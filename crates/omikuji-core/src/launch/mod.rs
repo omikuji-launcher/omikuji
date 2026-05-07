@@ -335,6 +335,16 @@ pub fn spawn(config: &LaunchConfig) -> Result<std::process::Child> {
     Ok(child)
 }
 
+fn append_dll_override(env: &mut HashMap<String, String>, entry: &str) {
+    let existing = env.get("WINEDLLOVERRIDES").map(|s| s.as_str()).unwrap_or("");
+    let new_value = if existing.is_empty() {
+        entry.to_string()
+    } else {
+        format!("{};{}", existing, entry)
+    };
+    env.insert("WINEDLLOVERRIDES".to_string(), new_value);
+}
+
 pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<String, String> {
     let mut env = HashMap::new();
 
@@ -364,30 +374,18 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
     env.insert("WINEFSYNC".to_string(), if game.wine.fsync { "1" } else { "0" }.to_string());
 
     if game.wine.dxvk {
-        env.insert("WINEDLLOVERRIDES".to_string(), "d3d11,d3d10core,d3d9,d3d8,dxgi=n,b".to_string());
+        append_dll_override(&mut env, "d3d11,d3d10core,d3d9,d3d8,dxgi=n,b");
         env.insert("WINE_LARGE_ADDRESS_AWARE".to_string(), "1".to_string());
     }
 
     if game.wine.vkd3d {
-        let overrides = env.get("WINEDLLOVERRIDES").map(|s| s.as_str()).unwrap_or("");
-        let new_overrides = if overrides.is_empty() {
-            "d3d12=n,b".to_string()
-        } else {
-            format!("{},d3d12=n,b", overrides)
-        };
-        env.insert("WINEDLLOVERRIDES".to_string(), new_overrides);
+        append_dll_override(&mut env, "d3d12=n,b");
     }
 
     if game.wine.dxvk_nvapi {
         env.insert("DXVK_ENABLE_NVAPI".to_string(), "1".to_string());
         env.insert("DXVK_NVAPIHACK".to_string(), "0".to_string());
-        let overrides = env.get("WINEDLLOVERRIDES").map(|s| s.as_str()).unwrap_or("");
-        let new_overrides = if overrides.is_empty() {
-            "nvapi,nvapi64=n,b".to_string()
-        } else {
-            format!("{},nvapi,nvapi64=n,b", overrides)
-        };
-        env.insert("WINEDLLOVERRIDES".to_string(), new_overrides);
+        append_dll_override(&mut env, "nvapi,nvapi64=n,b");
     }
 
     if game.wine.battleye {
@@ -401,21 +399,17 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
         env.insert("WINE_FULLSCREEN_FSR".to_string(), "1".to_string());
     }
 
-    if !game.wine.audio_driver.is_empty() {
-        env.insert("WINE_AUDIO_DRIVER".to_string(), game.wine.audio_driver.clone());
+    if game.wine.audio_driver == "alsa" {
+        append_dll_override(&mut env, "winepulse.drv=d");
     }
 
     if !game.wine.dll_overrides.is_empty() {
-        let existing = env.get("WINEDLLOVERRIDES").map(|s| s.as_str()).unwrap_or("");
         let custom: Vec<String> = game.wine.dll_overrides.iter()
             .map(|(k, v)| format!("{}={}", k, v))
             .collect();
-        let combined = if existing.is_empty() {
-            custom.join(",")
-        } else {
-            format!("{},{}", existing, custom.join(","))
-        };
-        env.insert("WINEDLLOVERRIDES".to_string(), combined);
+        for entry in custom {
+            append_dll_override(&mut env, &entry);
+        }
     }
 
     if game.system.pulse_latency {
