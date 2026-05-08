@@ -225,6 +225,7 @@ Item {
 
             ToggleRow { fieldKey: "wine.esync"; toggleLabel: "Esync" }
             ToggleRow { fieldKey: "wine.fsync"; toggleLabel: "Fsync" }
+            ToggleRow { fieldKey: "wine.ntsync"; toggleLabel: "NTSync" }
         }
 
         SettingsSection {

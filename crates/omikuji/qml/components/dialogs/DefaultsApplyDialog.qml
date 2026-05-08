@@ -13,7 +13,7 @@ Item {
 
     property var sectionLabels: ({
         "wine": "Wine (version, architecture)",
-        "sync": "Sync (esync, fsync)",
+        "sync": "Sync (esync, fsync, ntsync)",
         "translation_layers": "Translation Layers (DXVK, VKD3D, …)",
         "compatibility": "Compatibility (BattlEye, EAC, FSR)",
         "display": "Display (DPI scaling)",

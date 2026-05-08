@@ -99,6 +99,8 @@ pub struct WineConfig {
     #[serde(default = "default_true")]
     pub fsync: bool,
     #[serde(default)]
+    pub ntsync: bool,
+    #[serde(default)]
     pub dxvk: bool,
     #[serde(default)]
     pub dxvk_version: String,
@@ -144,6 +146,7 @@ impl Default for WineConfig {
             prefix_arch: default_prefix_arch(),
             esync: true,
             fsync: true,
+            ntsync: false,
             dxvk: false,
             dxvk_version: String::new(),
             vkd3d: false,
@@ -488,6 +491,8 @@ impl Game {
             && let Some(v) = d.wine.esync { self.wine.esync = v; }
         if self.wine.fsync == w.fsync
             && let Some(v) = d.wine.fsync { self.wine.fsync = v; }
+        if self.wine.ntsync == w.ntsync
+            && let Some(v) = d.wine.ntsync { self.wine.ntsync = v; }
         if self.wine.dxvk == w.dxvk
             && let Some(v) = d.wine.dxvk { self.wine.dxvk = v; }
         if self.wine.dxvk_version == w.dxvk_version

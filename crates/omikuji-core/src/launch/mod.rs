@@ -373,6 +373,14 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
     env.insert("WINEESYNC".to_string(), if game.wine.esync { "1" } else { "0" }.to_string());
     env.insert("WINEFSYNC".to_string(), if game.wine.fsync { "1" } else { "0" }.to_string());
 
+    if variant == WineVariant::Proton {
+        let ntsync = game.wine.ntsync;
+        env.insert("PROTON_USE_NTSYNC".to_string(), if ntsync { "1" } else { "0" }.to_string());
+        
+        // Proton 11+ uses PROTON_NO_NTSYNC to disable NTSync as seen in cachyos-proton 11.0-20260428
+        env.insert("PROTON_NO_NTSYNC".to_string(), if ntsync { "0" } else { "1" }.to_string());
+    }
+
     if game.wine.dxvk {
         append_dll_override(&mut env, "d3d11,d3d10core,d3d9,d3d8,dxgi=n,b");
         env.insert("WINE_LARGE_ADDRESS_AWARE".to_string(), "1".to_string());

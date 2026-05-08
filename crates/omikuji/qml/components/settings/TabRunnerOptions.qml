@@ -127,7 +127,7 @@ Item {
                     width: parent.width
                     columns: 4
                     columnSpacing: 8
-                    rowSpacing: 0
+                    rowSpacing: 12
 
                     Text {
                         text: "Esync"
@@ -155,6 +155,21 @@ Item {
                         checked: config["wine.fsync"] === true
                         onToggled: (val) => updateField("wine.fsync", val)
                     }
+
+                    Text {
+                        text: "NTSync"
+                        color: theme.text
+                        font.pixelSize: 15
+                        Layout.preferredWidth: 80
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    M3Switch {
+                        checked: config["wine.ntsync"] === true
+                        onToggled: (val) => updateField("wine.ntsync", val)
+                    }
+
+                    Item { Layout.columnSpan: 2 }
                 }
             }
 

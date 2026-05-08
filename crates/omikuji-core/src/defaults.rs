@@ -25,6 +25,8 @@ pub struct WineDefaults {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fsync: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub ntsync: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub dxvk: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dxvk_version: Option<String>,
@@ -143,6 +145,7 @@ impl Defaults {
         if has("sync") {
             if let Some(v) = self.wine.esync { game.wine.esync = v; }
             if let Some(v) = self.wine.fsync { game.wine.fsync = v; }
+            if let Some(v) = self.wine.ntsync { game.wine.ntsync = v; }
         }
         if has("translation_layers") {
             if let Some(v) = self.wine.dxvk { game.wine.dxvk = v; }
@@ -222,7 +225,7 @@ impl Defaults {
         if self.wine.version.is_some() || self.wine.prefix_arch.is_some() {
             out.push("wine".into());
         }
-        if self.wine.esync.is_some() || self.wine.fsync.is_some() {
+        if self.wine.esync.is_some() || self.wine.fsync.is_some() || self.wine.ntsync.is_some() {
             out.push("sync".into());
         }
         if self.wine.dxvk.is_some() || self.wine.dxvk_version.is_some()

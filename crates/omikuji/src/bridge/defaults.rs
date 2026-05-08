@@ -104,6 +104,7 @@ impl qobject::DefaultsBridge {
         put_str!("wine.prefix_arch", d.wine.prefix_arch.clone().unwrap_or(w.prefix_arch));
         put_bool!("wine.esync", d.wine.esync.unwrap_or(w.esync));
         put_bool!("wine.fsync", d.wine.fsync.unwrap_or(w.fsync));
+        put_bool!("wine.ntsync", d.wine.ntsync.unwrap_or(w.ntsync));
         put_bool!("wine.dxvk", d.wine.dxvk.unwrap_or(w.dxvk));
         put_str!("wine.dxvk_version", d.wine.dxvk_version.clone().unwrap_or(w.dxvk_version));
         put_bool!("wine.vkd3d", d.wine.vkd3d.unwrap_or(w.vkd3d));
@@ -236,6 +237,7 @@ fn apply_to_defaults(d: &mut Defaults, key: &str, value: &str) -> bool {
         "wine.prefix_arch" => d.wine.prefix_arch = Some(value.to_string()),
         "wine.esync" => d.wine.esync = Some(parse_bool(value)),
         "wine.fsync" => d.wine.fsync = Some(parse_bool(value)),
+        "wine.ntsync" => d.wine.ntsync = Some(parse_bool(value)),
         "wine.dxvk" => d.wine.dxvk = Some(parse_bool(value)),
         "wine.dxvk_version" => d.wine.dxvk_version = Some(value.to_string()),
         "wine.vkd3d" => d.wine.vkd3d = Some(parse_bool(value)),
@@ -299,6 +301,7 @@ fn clear_in_defaults(d: &mut Defaults, key: &str) -> bool {
         "wine.prefix_arch" => d.wine.prefix_arch = None,
         "wine.esync" => d.wine.esync = None,
         "wine.fsync" => d.wine.fsync = None,
+        "wine.ntsync" => d.wine.ntsync = None,
         "wine.dxvk" => d.wine.dxvk = None,
         "wine.dxvk_version" => d.wine.dxvk_version = None,
         "wine.vkd3d" => d.wine.vkd3d = None,
@@ -356,6 +359,7 @@ fn collect_set_keys(d: &Defaults) -> Vec<String> {
     if d.wine.prefix_arch.as_ref().is_some_and(|v| v != &w.prefix_arch) { k.push("wine.prefix_arch".into()); }
     if d.wine.esync.is_some_and(|v| v != w.esync) { k.push("wine.esync".into()); }
     if d.wine.fsync.is_some_and(|v| v != w.fsync) { k.push("wine.fsync".into()); }
+    if d.wine.ntsync.is_some_and(|v| v != w.ntsync) { k.push("wine.ntsync".into()); }
     if d.wine.dxvk.is_some_and(|v| v != w.dxvk) { k.push("wine.dxvk".into()); }
     if d.wine.dxvk_version.as_ref().is_some_and(|v| v != &w.dxvk_version) { k.push("wine.dxvk_version".into()); }
     if d.wine.vkd3d.is_some_and(|v| v != w.vkd3d) { k.push("wine.vkd3d".into()); }

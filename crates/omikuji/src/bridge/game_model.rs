@@ -587,6 +587,7 @@ fn populate_config_map(game: &Game, m: &mut QMap<QMapPair_QString_QVariant>) {
     put_str!("wine.prefix_arch", game.wine.prefix_arch);
     put_bool!("wine.esync", game.wine.esync);
     put_bool!("wine.fsync", game.wine.fsync);
+    put_bool!("wine.ntsync", game.wine.ntsync);
     put_bool!("wine.dxvk", game.wine.dxvk);
     put_str!("wine.dxvk_version", game.wine.dxvk_version);
     put_bool!("wine.vkd3d", game.wine.vkd3d);
@@ -669,6 +670,7 @@ fn apply_field_to_game(game: &mut Game, key: &str, value: &str) -> bool {
         "wine.prefix_arch" => game.wine.prefix_arch = value.to_string(),
         "wine.esync" => game.wine.esync = parse_bool(value),
         "wine.fsync" => game.wine.fsync = parse_bool(value),
+        "wine.ntsync" => game.wine.ntsync = parse_bool(value),
         "wine.dxvk" => game.wine.dxvk = parse_bool(value),
         "wine.dxvk_version" => game.wine.dxvk_version = value.to_string(),
         "wine.vkd3d" => game.wine.vkd3d = parse_bool(value),
