@@ -61,7 +61,7 @@ pub fn run(game: &Game, tool: WineTool) -> Result<Child> {
     cmd.envs(&env);
 
     // proton tools (except the kill verb) need waitforexitandrun so umu-run waits for the tool to close before obliterating the prefix down
-    if variant == WineVariant::ProtonGE && !matches!(tool, WineTool::KillWineserver) {
+    if variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver) {
         cmd.env("PROTON_VERB", "waitforexitandrun");
     }
 
@@ -89,7 +89,7 @@ fn build_command(
             vec![path.to_string_lossy().into_owned()],
         )),
         WineTool::Winetricks => {
-            if variant == WineVariant::ProtonGE {
+            if variant == WineVariant::Proton {
                 // umu-run ships its own winetricks verb apparently
                 Ok((
                     wine_exe.to_path_buf(),
@@ -101,7 +101,7 @@ fn build_command(
             }
         }
         WineTool::KillWineserver => {
-            if variant == WineVariant::ProtonGE {
+            if variant == WineVariant::Proton {
                 // wineboot -k tears down the session cleanly; invoking wineserver directly races with umu's lifecycle
                 Ok((
                     wine_exe.to_path_buf(),

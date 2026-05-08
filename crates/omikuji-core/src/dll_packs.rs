@@ -222,7 +222,7 @@ fn ensure_prefix_bootstrapped(
     cmd.arg("wineboot").arg("-u");
     cmd.env_clear();
     cmd.envs(env);
-    if variant == WineVariant::ProtonGE {
+    if variant == WineVariant::Proton {
         // umu-run synchronous verb, waits for the wineboot child to exit before tearing down
         cmd.env("PROTON_VERB", "waitforexitandrun");
     }
@@ -274,7 +274,7 @@ fn set_ngx_registry(
     ]);
     cmd.env_clear();
     cmd.envs(env);
-    if variant == WineVariant::ProtonGE {
+    if variant == WineVariant::Proton {
         cmd.env("PROTON_VERB", "waitforexitandrun");
     }
     cmd.stdin(Stdio::null());

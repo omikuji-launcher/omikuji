@@ -20,8 +20,8 @@ pub struct LaunchConfig {
 pub enum WineVariant {
     System,
     WineGE,
-    // proton-ge needs umu-run as the launcher bin, not wine64 directly
-    ProtonGE,
+    // proton requires umu-launcher
+    Proton,
 }
 
 impl WineVariant {
@@ -29,11 +29,11 @@ impl WineVariant {
         if version.is_empty() || version == "system" {
             WineVariant::System
         } else if version.starts_with("GE-Proton") || version.starts_with("Proton") || version.starts_with("dwproton") || version.starts_with("proton") {
-            WineVariant::ProtonGE
+            WineVariant::Proton
         } else if version.starts_with("steam:") {
             let steam_version = version.strip_prefix("steam:").unwrap_or(version);
             if steam_version.starts_with("GE-Proton") || steam_version.starts_with("Proton") || steam_version.starts_with("dwproton") || steam_version.starts_with("proton") {
-                WineVariant::ProtonGE
+                WineVariant::Proton
             } else {
                 WineVariant::WineGE
             }
@@ -357,7 +357,7 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
     env.insert("WINEARCH".to_string(), game.wine.prefix_arch.clone());
     env.insert("WINE".to_string(), wine_exe.to_string_lossy().to_string());
 
-    if variant == WineVariant::ProtonGE {
+    if variant == WineVariant::Proton {
         let proton_path = if game.wine.version.starts_with("steam:") {
             let steam_version = game.wine.version.strip_prefix("steam:").unwrap_or(&game.wine.version);
             crate::steam::local::resolve_or_default_proton(Some(steam_version))
@@ -401,6 +401,14 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
 
     if game.wine.audio_driver == "alsa" {
         append_dll_override(&mut env, "winepulse.drv=d");
+    }
+
+    if game.wine.graphics_driver == "wayland" {
+        if variant == WineVariant::Proton {
+            env.insert("PROTON_ENABLE_WAYLAND".to_string(), "1".to_string());
+        } else {
+            env.insert("DISPLAY".to_string(), String::new());
+        }
     }
 
     if !game.wine.dll_overrides.is_empty() {
@@ -480,7 +488,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
                 Ok(PathBuf::from("wine"))
             }
         }
-        WineVariant::ProtonGE => {
+        WineVariant::Proton => {
             let umu_run = find_umu_run().ok_or_else(|| {
                 anyhow::anyhow!(
                     "Proton requires umu-run (umu-launcher) but it's not found. \
@@ -670,8 +678,8 @@ mod tests {
         assert_eq!(WineVariant::from_version("system"), WineVariant::System);
         assert_eq!(WineVariant::from_version("wine-ge-9-5"), WineVariant::WineGE);
         assert_eq!(WineVariant::from_version("lutris-7.2"), WineVariant::WineGE);
-        assert_eq!(WineVariant::from_version("GE-Proton10-34"), WineVariant::ProtonGE);
-        assert_eq!(WineVariant::from_version("Proton-9-0-4"), WineVariant::ProtonGE);
+        assert_eq!(WineVariant::from_version("GE-Proton10-34"), WineVariant::Proton);
+        assert_eq!(WineVariant::from_version("Proton-9-0-4"), WineVariant::Proton);
     }
 
 }
