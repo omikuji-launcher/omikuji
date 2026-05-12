@@ -119,17 +119,16 @@ jobs:
             --custom-apprun=packaging/AppRun \
             --output appimage
 
-          ls -lh
-
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AppImage
           path: "*.AppImage"
+          archive: false
 
       - name: Create GitHub Release
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           name: ${{ github.event.inputs.release_tag }}
