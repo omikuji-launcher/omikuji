@@ -77,7 +77,8 @@ jobs:
 
           chmod +x tools/linuxdeploy tools/linuxdeploy-plugin-qt
 
-          echo "EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so" >> "$GITHUB_ENV"
+          echo "EXTRA_PLATFORM_PLUGINS=libqwayland-egl.so,libqwayland-generic.so" >> "$GITHUB_ENV"
+          echo "EXTRA_QT_MODULES: svg,imageformats,wayland-decoration-client,wayland-graphics-integration-client,wayland-shell-integration" >> "$GITHUB_ENV"
 
           echo "$PWD/tools" >> "$GITHUB_PATH"
 
