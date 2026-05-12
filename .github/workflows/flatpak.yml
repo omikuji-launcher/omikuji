@@ -1,69 +1,51 @@
-name: Flatpak
+name: Build Flatpak
 
 on:
   workflow_dispatch:
 
 jobs:
-  flatpak-extensions:
+  flatpak:
+    name: Build Flatpak
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Install dependencies
+      - name: Install Flatpak dependencies
         run: |
           sudo apt update
           sudo apt install -y flatpak flatpak-builder git
 
-          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak remote-add --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
 
-          flatpak install -y flathub \
-            org.freedesktop.Sdk//${{ matrix.version }} \
-            org.freedesktop.Platform//${{ matrix.version }}
-
-      - name: Build
-        run: |
-          flatpak-builder --force-clean build-dir \
-            flatpak/io.github.reakjra.omikuji.yaml
-
-          flatpak build-bundle build-dir \
-            io.github.reakjra.omikuji.flatpak
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: lsfg-vk-layer-${{ matrix.version }}
-          path: "*.flatpak"
-
-  flatpak-ui:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Install Flatpak build dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y flatpak flatpak-builder git
-
-          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-
+          # Install KDE runtime + Wine base + Rust
           flatpak install -y flathub \
             org.kde.Sdk//6.10 \
-            org.kde.Platform//6.10
+            org.kde.Platform//6.10 \
+            org.winehq.Wine//stable-25.08 \
+            org.freedesktop.Sdk.Extension.rust-stable
 
-      - name: Build Flatpak UI
+      - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean build-dir \
-            flatpak/io.github.reakjra.omikuji.yaml
+          mkdir -p build-dir
+          cd flatpak
+          flatpak-builder \
+            --force-clean \
+            --repo=repo \
+            build-dir \
+            io.github.reakjra.omikuji.yml
 
-          flatpak build-bundle build-dir \
-            io.github.reakjra.omikuji.flatpak
+      - name: Export Flatpak bundle
+        run: |
+          flatpak build-bundle repo \
+            omikuji.flatpak \
+            io.github.reakjra.omikuji
+            
 
-      - name: Upload artifact
+      - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v6
         with:
-          name: flatpak
-          path: "*.flatpak"
+          name: omikuji-flatpak
+          path: omikuji.flatpak
