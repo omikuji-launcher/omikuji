@@ -29,13 +29,13 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          mkdir -p build-dir
           cd flatpak
+          mkdir -p build-dir
           flatpak-builder --user \
             --force-clean \
             --repo=repo \
             build-dir \
-            io.github.reakjra.omikuji.yml
+            io.github.reakjra.omikuji.yaml
 
       - name: Export Flatpak bundle
         run: |
