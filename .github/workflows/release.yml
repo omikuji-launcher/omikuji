@@ -57,7 +57,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.0"
-          modules: "qtshadertools qt5compat"
+          modules: "qtshadertools qt5compat qtwayland qtsvg"
           cache: true
 
       - name: Symlink qsb to /usr/lib/qt6/bin
