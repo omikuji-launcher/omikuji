@@ -55,10 +55,10 @@ jobs:
             target
           key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
 
-      - name: Install Qt 6.8.0
+      - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.0'
+          version: '6.1.0'
           modules: 'qtshadertools qt5compat'
           cache: true
 
