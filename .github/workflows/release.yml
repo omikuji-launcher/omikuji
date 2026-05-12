@@ -1,9 +1,21 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag (example: 1.0.0)"
+        required: false
+        type: string
+
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   contents: write
@@ -12,9 +24,10 @@ jobs:
   appimage:
     name: Build AppImage
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install system deps
         run: |
@@ -32,7 +45,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry
@@ -43,8 +56,8 @@ jobs:
       - name: Install Qt 6.8.0
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.0'
-          modules: 'qtshadertools qt5compat'
+          version: "6.8.0"
+          modules: "qtshadertools qt5compat"
           cache: true
 
       - name: Symlink qsb to /usr/lib/qt6/bin (build.rs fallback search path)
@@ -58,37 +71,74 @@ jobs:
       - name: Download linuxdeploy + qt plugin
         run: |
           mkdir -p tools
-          wget -qO tools/linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          wget -qO tools/linuxdeploy-plugin-qt https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+
+          wget -qO tools/linuxdeploy \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+
+          wget -qO tools/linuxdeploy-plugin-qt \
+            https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+
           chmod +x tools/linuxdeploy tools/linuxdeploy-plugin-qt
+
+          if [[ "6.8.0" == "6.10" ]]; then
+            echo "EXTRA_PLATFORM_PLUGINS=libqwayland.so" >> "$GITHUB_ENV"
+          else
+            echo "EXTRA_PLATFORM_PLUGINS=libqwayland-generic.so" >> "$GITHUB_ENV"
+          fi
+
+          echo "EXTRA_QT_MODULES=svg,imageformats,wayland-decoration-client,wayland-graphics-integration-client,wayland-shell-integration" >> "$GITHUB_ENV"
+
           echo "$PWD/tools" >> "$GITHUB_PATH"
 
       - name: Set up AppDir
         run: |
           APPDIR="$RUNNER_TEMP/omikuji-appdir"
+
           echo "APPDIR=$APPDIR" >> "$GITHUB_ENV"
 
           rm -rf "$APPDIR"
+
           mkdir -p "$APPDIR/usr/bin"
           mkdir -p "$APPDIR/usr/share/applications"
           mkdir -p "$APPDIR/usr/share/icons/hicolor/512x512/apps"
 
-          cp target/release/omikuji "$APPDIR/usr/bin/omikuji"
-          sed "s|@EXEC_PATH@|omikuji|" packaging/io.github.reakjra.omikuji.desktop.in \
-              > "$APPDIR/usr/share/applications/io.github.reakjra.omikuji.desktop"
+          cp target/release/omikuji \
+            "$APPDIR/usr/bin/omikuji"
+
+          sed "s|@EXEC_PATH@|omikuji|" \
+            packaging/io.github.reakjra.omikuji.desktop.in \
+            > "$APPDIR/usr/share/applications/io.github.reakjra.omikuji.desktop"
+
           cp crates/omikuji/qml/icons/app.png \
-              "$APPDIR/usr/share/icons/hicolor/512x512/apps/io.github.reakjra.omikuji.png"
+            "$APPDIR/usr/share/icons/hicolor/512x512/apps/io.github.reakjra.omikuji.png"
 
       - name: Build AppImage with custom AppRun
         env:
-          NO_STRIP: '1'
+          NO_STRIP: "1"
           QML_SOURCES_PATHS: ${{ github.workspace }}/crates/omikuji/qml
         run: |
           chmod +x packaging/AppRun
-          linuxdeploy --appdir "$APPDIR" --plugin qt --custom-apprun=packaging/AppRun --output appimage
 
-      - name: Upload AppImage to release
-        uses: softprops/action-gh-release@v2
+          linuxdeploy \
+            --appdir "$APPDIR" \
+            --plugin qt \
+            --custom-apprun=packaging/AppRun \
+            --output appimage
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
         with:
-          files: '*.AppImage'
-          fail_on_unmatched_files: true
+          name: AppImage
+          path: "*.AppImage"
+          archive: false
+
+      - name: Create GitHub Release
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: ${{ github.event.inputs.release_tag }}
+          files: "*.AppImage"
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
