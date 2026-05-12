@@ -44,6 +44,8 @@ qmlcache_loader.cpp
 ehthumbs.db
 Thumbs.db
 
+[Bb]uild-dir/
+
 tools/
 omikuji-appdir
 AppDir/
