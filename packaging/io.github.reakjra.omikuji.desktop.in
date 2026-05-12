@@ -7,6 +7,6 @@ Icon=io.github.reakjra.omikuji
 StartupWMClass=omikuji
 Categories=Game;PackageManager;
 Keywords=gaming;launcher;
-StartupNotify=false
+StartupNotify=true
 Terminal=false
 Comment=Qt/QML based wine apps launcher for Linux

@@ -21,6 +21,9 @@ qt6-base \
 qt6-tools \
 qt6-wayland \
 qt6-shadertools \
+qt6-declarative \
+qt6-5compat \
+qt6-svg
 libfbclient \
 mariadb \
 unixodbc \
