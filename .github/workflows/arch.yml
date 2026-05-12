@@ -14,7 +14,7 @@ jobs:
       - name: Install base dependencies
         run: |
           pacman -Syu --noconfirm archlinux-keyring
-          sudo pacman -S pkg-config \
+          pacman -S pkg-config \
           cmake \
           systemd-libs \
           fuse2 \
