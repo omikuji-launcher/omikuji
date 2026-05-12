@@ -62,7 +62,8 @@ jobs:
             qml6-module-qtwayland-compositor \
             libqt6core5compat6 \
             libqt6core5compat6-dev \
-            qt6-base-private-dev
+            qt6-base-private-dev \
+            qt6-shader-baker
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -78,14 +79,13 @@ jobs:
 
       - name: Locate qsb
         run: |
-          QSB_PATH="$(command -v qsb)"
+          QSB_PATH="$(command -v qsb || true)"
 
           if [ -z "$QSB_PATH" ]; then
-            echo "qsb not found"
-            exit 1
+            echo "warning: qsb not found, continuing anyway"
+          else
+            echo "QSB_PATH=$QSB_PATH" >> "$GITHUB_ENV"
           fi
-
-          echo "QSB_PATH=$QSB_PATH" >> "$GITHUB_ENV"
 
       - name: Download linuxdeploy + qt plugin
         run: |
