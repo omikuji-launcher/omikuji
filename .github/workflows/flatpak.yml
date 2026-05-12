@@ -17,11 +17,11 @@ jobs:
           sudo apt update
           sudo apt install -y flatpak flatpak-builder git
 
-          flatpak remote-add --if-not-exists flathub \
+          flatpak --user remote-add --if-not-exists flathub \
             https://dl.flathub.org/repo/flathub.flatpakrepo
 
           # Install KDE runtime + Wine base + Rust
-          flatpak install -y flathub \
+          flatpak --user install -y flathub \
             org.kde.Sdk//6.10 \
             org.kde.Platform//6.10 \
             org.winehq.Wine//stable-25.08 \
@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p build-dir
           cd flatpak
-          flatpak-builder \
+          flatpak-builder --user \
             --force-clean \
             --repo=repo \
             build-dir \
@@ -42,7 +42,6 @@ jobs:
           flatpak build-bundle repo \
             omikuji.flatpak \
             io.github.reakjra.omikuji
-            
 
       - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v6
