@@ -43,3 +43,8 @@ qmlcache_loader.cpp
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+tools/
+AppDir/
+linuxdeploy*
+*.AppImage
