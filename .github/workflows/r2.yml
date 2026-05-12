@@ -39,7 +39,9 @@ jobs:
             libudev-dev \
             libfuse2 \
             wget \
-            protobuf-compiler
+            protobuf-compiler \
+            build-essential \
+            liblzma-dev
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
