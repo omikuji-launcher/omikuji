@@ -117,6 +117,9 @@ impl Default for NavSettings {
 pub struct BehaviorSettings {
     pub minimize_on_launch: bool,
     pub save_game_logs: bool,
+    pub auto_check_epic_updates_on_launch: bool,
+    pub auto_check_gog_updates_on_launch: bool,
+    pub auto_check_updates_on_boot: bool,
 }
 
 

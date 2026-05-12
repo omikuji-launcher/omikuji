@@ -1,4 +1,6 @@
 // little note: FUCK YOU GOG. we love you really but what the fuck
+pub mod updates;
+
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

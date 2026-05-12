@@ -154,7 +154,9 @@ Popup {
                         color: hoverArea.containsMouse
                             ? (modelData.danger
                                 ? Qt.rgba(theme.error.r, theme.error.g, theme.error.b, 0.18)
-                                : Qt.rgba(theme.text.r, theme.text.g, theme.text.b, 0.14))
+                                : modelData.accent
+                                    ? Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.18)
+                                    : Qt.rgba(theme.text.r, theme.text.g, theme.text.b, 0.14))
                             : "transparent"
 
                         Behavior on color {
@@ -167,7 +169,11 @@ Popup {
                             anchors.leftMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.text
-                            color: modelData.danger ? theme.error : theme.text
+                            color: modelData.danger
+                                ? theme.error
+                                : modelData.accent
+                                    ? theme.accent
+                                    : theme.text
                             font.pixelSize: 13
                         }
 

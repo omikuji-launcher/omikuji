@@ -115,6 +115,7 @@ pub fn build_install_request(
         temp_dir,
         kind: DownloadKind::Install,
         destructive_cleanup: true,
+        start_paused: false,
     })
 }
 
@@ -142,6 +143,7 @@ pub fn build_update_request(
         temp_dir: None,
         kind: DownloadKind::Update { from_version },
         destructive_cleanup: false,
+        start_paused: false,
     })
 }
 

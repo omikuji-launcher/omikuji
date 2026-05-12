@@ -1,4 +1,5 @@
 pub mod eos_overlay;
+pub mod updates;
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};

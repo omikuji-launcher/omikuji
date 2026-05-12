@@ -67,95 +67,8 @@ impl DownloadSource for GogdlSource {
             ));
         }
 
-        let support_dir = crate::data_dir()
-            .join("gog")
-            .join("support")
-            .join(&entry.app_id);
-        let _ = std::fs::create_dir_all(&support_dir);
-
-        let auth = crate::gog::gog_auth_path();
-
-        let gogdl_cfg = crate::gog::gogdl_config_dir();
-        let _ = std::fs::create_dir_all(&gogdl_cfg);
-
-        let mut cmd = Command::new(&gogdl);
-        cmd.env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-            .arg("--auth-config-path")
-            .arg(&auth)
-            .arg("download")
-            .arg(&entry.app_id)
-            .arg("--platform")
-            .arg("windows")
-            .arg("--path")
-            .arg(&entry.install_path)
-            .arg("--support")
-            .arg(&support_dir)
-            .arg("--skip-dlcs")
-            .arg("--lang")
-            .arg("en-US")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .process_group(0)
-            .kill_on_drop(true);
-
-        let mut child = cmd
-            .spawn()
-            .map_err(|e| anyhow!("failed to spawn gogdl: {}", e))?;
-
-        let stdout = child.stdout.take().expect("stdout piped");
-        let stderr = child.stderr.take().expect("stderr piped");
-        let mut out_lines = BufReader::new(stdout).lines();
-        let mut err_lines = BufReader::new(stderr).lines();
-
-        let mut pct: f64 = 0.0;
-        let mut speed_bps: u64 = 0;
-        let mut dl_bytes: u64 = 0;
-        let mut total_bytes: u64 = entry.bytes_total;
-
-        let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
-        control_tick.tick().await;
-
-        loop {
-            tokio::select! {
-                line = out_lines.next_line() => {
-                    match line {
-                        Ok(Some(l)) => {
-                            if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                                report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
-                            }
-                        }
-                        Ok(None) | Err(_) => break,
-                    }
-                }
-                line = err_lines.next_line() => {
-                    match line {
-                        Ok(Some(l)) => {
-                            if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                                report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
-                            } else {
-                                eprintln!("[gogdl] {}", l);
-                            }
-                        }
-                        Ok(None) | Err(_) => break,
-                    }
-                }
-                _ = control_tick.tick() => {
-                    if check_control(&entry.id) != ControlSignal::None {
-                        shutdown(&mut child).await;
-                        return Ok(());
-                    }
-                }
-            }
-        }
-
-        let status = child
-            .wait()
-            .await
-            .map_err(|e| anyhow!("gogdl wait failed: {}", e))?;
-
-        if !status.success() {
-            return Err(anyhow!("gogdl exited with status: {}", status));
-        }
+        let child = spawn_download(&gogdl, entry)?;
+        run_with_progress(child, entry).await?;
 
         // heroic treats a clean gogdl exit as the install signal, we do too
         // resolve_install_root BFS handles games where gogdl unpacks into a folder_name subdir of --path, which happens with names containing ™.
@@ -193,6 +106,108 @@ impl DownloadSource for GogdlSource {
 
         Ok(())
     }
+
+    async fn update(&self, entry: &DownloadEntry) -> Result<()> {
+        let gogdl = gogdl_bin()?;
+        // wipe stale manifest so gogdl sees the latest build before deciding whats to patch
+        crate::gog::wipe_gogdl_manifest_for(&entry.app_id);
+        let child = spawn_download(&gogdl, entry)?;
+        run_with_progress(child, entry).await
+    }
+}
+
+fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
+    let support_dir = crate::data_dir()
+        .join("gog")
+        .join("support")
+        .join(&entry.app_id);
+    let _ = std::fs::create_dir_all(&support_dir);
+
+    let auth = crate::gog::gog_auth_path();
+    let gogdl_cfg = crate::gog::gogdl_config_dir();
+    let _ = std::fs::create_dir_all(&gogdl_cfg);
+
+    let mut cmd = Command::new(gogdl);
+    cmd.env("GOGDL_CONFIG_PATH", &gogdl_cfg)
+        .arg("--auth-config-path")
+        .arg(&auth)
+        .arg("download")
+        .arg(&entry.app_id)
+        .arg("--platform")
+        .arg("windows")
+        .arg("--path")
+        .arg(&entry.install_path)
+        .arg("--support")
+        .arg(&support_dir)
+        .arg("--skip-dlcs")
+        .arg("--lang")
+        .arg("en-US")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .process_group(0)
+        .kill_on_drop(true);
+
+    cmd.spawn()
+        .map_err(|e| anyhow!("failed to spawn gogdl: {}", e))
+}
+
+async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
+    let stdout = child.stdout.take().expect("stdout piped");
+    let stderr = child.stderr.take().expect("stderr piped");
+    let mut out_lines = BufReader::new(stdout).lines();
+    let mut err_lines = BufReader::new(stderr).lines();
+
+    let mut pct: f64 = 0.0;
+    let mut speed_bps: u64 = 0;
+    let mut dl_bytes: u64 = 0;
+    let mut total_bytes: u64 = entry.bytes_total;
+
+    let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
+    control_tick.tick().await;
+
+    loop {
+        tokio::select! {
+            line = out_lines.next_line() => {
+                match line {
+                    Ok(Some(l)) => {
+                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
+                            report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
+                        }
+                    }
+                    Ok(None) | Err(_) => break,
+                }
+            }
+            line = err_lines.next_line() => {
+                match line {
+                    Ok(Some(l)) => {
+                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
+                            report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
+                        } else {
+                            eprintln!("[gogdl] {}", l);
+                        }
+                    }
+                    Ok(None) | Err(_) => break,
+                }
+            }
+            _ = control_tick.tick() => {
+                if check_control(&entry.id) != ControlSignal::None {
+                    shutdown(&mut child).await;
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    let status = child
+        .wait()
+        .await
+        .map_err(|e| anyhow!("gogdl wait failed: {}", e))?;
+
+    if !status.success() {
+        return Err(anyhow!("gogdl exited with status: {}", status));
+    }
+
+    Ok(())
 }
 
 // called post-install when we couldnt find a goggame-*.info marker, to see where gogdl actually dropped teh game. only logs top leevel + immediate subdirs.

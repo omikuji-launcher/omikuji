@@ -342,6 +342,7 @@ impl qobject::EpicModel {
             temp_dir: None,
             kind: omikuji_core::downloads::DownloadKind::Install,
             destructive_cleanup: !is_import,
+            start_paused: false,
         };
 
         let id = downloads::manager().enqueue(req);

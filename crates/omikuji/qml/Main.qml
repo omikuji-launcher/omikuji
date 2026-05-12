@@ -164,6 +164,17 @@ ApplicationWindow {
                 root.requestActivate()
             }
         }
+
+        onUpdates_queued: (epicCount, gogCount) => {
+            let total = epicCount + gogCount
+            if (total <= 0) return
+            let bits = []
+            if (epicCount > 0) bits.push(epicCount + " Epic")
+            if (gogCount > 0) bits.push(gogCount + " GOG")
+            toastManager.show("info", "Updates available", bits.join(" + ") + " queued in Downloads")
+        }
+
+        Component.onCompleted: gameModel.scan_all_for_updates()
     }
 
     EpicModel { id: epicModel }
@@ -268,7 +279,7 @@ ApplicationWindow {
     }
 
     // redirects to downloads if an install is in flight, launching mid-patch would read files teh patcher is rewriting
-    function tryPlay(idx) {
+    function tryPlay(idx, forceSkipUpdateCheck = false) {
         if (idx < 0 || idx >= gameModel.count) return false
         let game = gameModel.get_game(idx)
         let appId = game ? (game["sourceAppId"] || "") : ""
@@ -279,7 +290,10 @@ ApplicationWindow {
                 return false
             }
         }
-        if (gameModel.launch_game(idx)) {
+        let launched = forceSkipUpdateCheck
+            ? gameModel.launch_game_force(idx)
+            : gameModel.launch_game(idx)
+        if (launched) {
             isSelectedGameRunning = true
             if (uiSettings.minimizeOnLaunch) {
                 steamStorePanel.keepAlive = false
@@ -1022,6 +1036,10 @@ property real cardZoom: uiSettings.cardZoom
             } else {
                 toastManager.show("error", "Update failed", "Could not enqueue update")
             }
+        }
+        onRunAnywayRequested: (gid) => {
+            let idx = gameModel.index_of_id(gid)
+            if (idx >= 0) root.tryPlay(idx, true)
         }
     }
 

@@ -32,6 +32,9 @@ pub mod qobject {
         #[qproperty(bool, nav_collapsed, cxx_name = "navCollapsed")]
         #[qproperty(bool, minimize_on_launch, cxx_name = "minimizeOnLaunch")]
         #[qproperty(bool, save_game_logs, cxx_name = "saveGameLogs")]
+        #[qproperty(bool, auto_check_epic_updates_on_launch, cxx_name = "autoCheckEpicUpdatesOnLaunch")]
+        #[qproperty(bool, auto_check_gog_updates_on_launch, cxx_name = "autoCheckGogUpdatesOnLaunch")]
+        #[qproperty(bool, auto_check_updates_on_boot, cxx_name = "autoCheckUpdatesOnBoot")]
         #[qproperty(f64, ui_scale, cxx_name = "uiScale")]
         #[qproperty(bool, muted_icons, cxx_name = "mutedIcons")]
         #[qproperty(QString, card_flow, cxx_name = "cardFlow")]
@@ -98,6 +101,18 @@ pub mod qobject {
         fn apply_save_game_logs(self: Pin<&mut UiSettingsBridge>, value: bool);
 
         #[qinvokable]
+        #[cxx_name = "applyAutoCheckEpicUpdatesOnLaunch"]
+        fn apply_auto_check_epic_updates_on_launch(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
+        #[cxx_name = "applyAutoCheckGogUpdatesOnLaunch"]
+        fn apply_auto_check_gog_updates_on_launch(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
+        #[cxx_name = "applyAutoCheckUpdatesOnBoot"]
+        fn apply_auto_check_updates_on_boot(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
         #[cxx_name = "applyUiScale"]
         fn apply_ui_scale(self: Pin<&mut UiSettingsBridge>, value: f64);
 
@@ -150,6 +165,9 @@ pub struct UiSettingsRust {
     pub nav_collapsed: bool,
     pub minimize_on_launch: bool,
     pub save_game_logs: bool,
+    pub auto_check_epic_updates_on_launch: bool,
+    pub auto_check_gog_updates_on_launch: bool,
+    pub auto_check_updates_on_boot: bool,
     pub ui_scale: f64,
     pub muted_icons: bool,
     pub card_flow: cxx_qt_lib::QString,
@@ -182,6 +200,9 @@ impl UiSettingsRust {
             nav_collapsed: s.nav.collapsed,
             minimize_on_launch: s.behavior.minimize_on_launch,
             save_game_logs: s.behavior.save_game_logs,
+            auto_check_epic_updates_on_launch: s.behavior.auto_check_epic_updates_on_launch,
+            auto_check_gog_updates_on_launch: s.behavior.auto_check_gog_updates_on_launch,
+            auto_check_updates_on_boot: s.behavior.auto_check_updates_on_boot,
             ui_scale: s.display.scale,
             muted_icons: s.display.muted_icons,
             card_flow: cxx_qt_lib::QString::from(&s.display.card_flow),
@@ -215,6 +236,9 @@ impl qobject::UiSettingsBridge {
             behavior: BehaviorSettings {
                 minimize_on_launch: self.minimize_on_launch,
                 save_game_logs: self.save_game_logs,
+                auto_check_epic_updates_on_launch: self.auto_check_epic_updates_on_launch,
+                auto_check_gog_updates_on_launch: self.auto_check_gog_updates_on_launch,
+                auto_check_updates_on_boot: self.auto_check_updates_on_boot,
             },
             display: DisplaySettings {
                 scale: self.ui_scale,
@@ -298,6 +322,21 @@ impl qobject::UiSettingsBridge {
         self.persist();
     }
 
+    fn apply_auto_check_epic_updates_on_launch(mut self: Pin<&mut Self>, value: bool) {
+        self.as_mut().set_auto_check_epic_updates_on_launch(value);
+        self.persist();
+    }
+
+    fn apply_auto_check_gog_updates_on_launch(mut self: Pin<&mut Self>, value: bool) {
+        self.as_mut().set_auto_check_gog_updates_on_launch(value);
+        self.persist();
+    }
+
+    fn apply_auto_check_updates_on_boot(mut self: Pin<&mut Self>, value: bool) {
+        self.as_mut().set_auto_check_updates_on_boot(value);
+        self.persist();
+    }
+
     fn apply_ui_scale(mut self: Pin<&mut Self>, value: f64) {
         let clamped = value.clamp(0.7, 2.0);
         self.as_mut().set_ui_scale(clamped);
@@ -336,6 +375,9 @@ impl qobject::UiSettingsBridge {
         self.as_mut().set_nav_collapsed(s.nav.collapsed);
         self.as_mut().set_minimize_on_launch(s.behavior.minimize_on_launch);
         self.as_mut().set_save_game_logs(s.behavior.save_game_logs);
+        self.as_mut().set_auto_check_epic_updates_on_launch(s.behavior.auto_check_epic_updates_on_launch);
+        self.as_mut().set_auto_check_gog_updates_on_launch(s.behavior.auto_check_gog_updates_on_launch);
+        self.as_mut().set_auto_check_updates_on_boot(s.behavior.auto_check_updates_on_boot);
         self.as_mut().set_ui_scale(s.display.scale);
         self.as_mut().set_muted_icons(s.display.muted_icons);
         self.as_mut().set_card_flow(cxx_qt_lib::QString::from(&s.display.card_flow));

@@ -44,6 +44,7 @@ Item {
 
             let isFav = game.favourite || false
             let isEpic = game.sourceKind === "epic" && game.sourceAppId && game.sourceAppId.length > 0
+            let isGog = game.sourceKind === "gog" && game.sourceAppId && game.sourceAppId.length > 0
             let hasDesktopShortcut = ctrl.gameModel.has_desktop_shortcut(index)
             let hasMenuShortcut = ctrl.gameModel.has_menu_shortcut(index)
 
@@ -58,6 +59,9 @@ Item {
                 { text: hasMenuShortcut ? "Remove application menu shortcut" : "Create application menu shortcut", action: "menu_shortcut" },
                 { text: "Duplicate", action: "duplicate" }
             ]
+            if (isEpic || isGog) {
+                built.push({ text: "Check for updates", action: "check_update", accent: true })
+            }
             if (isEpic) {
                 built.push({ text: "Uninstall (Epic Games)", action: "uninstall_epic", danger: true })
             }
@@ -118,6 +122,14 @@ Item {
                         epicUninstallConfirm.title = "Uninstall " + (g.name || "this game") + "?"
                         epicUninstallConfirm.message = "Legendary will delete the game files from disk. This cannot be undone."
                         epicUninstallConfirm.show({ id: g.gameId })
+                    }
+                    break
+                }
+                case "check_update": {
+                    let g = ctrl.gameModel.get_game(idx)
+                    if (g && g.gameId) {
+                        if (g.sourceKind === "gog") ctrl.gameModel.check_gog_update(g.gameId)
+                        else ctrl.gameModel.check_epic_update(g.gameId)
                     }
                     break
                 }

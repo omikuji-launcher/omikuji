@@ -124,80 +124,11 @@ impl DownloadSource for LegendarySource {
             .process_group(0)
             .kill_on_drop(true);
 
-        let mut child = cmd
+        let child = cmd
             .spawn()
             .map_err(|e| anyhow!("failed to spawn legendary: {}", e))?;
 
-        let stdout = child.stdout.take().expect("stdout piped");
-        let stderr = child.stderr.take().expect("stderr piped");
-        let mut out_lines = BufReader::new(stdout).lines();
-        let mut err_lines = BufReader::new(stderr).lines();
-
-        let mut pct: f64 = 0.0;
-        let mut speed_bps: u64 = 0;
-        let mut dl_bytes: u64 = 0;
-        let mut total_bytes: u64 = entry.bytes_total;
-        let mut reusable_bytes: u64 = 0;
-
-        let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
-        control_tick.tick().await; // first tick fires immediately, consume it
-
-        let adjusted = |pct: f64, dl: u64, total: u64, reusable: u64, speed: u64| -> (f64, u64, u64, u64) {
-            if reusable > 0 && total > 0 {
-                let base = reusable as f64 / total as f64;
-                let adj_pct = (base + (1.0 - base) * pct / 100.0) * 100.0;
-                let adj_dl = (adj_pct / 100.0 * total as f64) as u64;
-                (adj_pct, adj_dl, total, speed)
-            } else {
-                (pct, dl, total, speed)
-            }
-        };
-
-        loop {
-            tokio::select! {
-                line = out_lines.next_line() => {
-                    match line {
-                        Ok(Some(l)) => {
-                            parse_reusable(&l, &mut reusable_bytes);
-                            if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                                let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
-                                report_progress(&entry.id, p, d, t, s);
-                            }
-                        }
-                        Ok(None) | Err(_) => break,
-                    }
-                }
-                line = err_lines.next_line() => {
-                    match line {
-                        Ok(Some(l)) => {
-                            parse_reusable(&l, &mut reusable_bytes);
-                            if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                                let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
-                                report_progress(&entry.id, p, d, t, s);
-                            } else {
-                                eprintln!("[legendary] {}", l);
-                            }
-                        }
-                        Ok(None) | Err(_) => break,
-                    }
-                }
-                _ = control_tick.tick() => {
-                    if check_control(&entry.id) != ControlSignal::None {
-                        shutdown(&mut child).await;
-                        return Ok(());
-                    }
-                }
-            }
-        }
-
-        let status = child
-            .wait()
-            .await
-            .map_err(|e| anyhow!("legendary wait failed: {}", e))?;
-
-        if !status.success() {
-            return Err(anyhow!("legendary exited with status: {}", status));
-        }
+        run_with_progress(child, entry).await?;
 
         // legendary occasionally exits 0 without writing installed.json (stale
         // lock files, interrupted prior state). without this guard the completion handler tries to import a game that isnt really installed.
@@ -210,6 +141,103 @@ impl DownloadSource for LegendarySource {
 
         Ok(())
     }
+
+    async fn update(&self, entry: &DownloadEntry) -> Result<()> {
+        let legendary = find_legendary().ok_or_else(|| anyhow!(
+            "legendary not found — install it with `pipx install legendary-gl` or `pip install --user legendary-gl`, then restart omikuji"
+        ))?;
+
+        let mut cmd = Command::new(&legendary);
+        cmd.arg("update")
+            .arg(&entry.app_id)
+            .arg("-y")
+            .arg("--skip-sdl")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .process_group(0)
+            .kill_on_drop(true);
+
+        let child = cmd
+            .spawn()
+            .map_err(|e| anyhow!("failed to spawn legendary update: {}", e))?;
+
+        run_with_progress(child, entry).await
+    }
+}
+
+async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
+    let stdout = child.stdout.take().expect("stdout piped");
+    let stderr = child.stderr.take().expect("stderr piped");
+    let mut out_lines = BufReader::new(stdout).lines();
+    let mut err_lines = BufReader::new(stderr).lines();
+
+    let mut pct: f64 = 0.0;
+    let mut speed_bps: u64 = 0;
+    let mut dl_bytes: u64 = 0;
+    let mut total_bytes: u64 = entry.bytes_total;
+    let mut reusable_bytes: u64 = 0;
+
+    let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
+    control_tick.tick().await;
+
+    let adjusted = |pct: f64, dl: u64, total: u64, reusable: u64, speed: u64| -> (f64, u64, u64, u64) {
+        if reusable > 0 && total > 0 {
+            let base = reusable as f64 / total as f64;
+            let adj_pct = (base + (1.0 - base) * pct / 100.0) * 100.0;
+            let adj_dl = (adj_pct / 100.0 * total as f64) as u64;
+            (adj_pct, adj_dl, total, speed)
+        } else {
+            (pct, dl, total, speed)
+        }
+    };
+
+    loop {
+        tokio::select! {
+            line = out_lines.next_line() => {
+                match line {
+                    Ok(Some(l)) => {
+                        parse_reusable(&l, &mut reusable_bytes);
+                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
+                            let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
+                            report_progress(&entry.id, p, d, t, s);
+                        }
+                    }
+                    Ok(None) | Err(_) => break,
+                }
+            }
+            line = err_lines.next_line() => {
+                match line {
+                    Ok(Some(l)) => {
+                        parse_reusable(&l, &mut reusable_bytes);
+                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
+                            let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
+                            report_progress(&entry.id, p, d, t, s);
+                        } else {
+                            eprintln!("[legendary] {}", l);
+                        }
+                    }
+                    Ok(None) | Err(_) => break,
+                }
+            }
+            _ = control_tick.tick() => {
+                if check_control(&entry.id) != ControlSignal::None {
+                    shutdown(&mut child).await;
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    let status = child
+        .wait()
+        .await
+        .map_err(|e| anyhow!("legendary wait failed: {}", e))?;
+
+    if !status.success() {
+        return Err(anyhow!("legendary exited with status: {}", status));
+    }
+
+    Ok(())
 }
 
 // legendary's progress output looks like:
