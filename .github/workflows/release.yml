@@ -33,7 +33,8 @@ jobs:
           pacman -Syu --noconfirm archlinux-keyring
           pacman -Syu --noconfirm pkg-config \
           base-devel \
-          sudo
+          sudo \
+          wget
 
       - name: Create build user
         run: |
