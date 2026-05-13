@@ -48,9 +48,13 @@ jobs:
 
       - name: Build
         run: |
+          sudo -u builder sh <<'EOF'
           set -e
           cd packaging
           makepkg -fs --noconfirm
+          EOF
+          ls -lh
+          cd packaging/
           pacman -U ./*.pkg.tar.zst
           chmod +x ./make-appimage.sh
           ./make-appimage.sh
