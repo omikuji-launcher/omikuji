@@ -37,7 +37,8 @@ jobs:
           wget \
           qt6ct \
           kvantum \
-          lxqt-qtplugin
+          lxqt-qtplugin \
+          xorg-server-xvfb
 
       - name: Create build user
         run: |
