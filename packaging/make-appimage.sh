@@ -24,8 +24,8 @@ chmod +x ./quick-sharun
 ./quick-sharun /usr/bin/omikuji
 
 # Turn AppDir into AppImage
-quick-sharun --make-appimage
+./quick-sharun --make-appimage
 
 # Test the app for 12 seconds, if the test fails due to the app
 # having issues running in the CI use --simple-test instead
-quick-sharun --test ./dist/*.AppImage
+./quick-sharun --test ./dist/*.AppImage
