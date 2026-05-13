@@ -48,14 +48,12 @@ jobs:
 
       - name: Build
         run: |
-          sudo -u builder sh <<'EOF'
           set -e
           cd packaging
           makepkg -fs --noconfirm
           pacman -U ./*.pkg.tar.zst
           chmod +x ./make-appimage.sh
           ./make-appimage.sh
-          EOF
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
