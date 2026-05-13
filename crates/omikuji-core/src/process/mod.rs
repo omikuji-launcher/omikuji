@@ -149,6 +149,8 @@ impl ProcessManager {
 
         eprintln!("[process] spawned pid: {}", pid);
 
+        crate::discord::set_playing(&game);
+
         let stdout_pipe = child.stdout.take();
         let stderr_pipe = child.stderr.take();
         let (log_tx, log_rx) = std::sync::mpsc::channel::<String>();
@@ -252,6 +254,8 @@ impl ProcessManager {
                 "[process {}] game '{}' exited with code {:?}, playtime: {}s",
                 pid, game_id, exit_code, playtime_secs
             );
+
+            crate::discord::clear();
 
             notify_game_exited(&game_id);
 

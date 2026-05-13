@@ -31,6 +31,7 @@ Item {
     property var gameData: null
     property string installPath: ""
     property string prefixPath: ""
+    property var defaults: null
     property var runnerOptions: []
     property int runnerIndex: 0
 
@@ -139,6 +140,7 @@ Item {
         } else if (installPath === "") {
             installPath = defaultInstallPath(gameData ? gameData.title : "")
         }
+        if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
         refreshFreeSpace()
         refreshInstallSize()

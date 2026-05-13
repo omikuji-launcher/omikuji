@@ -211,6 +211,26 @@ Item {
             Row {
                 width: parent.width
                 spacing: 8
+                M3FileField {
+                    id: prefixField
+                    label: "Prefix"
+                    placeholder: "empty = auto-create per game"
+                    text: root.cfg["wine.prefix"] || ""
+                    selectFolder: true
+                    width: parent.width - 32
+                    gameModel: root.gameModel
+                    onTextEdited: (t) => root.update("wine.prefix", t)
+                    onAccepted: (p) => root.update("wine.prefix", p)
+                }
+                ResetBadge {
+                    anchors.verticalCenter: prefixField.verticalCenter
+                    fieldKey: "wine.prefix"
+                }
+            }
+
+            Row {
+                width: parent.width
+                spacing: 8
                 M3Dropdown {
                     id: archDd
                     label: "Architecture"

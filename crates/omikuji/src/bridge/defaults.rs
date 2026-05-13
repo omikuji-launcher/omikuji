@@ -101,6 +101,7 @@ impl qobject::DefaultsBridge {
         }
 
         put_str!("wine.version", d.wine.version.clone().unwrap_or(w.version));
+        put_str!("wine.prefix", d.wine.prefix.clone().unwrap_or(w.prefix));
         put_str!("wine.prefix_arch", d.wine.prefix_arch.clone().unwrap_or(w.prefix_arch));
         put_bool!("wine.esync", d.wine.esync.unwrap_or(w.esync));
         put_bool!("wine.fsync", d.wine.fsync.unwrap_or(w.fsync));
@@ -234,6 +235,7 @@ fn parse_u32(s: &str) -> u32 { s.parse().unwrap_or(0) }
 fn apply_to_defaults(d: &mut Defaults, key: &str, value: &str) -> bool {
     match key {
         "wine.version" => d.wine.version = Some(value.to_string()),
+        "wine.prefix" => d.wine.prefix = Some(value.to_string()),
         "wine.prefix_arch" => d.wine.prefix_arch = Some(value.to_string()),
         "wine.esync" => d.wine.esync = Some(parse_bool(value)),
         "wine.fsync" => d.wine.fsync = Some(parse_bool(value)),
@@ -298,6 +300,7 @@ fn apply_to_defaults(d: &mut Defaults, key: &str, value: &str) -> bool {
 fn clear_in_defaults(d: &mut Defaults, key: &str) -> bool {
     match key {
         "wine.version" => d.wine.version = None,
+        "wine.prefix" => d.wine.prefix = None,
         "wine.prefix_arch" => d.wine.prefix_arch = None,
         "wine.esync" => d.wine.esync = None,
         "wine.fsync" => d.wine.fsync = None,
@@ -356,6 +359,7 @@ fn collect_set_keys(d: &Defaults) -> Vec<String> {
     let l = LaunchConfig::default();
 
     if d.wine.version.as_ref().is_some_and(|v| v != &w.version) { k.push("wine.version".into()); }
+    if d.wine.prefix.as_ref().is_some_and(|v| v != &w.prefix) { k.push("wine.prefix".into()); }
     if d.wine.prefix_arch.as_ref().is_some_and(|v| v != &w.prefix_arch) { k.push("wine.prefix_arch".into()); }
     if d.wine.esync.is_some_and(|v| v != w.esync) { k.push("wine.esync".into()); }
     if d.wine.fsync.is_some_and(|v| v != w.fsync) { k.push("wine.fsync".into()); }

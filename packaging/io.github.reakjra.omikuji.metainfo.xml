@@ -7,6 +7,7 @@
   <developer_name>reakjra</developer_name>
   <name>Omikuji</name>
   <summary>Qt/QML based game launcher for Linux</summary>
+  <icon type="stock">io.github.reakjra.omikuji</icon>
 
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>

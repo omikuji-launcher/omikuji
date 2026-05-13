@@ -4,6 +4,7 @@ pub mod component_state;
 pub mod components;
 pub mod defaults;
 pub mod desktop;
+pub mod discord;
 pub mod dll_packs;
 pub mod downloads;
 pub mod endfield;

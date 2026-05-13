@@ -64,6 +64,7 @@ pub struct DownloadRequest {
     pub temp_dir: Option<PathBuf>,
     pub kind: DownloadKind,
     pub destructive_cleanup: bool,
+    pub start_paused: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -175,6 +176,12 @@ impl DownloadManager {
 
     pub fn enqueue(&self, req: DownloadRequest) -> String {
         let id = Self::next_id();
+        let start_paused = req.start_paused;
+        let initial_status = if start_paused {
+            DownloadStatus::Paused
+        } else {
+            DownloadStatus::Queued
+        };
         let entry = DownloadEntry {
             id: id.clone(),
             source: req.source,
@@ -187,7 +194,7 @@ impl DownloadManager {
             temp_dir: req.temp_dir,
             kind: req.kind,
             destructive_cleanup: req.destructive_cleanup,
-            status: DownloadStatus::Queued,
+            status: initial_status,
             progress: 0.0,
             bytes_downloaded: 0,
             bytes_total: 0,
@@ -198,18 +205,24 @@ impl DownloadManager {
             let mut inner = self.inner.lock().unwrap();
             inner.entries.push(entry);
             inner.events.push_back(DownloadEvent::Added(id.clone()));
-            let start = !inner.worker_started;
-            if start {
-                inner.worker_started = true;
-            }
             save_queue(&inner.entries);
-            start
+            if start_paused {
+                false
+            } else {
+                let start = !inner.worker_started;
+                if start {
+                    inner.worker_started = true;
+                }
+                start
+            }
         };
 
         if need_worker {
             Self::spawn_worker();
         }
-        self.notify.notify_one();
+        if !start_paused {
+            self.notify.notify_one();
+        }
         id
     }
 
@@ -453,7 +466,7 @@ impl DownloadManager {
 }
 
 // usable from both the tokio worker and the Qt thread (which has no tokio runtime)
-fn cleanup_install_dir_blocking(path: &std::path::Path) {
+pub fn cleanup_install_dir_blocking(path: &std::path::Path) {
     if !path.exists() {
         return;
     }

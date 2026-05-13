@@ -10,6 +10,7 @@ Item {
     property var gameModel: null
     property var epicModel: null
     property var downloadModel: null
+    property var defaults: null
     property int runnersVersion: 0
 
     property var activeDownloads: ({})
@@ -27,6 +28,7 @@ Item {
         gameModel: ctrl.gameModel
         epicModel: ctrl.epicModel
         runnersVersion: ctrl.runnersVersion
+        defaults: ctrl.defaults
         onCancelled: hide()
         onInstallEnqueued: (id) => {
             hide()

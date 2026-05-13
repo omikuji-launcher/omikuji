@@ -84,6 +84,7 @@ ApplicationWindow {
     }
 
     function handleGamepadButton(name) {
+        if (!root.active) return
         root.gamepadActive = true
 
         if (settingsDialog.visible) {

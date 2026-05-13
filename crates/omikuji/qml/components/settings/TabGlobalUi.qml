@@ -226,6 +226,26 @@ Item {
             }
 
             SettingsRow {
+                label: "Show tray icon"
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.showTrayIcon : false
+                    onToggled: (val) => uiSettings.applyShowTrayIcon(val)
+                }
+            }
+
+            SettingsRow {
+                label: "Discord Rich Presence"
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.discordRpc : false
+                    onToggled: (val) => uiSettings.applyDiscordRpc(val)
+                }
+            }
+
+            SettingsRow {
                 label: "Unload store tabs"
                 description: "After 15s idle"
                 labelWidth: root.rowLabelWidth
@@ -244,6 +264,39 @@ Item {
                 M3Switch {
                     checked: uiSettings ? uiSettings.saveGameLogs : false
                     onToggled: (val) => uiSettings.applySaveGameLogs(val)
+                }
+            }
+
+            SettingsRow {
+                label: "Check EG games updates on run"
+                description: "Might slowdown start times for Epic games"
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.autoCheckEpicUpdatesOnLaunch : false
+                    onToggled: (val) => uiSettings.applyAutoCheckEpicUpdatesOnLaunch(val)
+                }
+            }
+
+            SettingsRow {
+                label: "Check GOG games updates on run"
+                description: "Might slowdown start times for GOG games"
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.autoCheckGogUpdatesOnLaunch : false
+                    onToggled: (val) => uiSettings.applyAutoCheckGogUpdatesOnLaunch(val)
+                }
+            }
+
+            SettingsRow {
+                label: "Check for updates on app launch"
+                description: "Queues updates in the downloads page on startup"
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.autoCheckUpdatesOnBoot : false
+                    onToggled: (val) => uiSettings.applyAutoCheckUpdatesOnBoot(val)
                 }
             }
         }

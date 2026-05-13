@@ -7,4 +7,5 @@ pub mod gamepad;
 pub mod game_model;
 pub mod gog_model;
 pub mod library_watcher;
+pub mod tray;
 pub mod ui_settings;

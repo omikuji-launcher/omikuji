@@ -485,6 +485,8 @@ impl Game {
 
         if self.wine.version == w.version
             && let Some(v) = &d.wine.version { self.wine.version = v.clone(); }
+        if self.wine.prefix == w.prefix
+            && let Some(v) = &d.wine.prefix { self.wine.prefix = v.clone(); }
         if self.wine.prefix_arch == w.prefix_arch
             && let Some(v) = &d.wine.prefix_arch { self.wine.prefix_arch = v.clone(); }
         if self.wine.esync == w.esync

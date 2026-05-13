@@ -212,6 +212,7 @@ fn main() {
         "src/bridge/archive_manager.rs",
         "src/bridge/defaults.rs",
         "src/bridge/gamepad.rs",
+        "src/bridge/tray.rs",
     ])
     ;
 
@@ -222,6 +223,9 @@ fn main() {
     let builder = builder.qt_module("Svg");
     println!("cargo:rustc-link-lib=Qt6Svg");
 
+    let builder = builder.qt_module("Widgets");
+    println!("cargo:rustc-link-lib=Qt6Widgets");
+
     // one-off C++ shim: calls QGuiApplication::setWindowIcon. QML's
     // Window / ApplicationWindow don't expose `icon` as an assignable
     // property in our Qt version, so we set it from Rust via a tiny
@@ -231,9 +235,11 @@ fn main() {
     let builder = unsafe {
         builder.cc_builder(|cc| {
             cc.file("src/app_icon.cpp");
+            cc.file("src/tray_native.cpp");
         })
     };
     println!("cargo:rerun-if-changed=src/app_icon.cpp");
+    println!("cargo:rerun-if-changed=src/tray_native.cpp");
 
     builder.build();
 }

@@ -98,10 +98,9 @@ pub fn media_path(game_id: &str, media_type: &MediaType) -> PathBuf {
     ))
 }
 
-// returns file:// URL for qml Image or plain path for other uses
 pub fn resolve_image(game_id: &str, manual_override: &str, media_type: &MediaType) -> String {
     if !manual_override.is_empty() {
-        return manual_override.to_string();
+        return to_qml_url(manual_override);
     }
 
     let path = media_path(game_id, media_type);
@@ -110,6 +109,16 @@ pub fn resolve_image(game_id: &str, manual_override: &str, media_type: &MediaTyp
     }
 
     String::new()
+}
+
+fn to_qml_url(s: &str) -> String {
+    if s.starts_with("file://") || s.starts_with("http://") || s.starts_with("https://") {
+        s.to_string()
+    } else if s.starts_with('/') {
+        format!("file://{}", s)
+    } else {
+        s.to_string()
+    }
 }
 pub fn fetch_media_blocking(game_id: &str, game_name: &str) -> FetchResult {
     fetch_media_blocking_with(game_id, game_name, |_| {})
@@ -195,6 +204,26 @@ fn sgdb_get<T: serde::de::DeserializeOwned>(url: reqwest::Url) -> Result<T> {
 
     resp.json::<T>()
         .with_context(|| format!("parsing sgdb response from {}", url))
+}
+
+pub fn sgdb_icon_url(name: &str) -> Result<Option<String>> {
+    let Some(id) = sgdb_search(name)? else { return Ok(None); };
+    let mut url = reqwest::Url::parse(SGDB_BASE).unwrap();
+    url.path_segments_mut().unwrap().extend(["icons", "game", &id.to_string()]);
+    let resp: SgdbResponse<Vec<SgdbAsset>> = sgdb_get(url)?;
+    if !resp.success {
+        anyhow::bail!("sgdb icons api reported failure for game {}", id);
+    }
+    let Some(assets) = resp.data else { return Ok(None) };
+    let pick = assets.into_iter().find(|a| {
+        let lower = a.url.to_lowercase();
+        lower.ends_with(".png")
+            || lower.ends_with(".jpg")
+            || lower.ends_with(".jpeg")
+            || lower.ends_with(".webp")
+            || lower.ends_with(".gif")
+    });
+    Ok(pick.map(|a| a.url))
 }
 
 fn sgdb_search(name: &str) -> Result<Option<u64>> {
@@ -331,7 +360,13 @@ mod tests {
     #[test]
     fn test_resolve_image_manual_override() {
         let result = resolve_image("abc123", "/custom/path.jpg", &MediaType::Coverart);
-        assert_eq!(result, "/custom/path.jpg");
+        assert_eq!(result, "file:///custom/path.jpg");
+
+        let result = resolve_image("abc123", "file:///already/url.jpg", &MediaType::Coverart);
+        assert_eq!(result, "file:///already/url.jpg");
+
+        let result = resolve_image("abc123", "https://cdn.example/x.jpg", &MediaType::Coverart);
+        assert_eq!(result, "https://cdn.example/x.jpg");
     }
 
     #[test]

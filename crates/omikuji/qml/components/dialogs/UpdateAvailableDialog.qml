@@ -21,6 +21,7 @@ Item {
     z: 2000
 
     signal updateRequested(string gameId, string appId, string fromVersion)
+    signal runAnywayRequested(string gameId)
     signal dismissed(string gameId)
 
     function show(payload) {
@@ -230,7 +231,7 @@ Item {
                     Text {
                         id: laterLabel
                         anchors.centerIn: parent
-                        text: "Later"
+                        text: "Cancel"
                         color: theme.text
                         font.pixelSize: 13
                         font.weight: Font.Medium
@@ -241,6 +242,39 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: { root.dismissed(root.gameId); root.hide() }
+                    }
+                }
+
+                Item {
+                    implicitWidth: Math.max(110, runAnywayLabel.implicitWidth + 28)
+                    implicitHeight: 36
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 18
+                        color: runAnywayHover.containsPress
+                            ? Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.18)
+                            : runAnywayHover.containsMouse
+                                ? Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.10)
+                                : "transparent"
+                        border.width: 1
+                        border.color: Qt.rgba(theme.accent.r, theme.accent.g, theme.accent.b, 0.45)
+                        Behavior on color { ColorAnimation { duration: 100 } }
+                    }
+                    Text {
+                        id: runAnywayLabel
+                        anchors.centerIn: parent
+                        text: "Run anyway"
+                        color: theme.accent
+                        font.pixelSize: 13
+                        font.weight: Font.Medium
+                    }
+                    MouseArea {
+                        id: runAnywayHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { root.runAnywayRequested(root.gameId); root.hide() }
                     }
                 }
 

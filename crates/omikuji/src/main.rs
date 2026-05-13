@@ -1,11 +1,12 @@
 mod bridge;
 mod cli;
 
-use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QUrl};
+use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
 use std::ffi::CString;
 
-// QML Window doesn't expose `icon` as assignable afaik; see app_icon.cpp shim
 unsafe extern "C" {
+    fn omikuji_app_init();
+    fn omikuji_app_exec() -> std::os::raw::c_int;
     fn omikuji_set_window_icon(path: *const std::os::raw::c_char);
     fn omikuji_set_desktop_file_name(name: *const std::os::raw::c_char);
 }
@@ -18,7 +19,7 @@ async fn main() {
         cli::CliAction::Console => "qrc:/qt/qml/omikuji/qml/ConsoleMode.qml",
     };
 
-    let mut app = QGuiApplication::new();
+    unsafe { omikuji_app_init(); }
 
     if let Ok(name) = CString::new("omikuji") {
         unsafe { omikuji_set_desktop_file_name(name.as_ptr()) };
@@ -34,7 +35,5 @@ async fn main() {
         engine.load(&QUrl::from(qml_root));
     }
 
-    if let Some(app) = app.as_mut() {
-        app.exec();
-    }
+    unsafe { omikuji_app_exec(); }
 }

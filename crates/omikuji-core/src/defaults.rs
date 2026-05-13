@@ -19,6 +19,8 @@ pub struct WineDefaults {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub prefix: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub prefix_arch: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub esync: Option<bool>,
@@ -140,6 +142,7 @@ impl Defaults {
 
         if has("wine") {
             if let Some(v) = &self.wine.version { game.wine.version = v.clone(); }
+            if let Some(v) = &self.wine.prefix { game.wine.prefix = v.clone(); }
             if let Some(v) = &self.wine.prefix_arch { game.wine.prefix_arch = v.clone(); }
         }
         if has("sync") {
@@ -222,7 +225,7 @@ impl Defaults {
 
     pub fn populated_sections(&self) -> Vec<String> {
         let mut out = Vec::new();
-        if self.wine.version.is_some() || self.wine.prefix_arch.is_some() {
+        if self.wine.version.is_some() || self.wine.prefix.is_some() || self.wine.prefix_arch.is_some() {
             out.push("wine".into());
         }
         if self.wine.esync.is_some() || self.wine.fsync.is_some() || self.wine.ntsync.is_some() {

@@ -34,6 +34,7 @@ Item {
     property string installPath: ""
     property string prefixPath: ""
     property string tempPath: ""
+    property var defaults: null
     property var runnerOptions: []
     property int runnerIndex: 0
 
@@ -177,6 +178,7 @@ Item {
         voiceChecks = vs
 
         if (installPath === "") installPath = defaultInstallPath()
+        if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
         refreshFreeSpace()
         refreshInstallSize()

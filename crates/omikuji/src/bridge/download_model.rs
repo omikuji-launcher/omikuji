@@ -300,6 +300,7 @@ impl qobject::DownloadModel {
             temp_dir: None,
             kind: omikuji_core::downloads::DownloadKind::Install,
             destructive_cleanup: true,
+            start_paused: false,
         };
         let id = downloads::manager().enqueue(req);
         QString::from(&id)

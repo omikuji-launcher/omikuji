@@ -9,6 +9,7 @@ Item {
 
     property var gameModel: null
     property var downloadModel: null
+    property var defaults: null
     property int runnersVersion: 0
 
     signal installEnqueued()
@@ -24,6 +25,7 @@ Item {
         gameModel: ctrl.gameModel
         downloadModel: ctrl.downloadModel
         runnersVersion: ctrl.runnersVersion
+        defaults: ctrl.defaults
         onCancelled: hide()
         onInstallEnqueued: (id) => {
             hide()
