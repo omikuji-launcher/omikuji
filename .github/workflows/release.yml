@@ -34,30 +34,11 @@ jobs:
           pacman -Syu --noconfirm pkg-config \
           base-devel \
           sudo \
-          cmake \
-          systemd-libs \
-          fuse2 \
           wget \
-          protobuf \
-          rust \
-          cmake \
-          libxkbcommon \
-          xcb-util-cursor \
-          libcups \
-          glib2 \
-          libproxy \
-          qt6-base \
-          qt6-tools \
-          qt6-wayland \
-          qt6-shadertools \
-          qt6-declarative \
-          qt6-5compat \
-          qt6-svg \
-          libfbclient \
-          mariadb \
-          unixodbc \
-          postgresql-libs \
-          jxrlib
+          qt6ct \
+          kvantum \
+          lxqt-qtplugin \
+          xorg-server-xvfb
 
       - name: Create build user
         run: |
@@ -74,19 +55,20 @@ jobs:
         run: |
           sudo -u builder sh <<'EOF'
           set -e
-          cargo build --release -p omikuji
-
-          export APPIMAGE_EXTRACT_AND_RUN=1
-
-          chmod +x ./packaging/make-appimage.sh
-          ./packaging/make-appimage.sh
+          cd packaging
+          makepkg -fs --noconfirm
           EOF
+          ls -lh
+          cd packaging/
+          pacman --noconfirm -U ./*.pkg.tar.zst
+          chmod +x ./make-appimage.sh
+          ./make-appimage.sh
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: AppImage
-          path: "*.AppImage"
+          path: "packaging/dist/*.AppImage"
           archive: false
 
       - name: Create GitHub Release
@@ -95,7 +77,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           name: ${{ github.event.inputs.release_tag }}
-          files: "*.AppImage"
+          files: "packaging/dist/*.AppImage"
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
