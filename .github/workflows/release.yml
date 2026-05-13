@@ -55,9 +55,10 @@ jobs:
           EOF
           ls -lh
           cd packaging/
-          pacman -U ./*.pkg.tar.zst
+          pacman --noconfirm -U ./*.pkg.tar.zst
           chmod +x ./make-appimage.sh
           ./make-appimage.sh
+
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
