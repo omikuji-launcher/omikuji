@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: AppImage
-          path: "packaging/*.AppImage"
+          path: "packaging/dist/*.AppImage"
           archive: false
 
       - name: Create GitHub Release
@@ -77,7 +77,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
           name: ${{ github.event.inputs.release_tag }}
-          files: "packaging/*.AppImage"
+          files: "packaging/dist/*.AppImage"
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
