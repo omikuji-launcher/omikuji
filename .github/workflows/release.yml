@@ -37,8 +37,7 @@ jobs:
           wget \
           qt6ct \
           kvantum \
-          lxqt-qtplugin \
-          xorg-server-xvfb
+          lxqt-qtplugin
 
       - name: Create build user
         run: |
@@ -55,13 +54,12 @@ jobs:
         run: |
           sudo -u builder sh <<'EOF'
           set -e
-          cd packaging/git
-          makepkg -fs --noconfirm
+          cd packaging
+          makepkg -p PKGBUILD-git -fs --noconfirm
           EOF
           ls -lh
-          cd packaging/git
+          cd packaging
           pacman --noconfirm -U ./*.pkg.tar.zst
-          cd ..
           chmod +x ./make-appimage.sh
           ./make-appimage.sh
 
