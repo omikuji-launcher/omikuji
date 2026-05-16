@@ -5,7 +5,11 @@ set -eu
 ARCH=$(uname -m)
 SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/quick-sharun.sh"
 
-VERSION=$(pacman -Q omikuji-git | awk '{print $2; exit}') # example command to get version of application here
+if [ -n "${GITHUB_REF_NAME:-}" ] && [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+    VERSION="${GITHUB_REF_NAME}"
+else
+    VERSION=$(pacman -Q omikuji-git | awk '{print $2; exit}')
+fi
 export ARCH VERSION
 export OUTPATH=./dist
 export ADD_HOOKS="self-updater.hook"
