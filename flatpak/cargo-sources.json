@@ -730,6 +730,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/discord-rich-presence/discord-rich-presence-1.1.0.crate",
+        "sha256": "90c55d69cab17c19677ce3a5f8face993a9e6eaf847fecac3547f3a3ff4a2494",
+        "dest": "cargo/vendor/discord-rich-presence-1.1.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"90c55d69cab17c19677ce3a5f8face993a9e6eaf847fecac3547f3a3ff4a2494\", \"files\": {}}",
+        "dest": "cargo/vendor/discord-rich-presence-1.1.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/displaydoc/displaydoc-0.2.5.crate",
         "sha256": "97369cbbc041bc366949bc74d34658d6cda5621039731c6310521892a3a20ae0",
         "dest": "cargo/vendor/displaydoc-0.2.5"
@@ -2602,6 +2615,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/serde_repr/serde_repr-0.1.20.crate",
+        "sha256": "175ee3e80ae9982737ca543e96133087cbd9a485eecc3bc4de9c1a37b47ea59c",
+        "dest": "cargo/vendor/serde_repr-0.1.20"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"175ee3e80ae9982737ca543e96133087cbd9a485eecc3bc4de9c1a37b47ea59c\", \"files\": {}}",
+        "dest": "cargo/vendor/serde_repr-0.1.20",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/serde_spanned/serde_spanned-1.1.1.crate",
         "sha256": "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26",
         "dest": "cargo/vendor/serde_spanned-1.1.1"
@@ -3377,6 +3403,19 @@
         "type": "inline",
         "contents": "{\"package\": \"06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821\", \"files\": {}}",
         "dest": "cargo/vendor/utf8parse-0.2.2",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/uuid/uuid-0.8.2.crate",
+        "sha256": "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7",
+        "dest": "cargo/vendor/uuid-0.8.2"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7\", \"files\": {}}",
+        "dest": "cargo/vendor/uuid-0.8.2",
         "dest-filename": ".cargo-checksum.json"
     },
     {

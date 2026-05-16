@@ -1,5 +1,12 @@
 name: Build Flatpak
 on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    paths:
+      - 'flatpak/**'
+      - 'Cargo.lock'
   workflow_dispatch:
 jobs:
   flatpak:
