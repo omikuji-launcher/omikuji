@@ -8,6 +8,10 @@ on:
       - 'flatpak/**'
       - 'Cargo.lock'
   workflow_dispatch:
+
+permissions:
+  contents: write
+
 jobs:
   flatpak:
     name: Build Flatpak
