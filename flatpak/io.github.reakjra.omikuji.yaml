@@ -1,7 +1,7 @@
 app-id: io.github.reakjra.omikuji
 sdk: org.kde.Sdk
 runtime: org.kde.Platform
-runtime-version: '6.10'
+runtime-version: "6.10"
 command: omikuji
 separate-locales: false # translations
 base: org.winehq.Wine
@@ -17,7 +17,7 @@ finish-args:
   - --socket=pulseaudio # notification sound
   - --allow=devel # ubisoft connect and other launchers
   - --allow=multiarch
-  - --allow=per-app-dev-shm  # pressure-vessel
+  - --allow=per-app-dev-shm # pressure-vessel
   - --device=all
   - --system-talk-name=org.freedesktop.UDisks2
   - --env=GST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/app/lib32/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/i386-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/lib/i386-linux-gnu/gstreamer-1.0
@@ -39,13 +39,13 @@ inherit-extensions:
 add-extensions:
   org.freedesktop.Platform.VulkanLayer.MangoHud:
     directory: lib/extensions/vulkan/MangoHud
-    version: '25.08'
+    version: "25.08"
     autodownload: true
     autodelete: false
 
   org.freedesktop.Platform.VulkanLayer.gamescope:
     directory: lib/extensions/vulkan/gamescope
-    version: '25.08'
+    version: "25.08"
     autodownload: true
     autodelete: false
 
@@ -56,7 +56,7 @@ modules:
       append-path: /usr/lib/sdk/rust-stable/bin
       env:
         CARGO_HOME: /run/build/omikuji/cargo
-        CARGO_NET_OFFLINE: 'true'
+        CARGO_NET_OFFLINE: "true"
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
       - cargo build --offline --release --all-features
@@ -65,11 +65,11 @@ modules:
       - install -Dm0644 packaging/io.github.reakjra.omikuji.desktop.in ${FLATPAK_DEST}/share/applications/io.github.reakjra.omikuji.desktop
       - install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml ${FLATPAK_DEST}/share/metainfo/io.github.reakjra.omikuji.metainfo.xml
     sources:
-       - cargo-sources.json
-       - type: git
-         url: https://github.com/reakjra/omikuji.git
-#         tag: "r0.0.0"
-#         commit "bc89e0f8e8958f997991b7062edaca47e474040a"
+      - cargo-sources.json
+      - type: git
+        url: https://github.com/reakjra/omikuji.git
+  #         tag: "r0.0.0"
+  #         commit "bc89e0f8e8958f997991b7062edaca47e474040a"
 
   - name: bundle-setup
     buildsystem: simple
