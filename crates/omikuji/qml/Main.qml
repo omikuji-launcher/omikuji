@@ -34,11 +34,24 @@ ApplicationWindow {
     Theme {
         id: theme
         mutedIcons: uiSettings.mutedIcons
+        followSystemColors: uiSettings.followSystemColors
+        followSystemFont: uiSettings.followSystemFont
+        fontFamily: uiSettings.fontFamily
+    }
+
+    Connections {
+        target: uiSettings
+        function onThemeChanged() {
+            theme.overrides = JSON.parse(uiSettings.overridesJson())
+        }
     }
 
     UiSettingsBridge {
         id: uiSettings
-        Component.onCompleted: initWatcher()
+        Component.onCompleted: {
+            initWatcher()
+            theme.overrides = JSON.parse(overridesJson())
+        }
         onShowTrayIconChanged: {
             trayBridge.setEnabled(showTrayIcon)
             if (showTrayIcon) root.pushTrayRecent()

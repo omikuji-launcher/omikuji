@@ -179,6 +179,7 @@ fn main() {
                 "qml/components/settings/TabGlobalAbout.qml",
                 "qml/components/settings/TabGlobalComponents.qml",
                 "qml/components/settings/TabGlobalDefaults.qml",
+                "qml/components/settings/TabGlobalTheme.qml",
                 "qml/components/settings/TabGlobalUi.qml",
                 "qml/components/settings/TabRunnerOptions.qml",
                 "qml/components/settings/TabSystem.qml",
@@ -250,10 +251,12 @@ fn main() {
     let builder = unsafe {
         builder.cc_builder(|cc| {
             cc.file("src/app_icon.cpp");
+            cc.file("src/app_font.cpp");
             cc.file("src/tray_native.cpp");
         })
     };
     println!("cargo:rerun-if-changed=src/app_icon.cpp");
+    println!("cargo:rerun-if-changed=src/app_font.cpp");
     println!("cargo:rerun-if-changed=src/tray_native.cpp");
 
     builder.build();

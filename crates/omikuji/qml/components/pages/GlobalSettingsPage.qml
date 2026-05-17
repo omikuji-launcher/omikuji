@@ -29,6 +29,7 @@ Item {
         { label: "Components", kind: "components" },
         { label: "Defaults",   kind: "defaults"   },
         { label: "Interface",  kind: "ui"         },
+        { label: "Theme",      kind: "theme"      },
         { label: "About",      kind: "about"      }
     ]
     property int currentTabIndex: 0
@@ -95,6 +96,16 @@ Item {
                         item.categoryAddRequested.connect(() => root.categoryAddRequested())
                         item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
                         item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
+                    }
+                }
+
+                Loader {
+                    width: parent.width
+                    active: root.currentKind === "theme"
+                    visible: active
+                    source: "../settings/TabGlobalTheme.qml"
+                    onLoaded: {
+                        item.uiSettings = root.uiSettings
                     }
                 }
 

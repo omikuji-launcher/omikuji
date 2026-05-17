@@ -6,6 +6,7 @@
 
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -16,6 +17,7 @@ pub struct UiSettings {
     pub nav: NavSettings,
     pub behavior: BehaviorSettings,
     pub display: DisplaySettings,
+    pub theme: ThemeSettings,
     #[serde(default)]
     pub console_mode: ConsoleModeSettings,
     #[serde(default = "default_categories")]
@@ -30,6 +32,7 @@ impl Default for UiSettings {
             nav: NavSettings::default(),
             behavior: BehaviorSettings::default(),
             display: DisplaySettings::default(),
+            theme: ThemeSettings::default(),
             console_mode: ConsoleModeSettings::default(),
             categories: default_categories(),
         }
@@ -140,6 +143,26 @@ pub struct DisplaySettings {
 impl Default for DisplaySettings {
     fn default() -> Self {
         Self { scale: 1.0, muted_icons: false, card_flow: "center".into() }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct ThemeSettings {
+    pub follow_system_colors: bool,
+    pub follow_system_font: bool,
+    pub font_family: String,
+    pub colors: BTreeMap<String, String>,
+}
+
+impl Default for ThemeSettings {
+    fn default() -> Self {
+        Self {
+            follow_system_colors: true,
+            follow_system_font: true,
+            font_family: String::new(),
+            colors: BTreeMap::new(),
+        }
     }
 }
 

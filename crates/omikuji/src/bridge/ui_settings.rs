@@ -5,10 +5,15 @@ use cxx_qt::{CxxQtType, Threading};
 use omikuji_core::fs_watcher::FileWatcher;
 use omikuji_core::ui_settings::{
     BehaviorSettings, CategoryEntry, ConsoleModeSettings, DisplaySettings, LibrarySettings,
-    NavSettings, TabsSettings, UiSettings, ui_settings_path,
+    NavSettings, TabsSettings, ThemeSettings, UiSettings, ui_settings_path,
 };
+use std::collections::BTreeMap;
 use std::pin::Pin;
 use std::time::{Duration, Instant};
+
+unsafe extern "C" {
+    fn omikuji_set_app_font(family: *const std::os::raw::c_char);
+}
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -42,6 +47,9 @@ pub mod qobject {
         #[qproperty(bool, muted_icons, cxx_name = "mutedIcons")]
         #[qproperty(QString, card_flow, cxx_name = "cardFlow")]
         #[qproperty(QString, console_background, cxx_name = "consoleBackground")]
+        #[qproperty(bool, follow_system_colors, cxx_name = "followSystemColors")]
+        #[qproperty(bool, follow_system_font, cxx_name = "followSystemFont")]
+        #[qproperty(QString, font_family, cxx_name = "fontFamily")]
         type UiSettingsBridge = super::UiSettingsRust;
     }
 
@@ -49,6 +57,10 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "categoriesChanged"]
         fn categories_changed(self: Pin<&mut UiSettingsBridge>);
+
+        #[qsignal]
+        #[cxx_name = "themeChanged"]
+        fn theme_changed(self: Pin<&mut UiSettingsBridge>);
     }
 
     // needed so the watcher bg thread can queue back to the ui thread
@@ -162,6 +174,34 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "availableIconsJson"]
         fn available_icons_json(self: &UiSettingsBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "applyFollowSystemColors"]
+        fn apply_follow_system_colors(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
+        #[cxx_name = "applyFollowSystemFont"]
+        fn apply_follow_system_font(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
+        #[cxx_name = "applyFontFamily"]
+        fn apply_font_family(self: Pin<&mut UiSettingsBridge>, value: &QString);
+
+        #[qinvokable]
+        #[cxx_name = "colorOverride"]
+        fn color_override(self: &UiSettingsBridge, token: &QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "setColorOverride"]
+        fn set_color_override(self: Pin<&mut UiSettingsBridge>, token: &QString, hex: &QString);
+
+        #[qinvokable]
+        #[cxx_name = "overridesJson"]
+        fn overrides_json(self: &UiSettingsBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "availableFontsJson"]
+        fn available_fonts_json(self: &UiSettingsBridge) -> QString;
     }
 }
 
@@ -190,9 +230,12 @@ pub struct UiSettingsRust {
     pub muted_icons: bool,
     pub card_flow: cxx_qt_lib::QString,
     pub console_background: cxx_qt_lib::QString,
+    pub follow_system_colors: bool,
+    pub follow_system_font: bool,
+    pub font_family: cxx_qt_lib::QString,
+    pub color_overrides: BTreeMap<String, String>,
     pub categories: Vec<CategoryEntry>,
     pub watcher: Option<FileWatcher>,
-    // skips the watcher echo from our own persist() writes
     pub suppress_reload_until: Option<Instant>,
 }
 
@@ -229,6 +272,10 @@ impl UiSettingsRust {
             muted_icons: s.display.muted_icons,
             card_flow: cxx_qt_lib::QString::from(&s.display.card_flow),
             console_background: cxx_qt_lib::QString::from(&s.console_mode.background),
+            follow_system_colors: s.theme.follow_system_colors,
+            follow_system_font: s.theme.follow_system_font,
+            font_family: cxx_qt_lib::QString::from(&s.theme.font_family),
+            color_overrides: s.theme.colors.clone(),
             categories: s.categories.clone(),
             watcher: None,
             suppress_reload_until: None,
@@ -269,6 +316,12 @@ impl qobject::UiSettingsBridge {
                 scale: self.ui_scale,
                 muted_icons: self.muted_icons,
                 card_flow: self.card_flow.to_string(),
+            },
+            theme: ThemeSettings {
+                follow_system_colors: self.follow_system_colors,
+                follow_system_font: self.follow_system_font,
+                font_family: self.font_family.to_string(),
+                colors: self.color_overrides.clone(),
             },
             console_mode: ConsoleModeSettings {
                 background: self.console_background.to_string(),
@@ -427,8 +480,13 @@ impl qobject::UiSettingsBridge {
         self.as_mut().set_muted_icons(s.display.muted_icons);
         self.as_mut().set_card_flow(cxx_qt_lib::QString::from(&s.display.card_flow));
         self.as_mut().set_console_background(cxx_qt_lib::QString::from(&s.console_mode.background));
+        self.as_mut().set_follow_system_colors(s.theme.follow_system_colors);
+        self.as_mut().set_follow_system_font(s.theme.follow_system_font);
+        self.as_mut().set_font_family(cxx_qt_lib::QString::from(&s.theme.font_family));
+        self.as_mut().rust_mut().get_mut().color_overrides = s.theme.colors;
         self.as_mut().rust_mut().get_mut().categories = s.categories;
         self.as_mut().categories_changed();
+        self.as_mut().theme_changed();
     }
 
     fn categories_json(&self) -> cxx_qt_lib::QString {
@@ -450,6 +508,67 @@ impl qobject::UiSettingsBridge {
 
     fn available_icons_json(&self) -> cxx_qt_lib::QString {
         let json = serde_json::to_string(ICON_NAMES).unwrap_or_else(|_| "[]".to_string());
+        cxx_qt_lib::QString::from(&json)
+    }
+
+    fn apply_follow_system_colors(mut self: Pin<&mut Self>, value: bool) {
+        self.as_mut().set_follow_system_colors(value);
+        self.as_mut().persist();
+        self.as_mut().theme_changed();
+    }
+
+    fn apply_follow_system_font(mut self: Pin<&mut Self>, value: bool) {
+        self.as_mut().set_follow_system_font(value);
+        self.as_mut().persist();
+        self.as_mut().apply_effective_font();
+        self.as_mut().theme_changed();
+    }
+
+    fn apply_font_family(mut self: Pin<&mut Self>, value: &cxx_qt_lib::QString) {
+        self.as_mut().set_font_family(value.clone());
+        self.as_mut().persist();
+        self.as_mut().apply_effective_font();
+        self.as_mut().theme_changed();
+    }
+
+    fn apply_effective_font(self: Pin<&mut Self>) {
+        let family = if self.follow_system_font {
+            String::new()
+        } else {
+            self.font_family.to_string()
+        };
+        match std::ffi::CString::new(family) {
+            Ok(c) => unsafe { omikuji_set_app_font(c.as_ptr()) },
+            Err(_) => {}
+        }
+    }
+
+    fn color_override(&self, token: &cxx_qt_lib::QString) -> cxx_qt_lib::QString {
+        let key = token.to_string();
+        let val = self.color_overrides.get(&key).cloned().unwrap_or_default();
+        cxx_qt_lib::QString::from(&val)
+    }
+
+    fn set_color_override(mut self: Pin<&mut Self>, token: &cxx_qt_lib::QString, hex: &cxx_qt_lib::QString) {
+        let key = token.to_string();
+        let val = hex.to_string();
+        let map = &mut self.as_mut().rust_mut().get_mut().color_overrides;
+        if val.is_empty() {
+            map.remove(&key);
+        } else {
+            map.insert(key, val);
+        }
+        self.as_mut().persist();
+        self.as_mut().theme_changed();
+    }
+
+    fn overrides_json(&self) -> cxx_qt_lib::QString {
+        let json = serde_json::to_string(&self.color_overrides).unwrap_or_else(|_| "{}".to_string());
+        cxx_qt_lib::QString::from(&json)
+    }
+
+    fn available_fonts_json(&self) -> cxx_qt_lib::QString {
+        let json = serde_json::to_string(&list_system_fonts()).unwrap_or_else(|_| "[]".to_string());
         cxx_qt_lib::QString::from(&json)
     }
 
@@ -481,4 +600,22 @@ impl qobject::UiSettingsBridge {
             Err(e) => eprintln!("[ui_settings] failed to start watcher: {e}"),
         }
     }
+}
+
+fn list_system_fonts() -> Vec<String> {
+    let output = std::process::Command::new("fc-list")
+        .args([":scalable=true:fontformat=TrueType", "family"])
+        .output();
+    let Ok(out) = output else { return Vec::new(); };
+    if !out.status.success() { return Vec::new(); }
+    let mut set = std::collections::BTreeSet::new();
+    for line in String::from_utf8_lossy(&out.stdout).lines() {
+        if let Some(name) = line.split(',').next() {
+            let trimmed = name.trim();
+            if !trimmed.is_empty() {
+                set.insert(trimmed.to_string());
+            }
+        }
+    }
+    set.into_iter().collect()
 }
