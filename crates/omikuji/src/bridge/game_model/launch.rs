@@ -287,7 +287,10 @@ impl super::qobject::GameModel {
     pub fn launch_console_mode(&self) {
         omikuji_core::ui_settings::UiSettings::set_console_mode_active(true);
         if let Ok(exe) = std::env::current_exe() {
-            let _ = std::process::Command::new(exe).arg("console").spawn();
+            let _ = std::process::Command::new(exe)
+                .arg("console")
+                .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
+                .spawn();
         }
         std::process::exit(0);
     }
@@ -295,7 +298,9 @@ impl super::qobject::GameModel {
     pub fn launch_desktop_mode(&self) {
         omikuji_core::ui_settings::UiSettings::set_console_mode_active(false);
         if let Ok(exe) = std::env::current_exe() {
-            let _ = std::process::Command::new(exe).spawn();
+            let _ = std::process::Command::new(exe)
+                .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
+                .spawn();
         }
         std::process::exit(0);
     }
