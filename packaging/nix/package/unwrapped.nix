@@ -18,7 +18,8 @@ let
   qtEnv = with qt6; env "qt-custom-${qtbase.version}" [
     qtdeclarative
     qtsvg
-    qtshadertools
+    qtshadertools 
+    qt5compat
   ];
 in 
 rustPlatform.buildRustPackage (finalAttrs: {
@@ -45,7 +46,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
       qtbase
       qtdeclarative
       qtsvg
-      qtshadertools
+      qtshadertools 
+      qt5compat
     ]);
 
   doCheck = false;
