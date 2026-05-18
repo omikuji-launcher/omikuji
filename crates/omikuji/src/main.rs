@@ -1,5 +1,6 @@
 mod bridge;
 mod cli;
+mod single_instance;
 
 use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
 use std::ffi::CString;
@@ -20,6 +21,10 @@ async fn main() {
         cli::CliAction::Gui => "qrc:/qt/qml/omikuji/qml/Main.qml",
         cli::CliAction::Console => "qrc:/qt/qml/omikuji/qml/ConsoleMode.qml",
     };
+
+    if !single_instance::check().await {
+        return;
+    }
 
     unsafe { omikuji_app_init(); }
 

@@ -67,19 +67,13 @@ ApplicationWindow {
         onQuit_requested: trayBridge.quitApp()
 
         Component.onCompleted: {
+            initThread()
             setIcon(":/qt/qml/omikuji/qml/icons/app.png")
             if (uiSettings.showTrayIcon) {
                 setEnabled(true)
                 root.pushTrayRecent()
             }
         }
-    }
-
-    Timer {
-        interval: 200
-        repeat: true
-        running: uiSettings.showTrayIcon
-        onTriggered: trayBridge.drainEvents()
     }
 
     function pushTrayRecent() {

@@ -90,6 +90,25 @@ ApplicationWindow {
         }
     }
 
+    TrayBridge {
+        id: trayBridge
+        onShow_window_requested: {
+            root.visible = true
+            root.raise()
+            root.requestActivate()
+        }
+        onToggle_window_requested: {
+            root.visible = true
+            root.raise()
+            root.requestActivate()
+        }
+        onQuit_requested: trayBridge.quitApp()
+        
+        Component.onCompleted: {
+            initThread()
+        }
+    }
+
     GamepadBridge {
         id: gamepad
         Component.onCompleted: start()
