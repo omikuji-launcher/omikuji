@@ -98,7 +98,10 @@ Then install the app:
 { inputs, pkgs, ... }:
 
 {
-	# NixOS side installation
+  # Using the home-manager module (recommended)
+  programs.omikuji.enable = true;
+
+	# Or NixOS side installation
 	environment.systemPackages = [
 		inputs.omikuji.packages.${pkgs.stdenv.hostPlatform.system}.default
 	];
@@ -142,6 +145,7 @@ If someone willingly wants to take charge for `.deb` / `.rpm` / Flatpak / etc. p
 
 ## Documentation
 - [Configuration](docs/configuration.md): `settings.toml`, custom runners, DLL packs
+- [Nix Home Manager options](docs/hm-module.md): Every options available in the Home Manager module
 
 ## Contributing
 

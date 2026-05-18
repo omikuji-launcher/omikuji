@@ -14,12 +14,15 @@
 
 let
   cargoToml = fromTOML (builtins.readFile "${flakeRoot}/crates/omikuji/Cargo.toml");
-
-  qtEnv = with qt6; env "qt-custom-${qtbase.version}" [
+  qtDeps = with qt6; [
+    qtbase
     qtdeclarative
     qtsvg
     qtshadertools
+    qt5compat
   ];
+
+  qtEnv = with qt6; env "qt-custom-${qtbase.version}" qtDeps;
 in 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "omikuji-unwrapped";
@@ -41,12 +44,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     qtEnv
     openssl
   ]
-  ++ (with qt6; [
-      qtbase
-      qtdeclarative
-      qtsvg
-      qtshadertools
-    ]);
+  ++ qtDeps;
 
   doCheck = false;
 
@@ -55,9 +53,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       --replace-fail '"/usr/lib/qt6/bin/qsb"' '"${qtEnv}/bin/qsb"'
   '';
 
-  buildPhase = ''
-    runHook preBuild
-
+  preBuild = ''
     # Add Qt-related environment variables.
     # https://discourse.nixos.org/t/python-qt-woes/11808/10
     setQtEnvironment=$(mktemp)
@@ -66,17 +62,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
     sed "/$random/d" -i "$setQtEnvironment"
     source "$setQtEnvironment"
     export QMAKE="${qtEnv}/bin/qmake"
-
-    cargo build --release
-
-    runHook postHook
   '';
 
-  installPhase = ''
-    runHook preInstall
-
-    install -Dm755 target/release/omikuji $out/bin/omikuji
-
+  postInstall = ''
     install -Dm444 $src/packaging/io.github.reakjra.omikuji.desktop.in \
       $out/share/applications/io.github.reakjra.omikuji.desktop
 
@@ -92,8 +80,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
         -resize "$size"x"$size" \
         $out/share/icons/hicolor/"$size"x"$size"/apps/io.github.reakjra.omikuji.png
     done
-
-    runHook postInstall
   '';
 
   meta = {

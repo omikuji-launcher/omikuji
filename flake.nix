@@ -35,5 +35,10 @@
           default = self'.packages.omikuji;
         };
       };
+
+      flake.homeModules = {
+        omikuji = import ./packaging/nix/module.nix self;
+        default = self.homeModules.omikuji;
+      };
     };
 }

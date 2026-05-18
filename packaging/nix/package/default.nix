@@ -1,6 +1,5 @@
 {
   lib,
-  # callPackage,
   buildFHSEnv,
   omikuji-unwrapped,
   extraPkgs ? pkgs: [ ],

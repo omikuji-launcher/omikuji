@@ -9,8 +9,11 @@ let
   #   ];
   # };
   qtEnv = with pkgs.qt6; env "qt-custom-${qtbase.version}" [
+    qtbase
     qtdeclarative
     qtsvg
+    qtshadertools
+    qt5compat
   ];
 in
 pkgs.mkShell {
