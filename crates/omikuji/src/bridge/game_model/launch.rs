@@ -166,7 +166,7 @@ impl super::qobject::GameModel {
             "winetricks" => omikuji_core::wine_tools::WineTool::Winetricks,
             "regedit" => omikuji_core::wine_tools::WineTool::Regedit,
             "cmd" => omikuji_core::wine_tools::WineTool::Cmd,
-            "winefile" => omikuji_core::wine_tools::WineTool::Winefile,
+            "explorer" => omikuji_core::wine_tools::WineTool::Explorer,
             "killwineserver" => omikuji_core::wine_tools::WineTool::KillWineserver,
             other => {
                 eprintln!("[run_wine_tool] unknown tool '{}'", other);

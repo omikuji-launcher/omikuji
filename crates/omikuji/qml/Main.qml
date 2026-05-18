@@ -1171,7 +1171,7 @@ property real cardZoom: uiSettings.cardZoom
             { text: "Winetricks", action: "winetricks" },
             { text: "Registry (regedit)", action: "regedit" },
             { text: "Command Prompt (cmd)", action: "cmd" },
-            { text: "File Manager (winefile)", action: "winefile" },
+            { text: "File Explorer (explorer)", action: "explorer" },
             { text: "Run EXE in prefix…", action: "run_exe" },
             { text: "Kill wineserver", action: "killwineserver", danger: true }
         ]

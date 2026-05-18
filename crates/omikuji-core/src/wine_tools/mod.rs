@@ -10,7 +10,7 @@ pub enum WineTool {
     Winetricks,
     Regedit,
     Cmd,
-    Winefile,
+    Explorer,
     RunExe(PathBuf),
     // wineserver -k (or wineboot -k for proton). useful when a crashed game leaves wineserver running (took it from lutris).
     KillWineserver,
@@ -83,7 +83,7 @@ fn build_command(
         WineTool::Winecfg => Ok((wine_exe.to_path_buf(), vec!["winecfg".into()])),
         WineTool::Regedit => Ok((wine_exe.to_path_buf(), vec!["regedit".into()])),
         WineTool::Cmd => Ok((wine_exe.to_path_buf(), vec!["wineconsole".into()])),
-        WineTool::Winefile => Ok((wine_exe.to_path_buf(), vec!["winefile".into()])),
+        WineTool::Explorer => Ok((wine_exe.to_path_buf(), vec!["explorer".into()])),
         WineTool::RunExe(path) => Ok((
             wine_exe.to_path_buf(),
             vec![path.to_string_lossy().into_owned()],
