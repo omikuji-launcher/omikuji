@@ -69,6 +69,71 @@ Or go with the AUR:
 yay -S omikuji-git
 ```
 
+
+You can also install/build it with Nix:
+
+<details>
+<summary><b>Click to expand Nix related stuff</b></summary>
+
+> For any issues related to the flake, mention @claymorwan in your issue.
+
+If you're on NixOS and using flakes, add the flake to your inputs:
+```nix
+# flake.nix
+{
+	
+	inputs = {
+		nixpkgs.url = "nixpkgs/nixos-unstable";
+		
+		omikuji = {
+			url = "github:reakjra/omikuji";
+			inputs.nixpkgs.follows = "nixpkgs";
+		};
+	};
+}
+```
+
+Then install the app:
+```nix
+{ inputs, pkgs, ... }:
+
+{
+	# NixOS side installation
+	environment.systemPackages = [
+		inputs.omikuji.packages.${pkgs.stdenv.hostPlatform.system}.default
+	];
+
+	# Or home-manager side installation
+	home.packages = [
+		inputs.omikuji.packages.${pkgs.stdenv.hostPlatform.system}.default
+	];
+}
+```
+
+To run it without installing:
+```sh
+nix run github:reakjra/omikuji
+# Add #omikuji-unwrapped to run the unwrapped package
+```
+
+Building the package itself:
+```sh
+nix build github:reakjra/omikuji
+```
+
+If you want to straight up build the app itself (during development for example), the flake also comes with a dev shell:
+```sh
+git clone https://github.com/reakjra/omikuji
+cd omikuji
+nix develop
+# Then just run the usual commands like cargo build or cargo run
+```
+
+> In almost any of these cases (apart from `nix run`) you can replace `.default` with `.omikuji-unwrapped` to refer to the unwrapped package.
+  Note that the unwrapped package isn't meant to be installed directly.
+
+</details>
+
 Runtime tools (umu-run, hpatchz, legendary, gogdl, jadeite, EGL dummy) are auto-fetched on first run.
 
 Data lives in `~/.local/share/omikuji/`.
@@ -105,3 +170,4 @@ Heavy debt to the prior art:
 - [AAG](https://github.com/an-anime-team/): gacha launcher reference. HoYo Sophon, CDN methods all from them <3. 
 
 Bundled icon set: [Material Symbols](https://github.com/google/material-design-icons) (Apache-2.0).
+
