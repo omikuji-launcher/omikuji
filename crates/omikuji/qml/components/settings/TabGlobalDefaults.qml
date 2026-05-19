@@ -491,18 +491,20 @@ Item {
                 Row {
                     width: parent.width
                     spacing: 8
-                    M3Slider {
-                        id: fpsSlider
+                    SettingsRow {
                         label: "FPS Limit"
-                        from: 0
-                        to: 360
-                        stepSize: 5
-                        value: root.cfg["graphics.gamescope.fps"] || 0
                         width: parent.width - 32
-                        onMoved: (val) => root.update("graphics.gamescope.fps", Math.round(val))
+                        M3SpinBox {
+                            id: fpsSpinBox
+                            from: 0
+                            to: 999
+                            stepSize: 1
+                            value: root.cfg["graphics.gamescope.fps"] || 0
+                            onValueChanged: root.update("graphics.gamescope.fps", value)
+                        }
                     }
                     ResetBadge {
-                        anchors.verticalCenter: fpsSlider.verticalCenter
+                        anchors.verticalCenter: parent.verticalCenter
                         fieldKey: "graphics.gamescope.fps"
                     }
                 }

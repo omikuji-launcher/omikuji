@@ -144,14 +144,16 @@ Item {
                     }
                 }
 
-                M3Slider {
+                SettingsRow {
                     label: "FPS Limit"
-                    from: 0
-                    to: 360
-                    stepSize: 5
-                    value: config["graphics.gamescope.fps"] || 0
                     width: parent.width
-                    onMoved: (val) => updateField("graphics.gamescope.fps", Math.round(val))
+                    M3SpinBox {
+                        from: 0
+                        to: 999
+                        stepSize: 1
+                        value: config["graphics.gamescope.fps"] || 0
+                        onValueChanged: updateField("graphics.gamescope.fps", value)
+                    }
                 }
 
                 SettingsRow {

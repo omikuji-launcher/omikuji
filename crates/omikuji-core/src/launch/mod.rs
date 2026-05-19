@@ -277,6 +277,8 @@ fn build_gamescope_args(game: &Game) -> Vec<String> {
     if gs.fps > 0 {
         args.push("-r".to_string());
         args.push(gs.fps.to_string());
+        args.push("--framerate-limit".to_string());
+        args.push(gs.fps.to_string());
     }
 
     if gs.fullscreen {
@@ -286,7 +288,8 @@ fn build_gamescope_args(game: &Game) -> Vec<String> {
     }
 
     if gs.integer_scaling {
-        args.push("-n".to_string());
+        args.push("-S".to_string());
+        args.push("integer".to_string());
     }
 
     if gs.hdr {
