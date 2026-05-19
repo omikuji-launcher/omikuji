@@ -1,3 +1,5 @@
+# Modified version of the wrapped lutris package from the nixpkgs
+
 {
   lib,
   buildFHSEnv,
@@ -279,9 +281,7 @@ buildFHSEnv {
       unixodbc
       samba4
       sane-backends
-      (openldap.overrideAttrs (_: {
-        doCheck = false;
-      }))
+      openldap
       ocl-icd
       util-linux
       libkrb5

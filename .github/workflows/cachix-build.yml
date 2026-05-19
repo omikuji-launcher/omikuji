@@ -1,0 +1,27 @@
+name: Cachix build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  omikuji-unwrapped:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v16
+        with:
+          name: omikuji
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Update flake inputs
+        run: nix flake update
+      
+      - name: Build omikuji-unwrapped
+        run: nix build .#omikuji-unwrapped
+        
+      - run: nix run .#omikuji-unwrapped -- --version
