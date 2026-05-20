@@ -126,7 +126,7 @@ If you don't want to compile the full package, there's a cachix binary cache fro
     ];
 
     trusted-public-keys = [
-      "omikuji.cachix.org-1:5vrRCU3F6e9sDXggp0oqCNCXMWEN3EQSIbIDx8DPfec="
+      "omikuji.cachix.org-1:dS6sbpMxarHWIIk3y0R7KXz3eVHUg1lo/y3gMbv4JhM="
     ];
 
   };
