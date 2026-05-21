@@ -1,7 +1,6 @@
 name: Cachix build
 
 on:
-  pull_request:
   push:
     branches:
       - master

@@ -1,4 +1,4 @@
-# Omikuji Home Manager Module Options
+# Home Manager Module Options
 
 
 ## [`programs.omikuji.enable`](#L20)
@@ -73,7 +73,17 @@ Default wine/proton package used in the settings.
 
 **Example:** `"pkgs.proton-ge-bin"`
 
-## [`programs.omikuji.settings.defaults`](#L71)
+## [`programs.omikuji.settings.mutableDefaults`](#L72)
+
+
+Wether configuration in `defaults.toml` can be updated by omikuji.
+
+
+**Type:** `types.bool`
+
+**Default:** `true`
+
+## [`programs.omikuji.settings.defaults`](#L80)
 
 
 Configuration written to
@@ -102,7 +112,17 @@ graphics.mangohud = true;
 system.gamemode = true;
 ```
 
-## [`programs.omikuji.settings.settings`](#L95)
+## [`programs.omikuji.settings.mutableSettings`](#L104)
+
+
+Wether configuration in `settings.toml` can be updated by omikuji.
+
+
+**Type:** `types.bool`
+
+**Default:** `true`
+
+## [`programs.omikuji.settings.settings`](#L112)
 
 
 Configuration written to
@@ -113,7 +133,48 @@ Configuration written to
 
 **Default:** `{ }`
 
-## [`programs.omikuji.settings.ui`](#L104)
+**Example:**
+
+```nix
+runners = [
+  {
+    name = "Proton-GE";
+    kind = "proton";
+    api_url = "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases";
+    asset_pattern = ".tar.gz";
+    extract = "tar_gz";
+  }
+  {
+    name = "Proton-Cachyos";
+    kind = "proton";
+    api_url = "https://api.github.com/repos/CachyOS/proton-cachyos/releases";
+    asset_pattern = ".tar.xz";
+    extract = "tar_xz";
+  }
+];
+
+dll_packs = [
+  {
+    name = "DXVK";
+    kind = "dxvk";
+    api_url = "https://api.github.com/repos/doitsujin/dxvk/releases";
+    asset_pattern = ".tar.gz";
+    extract = "tar_gz";
+  }
+];
+```
+
+## [`programs.omikuji.settings.mutableUi`](#L149)
+
+
+Wether configuration in `ui.toml` can be updated by omikuji.
+
+
+**Type:** `types.bool`
+
+**Default:** `true`
+
+## [`programs.omikuji.settings.ui`](#L157)
 
 
 Configuration written to
@@ -123,6 +184,29 @@ Configuration written to
 **Type:** `any`
 
 **Default:** `{ }`
+
+**Example:**
+
+```nix
+theme = {
+  follow_system_colors = false;
+  colors = {
+    bg = "#181825";
+    surface = "#1e1e2e";
+    accent = "#cba6f7";
+    accentText = "#11111b";
+    text = "#cdd6f4";
+    error = "#f38ba8";
+    success = "#a6e3a1";
+    warning = "#f9e2af";
+  };
+};
+
+console_mode = {
+  background = "wave";
+  active = false;
+};
+```
 
 ---
 *Generated with [nix-doc](https://github.com/Thunderbottom/nix-doc)*
