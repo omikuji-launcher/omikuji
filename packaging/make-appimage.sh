@@ -27,7 +27,7 @@ wget --retry-connrefused --tries=30 "$SHARUN" -O ./quick-sharun
 chmod +x ./quick-sharun ./get-debloated-pkgs
 
 # Debloated pkgs
-./get-debloated-pkgs -add-common --prefer-nano
+./get-debloated-pkgs --add-common --prefer-nano
 
 # Deploy dependencies
 ./quick-sharun /usr/bin/omikuji
