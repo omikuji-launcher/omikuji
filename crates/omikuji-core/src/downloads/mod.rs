@@ -172,13 +172,13 @@ lazy_static! {
 }
 
 fn bar_style() -> ProgressStyle {
-    ProgressStyle::with_template("\n{msg}\n  {prefix}  [{bar:30}]  {bytes}/{total_bytes}  {bytes_per_sec}\n")
+    ProgressStyle::with_template("\n{msg}\n  {prefix}  [{bar:30}]  {decimal_bytes}/{decimal_total_bytes}  {decimal_bytes_per_sec}\n")
         .unwrap()
         .progress_chars("▰▰▱")
 }
 
 fn bar_style_no_total() -> ProgressStyle {
-    ProgressStyle::with_template("\n{msg}\n  {prefix}  [{bar:30}]  {bytes}  {bytes_per_sec}\n")
+    ProgressStyle::with_template("\n{msg}\n  {prefix}  [{bar:30}]  {decimal_bytes}  {decimal_bytes_per_sec}\n")
         .unwrap()
         .progress_chars("▰▰▱")
 }
