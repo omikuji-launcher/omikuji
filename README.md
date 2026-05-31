@@ -173,6 +173,7 @@ If someone willingly wants to take charge for `.deb` / `.rpm` / etc. packaging i
 
 Bug reports (especially these), requests and PRs welcome. A few notes:
 
+- To get debug logs, in your terminal: RUST_LOG=debug omikuji 
 - Open an issue before a big change so we can talk about it first.
 - Match the existing code style. (literally just make it better than mine)
 - Keep PRs focused. One thing at a time.
