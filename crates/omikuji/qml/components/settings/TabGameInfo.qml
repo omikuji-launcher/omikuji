@@ -58,6 +58,10 @@ Item {
                     ]
                     let isFlatpakLauncher = gameModel ? gameModel.is_flatpak() : false
                     let currentIsFlatpak = config["runner.type"] === "flatpak"
+                    let currentIsNative = config["runner.type"] === "native"
+                    if (!isFlatpakLauncher || currentIsNative) {
+                        opts.push({ label: "Native", value: "native" })
+                    }
                     if (!isFlatpakLauncher || currentIsFlatpak) {
                         opts.push({ label: "Flatpak", value: "flatpak" })
                     }

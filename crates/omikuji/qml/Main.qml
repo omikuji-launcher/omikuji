@@ -350,6 +350,7 @@ ApplicationWindow {
             playtime: game["playtime"] || 0,
             lastPlayed: game["lastPlayed"] || "",
             runner: game["runner"] || "",
+            runnerType: game["runnerType"] || "",
             gameId: game["gameId"] || "",
             sourceAppId: game["sourceAppId"] || ""
         }

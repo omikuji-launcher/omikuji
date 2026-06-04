@@ -59,7 +59,7 @@ fn default_categories() -> Vec<CategoryEntry> {
         CategoryEntry { enabled: true, name: "Favourites".into(), icon: "star".into(), kind: "favourite".into(), value: String::new() },
         CategoryEntry { enabled: true, name: "Recent".into(), icon: "schedule".into(), kind: "recent".into(), value: String::new() },
         CategoryEntry { enabled: true, name: "Wine".into(), icon: "wine_bar".into(), kind: "runner".into(), value: "wine".into() },
-        CategoryEntry { enabled: true, name: "Native".into(), icon: "monitor".into(), kind: "runner".into(), value: "native".into() },
+        CategoryEntry { enabled: true, name: "Native".into(), icon: "terminal".into(), kind: "runner".into(), value: "native".into() },
     ]
 }
 

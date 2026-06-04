@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import ".."
+import "../widgets/RunnerGrouping.js" as RG
 
 Item {
     id: row
@@ -100,13 +101,11 @@ Item {
         let cat = _currentCategory
         let kind = cat.kind || "all"
         let value = cat.value || ""
-        let runnerType = g.runnerType || ""
-        let isWine = runnerType !== "steam" && runnerType !== "flatpak"
         switch (kind) {
             case "all":       return true
             case "favourite": return g.favourite === true
             case "recent":    return _recentIds[g.gameId] === true
-            case "runner":    return (value === "wine") ? isWine : !isWine
+            case "runner":    return RG.runnerBucket(g.runnerType) === value
             case "tag": {
                 let cats = []
                 try { cats = JSON.parse(g.categories || "[]") } catch (e) { cats = [] }

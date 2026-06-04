@@ -386,6 +386,48 @@ Item {
             }
         }
 
+        // the more i add the more i aks myself why im doing this. Electron was the real answer all along...
+        SettingsSection {
+            label: "Native"
+            icon: "terminal"
+            width: parent.width
+            visible: runnerType === "native"
+
+            M3FileField {
+                label: "Executable"
+                text: config["meta.exe"] || ""
+                width: parent.width
+                gameModel: root.gameModel
+                onTextEdited: (t) => updateField("meta.exe", t)
+            }
+
+            M3FileField {
+                label: "Working Directory"
+                placeholder: "empty = executable's parent directory"
+                text: config["launch.working_dir"] || ""
+                selectFolder: true
+                width: parent.width
+                gameModel: root.gameModel
+                onTextEdited: (t) => updateField("launch.working_dir", t)
+            }
+
+            M3TextField {
+                label: "Arguments"
+                placeholder: '--skip-intro --windowed'
+                text: config["launch.args"] || ""
+                width: parent.width
+                onTextEdited: updateField("launch.args", text)
+            }
+
+            M3TextField {
+                label: "Command Prefix"
+                placeholder: "prepended to command (e.g. custom wrapper)"
+                text: config["launch.command_prefix"] || ""
+                width: parent.width
+                onTextEdited: updateField("launch.command_prefix", text)
+            }
+        }
+
         SettingsSection {
             label: "Steam"
             icon: "steam"

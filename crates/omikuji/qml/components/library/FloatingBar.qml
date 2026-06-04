@@ -235,6 +235,7 @@ Item {
                 icon: "wine_bar"
                 size: 40
                 rounded: true
+                visible: !root.displayedGame || (root.displayedGame.runnerType !== "native" && root.displayedGame.runnerType !== "flatpak")
                 anchors.verticalCenter: parent.verticalCenter
                 onClicked: root.wineToolsClicked()
             }

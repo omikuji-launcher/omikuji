@@ -1,5 +1,6 @@
 import QtQuick
 import "../widgets"
+import "../widgets/RunnerGrouping.js" as RG
 import "."
 
 Item {
@@ -55,14 +56,11 @@ Item {
         let game = gameModel.get_game(index)
         if (!game) return false
 
-        let runnerType = game.runnerType || ""
-        let isWine = runnerType !== "steam" && runnerType !== "flatpak"
-
         switch (filterKind) {
             case "all":       return true
             case "favourite": return game.favourite === true
             case "recent":    return _recentIds[game.gameId] === true
-            case "runner":    return (filterValue === "wine") ? isWine : !isWine
+            case "runner":    return RG.runnerBucket(game.runnerType) === filterValue
             case "tag": {
                 let cats = []
                 try { cats = JSON.parse(game.categories || "[]") } catch (e) { cats = [] }

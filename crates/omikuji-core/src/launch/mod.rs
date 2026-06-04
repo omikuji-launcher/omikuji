@@ -78,6 +78,7 @@ pub fn build_launch(game: &Game) -> Result<LaunchConfig> {
     match game.runner.runner_type.as_str() {
         "steam" => return build_steam_launch(game, working_dir),
         "flatpak" => return build_flatpak_launch(game, working_dir),
+        "native" => return build_native_launch(game, working_dir),
         _ => {}
     }
 
@@ -250,6 +251,44 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfi
     apply_wrapping(&mut command, &mut env, game, false);
 
     Ok(LaunchConfig::from_game(game, command, env, working_dir))
+}
+
+fn build_native_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig> {
+    let exe = &game.metadata.exe;
+    if exe.as_os_str().is_empty() {
+        anyhow::bail!("Native runner requires an executable");
+    }
+    if !exe.exists() {
+        anyhow::bail!("Game executable not found at `{}`", exe.display());
+    }
+    if !is_executable(exe) {
+        anyhow::bail!("`{}` is not executable. Mark it executable (chmod +x) and try again.", exe.display());
+    }
+
+    let mut command = vec![relative_exe(exe, &working_dir)];
+    for arg in &game.launch.args {
+        command.push(arg.clone());
+    }
+
+    let mut env: HashMap<String, String> = std::env::vars().collect();
+    for (k, v) in &game.launch.env {
+        env.insert(k.clone(), v.clone());
+    }
+    if game.system.pulse_latency {
+        env.insert("PULSE_LATENCY_MSEC".to_string(), "60".to_string());
+    }
+
+    apply_wrapping(&mut command, &mut env, game, true);
+
+    Ok(LaunchConfig::from_game(game, command, env, working_dir))
+}
+
+// we trust lutris with this one guys
+fn relative_exe(exe: &Path, working_dir: &Path) -> String {
+    match exe.strip_prefix(working_dir) {
+        Ok(rel) => format!("./{}", rel.display()),
+        Err(_) => exe.to_string_lossy().to_string(),
+    }
 }
 
 fn build_gamescope_args(game: &Game) -> Vec<String> {

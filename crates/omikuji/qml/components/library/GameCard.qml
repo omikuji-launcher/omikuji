@@ -9,6 +9,7 @@ BaseCard {
     imageSource: coverart || banner
     leftIconName: runnerType === "steam" ? "steam"
                 : runnerType === "flatpak" ? ""
+                : runnerType === "native" ? "terminal"
                 : "wine_bar"
     leftIconSize: 20
     clickable: true

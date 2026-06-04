@@ -29,7 +29,9 @@ Item {
 
     readonly property var runnerOptions: [
         { label: "Wine / Proton", value: "wine" },
-        { label: "Native",        value: "native" }
+        { label: "Native",        value: "native" },
+        { label: "Steam",         value: "steam" },
+        { label: "Flatpak",       value: "flatpak" }
     ]
 
     readonly property bool _valueNeeded: formKind === "runner" || formKind === "tag"

@@ -73,6 +73,13 @@ function firstNonHeader(options) {
     return -1
 }
 
+// shhhh nobody will notice you living here
+function runnerBucket(runnerType) {
+    var t = String(runnerType || "")
+    if (t === "steam" || t === "flatpak" || t === "native") return t
+    return "wine"
+}
+
 function pickPreferred(options, substrings) {
     if (!substrings || substrings.length === 0) return firstNonHeader(options)
     for (var s = 0; s < substrings.length; s++) {
