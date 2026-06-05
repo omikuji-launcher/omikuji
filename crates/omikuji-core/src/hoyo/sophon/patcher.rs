@@ -29,6 +29,7 @@ use crate::external::hpatchz;
 const HOLD_LAST_FILE_SUFFIX: &str = "globalgamemanagers";
 const DEFAULT_RETRIES: u8 = 4;
 const PARALLEL_DOWNLOADS: usize = 4;
+const PARALLEL_PATCHES: usize = 4;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Stage {
@@ -58,6 +59,7 @@ pub struct PatchOutcome {
 
 #[derive(Clone)]
 struct FileTask {
+    seq: usize,
     asset_name: String,
     asset_size: u64,
     asset_hash_md5: String,
@@ -96,11 +98,11 @@ impl FileTask {
     }
 
     fn tmp_src_filename(&self) -> String {
-        format!("{}.tmp", self.asset_hash_md5)
+        format!("{}-{}.tmp", self.seq, self.asset_hash_md5)
     }
 
     fn tmp_out_filename(&self) -> String {
-        format!("{}.tmp.out", self.asset_hash_md5)
+        format!("{}-{}.tmp.out", self.seq, self.asset_hash_md5)
     }
 
     fn download_url(&self) -> String {
@@ -125,9 +127,11 @@ fn build_tasks(
     manifest
         .patch_assets
         .iter()
-        .filter_map(|asset| {
+        .enumerate()
+        .filter_map(|(seq, asset)| {
             let chunk = pick_chunk(asset, from_version)?;
             Some(FileTask {
+                seq,
                 asset_name: asset.asset_name.clone(),
                 asset_size: asset.asset_size,
                 asset_hash_md5: asset.asset_hash_md5.clone(),
@@ -516,37 +520,54 @@ pub async fn apply_update(
     }
 
     let total_files = tasks.len() as u64;
-    let mut patched: u64 = 0;
-    let mut last_task: Option<FileTask> = None;
+    let patched = Arc::new(AtomicU64::new(0));
+    let last_task = tasks
+        .iter()
+        .find(|t| t.asset_name.ends_with(HOLD_LAST_FILE_SUFFIX))
+        .cloned();
 
-    for task in &tasks {
-        if is_cancelled() {
-            return Err(anyhow!("cancelled"));
-        }
-        let hold = task.asset_name.ends_with(HOLD_LAST_FILE_SUFFIX);
-        if hold {
-            last_task = Some(task.clone());
-        }
+    let patch_results: Vec<Result<()>> = stream::iter(tasks.clone())
+        .map(|task| {
+            let game_dir = game_dir.clone();
+            let files_dir = files_dir.clone();
+            let patches_dir = patches_dir.clone();
+            let on_progress = on_progress.clone();
+            let is_cancelled = is_cancelled.clone();
+            let bytes_done = bytes_done.clone();
+            let patched = patched.clone();
+            async move {
+                if is_cancelled() {
+                    return Err(anyhow!("cancelled"));
+                }
+                let hold = task.asset_name.ends_with(HOLD_LAST_FILE_SUFFIX);
+                tokio::task::spawn_blocking(move || {
+                    apply_file_task_blocking(&task, &game_dir, &files_dir, &patches_dir, hold)
+                })
+                .await
+                .map_err(|e| anyhow!("patch task panicked: {}", e))??;
 
-        let task_c = task.clone();
-        let game_dir_c = game_dir.clone();
-        let files_dir_c = files_dir.clone();
-        let patches_dir_c = patches_dir.clone();
-        tokio::task::spawn_blocking(move || {
-            apply_file_task_blocking(&task_c, &game_dir_c, &files_dir_c, &patches_dir_c, hold)
+                let done = patched.fetch_add(1, Ordering::SeqCst) + 1;
+                on_progress(ProgressReport {
+                    stage: Stage::Patching,
+                    current: done,
+                    total: total_files,
+                    bytes_done: bytes_done.load(Ordering::SeqCst),
+                    bytes_total,
+                    bytes_session: 0,
+                });
+                Ok(())
+            }
         })
-        .await
-        .map_err(|e| anyhow!("patch task panicked: {}", e))??;
+        .buffer_unordered(PARALLEL_PATCHES)
+        .collect()
+        .await;
 
-        patched += 1;
-        on_progress(ProgressReport {
-            stage: Stage::Patching,
-            current: patched,
-            total: total_files,
-            bytes_done: bytes_done.load(Ordering::SeqCst),
-            bytes_total,
-            bytes_session: 0,
-        });
+    for r in patch_results {
+        r?;
+    }
+
+    if is_cancelled() {
+        return Err(anyhow!("cancelled"));
     }
 
     if let Some(last) = last_task {
@@ -581,5 +602,5 @@ pub async fn apply_update(
 
     let _ = std::fs::remove_dir_all(&files_dir);
 
-    Ok(PatchOutcome { files_patched: patched, files_deleted: deleted })
+    Ok(PatchOutcome { files_patched: patched.load(Ordering::SeqCst), files_deleted: deleted })
 }
