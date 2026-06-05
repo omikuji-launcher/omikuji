@@ -75,6 +75,37 @@ pub fn applications_dir() -> PathBuf {
         .join("applications")
 }
 
+pub fn icons_dir() -> PathBuf {
+    if std::env::var("FLATPAK_ID").is_ok() {
+        return dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join(".local/share/icons/hicolor/256x256/apps");
+    }
+    dirs::data_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("icons/hicolor/256x256/apps")
+}
+
+// im doing this just for a stupid icon on a stupid dock. hmph.
+pub fn ensure_steam_icon(game: &Game) -> Result<()> {
+    let src = media_path(&game.metadata.id, &MediaType::Icon);
+    if !src.exists() {
+        return Ok(());
+    }
+
+    let dir = icons_dir();
+    fs::create_dir_all(&dir)
+        .with_context(|| format!("creating icon dir {}", dir.display()))?;
+
+    let appid = crate::steam::synthetic_appid(&game.metadata.id);
+    let link = dir.join(format!("steam_icon_{}.png", appid));
+    let _ = fs::remove_file(&link);
+    std::os::unix::fs::symlink(&src, &link)
+        .with_context(|| format!("linking {}", link.display()))?;
+
+    Ok(())
+}
+
 pub fn browse_files(path: &Path) -> Result<()> {
     let path_str = path.to_string_lossy();
     let url = if path_str.starts_with("file://") {

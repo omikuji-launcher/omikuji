@@ -86,6 +86,12 @@ pub fn build_launch(game: &Game) -> Result<LaunchConfig> {
     let wine_exe = resolve_wine_exe(variant, &game.wine.version)?;
     let mut env = build_env(game, variant, &wine_exe);
 
+    if variant == WineVariant::Proton {
+        if let Err(e) = crate::desktop::ensure_steam_icon(game) {
+            tracing::warn!("dock icon link failed for {}: {}", game.metadata.name, e);
+        }
+    }
+
     let mut command = if game.is_epic() {
         let legendary = crate::downloads::legendary::find_legendary()
             .ok_or_else(|| anyhow::Error::new(ComponentMissing { name: "Legendary".to_string() }))?;
@@ -406,7 +412,7 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
         };
         env.insert("PROTONPATH".to_string(), proton_path.to_string_lossy().to_string());
         env.insert("PROTON_VERB".to_string(), "run".to_string());
-        env.insert("GAMEID".to_string(), game.metadata.id.clone());
+        env.insert("GAMEID".to_string(), format!("umu-{}", crate::steam::synthetic_appid(&game.metadata.id)));
     }
 
     env.insert("WINEESYNC".to_string(), if game.wine.esync { "1" } else { "0" }.to_string());

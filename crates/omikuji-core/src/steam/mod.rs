@@ -11,6 +11,15 @@ pub fn is_steam_installed() -> bool {
     find_steam_dir().is_some()
 }
 
+pub fn synthetic_appid(game_id: &str) -> u32 {
+    let mut h: u32 = 2166136261;
+    for b in game_id.bytes() {
+        h ^= b as u32;
+        h = h.wrapping_mul(16777619);
+    }
+    1_000_000_000 + (h % 1_000_000_000)
+}
+
 pub type SteamPlaytimeMap = std::collections::HashMap<String, (f64, u64)>;
 
 // empty api_key means no remote sync, local process-tracking still populates playtime
