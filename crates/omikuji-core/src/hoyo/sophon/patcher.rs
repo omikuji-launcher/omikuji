@@ -455,7 +455,19 @@ pub async fn apply_update(
     let files_dir = files_temp(&temp_root, &matching_field);
     let patches_dir = patches_temp(&temp_root, &matching_field);
 
-    let tasks = build_tasks(&manifest, &diff.diff_download, &from_version);
+    let all_tasks = build_tasks(&manifest, &diff.diff_download, &from_version);
+    let total_before = all_tasks.len();
+    // oh wow i just spent 1 hour trying to figure out why it'd fail the update. Oh wow, i just realized it was resources management clean-up in game. I'm so very happy right now. Im genuinely blistering happiness from all my pores.
+    let tasks: Vec<FileTask> = all_tasks
+        .into_iter()
+        .filter(|t| t.original_path(&game_dir).map_or(true, |p| p.exists()))
+        .collect();
+    if total_before > tasks.len() {
+        tracing::info!(
+            "skipped {} patch(es) with absent originals (in-game resource cleanup)",
+            total_before - tasks.len()
+        );
+    }
     if tasks.is_empty() {
         return Ok(PatchOutcome { files_patched: 0, files_deleted: 0 });
     }
