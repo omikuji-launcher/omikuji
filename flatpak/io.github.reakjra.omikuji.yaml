@@ -69,7 +69,6 @@ modules:
       - type: git
         url: https://github.com/reakjra/omikuji.git
         tag: "v0.2.2"
-        commit: "f884fb283fc3bd523b7a1ac101c1d42ad4415155"
 
   - name: bundle-setup
     buildsystem: simple
