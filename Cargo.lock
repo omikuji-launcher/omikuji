@@ -1562,6 +1562,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "crc32fast",
  "dirs",
  "discord-rich-presence",
  "flate2",

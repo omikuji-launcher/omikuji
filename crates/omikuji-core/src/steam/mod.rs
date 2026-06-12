@@ -1,6 +1,7 @@
 
 pub mod api;
 pub mod local;
+pub mod shortcuts;
 
 use anyhow::Result;
 

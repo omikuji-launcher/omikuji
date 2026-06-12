@@ -150,14 +150,8 @@ fn launcher_command() -> String {
 }
 
 fn generate_desktop_content(game: &Game) -> String {
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
     let icon = resolve_desktop_icon(game);
-    let exec = format!("{} run {}_{}", launcher_command(), slug, game.metadata.id);
+    let exec = format!("{} run {}", launcher_command(), launch_target(game));
 
     format!(
         "[Desktop Entry]\n\
@@ -204,6 +198,18 @@ fn sanitize_slug(name: &str) -> String {
         .to_string()
 }
 
+pub fn game_slug(game: &Game) -> String {
+    if game.metadata.slug.is_empty() {
+        sanitize_slug(&game.metadata.name)
+    } else {
+        game.metadata.slug.clone()
+    }
+}
+
+pub fn launch_target(game: &Game) -> String {
+    format!("{}_{}", game_slug(game), game.metadata.id)
+}
+
 pub fn create_desktop_shortcut(game: &Game) -> Result<PathBuf> {
     let desktop = desktop_dir()
         .or_else(|| {
@@ -216,13 +222,7 @@ pub fn create_desktop_shortcut(game: &Game) -> Result<PathBuf> {
             .with_context(|| format!("creating desktop directory {}", desktop.display()))?;
     }
 
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     let path = desktop.join(&filename);
 
     let content = generate_desktop_content(game);
@@ -241,13 +241,7 @@ pub fn create_menu_shortcut(game: &Game) -> Result<PathBuf> {
     fs::create_dir_all(&apps_dir)
         .with_context(|| format!("creating applications directory {}", apps_dir.display()))?;
 
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     let path = apps_dir.join(&filename);
 
     let content = generate_desktop_content(game);
@@ -266,13 +260,7 @@ pub fn remove_desktop_shortcut(game: &Game) -> Result<()> {
         return Ok(());
     };
 
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     let path = desktop.join(&filename);
 
     if path.exists() {
@@ -284,13 +272,7 @@ pub fn remove_desktop_shortcut(game: &Game) -> Result<()> {
 }
 
 pub fn remove_menu_shortcut(game: &Game) -> Result<()> {
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     let path = applications_dir().join(&filename);
 
     if path.exists() {
@@ -306,24 +288,12 @@ pub fn desktop_shortcut_exists(game: &Game) -> bool {
         return false;
     };
 
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     desktop.join(&filename).exists()
 }
 
 pub fn menu_shortcut_exists(game: &Game) -> bool {
-    let slug = if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    };
-
-    let filename = desktop_filename(&slug, &game.metadata.id);
+    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
     applications_dir().join(&filename).exists()
 }
 

@@ -48,6 +48,15 @@ Item {
             let hasDesktopShortcut = ctrl.gameModel.has_desktop_shortcut(index)
             let hasMenuShortcut = ctrl.gameModel.has_menu_shortcut(index)
 
+            let shortcuts = [
+                { text: hasDesktopShortcut ? "Remove desktop shortcut" : "Create desktop shortcut", action: "desktop_shortcut" },
+                { text: hasMenuShortcut ? "Remove application menu shortcut" : "Create application menu shortcut", action: "menu_shortcut" }
+            ]
+            if (ctrl.gameModel.steam_shortcut_available(index)) {
+                let hasSteamShortcut = ctrl.gameModel.has_steam_shortcut(index)
+                shortcuts.push({ text: hasSteamShortcut ? "Remove Steam shortcut" : "Create Steam shortcut", action: "steam_shortcut" })
+            }
+
             let built = [
                 { text: "Play", action: "play" },
                 { text: "Show logs", action: "logs" },
@@ -55,8 +64,7 @@ Item {
                 { text: "Categories", action: "categories" },
                 { text: "Browse files", action: "browse" },
                 { text: isFav ? "Remove from favorites" : "Add to favorites", action: "favorite" },
-                { text: hasDesktopShortcut ? "Remove desktop shortcut" : "Create desktop shortcut", action: "desktop_shortcut" },
-                { text: hasMenuShortcut ? "Remove application menu shortcut" : "Create application menu shortcut", action: "menu_shortcut" },
+                { text: "Shortcuts", submenu: shortcuts },
                 { text: "Duplicate", action: "duplicate" }
             ]
             if (isEpic || isGog) {
@@ -111,6 +119,10 @@ Item {
                 case "menu_shortcut":
                     if (ctrl.gameModel.has_menu_shortcut(idx)) ctrl.gameModel.remove_menu_shortcut(idx)
                     else ctrl.gameModel.create_menu_shortcut(idx)
+                    break
+                case "steam_shortcut":
+                    if (ctrl.gameModel.has_steam_shortcut(idx)) ctrl.gameModel.remove_steam_shortcut(idx)
+                    else ctrl.gameModel.create_steam_shortcut(idx)
                     break
                 case "duplicate":
                     ctrl.gameModel.duplicate_game(idx)

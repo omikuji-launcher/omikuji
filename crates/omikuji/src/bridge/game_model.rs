@@ -276,6 +276,18 @@ pub mod qobject {
         fn has_menu_shortcut(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
+        fn create_steam_shortcut(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
+        fn remove_steam_shortcut(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
+        fn has_steam_shortcut(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
+        fn steam_shortcut_available(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
         fn duplicate_game(self: Pin<&mut GameModel>, index: i32) -> bool;
 
         #[qinvokable]

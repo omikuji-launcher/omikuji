@@ -33,6 +33,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 xz2 = "0.1"
 notify = "8"
 discord-rich-presence = "1"
+crc32fast = "1"
 
 [build-dependencies]
 prost-build = "0.13"

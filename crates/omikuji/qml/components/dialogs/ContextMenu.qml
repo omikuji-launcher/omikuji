@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
+import "../widgets"
 
 Popup {
     id: root
@@ -13,13 +14,28 @@ Popup {
     // CloseOnPressOutside eats thee click before it reaches the trigger, callers check lastClosedAt to skip an immediate reopen
     property double lastClosedAt: 0
 
+    readonly property int _defaultClosePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+    property int _submenuIndex: -1
+    property int _submenuSide: 1
+    property Item _submenuAnchor: null
+    property var _submenu: null
+    property bool _subCloseExpected: false
+
     signal itemClicked(string action)
 
     padding: 8
     margins: 0
     width: itemWidth + padding * 2
 
-    onClosed: lastClosedAt = Date.now()
+    onClosed: {
+        lastClosedAt = Date.now()
+        closePolicy = _defaultClosePolicy
+        _closeSubmenu()
+    }
+
+    Component.onDestruction: {
+        if (_submenu) _submenu.destroy()
+    }
 
     onItemsChanged: Qt.callLater(calculateWidth)
 
@@ -28,6 +44,7 @@ Popup {
         for (let i = 0; i < items.length; i++) {
             if (items[i].separator) continue
             let textWidth = items[i].text.length * 7.5 + 24
+            if (items[i].submenu) textWidth += 24
             if (textWidth > maxWidth) maxWidth = textWidth
         }
         let floor = minWidth > 0 ? minWidth : 160
@@ -110,6 +127,91 @@ Popup {
         open()
     }
 
+    function openBeside(anchorItem, side) {
+        if (!anchorItem || !parent) { open(); return }
+        let win = anchorItem.Window.window
+        let w = _computedWidth()
+        let h = _computedHeight()
+        let dx = side === -1 ? -w - padding + 4 : anchorItem.width + padding - 4
+        let p = anchorItem.mapToItem(parent, dx, -padding)
+        let ny = p.y
+        if (win) {
+            let absY = anchorItem.mapToItem(null, 0, -padding).y
+            let overflow = absY + h - (win.height - 4)
+            if (overflow > 0) ny -= overflow
+        }
+        x = p.x
+        y = Math.max(4, ny)
+        open()
+    }
+
+    Timer {
+        id: submenuOpenTimer
+        interval: 150
+        onTriggered: root._openSubmenu()
+    }
+
+    function _scheduleSubmenu(index, row) {
+        _submenuAnchor = row
+        if (_submenuIndex === index) return
+        _submenuIndex = index
+        submenuOpenTimer.restart()
+    }
+
+    function _openSubmenuNow(index, row) {
+        submenuOpenTimer.stop()
+        _submenuIndex = index
+        _submenuAnchor = row
+        _openSubmenu()
+    }
+
+    function _closeSubmenu() {
+        submenuOpenTimer.stop()
+        _submenuIndex = -1
+        if (_submenu && _submenu.visible) {
+            _subCloseExpected = true
+            _submenu.close()
+        }
+    }
+
+    function _openSubmenu() {
+        if (_submenuIndex < 0 || !_submenuAnchor || !items[_submenuIndex] || !items[_submenuIndex].submenu) return
+        let sub = _ensureSubmenu()
+        if (!sub) return
+        sub.items = items[_submenuIndex].submenu
+        let w = sub._computedWidth()
+        let win = _submenuAnchor.Window.window
+        let absRight = _submenuAnchor.mapToItem(null, _submenuAnchor.width + padding - 4, 0).x
+        _submenuSide = (win && absRight + w > win.width - 4) ? -1 : 1
+        sub.openBeside(_submenuAnchor, _submenuSide)
+    }
+
+    function _ensureSubmenu() {
+        if (_submenu) return _submenu
+        let comp = Qt.createComponent("ContextMenu.qml")
+        if (comp.status !== Component.Ready) {
+            console.warn("ContextMenu: submenu component failed:", comp.errorString())
+            return null
+        }
+        _submenu = comp.createObject(parent)
+        _submenu.itemClicked.connect(function(action) {
+            root.itemClicked(action)
+            root.close()
+        })
+        return _submenu
+    }
+
+    Connections {
+        target: root._submenu
+        function onOpened() { root.closePolicy = Popup.NoAutoClose }
+        function onClosed() {
+            root.closePolicy = root._defaultClosePolicy
+            root._submenuIndex = -1
+            if (!root._subCloseExpected) root.close()
+            root._subCloseExpected = false
+        }
+    }
+
     // dark themes lighten the popup, light themes darken it becuase pure-white surfaces need to drop in lightness to stand out
     background: Rectangle {
         color: theme.active.window.hslLightness > 0.5
@@ -177,14 +279,37 @@ Popup {
                             font.pixelSize: 13
                         }
 
+                        SvgIcon {
+                            visible: !!modelData.submenu
+                            anchors.right: parent.right
+                            anchors.rightMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: "chevron_left"
+                            size: 16
+                            color: theme.textMuted
+                            rotation: root._submenuIndex === index && root._submenuSide === -1 ? 0 : 180
+
+                            Behavior on rotation {
+                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                            }
+                        }
+
                         MouseArea {
                             id: hoverArea
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
+                            onEntered: {
+                                if (modelData.submenu) root._scheduleSubmenu(index, parent)
+                                else root._closeSubmenu()
+                            }
                             onClicked: {
-                                root.itemClicked(modelData.action || modelData.text.toLowerCase().replace(/ /g, "_"))
-                                root.close()
+                                if (modelData.submenu) {
+                                    root._openSubmenuNow(index, parent)
+                                } else {
+                                    root.itemClicked(modelData.action || modelData.text.toLowerCase().replace(/ /g, "_"))
+                                    root.close()
+                                }
                             }
                         }
                     }

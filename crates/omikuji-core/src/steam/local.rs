@@ -259,6 +259,15 @@ pub fn get_active_steamid64() -> Option<String> {
     users.first().map(|u| u.steamid64.clone())
 }
 
+const STEAMID64_BASE: u64 = 76561197960265728;
+
+pub fn steamid64_to_steamid32(steamid64: &str) -> Option<String> {
+    steamid64
+        .parse::<u64>()
+        .ok()
+        .map(|id| (id - STEAMID64_BASE).to_string())
+}
+
 #[derive(Debug, Clone)]
 pub struct AppManifest {
     pub appid: String,
@@ -538,8 +547,7 @@ mod tests {
 
     #[test]
     fn test_steamid_conversion() {
-        let steamid64: u64 = 76561197960287930; // example
-        let steamid32 = steamid64 - 76561197960265728;
-        assert_eq!(steamid32, 22202);
+        assert_eq!(steamid64_to_steamid32("76561197960287930").as_deref(), Some("22202"));
+        assert_eq!(steamid64_to_steamid32("not a number"), None);
     }
 }
