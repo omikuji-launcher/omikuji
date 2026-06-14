@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use omikuji_core::library::{Game, Library};
 use omikuji_core::ui_settings::UiSettings;
-use omikuji_core::{launch, media, process};
+use omikuji_core::{desktop, launch, process};
 use std::io::{self, IsTerminal, Write};
 
 #[derive(Parser)]
@@ -82,22 +82,18 @@ enum Resolved<'a> {
 fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
     let lower = input.to_lowercase();
 
-    if let Some((slug, id)) = lower.rsplit_once('_')
-        && is_id_like(id)
-        && let Some(g) = lib
-            .game
-            .iter()
-            .find(|g| g.metadata.id.eq_ignore_ascii_case(id))
-        && media::slugify(&g.metadata.name) == slug
+    if let Some(g) = lib
+        .game
+        .iter()
+        .find(|g| desktop::launch_target(g).eq_ignore_ascii_case(&lower))
     {
         return Resolved::Found(g);
     }
 
-    if is_id_like(&lower)
-        && let Some(g) = lib
-            .game
-            .iter()
-            .find(|g| g.metadata.id.eq_ignore_ascii_case(&lower))
+    if let Some(g) = lib
+        .game
+        .iter()
+        .find(|g| g.metadata.id.eq_ignore_ascii_case(&lower))
     {
         return Resolved::Found(g);
     }
@@ -105,7 +101,7 @@ fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
     let matches: Vec<&Game> = lib
         .game
         .iter()
-        .filter(|g| media::slugify(&g.metadata.name) == lower)
+        .filter(|g| desktop::game_slug(g).eq_ignore_ascii_case(&lower))
         .collect();
 
     match matches.len() {
@@ -113,10 +109,6 @@ fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
         1 => Resolved::Found(matches[0]),
         _ => Resolved::Multiple(matches),
     }
-}
-
-fn is_id_like(s: &str) -> bool {
-    s.len() == 6 && s.chars().all(|c| c.is_ascii_alphanumeric())
 }
 
 fn pick_from_matches(matches: &[&Game]) -> Option<usize> {
