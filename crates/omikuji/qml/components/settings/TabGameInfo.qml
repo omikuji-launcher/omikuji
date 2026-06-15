@@ -51,22 +51,12 @@ Item {
             M3Dropdown {
                 label: "Runner"
                 width: parent.width
-                options: {
-                    let opts = [
-                        { label: "Wine", value: "wine" },
-                        { label: "Steam", value: "steam" }
-                    ]
-                    let isFlatpakLauncher = gameModel ? gameModel.is_flatpak() : false
-                    let currentIsFlatpak = config["runner.type"] === "flatpak"
-                    let currentIsNative = config["runner.type"] === "native"
-                    if (!isFlatpakLauncher || currentIsNative) {
-                        opts.push({ label: "Native", value: "native" })
-                    }
-                    if (!isFlatpakLauncher || currentIsFlatpak) {
-                        opts.push({ label: "Flatpak", value: "flatpak" })
-                    }
-                    return opts
-                }
+                options: [
+                    { label: "Wine", value: "wine" },
+                    { label: "Steam", value: "steam" },
+                    { label: "Native", value: "native" },
+                    { label: "Flatpak", value: "flatpak" }
+                ]
                 currentIndex: {
                     let t = config["runner.type"] || "wine"
                     for (let i = 0; i < options.length; i++) {
@@ -75,6 +65,16 @@ Item {
                     return 0
                 }
                 onSelected: (val) => updateField("runner.type", val)
+            }
+
+            Text {
+                width: parent.width
+                visible: gameModel ? gameModel.is_flatpak() : false
+                text: "It seems you're using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications."
+                color: theme.warning
+                font.pixelSize: 12
+                font.weight: Font.Medium
+                wrapMode: Text.WordWrap
             }
         }
 

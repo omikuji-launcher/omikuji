@@ -92,7 +92,6 @@ Item {
             font.pixelSize: 14
         }
 
-        // chevron_left rotated becuase chevron_down.svg is the same art
         SvgIcon {
             id: chevronIcon
             anchors.right: parent.right
@@ -101,7 +100,7 @@ Item {
             name: "chevron_left"
             size: 20
             color: theme.textMuted
-            rotation: popup.visible ? 90 : -90
+            rotation: popup.visible ? -90 : 0
 
             Behavior on rotation {
                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
