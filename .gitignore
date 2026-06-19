@@ -35,6 +35,7 @@ qmlcache_loader.cpp
 *.user
 *.user.*
 .qtcreator/
+**/.qmlls.ini
 
 .DS_Store
 .DS_Store?
