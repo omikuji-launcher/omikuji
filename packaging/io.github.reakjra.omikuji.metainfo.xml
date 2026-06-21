@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.4.0" date="2026-06-22">
+      <description>
+        <ul>
+          <li>Added a System Info section in About with a one-click copyable hardware/OS dump for bug reports.</li>
+          <li>The per-game GPU selector is now op.</li>
+          <li>Reworked the Components settings tab and version manager onto the new UI.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.3.0" date="2026-06-21">
       <description>
         <p>Major UI overhaul.</p>

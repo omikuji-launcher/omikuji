@@ -1,6 +1,6 @@
 [package]
 name = "omikuji"
-version = "0.3.0"
+version = "0.4.0"
 description = "Qt/QML based wine apps launcher for Linux"
 license = "GPL-3.0-or-later"
 edition = "2024"
