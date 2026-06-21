@@ -22,6 +22,11 @@
     </p>
   </description>
   <releases>
+    <release version="0.3.0" date="2026-06-21">
+      <description>
+        <p>Major UI overhaul.</p>
+      </description>
+    </release>
     <release version="0.2.3" date="2026-06-17">
       <description>
         <ul>
