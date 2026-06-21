@@ -27,6 +27,8 @@ Backend is Rust, frontend is Qt/QML via [cxx-qt](https://github.com/KDAB/cxx-qt)
 
 ```sh
 yay -S omikuji-git
+# or 
+yay -S omikuji-bin
 ```
 
 #### Flatpak 
