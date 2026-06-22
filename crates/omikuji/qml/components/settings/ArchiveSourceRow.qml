@@ -1,7 +1,7 @@
 import QtQuick
 
 import "../widgets"
-import "../dialogs"
+import "../widgets/RunnerGrouping.js" as RG
 
 Item {
     id: root
@@ -124,71 +124,34 @@ Item {
             font.pixelSize: 13
         }
 
-        FieldSurface {
-            id: picker
+        M3Dropdown {
             anchors.right: parent.right
             anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(240, pickerRow.implicitWidth + 20)
-            height: 32
-            focused: menu.visible
-
-            Row {
-                id: pickerRow
-                anchors.centerIn: parent
-                spacing: 8
-
-                Text {
-                    id: pickerLabel
-                    text: root.activeVersion === "" ? "Disabled" : root.activeVersion
-                    color: root.activeVersion === "" ? theme.textMuted : theme.text
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
-                    elide: Text.ElideRight
-                    width: Math.min(implicitWidth, 200)
-                    anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(240, labelMetrics.width + 56)
+            fieldHeight: 32
+            options: {
+                let opts = [{ label: "Disabled", value: "" }]
+                for (let i = 0; i < root.installedVersions.length; i++) {
+                    let tag = root.installedVersions[i]
+                    opts.push({ label: tag, value: tag })
                 }
-
-                SvgIcon {
-                    id: chevron
-                    anchors.verticalCenter: parent.verticalCenter
-                    name: "chevron_left"
-                    size: 14
-                    color: theme.textMuted
-                    rotation: menu.visible ? 90 : -90
-                    Behavior on rotation { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-                }
+                return opts
+            }
+            currentIndex: {
+                let idx = RG.indexOfValue(options, root.activeVersion)
+                return idx >= 0 ? idx : 0
+            }
+            onSelected: (value) => {
+                if (value !== root.activeVersion) root.autoInjectChanged(value)
             }
 
-            MouseArea {
-                id: pickerArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    // debounce becuase CloseOnPressOutside eats the click before this fires and would instantly reopen
-                    if (Date.now() - menu.lastClosedAt < 150) return
-                    menu.items = root._buildMenuItems()
-                    menu.minWidth = picker.width - 16
-                    menu.openBelow(picker)
-                }
-            }
-        }
-
-        ContextMenu {
-            id: menu
-            onItemClicked: (action) => {
-                if (action !== root.activeVersion) root.autoInjectChanged(action)
+            TextMetrics {
+                id: labelMetrics
+                font.pixelSize: 14
+                text: root.activeVersion === "" ? "Disabled" : root.activeVersion
             }
         }
     }
 
-    function _buildMenuItems() {
-        let items = [{ text: "Disabled", action: "" }]
-        for (let i = 0; i < installedVersions.length; i++) {
-            let tag = installedVersions[i]
-            items.push({ text: tag, action: tag })
-        }
-        return items
-    }
 }

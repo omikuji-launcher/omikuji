@@ -13,6 +13,7 @@ Item {
         return (opt && !opt.header) ? opt.value : ""
     }
     property string label: ""
+    property real fieldHeight: 44
 
     signal selected(var value)
 
@@ -68,7 +69,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        height: 44
+        height: root.fieldHeight
         focused: popup.visible
 
         Text {
