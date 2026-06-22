@@ -88,7 +88,6 @@ impl Default for LibrarySettings {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct TabsSettings {
-    // library/downloads/settings are always on; only store tabs are user-hideable
     pub show_gachas: bool,
     pub show_epic: bool,
     pub show_gog: bool,
