@@ -129,49 +129,24 @@ Item {
                 width: parent.width
 
                 GridLayout {
-                    width: parent.width
-                    columns: 4
-                    columnSpacing: 8
+                    columns: 2
+                    columnSpacing: 96
                     rowSpacing: 12
 
-                    Text {
-                        text: "Esync"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "Esync"
                         checked: config["wine.esync"] === true
                         onToggled: (val) => updateField("wine.esync", val)
                     }
 
-                    Text {
-                        text: "Fsync"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 16
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {                        label: "Fsync"
                         checked: config["wine.fsync"] === true
                         onToggled: (val) => updateField("wine.fsync", val)
                     }
 
-                    Text {
-                        text: "NTSync"
-                        color: root.isProtonWine ? theme.text : theme.textSubtle
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "NTSync"
                         enabled: root.isProtonWine
-                        opacity: root.isProtonWine ? 1 : 0.45
                         checked: config["wine.ntsync"] === true
                         onToggled: (val) => updateField("wine.ntsync", val)
                     }
@@ -181,7 +156,8 @@ Item {
                         color: theme.textSubtle
                         font.pixelSize: 13
                         visible: !root.isProtonWine
-                        Layout.columnSpan: 4
+                        Layout.columnSpan: 2
+                        wrapMode: Text.WordWrap
                     }
                 }
             }
@@ -192,61 +168,28 @@ Item {
                 width: parent.width
 
                 GridLayout {
-                    width: parent.width
-                    columns: 4
-                    columnSpacing: 8
+                    columns: 2
+                    columnSpacing: 96
                     rowSpacing: 12
 
-                    Text {
-                        text: "DXVK"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "DXVK"
                         checked: config["wine.dxvk"] === true
                         onToggled: (val) => updateField("wine.dxvk", val)
                     }
 
-                    Text {
-                        text: "VKD3D"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 16
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {                        label: "VKD3D"
                         checked: config["wine.vkd3d"] === true
                         onToggled: (val) => updateField("wine.vkd3d", val)
                     }
 
-                    Text {
-                        text: "D3D Extras"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "D3D Extras"
                         checked: config["wine.d3d_extras"] === true
                         onToggled: (val) => updateField("wine.d3d_extras", val)
                     }
 
-                    Text {
-                        text: "DXVK-NVAPI"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 16
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {                        label: "DXVK-NVAPI"
                         checked: config["wine.dxvk_nvapi"] === true
                         onToggled: (val) => updateField("wine.dxvk_nvapi", val)
                     }
@@ -259,45 +202,23 @@ Item {
                 width: parent.width
 
                 GridLayout {
-                    width: parent.width
-                    columns: 4
-                    columnSpacing: 8
-                    rowSpacing: 0
+                    columns: 2
+                    columnSpacing: 96
+                    rowSpacing: 12
 
-                    Text {
-                        text: "BattlEye"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "BattlEye"
                         checked: config["wine.battleye"] === true
                         onToggled: (val) => updateField("wine.battleye", val)
                     }
 
-                    Text {
-                        text: "EasyAntiCheat"
-                        color: theme.text
-                        font.pixelSize: 15
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 16
-                    }
-
-                    M3Switch {
+                    LabeledSwitch {                        label: "EasyAntiCheat"
                         checked: config["wine.easyanticheat"] === true
                         onToggled: (val) => updateField("wine.easyanticheat", val)
                     }
-                }
 
-                SettingsRow {
-                    label: "FSR"
-                    description: "AMD FidelityFX Super Resolution"
-                    width: parent.width
-
-                    M3Switch {
+                    LabeledSwitch {
+                        label: "FSR"
                         checked: config["wine.fsr"] === true
                         onToggled: (val) => updateField("wine.fsr", val)
                     }
@@ -309,13 +230,10 @@ Item {
                 icon: "desktop_windows"
                 width: parent.width
 
-                SettingsRow {
+                LabeledSwitch {
                     label: "DPI Scaling"
-                    width: parent.width
-                    M3Switch {
-                        checked: config["wine.dpi_scaling"] === true
-                        onToggled: (val) => updateField("wine.dpi_scaling", val)
-                    }
+                    checked: config["wine.dpi_scaling"] === true
+                    onToggled: (val) => updateField("wine.dpi_scaling", val)
                 }
 
                 M3Slider {

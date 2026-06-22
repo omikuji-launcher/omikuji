@@ -155,6 +155,7 @@ Popup {
     function _scheduleSubmenu(index, row) {
         _submenuAnchor = row
         if (_submenuIndex === index) return
+        _submenuSide = 1
         _submenuIndex = index
         submenuOpenTimer.restart()
     }

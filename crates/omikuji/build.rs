@@ -218,6 +218,7 @@ fn main() {
                 "qml/components/widgets/IconButton.qml",
                 "qml/components/widgets/IconPickerPopup.qml",
                 "qml/components/widgets/KeyValueTable.qml",
+                "qml/components/widgets/LabeledSwitch.qml",
                 "qml/components/widgets/LoadingDots.qml",
                 "qml/components/widgets/M3Button.qml",
                 "qml/components/widgets/M3Dropdown.qml",
