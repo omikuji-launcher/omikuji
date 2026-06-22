@@ -38,6 +38,7 @@ jobs:
           base-devel \
           sudo \
           wget \
+          patchelf \
           qt6ct \
           kvantum \
           lxqt-qtplugin
