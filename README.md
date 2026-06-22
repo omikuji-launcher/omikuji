@@ -3,7 +3,6 @@
 A Qt/QML based games/apps launcher for Linux. Built 'cause I couldn't bear having 3 different launchers for just games.
 
 Manages wine/proton runners, wineprefixes, DXVK/VKD3D, and game launching. Imports from Steam, installs Epic, GOG and Waifu machine slots games directly. 
-Backend is Rust, frontend is Qt/QML via [cxx-qt](https://github.com/KDAB/cxx-qt).
 
 ## Screenshots
 
@@ -150,17 +149,23 @@ nix develop
 
 </details>
 
-## What it does
+## What does it do?!
 
 - **Game library** one TOML per game, shareable, git-friendly.
 - **Wine / Proton**: auto-detects Steam-installed Proton, has its own fetcher in the settings.
 - **Translation layers**: DXVK, VKD3D, DXVK-NVAPI. Auto-fetched from upstream releases.
-- **Stores**: import from Steam (locally), install Epic games (via legendary), GOG (via gogdl), HoYoverse / Kuro / Gryphline gachas (direct CDN + delta patch handlers).
-- **Wrapping chain**: gamescope, mangohud, gamemode, taskset, custom prefixes.
+- **Stores**: import from Steam (locally), install Epic games (via legendary), GOG (via gogdl), HoYoverse / Kuro / Gryphline gachas (direct downloads and updates).
 - **Wine tools**: winecfg, winetricks, regedit, cmd, winefile, run-exe, kill-wineserver.
 - **Art fetch**: SteamGridDB for banners, covers, icons.
-- **Playtime**: tracked per-game, persisted on exit. Steam playtime via your own Web API key.
-- **CLI**: `omikuji run <slug_or_id>` launches games headlessly. Used for `.desktop` shortcuts.
+
+#### CLI commands
+
+| Command   | args |  Description       										   					 |
+| ------ | ---------- | ---------- 												   	 				 |
+| `omikuji`         |   `path/to/.exe`     |  Opens a modal for ephemeral runs.			         	 |
+| `omikuji run`     |     `slug_or_id`     |  runs a game from the library headless.			     | 
+| `omikuji console` |     `None`  	       |  runs Omikuji in console mode.			     			 | 
+
 
 ## Status/Infos
 
@@ -179,11 +184,9 @@ QML side held up with tape and prays🙏
 
 Not implemented/WIP/Planning to add: 
 - i18n/qsTr (ehahahshhaha)
-- Amazon Games
+- Amazon Games (Nile)
 - make gacha stuff optional (not automatically fetched on startup)
 - more CLI commands which i cant be bothered with yet
-- Genuinely fix some UI stuff (e.g, settings page edit/add games tabs. I dont like them there ngl)
-- Components tab in the settings page is a bit ass and im not sure i like the green texts/balls
 
 ## Documentation
 - [Configuration](docs/configuration.md): `settings.toml`, custom runners, DLL packs
@@ -212,6 +215,7 @@ GPL-3.0-or-later. See [LICENSE](LICENSE).
 
 Heavy debt to the prior art:
 
+- [cxx-qt](https://github.com/KDAB/cxx-qt): lovely super-glue.
 - [Lutris](https://github.com/lutris/lutris): the wrapping chain, env setup, runner detection logic, and a lot of wine know-how is ported from here.
 - [Heroic Games Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher): Epic and GOG integration patterns. Also the source of the bundled `gogdl` binary.
 - [AAG](https://github.com/an-anime-team/): gacha launcher reference. HoYo Sophon, CDN methods all from them <3. 
