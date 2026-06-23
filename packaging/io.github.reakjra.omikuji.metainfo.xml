@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.4.2" date="2026-06-23">
+      <description>
+        <ul>
+          <li>"Open with Omikuji" picker for .exe files.</li>
+          <li>Theme falls back to its own palette when the system color scheme is unknown.</li>
+          <li>RPM packaging CI.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.4.1" date="2026-06-22">
       <description>
         <p>Minor UI fixes.</p>

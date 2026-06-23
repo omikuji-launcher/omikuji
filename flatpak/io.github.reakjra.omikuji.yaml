@@ -68,7 +68,7 @@ modules:
       - cargo-sources.json
       - type: git
         url: https://github.com/reakjra/omikuji.git
-        tag: "v0.4.1"
+        tag: "v0.4.2"
 
   - name: bundle-setup
     buildsystem: simple
