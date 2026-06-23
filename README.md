@@ -30,6 +30,14 @@ yay -S omikuji-git
 yay -S omikuji-bin
 ```
 
+#### Fedora COPR (43 - 44)
+
+```sh
+sudo dnf copr enable reakjra/omikuji
+sudo dnf install omikuji
+```
+> or manually install with the `.rpm` in the [releases page](https://github.com/reakjra/omikuji/releases).
+
 #### Flatpak 
 
 Until I bother with reading the flathub documentation to submit, you can manually install it yourself:
