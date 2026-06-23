@@ -1013,7 +1013,7 @@ property real cardZoom: uiSettings.cardZoom
             { text: "File Explorer (explorer)", action: "explorer" },
             { text: "Run EXE in prefix…", action: "run_exe" },
             { text: "Kill wineserver", action: "killwineserver", danger: true }
-        ]
+        ] // TODO: dry up the dispatcher mighjt aswell kill it
 
         onItemClicked: (action) => {
             if (!root.selectedGame || !root.selectedGame.gameId) return
@@ -1126,3 +1126,6 @@ property real cardZoom: uiSettings.cardZoom
 }
 
 // TODO might just really need to spend a week just on un-spaghettifying the whole qml. just sayin
+// TODO refractor game cards (need proper indexes for sorting)
+// TODO restyle toast
+// TODO kill dropshadow so we can drop qt6-5compat
