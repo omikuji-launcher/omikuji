@@ -4,6 +4,11 @@ A Qt/QML based games/apps launcher for Linux. Built 'cause I couldn't bear havin
 
 Manages wine/proton runners, wineprefixes, DXVK/VKD3D, and game launching. Imports from Steam, installs Epic, GOG and Waifu machine slots games directly. 
 
+## Read the docs! 
+
+> [!IMPORTANT]
+> You feel lost, want more infos or just waste time? Read the [Docs](https://reakjra.github.io/omikuji).
+
 ## Screenshots
 
 | Library                                          | Edit Game                                                 |
@@ -208,12 +213,12 @@ Bug reports (especially these), requests and PRs welcome. A few notes:
 - Open an issue before a big change so we can talk about it first.
 - Match the existing code style. (literally just make it better than mine)
 - Keep PRs focused. One thing at a time.
-- This is a solo project, so no back-compat shims for old behavior. If something needs to change, it changes (praying it doesn't break anything).
 - Be thorough in explaining a issue/request/PR, im dummy
 - Whatever other 20 reasons people usually list in their contributing section
-- Might still have no proper app-wise stacktraces when releasing it (just a note if for x reasons the app crashes)
 
 - assets repo: [omikuji-assets](https://github.com/reakjra/omikuji-assets)
+
+> See also: [Dev Infos](https://reakjra.github.io/omikuji/dev/overview.html)
 
 ## License
 

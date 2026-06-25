@@ -13,6 +13,7 @@ Item {
     readonly property string appVersion: gameModel ? gameModel.app_version() : ""
     readonly property string repoUrl: "https://github.com/reakjra/omikuji"
     readonly property string assetsRepoUrl: "https://github.com/reakjra/omikuji-assets"
+    readonly property string docsUrl: "https://reakjra.github.io/omikuji"
 
     implicitHeight: content.height
 
@@ -71,47 +72,34 @@ Item {
                 width: parent.width
                 spacing: 10
 
-                Row {
-                    width: parent.width
-                    spacing: 12
-                    Text {
-                        text: "Source"
-                        color: theme.textMuted
-                        font.pixelSize: 13
-                        width: 80
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "<a href='" + root.repoUrl + "' style='color:" + theme.accent + "'>" + root.repoUrl + "</a>"
-                        color: theme.accent
-                        font.pixelSize: 13
-                        font.family: "monospace"
-                        textFormat: Text.RichText
-                        onLinkActivated: (link) => Qt.openUrlExternally(link)
-                        anchors.verticalCenter: parent.verticalCenter
-                        HoverHandler { cursorShape: Qt.PointingHandCursor }
-                    }
-                }
+                Repeater {
+                    model: [
+                        { label: "Source", url: root.repoUrl },
+                        { label: "Assets", url: root.assetsRepoUrl },
+                        { label: "Docs", url: root.docsUrl }
+                    ]
 
-                Row {
-                    width: parent.width
-                    spacing: 12
-                    Text {
-                        text: "Assets"
-                        color: theme.textMuted
-                        font.pixelSize: 13
-                        width: 80
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: "<a href='" + root.assetsRepoUrl + "' style='color:" + theme.accent + "'>" + root.assetsRepoUrl + "</a>"
-                        color: theme.accent
-                        font.pixelSize: 13
-                        font.family: "monospace"
-                        textFormat: Text.RichText
-                        onLinkActivated: (link) => Qt.openUrlExternally(link)
-                        anchors.verticalCenter: parent.verticalCenter
-                        HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    Row {
+                        required property var modelData
+                        width: parent.width
+                        spacing: 12
+                        Text {
+                            text: modelData.label
+                            color: theme.textMuted
+                            font.pixelSize: 13
+                            width: 80
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "<a href='" + modelData.url + "' style='color:" + theme.accent + "'>" + modelData.url + "</a>"
+                            color: theme.accent
+                            font.pixelSize: 13
+                            font.family: "monospace"
+                            textFormat: Text.RichText
+                            onLinkActivated: (link) => Qt.openUrlExternally(link)
+                            anchors.verticalCenter: parent.verticalCenter
+                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                        }
                     }
                 }
             }
