@@ -9,7 +9,7 @@ Manages wine/proton runners, wineprefixes, DXVK/VKD3D, and game launching. Impor
 > [!IMPORTANT]
 > You feel lost, want more infos or just waste time? Read the [Docs](https://reakjra.github.io/omikuji).
 
-- [Configuration](docs/site/src/user/configuration.md): `settings.toml`, custom runners, DLL packs
+- [Configuration](https://reakjra.github.io/omikuji/user/configuration.html): `settings.toml`, custom runners, DLL packs
 - [Nix Home Manager options](docs/hm-module.md): Every options available in the Home Manager module
 
 ## Screenshots
@@ -196,10 +196,9 @@ QML side held up with tape and prays🙏
 
 
 Not implemented/WIP/Planning to add: 
-- i18n/qsTr (ehahahshhaha)
+- i18n/qsTr (ehahahshhaha) < why this exists
 - Amazon Games (Nile)
-- make gacha stuff optional (not automatically fetched on startup)
-- more CLI commands which i cant be bothered with yet
+
 
 ## Contributing
 
