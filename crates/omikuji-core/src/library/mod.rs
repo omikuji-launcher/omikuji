@@ -489,106 +489,70 @@ impl Game {
 
     // skips fields the caller already set so per-source picks (steam:appid etc) survive
     pub fn seed_from_defaults(&mut self, d: &crate::defaults::Defaults) {
+        fn seed<T: PartialEq + Clone>(field: &mut T, stock: &T, default: &Option<T>) {
+            if *field == *stock
+                && let Some(v) = default { *field = v.clone(); }
+        }
+
         let w = WineConfig::default();
         let g = GraphicsConfig::default();
         let gs_def = GamescopeConfig::default();
         let s = SystemConfig::default();
         let l = LaunchConfig::default();
 
-        if self.wine.version == w.version
-            && let Some(v) = &d.wine.version { self.wine.version = v.clone(); }
-        if self.wine.prefix == w.prefix
-            && let Some(v) = &d.wine.prefix { self.wine.prefix = v.clone(); }
-        if self.wine.prefix_arch == w.prefix_arch
-            && let Some(v) = &d.wine.prefix_arch { self.wine.prefix_arch = v.clone(); }
-        if self.wine.esync == w.esync
-            && let Some(v) = d.wine.esync { self.wine.esync = v; }
-        if self.wine.fsync == w.fsync
-            && let Some(v) = d.wine.fsync { self.wine.fsync = v; }
-        if self.wine.ntsync == w.ntsync
-            && let Some(v) = d.wine.ntsync { self.wine.ntsync = v; }
-        if self.wine.dxvk == w.dxvk
-            && let Some(v) = d.wine.dxvk { self.wine.dxvk = v; }
-        if self.wine.dxvk_version == w.dxvk_version
-            && let Some(v) = &d.wine.dxvk_version { self.wine.dxvk_version = v.clone(); }
-        if self.wine.vkd3d == w.vkd3d
-            && let Some(v) = d.wine.vkd3d { self.wine.vkd3d = v; }
-        if self.wine.vkd3d_version == w.vkd3d_version
-            && let Some(v) = &d.wine.vkd3d_version { self.wine.vkd3d_version = v.clone(); }
-        if self.wine.d3d_extras == w.d3d_extras
-            && let Some(v) = d.wine.d3d_extras { self.wine.d3d_extras = v; }
-        if self.wine.d3d_extras_version == w.d3d_extras_version
-            && let Some(v) = &d.wine.d3d_extras_version { self.wine.d3d_extras_version = v.clone(); }
-        if self.wine.dxvk_nvapi == w.dxvk_nvapi
-            && let Some(v) = d.wine.dxvk_nvapi { self.wine.dxvk_nvapi = v; }
-        if self.wine.dxvk_nvapi_version == w.dxvk_nvapi_version
-            && let Some(v) = &d.wine.dxvk_nvapi_version { self.wine.dxvk_nvapi_version = v.clone(); }
-        if self.wine.fsr == w.fsr
-            && let Some(v) = d.wine.fsr { self.wine.fsr = v; }
-        if self.wine.battleye == w.battleye
-            && let Some(v) = d.wine.battleye { self.wine.battleye = v; }
-        if self.wine.easyanticheat == w.easyanticheat
-            && let Some(v) = d.wine.easyanticheat { self.wine.easyanticheat = v; }
-        if self.wine.dpi_scaling == w.dpi_scaling
-            && let Some(v) = d.wine.dpi_scaling { self.wine.dpi_scaling = v; }
-        if self.wine.dpi == w.dpi
-            && let Some(v) = d.wine.dpi { self.wine.dpi = v; }
-        if self.wine.audio_driver == w.audio_driver
-            && let Some(v) = &d.wine.audio_driver { self.wine.audio_driver = v.clone(); }
-        if self.wine.graphics_driver == w.graphics_driver
-            && let Some(v) = &d.wine.graphics_driver { self.wine.graphics_driver = v.clone(); }
+        seed(&mut self.wine.version, &w.version, &d.wine.version);
+        seed(&mut self.wine.prefix, &w.prefix, &d.wine.prefix);
+        seed(&mut self.wine.prefix_arch, &w.prefix_arch, &d.wine.prefix_arch);
+        seed(&mut self.wine.esync, &w.esync, &d.wine.esync);
+        seed(&mut self.wine.fsync, &w.fsync, &d.wine.fsync);
+        seed(&mut self.wine.ntsync, &w.ntsync, &d.wine.ntsync);
+        seed(&mut self.wine.dxvk, &w.dxvk, &d.wine.dxvk);
+        seed(&mut self.wine.dxvk_version, &w.dxvk_version, &d.wine.dxvk_version);
+        seed(&mut self.wine.vkd3d, &w.vkd3d, &d.wine.vkd3d);
+        seed(&mut self.wine.vkd3d_version, &w.vkd3d_version, &d.wine.vkd3d_version);
+        seed(&mut self.wine.d3d_extras, &w.d3d_extras, &d.wine.d3d_extras);
+        seed(&mut self.wine.d3d_extras_version, &w.d3d_extras_version, &d.wine.d3d_extras_version);
+        seed(&mut self.wine.dxvk_nvapi, &w.dxvk_nvapi, &d.wine.dxvk_nvapi);
+        seed(&mut self.wine.dxvk_nvapi_version, &w.dxvk_nvapi_version, &d.wine.dxvk_nvapi_version);
+        seed(&mut self.wine.fsr, &w.fsr, &d.wine.fsr);
+        seed(&mut self.wine.battleye, &w.battleye, &d.wine.battleye);
+        seed(&mut self.wine.easyanticheat, &w.easyanticheat, &d.wine.easyanticheat);
+        seed(&mut self.wine.dpi_scaling, &w.dpi_scaling, &d.wine.dpi_scaling);
+        seed(&mut self.wine.dpi, &w.dpi, &d.wine.dpi);
+        seed(&mut self.wine.audio_driver, &w.audio_driver, &d.wine.audio_driver);
+        seed(&mut self.wine.graphics_driver, &w.graphics_driver, &d.wine.graphics_driver);
         for (k, v) in &d.wine.dll_overrides {
             self.wine.dll_overrides.entry(k.clone()).or_insert_with(|| v.clone());
         }
 
-        if self.launch.command_prefix == l.command_prefix
-            && let Some(v) = &d.launch.command_prefix { self.launch.command_prefix = v.clone(); }
+        seed(&mut self.launch.command_prefix, &l.command_prefix, &d.launch.command_prefix);
         for (k, v) in &d.launch.env {
             self.launch.env.entry(k.clone()).or_insert_with(|| v.clone());
         }
 
-        if self.graphics.mangohud == g.mangohud
-            && let Some(v) = d.graphics.mangohud { self.graphics.mangohud = v; }
-        if self.graphics.gpu == g.gpu
-            && let Some(v) = &d.graphics.gpu { self.graphics.gpu = v.clone(); }
+        seed(&mut self.graphics.mangohud, &g.mangohud, &d.graphics.mangohud);
+        seed(&mut self.graphics.gpu, &g.gpu, &d.graphics.gpu);
 
         let gs = &mut self.graphics.gamescope;
         let dgs = &d.graphics.gamescope;
-        if gs.enabled == gs_def.enabled
-            && let Some(v) = dgs.enabled { gs.enabled = v; }
-        if gs.width == gs_def.width
-            && let Some(v) = dgs.width { gs.width = v; }
-        if gs.height == gs_def.height
-            && let Some(v) = dgs.height { gs.height = v; }
-        if gs.game_width == gs_def.game_width
-            && let Some(v) = dgs.game_width { gs.game_width = v; }
-        if gs.game_height == gs_def.game_height
-            && let Some(v) = dgs.game_height { gs.game_height = v; }
-        if gs.fps == gs_def.fps
-            && let Some(v) = dgs.fps { gs.fps = v; }
-        if gs.refresh_rate == gs_def.refresh_rate
-            && let Some(v) = dgs.refresh_rate { gs.refresh_rate = v; }
-        if gs.fullscreen == gs_def.fullscreen
-            && let Some(v) = dgs.fullscreen { gs.fullscreen = v; }
-        if gs.borderless == gs_def.borderless
-            && let Some(v) = dgs.borderless { gs.borderless = v; }
-        if gs.integer_scaling == gs_def.integer_scaling
-            && let Some(v) = dgs.integer_scaling { gs.integer_scaling = v; }
-        if gs.hdr == gs_def.hdr
-            && let Some(v) = dgs.hdr { gs.hdr = v; }
-        if gs.filter == gs_def.filter
-            && let Some(v) = &dgs.filter { gs.filter = v.clone(); }
-        if gs.fsr_sharpness == gs_def.fsr_sharpness
-            && let Some(v) = dgs.fsr_sharpness { gs.fsr_sharpness = v; }
+        seed(&mut gs.enabled, &gs_def.enabled, &dgs.enabled);
+        seed(&mut gs.width, &gs_def.width, &dgs.width);
+        seed(&mut gs.height, &gs_def.height, &dgs.height);
+        seed(&mut gs.game_width, &gs_def.game_width, &dgs.game_width);
+        seed(&mut gs.game_height, &gs_def.game_height, &dgs.game_height);
+        seed(&mut gs.fps, &gs_def.fps, &dgs.fps);
+        seed(&mut gs.refresh_rate, &gs_def.refresh_rate, &dgs.refresh_rate);
+        seed(&mut gs.fullscreen, &gs_def.fullscreen, &dgs.fullscreen);
+        seed(&mut gs.borderless, &gs_def.borderless, &dgs.borderless);
+        seed(&mut gs.integer_scaling, &gs_def.integer_scaling, &dgs.integer_scaling);
+        seed(&mut gs.hdr, &gs_def.hdr, &dgs.hdr);
+        seed(&mut gs.filter, &gs_def.filter, &dgs.filter);
+        seed(&mut gs.fsr_sharpness, &gs_def.fsr_sharpness, &dgs.fsr_sharpness);
 
-        if self.system.gamemode == s.gamemode
-            && let Some(v) = d.system.gamemode { self.system.gamemode = v; }
-        if self.system.prevent_sleep == s.prevent_sleep
-            && let Some(v) = d.system.prevent_sleep { self.system.prevent_sleep = v; }
-        if self.system.pulse_latency == s.pulse_latency
-            && let Some(v) = d.system.pulse_latency { self.system.pulse_latency = v; }
-        if self.system.cpu_limit == s.cpu_limit
-            && let Some(v) = d.system.cpu_limit { self.system.cpu_limit = v; }
+        seed(&mut self.system.gamemode, &s.gamemode, &d.system.gamemode);
+        seed(&mut self.system.prevent_sleep, &s.prevent_sleep, &d.system.prevent_sleep);
+        seed(&mut self.system.pulse_latency, &s.pulse_latency, &d.system.pulse_latency);
+        seed(&mut self.system.cpu_limit, &s.cpu_limit, &d.system.cpu_limit);
     }
 }
 
