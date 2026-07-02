@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.5.0
+Version:        0.5.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,11 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Thu Jul 02 2026 reakjra <reakjra@proton.me> - 0.5.1-1
+- Env sets for flatpak/native/steam games.
+- GOG uninstall button
+- Various minor fixes
+
 * Sat Jun 27 2026 reakjra <reakjra@proton.me> - 0.5.0-1
 - Ofuda system (prefix manager)
 - Prefix prep modal
