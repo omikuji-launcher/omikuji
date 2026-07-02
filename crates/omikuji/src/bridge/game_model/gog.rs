@@ -33,42 +33,11 @@ impl super::qobject::GameModel {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();
 
-        std::thread::spawn(move || {
-            let rt = match tokio::runtime::Runtime::new() {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::error!("failed to create tokio runtime: {}", e);
-                    omikuji_core::install_sizes::push(omikuji_core::install_sizes::InstallSizeResult {
-                        request_id: rid,
-                        download_bytes: 0,
-                        install_bytes: 0,
-                        error: format!("tokio runtime: {}", e),
-                    });
-                    return;
-                }
-            };
-            let result = rt.block_on(async {
-                omikuji_core::gog::fetch_install_size(&app_name_str).await
-            });
-
-            let pushed = match result {
-                Ok(size) => omikuji_core::install_sizes::InstallSizeResult {
-                    request_id: rid,
-                    download_bytes: size.download_bytes,
-                    install_bytes: size.install_bytes,
-                    error: String::new(),
-                },
-                Err(e) => {
-                    tracing::error!("install size fetch failed: {}", e);
-                    omikuji_core::install_sizes::InstallSizeResult {
-                        request_id: rid,
-                        download_bytes: 0,
-                        install_bytes: 0,
-                        error: format!("{}", e),
-                    }
-                }
-            };
-            omikuji_core::install_sizes::push(pushed);
+        omikuji_core::install_sizes::spawn_fetch(rid, move || async move {
+            omikuji_core::gog::fetch_install_size(&app_name_str)
+                .await
+                .map(|s| (s.download_bytes, s.install_bytes))
+                .map_err(|e| e.to_string())
         });
     }
 

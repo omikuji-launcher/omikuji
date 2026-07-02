@@ -30,6 +30,38 @@ pub fn take_pending() -> Vec<InstallSizeResult> {
         .unwrap_or_default()
 }
 
+// os thread + fresh runtime: cant call block_on inside the app's existing tokio context
+pub fn spawn_fetch<F, Fut>(request_id: String, fetch: F)
+where
+    F: FnOnce() -> Fut + Send + 'static,
+    Fut: std::future::Future<Output = Result<(u64, u64), String>>,
+{
+    std::thread::spawn(move || {
+        let result = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt.block_on(fetch()),
+            Err(e) => Err(format!("tokio runtime: {}", e)),
+        };
+        let pushed = match result {
+            Ok((download_bytes, install_bytes)) => InstallSizeResult {
+                request_id,
+                download_bytes,
+                install_bytes,
+                error: String::new(),
+            },
+            Err(error) => {
+                tracing::error!("install size fetch failed: {}", error);
+                InstallSizeResult {
+                    request_id,
+                    download_bytes: 0,
+                    install_bytes: 0,
+                    error,
+                }
+            }
+        };
+        push(pushed);
+    });
+}
+
 #[derive(Debug, Clone)]
 pub struct FileDialogResult {
     pub request_id: String,

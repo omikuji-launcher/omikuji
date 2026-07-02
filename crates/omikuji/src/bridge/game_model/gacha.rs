@@ -96,57 +96,18 @@ impl super::qobject::GameModel {
         let eid = edition_id.to_string();
         let voices_str = voices_csv.to_string();
 
-        std::thread::spawn(move || {
-            let rt = match tokio::runtime::Runtime::new() {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::error!("tokio runtime: {}", e);
-                    omikuji_core::install_sizes::push(
-                        omikuji_core::install_sizes::InstallSizeResult {
-                            request_id: rid,
-                            download_bytes: 0,
-                            install_bytes: 0,
-                            error: format!("runtime: {}", e),
-                        },
-                    );
-                    return;
-                }
-            };
-
-            let pushed = rt.block_on(async move {
-                let Some(manifest) = omikuji_core::gachas::manifest::find(&mid) else {
-                    return omikuji_core::install_sizes::InstallSizeResult {
-                        request_id: rid.clone(),
-                        download_bytes: 0,
-                        install_bytes: 0,
-                        error: format!("unknown manifest: {}", mid),
-                    };
-                };
-                let voices: Vec<String> = voices_str
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .filter(|s| !s.is_empty())
-                    .collect();
-                match omikuji_core::gachas::strategies::fetch_install_size(&manifest, &eid, &voices).await {
-                    Ok(sz) => omikuji_core::install_sizes::InstallSizeResult {
-                        request_id: rid,
-                        download_bytes: sz.download_bytes,
-                        install_bytes: sz.install_bytes,
-                        error: String::new(),
-                    },
-                    Err(e) => {
-                        tracing::error!("gacha size {}: {}", mid, e);
-                        omikuji_core::install_sizes::InstallSizeResult {
-                            request_id: rid,
-                            download_bytes: 0,
-                            install_bytes: 0,
-                            error: e.to_string(),
-                        }
-                    }
-                }
-            });
-
-            omikuji_core::install_sizes::push(pushed);
+        omikuji_core::install_sizes::spawn_fetch(rid, move || async move {
+            let manifest = omikuji_core::gachas::manifest::find(&mid)
+                .ok_or_else(|| format!("unknown manifest: {}", mid))?;
+            let voices: Vec<String> = voices_str
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            omikuji_core::gachas::strategies::fetch_install_size(&manifest, &eid, &voices)
+                .await
+                .map(|s| (s.download_bytes, s.install_bytes))
+                .map_err(|e| e.to_string())
         });
     }
 
