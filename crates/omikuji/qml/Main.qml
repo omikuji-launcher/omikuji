@@ -301,18 +301,29 @@ ApplicationWindow {
         id: libWatcher
         onChanged: {
             gameModel.refresh(selectedGameIndex)
-            if (selectedGameId !== "") {
-                for (let i = 0; i < gameModel.count; i++) {
-                    let game = gameModel.get_game(i)
-                    if (game && game["gameId"] === selectedGameId) {
-                        selectedGameIndex = i
-                        break
-                    }
-                }
-            }
+            resyncSelectedIndex()
             updateSelection()
         }
         Component.onCompleted: watch(gameModel.library_dir())
+    }
+
+    function resyncSelectedIndex() {
+        if (selectedGameId === "") return
+        for (let i = 0; i < gameModel.count; i++) {
+            let game = gameModel.get_game(i)
+            if (game && game["gameId"] === selectedGameId) {
+                selectedGameIndex = i
+                return
+            }
+        }
+        selectedGameIndex = -1
+    }
+
+    Connections {
+        target: gameModel
+        function onRowsMoved() { root.resyncSelectedIndex() }
+        function onRowsInserted() { root.resyncSelectedIndex() }
+        function onRowsRemoved() { root.resyncSelectedIndex() }
     }
 
 
