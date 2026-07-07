@@ -31,6 +31,8 @@ Item {
 
     property bool clickable: true
     property bool contextEnabled: false
+    property bool reorderable: false
+    property bool reordering: false
 
     property Component actionComponent: null
     property Component overlayComponent: null
@@ -38,6 +40,9 @@ Item {
     signal clicked()
     signal doubleClicked()
     signal rightClicked(real winX, real winY)
+    signal reorderStarted(real grabX, real grabY)
+    signal reorderMoved(real winX, real winY)
+    signal reorderEnded()
 
     readonly property bool nameHovered: {
         if (!cardHover.containsMouse) return false
@@ -79,7 +84,9 @@ Item {
             : theme.cardBg
         border.width: root.selected ? root.selectedBorderWidth : 0
         border.color: root.selectedBorderColor
-        scale: cardHover.containsPress ? 0.96 : (cardHover.containsMouse ? 1.02 : 1.0)
+        scale: root.reordering ? 1.0
+            : cardHover.containsPress ? 0.96
+            : (cardHover.containsMouse ? 1.02 : 1.0)
 
         Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
         Behavior on border.width { NumberAnimation { duration: 100 } }
@@ -215,15 +222,18 @@ Item {
         anchors.fill: parent
         hoverEnabled: root.cardVisible
         enabled: root.cardVisible
-        cursorShape: root.cardVisible && root.clickable
+        cursorShape: root.reordering ? Qt.ClosedHandCursor
+            : root.cardVisible && root.clickable
             ? Qt.PointingHandCursor
             : Qt.ArrowCursor
         acceptedButtons: root.clickable
             ? (root.contextEnabled ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton)
             : Qt.NoButton
+        preventStealing: root.reordering
 
         onClicked: (mouse) => {
             if (!root.cardVisible) return
+            if (mouse.wasHeld && root.reorderable) return
             mouse.accepted = true
             if (mouse.button === Qt.RightButton) {
                 let winPos = root.mapToItem(null, mouse.x, mouse.y)
@@ -239,5 +249,26 @@ Item {
             mouse.accepted = true
             root.doubleClicked()
         }
+
+        onPressAndHold: (mouse) => {
+            if (!root.reorderable || mouse.button !== Qt.LeftButton) return
+            root.reordering = true
+            root.reorderStarted(mouse.x, mouse.y)
+        }
+
+        onPositionChanged: (mouse) => {
+            if (!root.reordering) return
+            let p = root.mapToItem(null, mouse.x, mouse.y)
+            root.reorderMoved(p.x, p.y)
+        }
+
+        onReleased: root._finishReorder()
+        onCanceled: root._finishReorder()
+    }
+
+    function _finishReorder() {
+        if (!reordering) return
+        reordering = false
+        reorderEnded()
     }
 }

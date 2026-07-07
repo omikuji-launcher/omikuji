@@ -476,7 +476,7 @@ impl qobject::UiSettingsBridge {
 
     fn apply_card_sort(mut self: Pin<&mut Self>, value: &cxx_qt_lib::QString) {
         let v = value.to_string();
-        let allowed = matches!(v.as_str(), "default" | "a-z" | "z-a");
+        let allowed = matches!(v.as_str(), "default" | "a-z" | "z-a" | "custom");
         let final_v = if allowed { value.clone() } else { cxx_qt_lib::QString::from("default") };
         self.as_mut().set_card_sort(final_v);
         self.persist();

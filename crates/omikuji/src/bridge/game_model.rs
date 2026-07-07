@@ -145,6 +145,14 @@ pub mod qobject {
         fn apply_sort_mode(self: Pin<&mut GameModel>, value: &QString);
 
         #[qinvokable]
+        #[cxx_name = "moveGame"]
+        fn move_game(self: Pin<&mut GameModel>, from: i32, to: i32);
+
+        #[qinvokable]
+        #[cxx_name = "commitOrder"]
+        fn commit_order(self: Pin<&mut GameModel>);
+
+        #[qinvokable]
         fn begin_edit_game(self: Pin<&mut GameModel>, index: i32) -> QMap_QString_QVariant;
 
         #[qinvokable]
@@ -514,6 +522,21 @@ pub mod qobject {
         #[inherit]
         fn end_remove_rows(self: Pin<&mut GameModel>);
 
+        #[cxx_name = "beginMoveRows"]
+        #[inherit]
+        fn begin_move_rows(
+            self: Pin<&mut GameModel>,
+            source_parent: &QModelIndex,
+            source_first: i32,
+            source_last: i32,
+            destination_parent: &QModelIndex,
+            destination_child: i32,
+        ) -> bool;
+
+        #[cxx_name = "endMoveRows"]
+        #[inherit]
+        fn end_move_rows(self: Pin<&mut GameModel>);
+
         #[cxx_name = "beginResetModel"]
         #[inherit]
         fn begin_reset_model(self: Pin<&mut GameModel>);
@@ -545,6 +568,7 @@ pub mod qobject {
 }
 
 use std::cmp::Ordering;
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::pin::Pin;
 
@@ -575,6 +599,7 @@ enum SortMode {
     Added,
     NameAsc,
     NameDesc,
+    Custom,
 }
 
 impl SortMode {
@@ -582,6 +607,7 @@ impl SortMode {
         match v {
             "a-z" => Self::NameAsc,
             "z-a" => Self::NameDesc,
+            "custom" => Self::Custom,
             _ => Self::Added,
         }
     }
@@ -592,6 +618,7 @@ impl SortMode {
             Self::Added => added,
             Self::NameAsc => a.display_sort_key().cmp(&b.display_sort_key()).then(added),
             Self::NameDesc => b.display_sort_key().cmp(&a.display_sort_key()).then(added),
+            Self::Custom => a.custom_key().cmp(&b.custom_key()),
         }
     }
 }
@@ -603,6 +630,7 @@ pub struct GameModelRust {
     draft: Option<Game>,
     preparing: bool,
     sort_mode: SortMode,
+    dirty_order: HashSet<String>,
 }
 
 impl Default for GameModelRust {
@@ -611,7 +639,7 @@ impl Default for GameModelRust {
         let sort_mode = SortMode::parse(&UiSettings::load().display.card_sort);
         library.game.sort_by(|a, b| sort_mode.cmp(a, b));
         let count = library.game.len() as i32;
-        Self { library, count, draft: None, preparing: false, sort_mode }
+        Self { library, count, draft: None, preparing: false, sort_mode, dirty_order: Default::default() }
     }
 }
 
@@ -997,8 +1025,71 @@ impl qobject::GameModel {
         if mode == self.sort_mode {
             return;
         }
+        if mode == SortMode::Custom {
+            self.as_mut().materialize_custom_order();
+            self.as_mut().commit_order();
+        }
         self.as_mut().rust_mut().get_mut().sort_mode = mode;
         self.resort_reset();
+    }
+
+    fn materialize_custom_order(mut self: Pin<&mut Self>) {
+        let rust = self.as_mut().rust_mut().get_mut();
+        let mut next = rust
+            .library
+            .game
+            .iter()
+            .filter_map(|g| g.metadata.custom_pos)
+            .max()
+            .map_or(0, |m| m + 1);
+        for game in rust.library.game.iter_mut() {
+            if game.metadata.custom_pos.is_none() {
+                game.metadata.custom_pos = Some(next);
+                next += 1;
+                rust.dirty_order.insert(game.metadata.id.clone());
+            }
+        }
+    }
+
+    fn move_game(mut self: Pin<&mut Self>, from: i32, to: i32) {
+        let count = self.library.game.len() as i32;
+        if self.sort_mode != SortMode::Custom
+            || from == to
+            || !(0..count).contains(&from)
+            || !(0..count).contains(&to)
+        {
+            return;
+        }
+        let dest = if to > from { to + 1 } else { to };
+        if !self.as_mut().begin_move_rows(
+            &QModelIndex::default(),
+            from,
+            from,
+            &QModelIndex::default(),
+            dest,
+        ) {
+            return;
+        }
+        let rust = self.as_mut().rust_mut().get_mut();
+        let game = rust.library.game.remove(from as usize);
+        rust.library.game.insert(to as usize, game);
+        for (i, g) in rust.library.game.iter_mut().enumerate() {
+            if g.metadata.custom_pos != Some(i as u32) {
+                g.metadata.custom_pos = Some(i as u32);
+                rust.dirty_order.insert(g.metadata.id.clone());
+            }
+        }
+        self.as_mut().end_move_rows();
+    }
+
+    fn commit_order(mut self: Pin<&mut Self>) {
+        let rust = self.as_mut().rust_mut().get_mut();
+        let dirty = std::mem::take(&mut rust.dirty_order);
+        for game in rust.library.game.iter().filter(|g| dirty.contains(g.id())) {
+            if let Err(e) = Library::save_game_static(game) {
+                tracing::warn!("save custom order for {}: {}", game.id(), e);
+            }
+        }
     }
 
     // on failure, draft is preserved so the user can fix fields and retry (a bit useless most of the times but may it be a connection error)

@@ -141,9 +141,10 @@ Popup {
                     options: [
                         { label: qsTr("Date added"), value: "default" },
                         { label: qsTr("Name A-Z"), value: "a-z" },
-                        { label: qsTr("Name Z-A"), value: "z-a" }
+                        { label: qsTr("Name Z-A"), value: "z-a" },
+                        { label: qsTr("Custom"), value: "custom" }
                     ]
-                    currentIndex: root.sortValue === "a-z" ? 1 : root.sortValue === "z-a" ? 2 : 0
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === root.sortValue))
                     onSelected: (value) => root.sortSelected(value)
                 }
             }

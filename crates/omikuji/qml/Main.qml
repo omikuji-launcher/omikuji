@@ -690,6 +690,7 @@ property real cardZoom: uiSettings.cardZoom
                 cardBaseWidth: root.cardBaseWidth
                 cardBaseHeight: root.cardBaseHeight
                 cardFlow: uiSettings.cardFlow
+                cardSort: uiSettings.cardSort
                 searchText: topBar.searchText
                 filterKind: navTabs.tabs[navTabs.currentIndex]?.kind || "all"
                 filterValue: navTabs.tabs[navTabs.currentIndex]?.value || ""

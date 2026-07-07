@@ -43,6 +43,8 @@ pub struct Metadata {
     pub last_played: String,
     #[serde(default)]
     pub added: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custom_pos: Option<u32>,
     #[serde(default)]
     pub banner: String,
     #[serde(default)]
@@ -268,6 +270,7 @@ impl Metadata {
             playtime: 0.0,
             last_played: String::new(),
             added: rfc3339_now(),
+            custom_pos: None,
             banner: String::new(),
             coverart: String::new(),
             icon: String::new(),
@@ -510,6 +513,10 @@ impl Game {
 
     pub fn added_key(&self) -> (&str, &str) {
         (&self.metadata.added, &self.metadata.id)
+    }
+
+    pub fn custom_key(&self) -> (u32, (&str, &str)) {
+        (self.metadata.custom_pos.unwrap_or(u32::MAX), self.added_key())
     }
 
     pub fn display_sort_key(&self) -> String {

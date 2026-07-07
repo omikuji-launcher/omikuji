@@ -249,14 +249,10 @@ Item {
                     options: [
                         { label: qsTr("Date added"), value: "default" },
                         { label: qsTr("Name A-Z"),   value: "a-z" },
-                        { label: qsTr("Name Z-A"),   value: "z-a" }
+                        { label: qsTr("Name Z-A"),   value: "z-a" },
+                        { label: qsTr("Custom"),     value: "custom" }
                     ]
-                    currentIndex: {
-                        let v = uiSettings ? uiSettings.cardSort : "default"
-                        if (v === "a-z") return 1
-                        if (v === "z-a") return 2
-                        return 0
-                    }
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (uiSettings ? uiSettings.cardSort : "default")))
                     onSelected: (value) => uiSettings.applyCardSort(value)
                 }
             }
