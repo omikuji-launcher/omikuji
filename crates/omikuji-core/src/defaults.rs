@@ -301,15 +301,8 @@ impl Defaults {
     }
 
     pub fn save(&self) -> std::io::Result<()> {
-        let path = defaults_path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
         let body = toml::to_string_pretty(self)
             .map_err(std::io::Error::other)?;
-        let tmp = path.with_extension("toml.tmp");
-        std::fs::write(&tmp, body)?;
-        std::fs::rename(&tmp, &path)?;
-        Ok(())
+        crate::fs_util::write_atomic(&defaults_path(), body)
     }
 }

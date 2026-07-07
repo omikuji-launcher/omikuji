@@ -319,7 +319,6 @@ impl qobject::GogModel {
                             rust.games = games;
                             rust.imported = imported;
                             obj.as_mut().end_reset_model();
-                        } else {
                         }
                         obj.as_mut().set_is_refreshing(false);
                     });

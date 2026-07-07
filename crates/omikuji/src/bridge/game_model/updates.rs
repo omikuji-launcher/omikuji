@@ -243,7 +243,7 @@ impl super::qobject::GameModel {
             return false;
         };
         match omikuji_core::gachas::strategies::source_key(&manifest) {
-            Ok(key) => omikuji_core::downloads::manager().source_supports_repair(&key.to_string()),
+            Ok(key) => omikuji_core::downloads::manager().source_supports_repair(key),
             Err(_) => false,
         }
     }

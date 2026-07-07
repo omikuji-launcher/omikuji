@@ -1190,15 +1190,21 @@ impl qobject::GameModel {
 
         let game_id = self.library.game[idx].metadata.id.clone();
 
+        if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id) {
+            tracing::error!("failed to remove game file: {}", e);
+            omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                game_id,
+                title: "Remove failed".to_string(),
+                message: format!("Couldn't delete the game's library file: {}", e),
+                action: omikuji_core::process::ErrorAction::None,
+            });
+            return;
+        }
+
         self.as_mut()
             .begin_remove_rows(&QModelIndex::default(), index, index);
 
         self.as_mut().rust_mut().get_mut().library.game.remove(idx);
-
-        let lib = &mut self.as_mut().rust_mut().get_mut().library;
-        if let Err(e) = lib.remove_game(&game_id) {
-            tracing::error!("failed to remove game file: {}", e);
-        }
 
         media::remove_cached_media(&game_id);
 

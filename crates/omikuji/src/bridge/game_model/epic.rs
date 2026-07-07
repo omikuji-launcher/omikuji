@@ -176,8 +176,8 @@ impl super::qobject::GameModel {
                             tracing::warn!("legendary exited 0 but {} still exists, forcing cleanup", path.display());
                             omikuji_core::downloads::cleanup_install_dir_blocking(path);
                         }
-                    if let Ok(mut lib) = omikuji_core::library::Library::load() {
-                        let _ = lib.remove_game(&game_id_owned);
+                    if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id_owned) {
+                        tracing::error!("failed to remove game file: {}", e);
                     }
                     omikuji_core::notifications::success(&name, "Uninstalled");
                 }

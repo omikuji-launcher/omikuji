@@ -178,8 +178,8 @@ impl super::qobject::GameModel {
             if let Err(e) = omikuji_core::gog::remove_install(&app_id) {
                 tracing::error!("registry remove failed: {}", e);
             }
-            if let Ok(mut lib) = omikuji_core::library::Library::load() {
-                let _ = lib.remove_game(&game_id_owned);
+            if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id_owned) {
+                tracing::error!("failed to remove game file: {}", e);
             }
             omikuji_core::notifications::success(&name, "Uninstalled");
         });

@@ -60,8 +60,7 @@ pub fn desktop_dir() -> Option<PathBuf> {
         }
     }
 
-    let dirs_result = dirs::desktop_dir();
-    dirs_result
+    dirs::desktop_dir()
 }
 
 pub fn applications_dir() -> PathBuf {
@@ -210,29 +209,34 @@ pub fn launch_target(game: &Game) -> String {
     format!("{}_{}", game_slug(game), game.metadata.id)
 }
 
+fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
+    dir.join(desktop_filename(&game_slug(game), &game.metadata.id))
+}
+
+fn write_shortcut(game: &Game, path: &Path, label: &str) -> Result<()> {
+    fs::write(path, generate_desktop_content(game))
+        .with_context(|| format!("writing {} file {}", label, path.display()))?;
+    fs::set_permissions(path, fs::Permissions::from_mode(0o755))
+        .with_context(|| format!("setting permissions on {}", path.display()))
+}
+
+fn remove_shortcut(path: &Path, label: &str) -> Result<()> {
+    if path.exists() {
+        fs::remove_file(path)
+            .with_context(|| format!("removing {} file {}", label, path.display()))?;
+    }
+    Ok(())
+}
+
 pub fn create_desktop_shortcut(game: &Game) -> Result<PathBuf> {
     let desktop = desktop_dir()
-        .or_else(|| {
-            dirs::home_dir().map(|h| h.join("Desktop"))
-        })
+        .or_else(|| dirs::home_dir().map(|h| h.join("Desktop")))
         .context("could not find or create desktop directory")?;
+    fs::create_dir_all(&desktop)
+        .with_context(|| format!("creating desktop directory {}", desktop.display()))?;
 
-    if !desktop.exists() {
-        std::fs::create_dir_all(&desktop)
-            .with_context(|| format!("creating desktop directory {}", desktop.display()))?;
-    }
-
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    let path = desktop.join(&filename);
-
-    let content = generate_desktop_content(game);
-    fs::write(&path, content)
-        .with_context(|| format!("writing desktop file {}", path.display()))?;
-
-    let perms = fs::Permissions::from_mode(0o755);
-    fs::set_permissions(&path, perms)
-        .with_context(|| format!("setting permissions on {}", path.display()))?;
-
+    let path = shortcut_path(game, &desktop);
+    write_shortcut(game, &path, "desktop")?;
     Ok(path)
 }
 
@@ -241,60 +245,28 @@ pub fn create_menu_shortcut(game: &Game) -> Result<PathBuf> {
     fs::create_dir_all(&apps_dir)
         .with_context(|| format!("creating applications directory {}", apps_dir.display()))?;
 
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    let path = apps_dir.join(&filename);
-
-    let content = generate_desktop_content(game);
-    fs::write(&path, content)
-        .with_context(|| format!("writing menu file {}", path.display()))?;
-
-    let perms = fs::Permissions::from_mode(0o755);
-    fs::set_permissions(&path, perms)
-        .with_context(|| format!("setting permissions on {}", path.display()))?;
-
+    let path = shortcut_path(game, &apps_dir);
+    write_shortcut(game, &path, "menu")?;
     Ok(path)
 }
 
 pub fn remove_desktop_shortcut(game: &Game) -> Result<()> {
-    let Some(desktop) = desktop_dir() else {
-        return Ok(());
-    };
-
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    let path = desktop.join(&filename);
-
-    if path.exists() {
-        fs::remove_file(&path)
-            .with_context(|| format!("removing desktop file {}", path.display()))?;
+    match desktop_dir() {
+        Some(desktop) => remove_shortcut(&shortcut_path(game, &desktop), "desktop"),
+        None => Ok(()),
     }
-
-    Ok(())
 }
 
 pub fn remove_menu_shortcut(game: &Game) -> Result<()> {
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    let path = applications_dir().join(&filename);
-
-    if path.exists() {
-        fs::remove_file(&path)
-            .with_context(|| format!("removing menu file {}", path.display()))?;
-    }
-
-    Ok(())
+    remove_shortcut(&shortcut_path(game, &applications_dir()), "menu")
 }
 
 pub fn desktop_shortcut_exists(game: &Game) -> bool {
-    let Some(desktop) = desktop_dir() else {
-        return false;
-    };
-
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    desktop.join(&filename).exists()
+    desktop_dir().is_some_and(|desktop| shortcut_path(game, &desktop).exists())
 }
 
 pub fn menu_shortcut_exists(game: &Game) -> bool {
-    let filename = desktop_filename(&game_slug(game), &game.metadata.id);
-    applications_dir().join(&filename).exists()
+    shortcut_path(game, &applications_dir()).exists()
 }
 
 pub fn duplicate_game(game: &Game) -> Result<Game> {

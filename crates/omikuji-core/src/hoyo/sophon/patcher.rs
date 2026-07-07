@@ -464,7 +464,7 @@ pub async fn apply_update(
     // oh wow i just spent 1 hour trying to figure out why it'd fail the update. Oh wow, i just realized it was resources management clean-up in game. I'm so very happy right now. Im genuinely blistering happiness from all my pores.
     let tasks: Vec<FileTask> = all_tasks
         .into_iter()
-        .filter(|t| t.original_path(&game_dir).map_or(true, |p| p.exists()))
+        .filter(|t| t.original_path(&game_dir).is_none_or(|p| p.exists()))
         .collect();
     if total_before > tasks.len() {
         tracing::info!(

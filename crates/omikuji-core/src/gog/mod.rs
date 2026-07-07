@@ -5,7 +5,6 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use tokio::process::Command as AsyncCommand;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -260,7 +259,7 @@ impl GogStore {
             }
         }
 
-        games.sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase()));
+        games.sort_by_key(|a| a.title.to_lowercase());
         tracing::info!("got {} games from library", games.len());
         save_cached_library(&games);
         Ok(games)
@@ -373,9 +372,6 @@ pub fn record_install(
     title: &str,
 ) -> Result<()> {
     let registry = registry_path();
-    if let Some(parent) = registry.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
     let mut v: serde_json::Value = if registry.exists() {
         serde_json::from_str(&std::fs::read_to_string(&registry)?).unwrap_or_default()
     } else {
@@ -390,9 +386,7 @@ pub fn record_install(
             "title": title,
         }),
     );
-    let tmp = registry.with_extension("json.tmp");
-    std::fs::write(&tmp, serde_json::to_string_pretty(&v)?)?;
-    std::fs::rename(&tmp, &registry)?;
+    crate::fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
     Ok(())
 }
 
@@ -405,9 +399,7 @@ pub fn remove_install(app_name: &str) -> Result<()> {
     if let Some(obj) = v.as_object_mut() {
         obj.remove(app_name);
     }
-    let tmp = registry.with_extension("json.tmp");
-    std::fs::write(&tmp, serde_json::to_string_pretty(&v)?)?;
-    std::fs::rename(&tmp, &registry)?;
+    crate::fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
     Ok(())
 }
 
@@ -872,15 +864,8 @@ fn read_user_data() -> Option<(String, String)> {
 }
 
 fn save_user_data(name: &str, id: &str) {
-    let path = user_data_path();
-    if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
     let body = serde_json::json!({ "username": name, "userId": id }).to_string();
-    let tmp = path.with_extension("json.tmp");
-    if std::fs::write(&tmp, body).is_ok() {
-        let _ = std::fs::rename(&tmp, &path);
-    }
+    let _ = crate::fs_util::write_atomic(&user_data_path(), body);
 }
 
 async fn fetch_game_metadata(
@@ -968,11 +953,6 @@ pub fn load_cached_library() -> Vec<GogGame> {
 
 pub fn save_cached_library(games: &[GogGame]) {
     let path = cached_library_path();
-    if let Some(parent) = path.parent()
-        && let Err(e) = std::fs::create_dir_all(parent) {
-            tracing::error!("library cache dir create failed: {}", e);
-            return;
-        }
     let body = match serde_json::to_string(games) {
         Ok(s) => s,
         Err(e) => {
@@ -980,13 +960,8 @@ pub fn save_cached_library(games: &[GogGame]) {
             return;
         }
     };
-    let tmp = path.with_extension("json.tmp");
-    if let Err(e) = std::fs::write(&tmp, body) {
+    if let Err(e) = crate::fs_util::write_atomic(&path, body) {
         tracing::error!("library cache write failed: {}", e);
-        return;
-    }
-    if let Err(e) = std::fs::rename(&tmp, &path) {
-        tracing::error!("library cache rename failed: {}", e);
     }
 }
 
@@ -995,39 +970,9 @@ fn resolve_gog_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Optio
     if url.is_empty() {
         return None;
     }
-    // in-flight guard: gog's api can return the same banner for multiple
-    // siblings during a refresh, so we only want one outstanding fetch per (app, kind) pair
-    static INFLIGHT: Mutex<Vec<String>> = Mutex::new(Vec::new());
-    let key = format!("{}_{}", app_name, kind);
-    let cache_path = cached_image_path(app_name, kind);
-    if cache_path.exists() {
-        return Some(format!("file://{}", cache_path.display()));
-    }
-    {
-        let mut guard = INFLIGHT.lock().unwrap();
-        if guard.iter().any(|k| k == &key) {
-            return Some(url.to_string());
-        }
-        guard.push(key.clone());
-    }
-    let path = cache_path.clone();
-    let fetch_url = url.to_string();
-    tokio::spawn(async move {
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        match reqwest::get(&fetch_url).await {
-            Ok(resp) if resp.status().is_success() => {
-                if let Ok(bytes) = resp.bytes().await
-                    && let Err(e) = std::fs::write(&path, &bytes) {
-                        tracing::error!("image cache write failed {}: {}", path.display(), e);
-                    }
-            }
-            Ok(resp) => tracing::warn!("image fetch {} returned {}", fetch_url, resp.status()),
-            Err(e) => tracing::error!("image fetch failed {}: {}", fetch_url, e),
-        }
-        let mut guard = INFLIGHT.lock().unwrap();
-        guard.retain(|k| k != &key);
-    });
-    Some(url.to_string())
+    crate::media::fetch_cached_image(
+        &cached_image_path(app_name, kind),
+        url,
+        format!("gog_{}_{}", app_name, kind),
+    )
 }

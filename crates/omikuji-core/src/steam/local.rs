@@ -242,7 +242,7 @@ pub fn get_steam_users() -> Vec<SteamUser> {
         }
     }
 
-    users.sort_by(|a, b| b.most_recent.cmp(&a.most_recent));
+    users.sort_by_key(|u| std::cmp::Reverse(u.most_recent));
     users
 }
 

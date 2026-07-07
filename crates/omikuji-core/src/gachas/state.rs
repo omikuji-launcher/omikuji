@@ -100,12 +100,12 @@ pub fn scan_unity_file(
 fn try_parse_version_at(bytes: &[u8], pos: usize, terminator: u8) -> Option<String> {
     let mut p = pos;
     let mut parts: [Vec<u8>; 3] = [Vec::new(), Vec::new(), Vec::new()];
-    for i in 0..3 {
-        while p < bytes.len() && bytes[p].is_ascii_digit() && parts[i].len() < 3 {
-            parts[i].push(bytes[p]);
+    for (i, part) in parts.iter_mut().enumerate() {
+        while p < bytes.len() && bytes[p].is_ascii_digit() && part.len() < 3 {
+            part.push(bytes[p]);
             p += 1;
         }
-        if parts[i].is_empty() {
+        if part.is_empty() {
             return None;
         }
         if i < 2 {

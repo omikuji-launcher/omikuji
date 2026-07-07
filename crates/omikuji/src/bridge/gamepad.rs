@@ -98,10 +98,10 @@ fn classify(name: &str) -> &'static str {
 }
 
 fn detect_kind(gilrs: &Gilrs) -> &'static str {
-    for (_id, gp) in gilrs.gamepads() {
-        return classify(gp.name());
-    }
-    "xbox"
+    gilrs
+        .gamepads()
+        .next()
+        .map_or("xbox", |(_, gp)| classify(gp.name()))
 }
 
 fn stick_dir(x: f32, y: f32, deadzone: f32) -> Option<&'static str> {
@@ -167,8 +167,8 @@ impl qobject::GamepadBridge {
                                 });
                             }
                         }
-                        EventType::AxisChanged(axis, _, _) => {
-                            if axis == Axis::LeftStickX || axis == Axis::LeftStickY {
+                        EventType::AxisChanged(axis, _, _)
+                            if (axis == Axis::LeftStickX || axis == Axis::LeftStickY) => {
                                 let pad = gilrs.gamepad(event.id);
                                 let lx = pad.value(Axis::LeftStickX);
                                 let ly = pad.value(Axis::LeftStickY);
@@ -181,7 +181,6 @@ impl qobject::GamepadBridge {
                                     }
                                 }
                             }
-                        }
                         EventType::Connected => {
                             let kind = classify(gilrs.gamepad(event.id).name());
                             let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::GamepadBridge>| {

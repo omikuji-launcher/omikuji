@@ -562,10 +562,7 @@ impl qobject::UiSettingsBridge {
         } else {
             self.font_family.to_string()
         };
-        match std::ffi::CString::new(family) {
-            Ok(c) => unsafe { omikuji_set_app_font(c.as_ptr()) },
-            Err(_) => {}
-        }
+        if let Ok(c) = std::ffi::CString::new(family) { unsafe { omikuji_set_app_font(c.as_ptr()) } }
     }
 
     fn color_override(&self, token: &cxx_qt_lib::QString) -> cxx_qt_lib::QString {

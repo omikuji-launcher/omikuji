@@ -433,23 +433,11 @@ impl Library {
         Ok(None)
     }
 
-    pub fn remove_game(&mut self, id: &str) -> Result<bool> {
-        let path = match Self::find_game_file_by_id(id) {
-            Ok(Some(p)) => p,
-            _ => {
-                Self::library_dir().join(format!("_{}.toml", id))
-            }
-        };
-
-        if path.exists() {
-            let _ = fs::remove_file(&path);
+    pub fn remove_game_file(id: &str) -> Result<()> {
+        if let Some(path) = Self::find_game_file_by_id(id)? {
+            fs::remove_file(&path)?;
         }
-
-        if let Some(idx) = self.game.iter().position(|g| g.metadata.id == id) {
-            self.game.remove(idx);
-            return Ok(true);
-        }
-        Ok(false)
+        Ok(())
     }
 
     pub fn save_all(&self) -> Result<()> {

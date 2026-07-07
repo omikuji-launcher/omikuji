@@ -70,11 +70,10 @@ async fn main() {
     }
 
     unsafe { omikuji_capture_default_font(); }
-    if !ui.theme.follow_system_font && !ui.theme.font_family.is_empty() {
-        if let Ok(family) = CString::new(ui.theme.font_family) {
+    if !ui.theme.follow_system_font && !ui.theme.font_family.is_empty()
+        && let Ok(family) = CString::new(ui.theme.font_family) {
             unsafe { omikuji_set_app_font(family.as_ptr()) };
         }
-    }
 
     let mut engine = QQmlApplicationEngine::new();
 

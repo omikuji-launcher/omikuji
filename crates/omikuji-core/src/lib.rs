@@ -10,6 +10,7 @@ pub mod downloads;
 pub mod endfield;
 pub mod epic;
 pub mod external;
+pub mod fs_util;
 pub mod fs_watcher;
 pub mod gachas;
 pub mod gog;

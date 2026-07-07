@@ -5,7 +5,6 @@
 
 use anyhow::{anyhow, Result};
 use serde::Deserialize;
-use std::fs;
 
 #[derive(Debug, Deserialize)]
 struct IndexFile {
@@ -90,11 +89,7 @@ async fn fetch_one(
     let _parsed: super::manifest::GachaManifest = serde_json::from_slice(&body)
         .map_err(|e| anyhow!("invalid manifest from {}: {}", url, e))?;
 
-    let dir = crate::gachas_dir().join(publisher).join(game);
-    fs::create_dir_all(&dir)?;
-    let path = dir.join("manifest.json");
-    let tmp = path.with_extension("json.tmp");
-    fs::write(&tmp, &body)?;
-    fs::rename(&tmp, &path)?;
+    let path = crate::gachas_dir().join(publisher).join(game).join("manifest.json");
+    crate::fs_util::write_atomic(&path, &body)?;
     Ok(())
 }

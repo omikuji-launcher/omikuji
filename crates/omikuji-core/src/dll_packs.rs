@@ -163,11 +163,8 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     }
 
     if changed {
-        std::fs::create_dir_all(&marker_dir)?;
         let body = toml::to_string_pretty(&applied)?;
-        let tmp = marker_path.with_extension("toml.tmp");
-        std::fs::write(&tmp, body)?;
-        std::fs::rename(&tmp, &marker_path)?;
+        crate::fs_util::write_atomic(&marker_path, body)?;
     }
 
     Ok(())

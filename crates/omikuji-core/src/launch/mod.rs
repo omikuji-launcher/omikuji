@@ -86,11 +86,10 @@ pub fn build_launch(game: &Game) -> Result<LaunchConfig> {
     let wine_exe = resolve_wine_exe(variant, &game.wine.version)?;
     let mut env = build_env(game, variant, &wine_exe);
 
-    if variant == WineVariant::Proton {
-        if let Err(e) = crate::desktop::ensure_steam_icon(game) {
+    if variant == WineVariant::Proton
+        && let Err(e) = crate::desktop::ensure_steam_icon(game) {
             tracing::warn!("dock icon link failed for {}: {}", game.metadata.name, e);
         }
-    }
 
     let mut command = if game.is_epic() {
         let legendary = crate::downloads::legendary::find_legendary()

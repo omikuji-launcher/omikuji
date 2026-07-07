@@ -141,13 +141,8 @@ fn read_entries(path: &Path) -> Result<Vec<Entry>> {
 }
 
 fn write_entries(path: &Path, entries: &[Entry]) -> Result<()> {
-    if let Some(dir) = path.parent() {
-        fs::create_dir_all(dir)?;
-    }
-    let tmp = path.with_extension("vdf.tmp");
-    fs::write(&tmp, serialize_entries(entries))
-        .with_context(|| format!("writing {}", tmp.display()))?;
-    fs::rename(&tmp, path).with_context(|| format!("renaming into {}", path.display()))?;
+    crate::fs_util::write_atomic(path, serialize_entries(entries))
+        .with_context(|| format!("writing {}", path.display()))?;
     Ok(())
 }
 
@@ -287,11 +282,10 @@ fn set_artwork(config: &Path, appid: u32, game: &Game) {
     ];
 
     for (source, target) in assets {
-        if source.exists() && !target.exists() {
-            if let Err(e) = fs::copy(source, &target) {
+        if source.exists() && !target.exists()
+            && let Err(e) = fs::copy(source, &target) {
                 tracing::warn!("steam artwork copy to {} failed: {}", target.display(), e);
             }
-        }
     }
 }
 

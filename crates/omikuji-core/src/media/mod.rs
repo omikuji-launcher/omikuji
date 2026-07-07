@@ -149,7 +149,7 @@ where
     }
 
     // coverart first, card binds to this and it's ~5x smaller than hero
-    let tasks: Vec<(MediaType, &str, Vec<(&str, &str)>)> = vec![
+    let tasks = [
         (MediaType::Coverart, "grids", vec![("dimensions", "600x900")]),
         (MediaType::Banner, "heroes", vec![]),
         (MediaType::Icon, "icons", vec![]),
@@ -342,6 +342,42 @@ pub fn remove_cached_media(game_id: &str) {
             }
         }
     }
+}
+
+// in-flight guard: store apis can hand the same image to multiple siblings
+// during a refresh, so only one outstanding fetch per key
+pub fn fetch_cached_image(cache_path: &std::path::Path, url: &str, key: String) -> Option<String> {
+    static INFLIGHT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+    if cache_path.exists() {
+        return Some(format!("file://{}", cache_path.display()));
+    }
+    {
+        let mut guard = INFLIGHT.lock().unwrap();
+        if guard.iter().any(|k| k == &key) {
+            return Some(url.to_string());
+        }
+        guard.push(key.clone());
+    }
+
+    let path = cache_path.to_path_buf();
+    let fetch_url = url.to_string();
+    tokio::spawn(async move {
+        match reqwest::get(&fetch_url).await {
+            Ok(resp) if resp.status().is_success() => {
+                if let Ok(bytes) = resp.bytes().await
+                    && let Err(e) = crate::fs_util::write_atomic(&path, &bytes) {
+                        tracing::error!("image cache write failed {}: {}", path.display(), e);
+                    }
+            }
+            Ok(resp) => tracing::warn!("image fetch {} returned {}", fetch_url, resp.status()),
+            Err(e) => tracing::error!("image fetch failed {}: {}", fetch_url, e),
+        }
+        let mut guard = INFLIGHT.lock().unwrap();
+        guard.retain(|k| k != &key);
+    });
+
+    Some(url.to_string())
 }
 
 #[cfg(test)]

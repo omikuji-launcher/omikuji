@@ -67,14 +67,7 @@ pub fn set_active_version(source_name: &str, tag: &str) -> std::io::Result<()> {
 }
 
 fn save_inner(state: &ComponentState) -> std::io::Result<()> {
-    let path = state_path();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
     let body = toml::to_string_pretty(state)
         .map_err(std::io::Error::other)?;
-    let tmp = path.with_extension("toml.tmp");
-    std::fs::write(&tmp, body)?;
-    std::fs::rename(&tmp, &path)?;
-    Ok(())
+    crate::fs_util::write_atomic(&state_path(), body)
 }

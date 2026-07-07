@@ -244,15 +244,8 @@ impl UiSettings {
 
     // atomic write (tmp + rename) so a crash mid-save cant leave a half-written file (hopefully)
     pub fn save(&self) -> std::io::Result<()> {
-        let path = ui_settings_path();
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
         let body = toml::to_string_pretty(self)
             .map_err(std::io::Error::other)?;
-        let tmp = path.with_extension("toml.tmp");
-        std::fs::write(&tmp, body)?;
-        std::fs::rename(&tmp, &path)?;
-        Ok(())
+        crate::fs_util::write_atomic(&ui_settings_path(), body)
     }
 }
