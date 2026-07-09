@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.6.0" date="2026-07-09">
+      <description>
+        <ul>
+          <li>Data structure migration + migration modal </li>
+          <li>UI polish (smaller buttons, headers action buttons, log windows refinement, logs custom colors regex)</li>
+          <li>nvapi injection following source kind</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.5.3" date="2026-07-08">
       <description>
         <ul>

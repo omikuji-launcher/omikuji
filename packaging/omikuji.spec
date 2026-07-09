@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.5.3
+Version:        0.6.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,11 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Thu Jul 09 2026 reakjra <reakjra@proton.me> - 0.6.0-1
+- Data structure migration + migration modal 
+- UI polish (smaller buttons, headers action buttons, log windows refinement, logs custom colors regex)
+- nvapi injection following source kind
+
 * Wed Jul 08 2026 reakjra <reakjra@proton.me> - 0.5.3-1
 - Main library cards drag and drop with custom order.
 - Pre-launch scripts now executing before resolving the executable.
