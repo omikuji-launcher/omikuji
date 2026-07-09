@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Window
 import "../controls"
 import "../primitives"
+import "../popups"
 
 
 // this is such a mess sned help
@@ -15,6 +16,7 @@ Window {
     property string gameName: ""
     property var gameModel: null
     property var theme: null
+    property var uiSettings: null
     property bool autoScroll: true
     property bool justSaved: false
     property bool searchExpanded: false
@@ -32,28 +34,27 @@ Window {
     function refresh() {
         if (!gameModel) return
         logWindow.rawLog = gameModel.game_log(gameId)
-        updateDisplay()
-    }
-
-    function updateDisplay() {
         textArea.text = rawLog
-        if (!searchExpanded || searchInput.text.length === 0) {
-            if (autoScroll) {
-                textArea.cursorPosition = textArea.length
-            }
+        if (autoScroll && (!searchExpanded || searchInput.text.length === 0)) {
+            textArea.cursorPosition = textArea.length
         }
     }
 
     Connections {
         target: gameModel
         function onGameLogAppended(id) {
-            if (id === logWindow.gameId) {
-                let wasAtBottom = scroll.contentItem ? scroll.contentItem.atYEnd : true
-                logWindow.rawLog = gameModel.game_log(gameId)
-                updateDisplay()
-                if (wasAtBottom || logWindow.autoScroll) {
-                    timerScroll.start()
-                }
+            if (id !== logWindow.gameId) return
+            let wasAtBottom = scroll.contentItem ? scroll.contentItem.atYEnd : true
+            let fresh = gameModel.game_log(gameId)
+            if (fresh.startsWith(logWindow.rawLog)) {
+                if (fresh.length > logWindow.rawLog.length)
+                    textArea.insert(textArea.length, fresh.substring(logWindow.rawLog.length))
+            } else {
+                textArea.text = fresh
+            }
+            logWindow.rawLog = fresh
+            if (wasAtBottom || logWindow.autoScroll) {
+                timerScroll.start()
             }
         }
     }
@@ -65,72 +66,44 @@ Window {
     }
 
     Component.onCompleted: {
+        highlighter.attach(textArea.textDocument)
         visible = true
         refresh()
         raise()
         requestActivate()
     }
 
+    ThemedLogHighlighter {
+        id: highlighter
+        settings: logWindow.uiSettings
+    }
+
     onClosing: windowClosed()
 
+    function openSearch() {
+        searchExpanded = true
+        Qt.callLater(() => {
+            searchInput.forceActiveFocus()
+            floatingBar.updateMatches()
+        })
+    }
+
+    function closeSearch() {
+        searchExpanded = false
+        textArea.select(0, 0)
+        textArea.forceActiveFocus()
+    }
+
     Shortcut {
-        sequence: StandardKey.Cancel
+        sequences: [StandardKey.Cancel]
         context: Qt.WindowShortcut
-        onActivated: logWindow.close()
+        onActivated: logWindow.searchExpanded ? logWindow.closeSearch() : logWindow.close()
     }
 
     Shortcut {
         sequence: "Ctrl+F"
         context: Qt.WindowShortcut
-        onActivated: {
-            logWindow.searchExpanded = !logWindow.searchExpanded
-            if (logWindow.searchExpanded) {
-                Qt.callLater(() => {
-                    searchInput.forceActiveFocus()
-                    floatingBar.updateMatches()
-                })
-            } else {
-                textArea.select(0, 0)
-                logWindow.forceActiveFocus()
-            }
-        }
-    }
-
-    component HeaderButton: Item {
-        id: btn
-        property string label: ""
-        property color labelColor: logWindow.theme.text
-        property color borderColor: logWindow.theme.surfaceBorder
-        property color hoverColor: Qt.rgba(logWindow.theme.text.r, logWindow.theme.text.g, logWindow.theme.text.b, 0.08)
-        signal clicked()
-
-        implicitWidth: btnText.implicitWidth + 24
-        implicitHeight: 28
-
-        Rectangle {
-            anchors.fill: parent
-            radius: theme.radius.xs
-            color: btnArea.containsMouse ? btn.hoverColor : "transparent"
-            border.width: 1
-            border.color: btn.borderColor
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        Text {
-            id: btnText
-            anchors.centerIn: parent
-            text: btn.label
-            color: btn.labelColor
-            font.pixelSize: 12
-        }
-
-        MouseArea {
-            id: btnArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: btn.clicked()
-        }
+        onActivated: logWindow.searchExpanded ? logWindow.closeSearch() : logWindow.openSearch()
     }
 
     ColumnLayout {
@@ -199,10 +172,12 @@ Window {
                     }
                 }
 
-                HeaderButton {
+                M3Button {
                     Layout.preferredWidth: implicitWidth
                     Layout.preferredHeight: implicitHeight
-                    label: qsTr("Clear")
+                    small: true
+                    variant: "text"
+                    text: qsTr("Clear")
                     onClicked: {
                         if (gameModel) {
                             gameModel.clear_game_log(logWindow.gameId)
@@ -211,10 +186,12 @@ Window {
                     }
                 }
 
-                HeaderButton {
+                M3Button {
                     Layout.preferredWidth: implicitWidth
                     Layout.preferredHeight: implicitHeight
-                    label: qsTr("Copy all")
+                    small: true
+                    variant: "text"
+                    text: qsTr("Copy all")
                     onClicked: {
                         textArea.selectAll()
                         textArea.copy()
@@ -222,17 +199,13 @@ Window {
                     }
                 }
 
-                HeaderButton {
+                M3Button {
                     Layout.preferredWidth: implicitWidth
                     Layout.preferredHeight: implicitHeight
-                    label: logWindow.justSaved ? qsTr("Saved ✓") : qsTr("Save")
-                    labelColor: logWindow.justSaved ? logWindow.theme.success : logWindow.theme.text
-                    borderColor: logWindow.justSaved
-                        ? Qt.rgba(logWindow.theme.success.r, logWindow.theme.success.g, logWindow.theme.success.b, 0.5)
-                        : logWindow.theme.surfaceBorder
-                    hoverColor: logWindow.justSaved
-                        ? Qt.rgba(logWindow.theme.success.r, logWindow.theme.success.g, logWindow.theme.success.b, 0.18)
-                        : Qt.rgba(logWindow.theme.text.r, logWindow.theme.text.g, logWindow.theme.text.b, 0.08)
+                    small: true
+                    variant: "tonal"
+                    success: logWindow.justSaved
+                    text: logWindow.justSaved ? qsTr("Saved ✓") : qsTr("Save")
                     onClicked: {
                         if (!gameModel) return
                         let path = gameModel.save_game_log(logWindow.gameId)
@@ -282,22 +255,50 @@ Window {
         }
     }
 
-    Rectangle {
+    PopupSurface {
+        id: searchFab
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 20
+        width: 40
+        height: 40
+        radius: 20
+        visible: opacity > 0
+        opacity: logWindow.searchExpanded ? 0 : 1
+        scale: logWindow.searchExpanded ? 0.85 : 1
+
+        Behavior on opacity { NumberAnimation { duration: logWindow.theme.dur.xfast } }
+        Behavior on scale { NumberAnimation { duration: logWindow.theme.dur.fast; easing.type: logWindow.theme.ease.standard } }
+
+        SvgIcon {
+            anchors.centerIn: parent
+            name: "search"
+            size: 18
+            color: logWindow.theme.text
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: logWindow.openSearch()
+        }
+    }
+
+    PopupSurface {
         id: floatingBar
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 20
+        width: searchRow.implicitWidth + 32
         height: 40
-        width: logWindow.searchExpanded ? searchRow.implicitWidth + 32 : 40
-        radius: 20
-        color: logWindow.theme.bgAlt
-        border.width: 1
-        border.color: logWindow.theme.surfaceBorder
-        clip: true
+        radius: logWindow.theme.radius.lg
+        transformOrigin: Item.Right
+        visible: opacity > 0
+        opacity: logWindow.searchExpanded ? 1 : 0
+        scale: logWindow.searchExpanded ? 1 : 0.9
 
-        Behavior on width {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-        }
+        Behavior on opacity { NumberAnimation { duration: logWindow.theme.dur.fast } }
+        Behavior on scale { NumberAnimation { duration: logWindow.theme.dur.fast; easing.type: logWindow.theme.ease.standard } }
 
         property var matchPositions: []
         property int matchCount: 0
@@ -334,39 +335,10 @@ Window {
             textArea.select(pos, pos + searchInput.text.length)
         }
 
-        SvgIcon {
-            anchors.right: parent.right
-            anchors.rightMargin: 11
-            anchors.verticalCenter: parent.verticalCenter
-            name: "search"
-            size: 18
-            color: logWindow.theme.text
-            opacity: logWindow.searchExpanded ? 0 : 1
-            Behavior on opacity { NumberAnimation { duration: 150 } }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: !logWindow.searchExpanded
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                logWindow.searchExpanded = true
-                Qt.callLater(() => {
-                    searchInput.forceActiveFocus()
-                    floatingBar.updateMatches()
-                })
-            }
-        }
-
         Row {
             id: searchRow
-            anchors.right: parent.right
-            anchors.rightMargin: 16
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             spacing: 12
-            opacity: logWindow.searchExpanded ? 1 : 0
-            visible: opacity > 0
-            Behavior on opacity { NumberAnimation { duration: 200 } }
 
             SvgIcon {
                 anchors.verticalCenter: parent.verticalCenter
@@ -379,7 +351,6 @@ Window {
                 id: searchInput
                 anchors.verticalCenter: parent.verticalCenter
                 width: 160
-                enabled: logWindow.searchExpanded
                 color: logWindow.theme.text
                 font.pixelSize: 14
                 clip: true
@@ -437,11 +408,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 icon: "close"
                 size: 24
-                onClicked: {
-                    logWindow.searchExpanded = false
-                    textArea.select(0, 0)
-                    logWindow.forceActiveFocus()
-                }
+                onClicked: logWindow.closeSearch()
             }
         }
     }

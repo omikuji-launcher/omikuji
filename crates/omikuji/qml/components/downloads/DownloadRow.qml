@@ -178,6 +178,7 @@ Item {
                 IconButton {
                     icon: "close"
                     size: 36
+                    danger: !row.isFinished
                     onClicked: {
                         if (!row.downloadModel) return
                         // finished entries dismiss witout a prompt, files are kept either way

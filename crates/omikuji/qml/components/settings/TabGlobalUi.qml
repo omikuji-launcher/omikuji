@@ -17,6 +17,7 @@ Item {
     signal categoryAddRequested()
     signal categoryEditRequested(int index, var entry)
     signal categoryDeleteRequested(int index, var entry)
+    signal manageLogRulesRequested()
 
     // swallow our own eho so the ListModel doesnt tear down mid-toggle / mid-drag
     property bool _selfApplying: false
@@ -267,6 +268,25 @@ Item {
                     onToggled: (val) => uiSettings.applyMutedIcons(val)
                 }
             }
+
+            SettingsRow {
+                label: qsTr("Highlight logs")
+                description: qsTr("Color error, fixme and warning lines in log output")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.highlightLogs : true
+                    onToggled: (val) => uiSettings.applyHighlightLogs(val)
+                }
+            }
+
+            M3Button {
+                small: true
+                variant: "tonal"
+                text: qsTr("Manage colors")
+                visible: uiSettings ? uiSettings.highlightLogs : false
+                onClicked: root.manageLogRulesRequested()
+            }
         }
 
         SettingsSection {
@@ -493,6 +513,7 @@ Item {
                             IconButton {
                                 icon: "close"
                                 size: 32
+                                danger: true
                                 onClicked: root.categoryDeleteRequested(wrapper.index, {
                                     enabled: wrapper.model.enabled, name: wrapper.name, icon: wrapper.icon,
                                     kind: wrapper.kind, value: wrapper.value

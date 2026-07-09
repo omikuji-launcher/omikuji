@@ -192,6 +192,7 @@ fn main() {
                 "qml/components/dialogs/PrefixCreateDialog.qml",
                 "qml/components/dialogs/PrefixDetailDialog.qml",
                 "qml/components/dialogs/PrefixPrepDialog.qml",
+                "qml/components/dialogs/LogRulesDialog.qml",
                 "qml/components/dialogs/GameLogsWindow.qml",
                 "qml/components/dialogs/MigrationDialog.qml",
                 "qml/components/dialogs/SetsDialog.qml",
@@ -259,6 +260,7 @@ fn main() {
                 "qml/components/controls/M3TextField.qml",
                 "qml/components/controls/OutputLog.qml",
                 "qml/components/controls/PlayButton.qml",
+                "qml/components/controls/ThemedLogHighlighter.qml",
                 "qml/components/popups/PopupSurface.qml",
                 "qml/components/cards/StatusBadge.qml",
                 "qml/components/cards/StoreCardAction.qml",
@@ -274,6 +276,7 @@ fn main() {
     .files([
         "src/bridge/game_model.rs",
         "src/bridge/library_watcher.rs",
+        "src/bridge/log_highlighter.rs",
         "src/bridge/epic_model.rs",
         "src/bridge/gog_model.rs",
         "src/bridge/download_model.rs",

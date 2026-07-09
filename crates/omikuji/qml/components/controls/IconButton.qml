@@ -8,6 +8,7 @@ Item {
     property string icon: ""
     property int size: 28
     property bool rounded: false
+    property bool danger: false
     // blocked: looks disabled and swallows clicks but still hovers, Item.enabled would kill hover events
     property bool blocked: false
 
@@ -24,8 +25,8 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: rounded ? size / 2 : 8
-        color: hoverArea.containsPress ? theme.statePressed
-              : hoverArea.containsMouse ? theme.stateHover
+        color: hoverArea.containsPress ? (btn.danger ? theme.alpha(theme.error, 0.28) : theme.statePressed)
+              : hoverArea.containsMouse ? (btn.danger ? theme.alpha(theme.error, 0.18) : theme.stateHover)
               : theme.alpha(theme.text, 0)
         scale: hoverArea.containsPress ? 0.9 : 1.0
 
@@ -40,7 +41,7 @@ Item {
             anchors.centerIn: parent
             name: btn.icon
             size: Math.round(btn.size * 0.55)
-            color: hoverArea.containsMouse ? theme.iconHover : theme.icon
+            color: hoverArea.containsMouse ? (btn.danger ? theme.error : theme.iconHover) : theme.icon
 
             Behavior on color {
                 ColorAnimation { duration: 100 }

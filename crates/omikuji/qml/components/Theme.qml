@@ -63,6 +63,10 @@ QtObject {
     function mix(a, b, t) {
         return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
     }
+    function resolveColor(v) {
+        const t = theme[v]
+        return (t !== undefined && String(t).startsWith("#")) ? String(t) : v
+    }
 
     property color outline: alpha(text, 0.12)
     property color outlineStrong: alpha(text, 0.24)

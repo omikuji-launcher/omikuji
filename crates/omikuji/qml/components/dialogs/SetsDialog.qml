@@ -324,6 +324,7 @@ DialogCard {
 
                     IconButton {
                         icon: "close"
+                        danger: true
                         onClicked: editVars.remove(index)
                     }
                 }

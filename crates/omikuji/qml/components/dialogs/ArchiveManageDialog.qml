@@ -303,31 +303,16 @@ DialogCard {
                             font.weight: Font.Medium
                         }
 
-                        Rectangle {
+                        IconButton {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 28
-                            height: 28
-                            radius: 14
-                            color: deleteArea.containsMouse
-                                ? theme.alpha(theme.error, 0.18)
-                                : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                            SvgIcon {
-                                anchors.centerIn: parent
-                                name: "close"
-                                size: 14
-                                color: deleteArea.containsMouse ? theme.error : theme.textMuted
-                            }
-                            MouseArea {
-                                id: deleteArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    archiveManager.deleteVersion(root.category, root.sourceName, tag)
-                                    root.refreshInstalled()
-                                    root.versionDeleted(root.category, root.sourceName, tag)
-                                }
+                            icon: "close"
+                            size: 28
+                            rounded: true
+                            danger: true
+                            onClicked: {
+                                archiveManager.deleteVersion(root.category, root.sourceName, tag)
+                                root.refreshInstalled()
+                                root.versionDeleted(root.category, root.sourceName, tag)
                             }
                         }
                     }

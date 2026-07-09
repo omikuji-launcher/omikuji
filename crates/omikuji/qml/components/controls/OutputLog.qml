@@ -14,6 +14,13 @@ Rectangle {
     radius: theme.radius.sm
     clip: true
 
+    ThemedLogHighlighter {
+        id: highlighter
+        settings: uiSettings
+    }
+
+    Component.onCompleted: highlighter.attach(area.textDocument)
+
     ScrollView {
         anchors.fill: parent
         anchors.margins: 8

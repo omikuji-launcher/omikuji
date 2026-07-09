@@ -19,6 +19,7 @@ Item {
     signal categoryAddRequested()
     signal categoryEditRequested(int index, var entry)
     signal categoryDeleteRequested(int index, var entry)
+    signal manageLogRulesRequested()
 
     signal defaultsApplyToExistingRequested()
     signal manageSetsRequested(string kind)
@@ -110,6 +111,7 @@ Item {
                 item.categoryAddRequested.connect(() => root.categoryAddRequested())
                 item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
                 item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
+                item.manageLogRulesRequested.connect(() => root.manageLogRulesRequested())
             }
         }
 

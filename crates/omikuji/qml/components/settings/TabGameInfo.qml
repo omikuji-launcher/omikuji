@@ -111,53 +111,12 @@ Item {
                 onTextEdited: (t) => updateField("meta.icon", t)
             }
 
-            Item {
-                id: refetchBtn
-                width: refetchRow.implicitWidth + 24
-                height: 32
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: theme.radius.sm
-                    color: refetchMouse.containsPress
-                        ? theme.alpha(theme.text, 0.14)
-                        : (refetchMouse.containsMouse
-                            ? theme.alpha(theme.text, 0.08)
-                            : "transparent")
-                    border.width: 1
-                    border.color: theme.alpha(theme.text, 0.18)
-
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                }
-
-                Row {
-                    id: refetchRow
-                    anchors.centerIn: parent
-                    spacing: 6
-
-                    SvgIcon {
-                        name: "sync"
-                        size: 14
-                        color: theme.text
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Text {
-                        text: qsTr("Refetch art")
-                        color: theme.text
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: refetchMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.refetchMediaRequested()
-                }
+            M3Button {
+                small: true
+                variant: "tonal"
+                icon: "sync"
+                text: qsTr("Refetch art")
+                onClicked: root.refetchMediaRequested()
             }
 
             M3TextField {

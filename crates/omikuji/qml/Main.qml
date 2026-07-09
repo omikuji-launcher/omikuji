@@ -995,6 +995,12 @@ property real cardZoom: uiSettings.cardZoom
         manageTitle: qsTr("Manage DLL sets")
     }
 
+    LogRulesDialog {
+        id: logRulesDialog
+        anchors.fill: parent
+        uiSettings: uiSettings
+    }
+
     CategoriesController {
         id: categoriesController
         uiSettings: uiSettings
@@ -1046,6 +1052,7 @@ property real cardZoom: uiSettings.cardZoom
             gameName: modelData.gameName
             gameModel: root.gameModelRef
             theme: root.themeRef
+            uiSettings: root.uiSettingsRef
             onWindowClosed: root.closeGameLogs(gameId)
         }
     }
@@ -1248,6 +1255,7 @@ property real cardZoom: uiSettings.cardZoom
                 }
                 onAddSourceRequested: (category) => archiveSourceDialog.show(category)
                 onManageSetsRequested: (kind) => (kind === "dll" ? dllSetsDialog : envSetsDialog).openManage()
+                onManageLogRulesRequested: logRulesDialog.show()
                 onCategoryAddRequested: categoriesController.showAdd()
                 onCategoryEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)
                 onCategoryDeleteRequested: (idx, entry) => categoriesController.showDelete(idx, entry)

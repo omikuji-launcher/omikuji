@@ -5,7 +5,7 @@ use cxx_qt::{CxxQtType, Threading};
 use omikuji_core::fs_watcher::FileWatcher;
 use omikuji_core::ui_settings::{
     BehaviorSettings, CategoryEntry, ConsoleModeSettings, DisplaySettings, KvSet, LibrarySettings,
-    NavSettings, TabsSettings, ThemeSettings, UiSettings, ui_settings_path,
+    LogRule, NavSettings, TabsSettings, ThemeSettings, UiSettings, ui_settings_path,
 };
 use std::collections::BTreeMap;
 use std::pin::Pin;
@@ -46,6 +46,7 @@ pub mod qobject {
         #[qproperty(bool, discord_rpc, cxx_name = "discordRpc")]
         #[qproperty(f64, ui_scale, cxx_name = "uiScale")]
         #[qproperty(bool, muted_icons, cxx_name = "mutedIcons")]
+        #[qproperty(bool, highlight_logs, cxx_name = "highlightLogs")]
         #[qproperty(QString, card_flow, cxx_name = "cardFlow")]
         #[qproperty(QString, card_sort, cxx_name = "cardSort")]
         #[qproperty(QString, console_background, cxx_name = "consoleBackground")]
@@ -70,6 +71,10 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "dllSetsChanged"]
         fn dll_sets_changed(self: Pin<&mut UiSettingsBridge>);
+
+        #[qsignal]
+        #[cxx_name = "logRulesChanged"]
+        fn log_rules_changed(self: Pin<&mut UiSettingsBridge>);
 
         #[qsignal]
         #[cxx_name = "themeChanged"]
@@ -161,6 +166,10 @@ pub mod qobject {
         fn apply_muted_icons(self: Pin<&mut UiSettingsBridge>, value: bool);
 
         #[qinvokable]
+        #[cxx_name = "applyHighlightLogs"]
+        fn apply_highlight_logs(self: Pin<&mut UiSettingsBridge>, value: bool);
+
+        #[qinvokable]
         #[cxx_name = "applyCardFlow"]
         fn apply_card_flow(self: Pin<&mut UiSettingsBridge>, value: &QString);
 
@@ -199,6 +208,14 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "applyDllSetsJson"]
         fn apply_dll_sets_json(self: Pin<&mut UiSettingsBridge>, json: &QString);
+
+        #[qinvokable]
+        #[cxx_name = "logRulesJson"]
+        fn log_rules_json(self: &UiSettingsBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "applyLogRulesJson"]
+        fn apply_log_rules_json(self: Pin<&mut UiSettingsBridge>, json: &QString);
 
         #[qinvokable]
         #[cxx_name = "initWatcher"]
@@ -269,6 +286,7 @@ pub struct UiSettingsRust {
     pub double_click_launches: bool,
     pub ui_scale: f64,
     pub muted_icons: bool,
+    pub highlight_logs: bool,
     pub card_flow: cxx_qt_lib::QString,
     pub card_sort: cxx_qt_lib::QString,
     pub console_background: cxx_qt_lib::QString,
@@ -282,6 +300,7 @@ pub struct UiSettingsRust {
     pub categories: Vec<CategoryEntry>,
     pub env_sets: Vec<KvSet>,
     pub dll_sets: Vec<KvSet>,
+    pub log_rules: Vec<LogRule>,
     pub watcher: Option<FileWatcher>,
     pub suppress_reload_until: Option<Instant>,
 }
@@ -317,6 +336,7 @@ impl UiSettingsRust {
             double_click_launches: s.behavior.double_click_launches,
             ui_scale: s.display.scale,
             muted_icons: s.display.muted_icons,
+            highlight_logs: s.display.highlight_logs,
             card_flow: cxx_qt_lib::QString::from(&s.display.card_flow),
             card_sort: cxx_qt_lib::QString::from(&s.display.card_sort),
             console_background: cxx_qt_lib::QString::from(&s.console_mode.background),
@@ -330,6 +350,7 @@ impl UiSettingsRust {
             categories: s.categories.clone(),
             env_sets: s.env_sets.clone(),
             dll_sets: s.dll_sets.clone(),
+            log_rules: s.display.log_rules.clone(),
             watcher: None,
             suppress_reload_until: None,
         }
@@ -406,6 +427,8 @@ impl qobject::UiSettingsBridge {
                 muted_icons: self.muted_icons,
                 card_flow: self.card_flow.to_string(),
                 card_sort: self.card_sort.to_string(),
+                highlight_logs: self.highlight_logs,
+                log_rules: self.log_rules.clone(),
             },
             theme: ThemeSettings {
                 follow_system_colors: self.follow_system_colors,
@@ -465,6 +488,7 @@ impl qobject::UiSettingsBridge {
     }
 
     apply_setting!(apply_muted_icons, set_muted_icons, bool);
+    apply_setting!(apply_highlight_logs, set_highlight_logs, bool);
 
     fn apply_card_flow(mut self: Pin<&mut Self>, value: &cxx_qt_lib::QString) {
         let v = value.to_string();
@@ -508,6 +532,7 @@ impl qobject::UiSettingsBridge {
         self.as_mut().set_double_click_launches(s.behavior.double_click_launches);
         self.as_mut().set_ui_scale(s.display.scale);
         self.as_mut().set_muted_icons(s.display.muted_icons);
+        self.as_mut().set_highlight_logs(s.display.highlight_logs);
         self.as_mut().set_card_flow(cxx_qt_lib::QString::from(&s.display.card_flow));
         self.as_mut().set_card_sort(cxx_qt_lib::QString::from(&s.display.card_sort));
         self.as_mut().set_console_background(cxx_qt_lib::QString::from(&s.console_mode.background));
@@ -524,12 +549,15 @@ impl qobject::UiSettingsBridge {
         self.as_mut().env_sets_changed();
         self.as_mut().rust_mut().get_mut().dll_sets = s.dll_sets;
         self.as_mut().dll_sets_changed();
+        self.as_mut().rust_mut().get_mut().log_rules = s.display.log_rules;
+        self.as_mut().log_rules_changed();
         self.as_mut().theme_changed();
     }
 
     kv_json_accessor!(categories_json, apply_categories_json, categories, Vec<CategoryEntry>, categories_changed, "categories");
     kv_json_accessor!(env_sets_json, apply_env_sets_json, env_sets, Vec<KvSet>, env_sets_changed, "env sets");
     kv_json_accessor!(dll_sets_json, apply_dll_sets_json, dll_sets, Vec<KvSet>, dll_sets_changed, "dll sets");
+    kv_json_accessor!(log_rules_json, apply_log_rules_json, log_rules, Vec<LogRule>, log_rules_changed, "log rules");
 
     fn available_icons_json(&self) -> cxx_qt_lib::QString {
         let json = serde_json::to_string(ICON_NAMES).unwrap_or_else(|_| "[]".to_string());

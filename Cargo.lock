@@ -1568,6 +1568,7 @@ dependencies = [
  "lazy_static",
  "libc",
  "omikuji-core",
+ "regex",
  "serde_json",
  "tokio",
  "tracing",

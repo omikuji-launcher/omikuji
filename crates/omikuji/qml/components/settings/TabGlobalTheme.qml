@@ -123,6 +123,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             icon: "close"
                             size: 24
+                            danger: true
                             visible: root._hasOverride(modelData.key) && uiSettings && !uiSettings.followSystemColors
                             onClicked: uiSettings.setColorOverride(modelData.key, "")
                         }

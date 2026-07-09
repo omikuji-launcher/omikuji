@@ -114,6 +114,7 @@ Item {
                 IconButton {
                     icon: "close"
                     size: 32
+                    danger: true
                     onClicked: root._removeRow(rowItem.index)
                 }
             }

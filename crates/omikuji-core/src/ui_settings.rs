@@ -151,6 +151,13 @@ pub struct BehaviorSettings {
 }
 
 
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct LogRule {
+    pub pattern: String,
+    pub color: String,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct DisplaySettings {
@@ -161,11 +168,13 @@ pub struct DisplaySettings {
     pub muted_icons: bool,
     pub card_flow: String,
     pub card_sort: String,
+    pub highlight_logs: bool,
+    pub log_rules: Vec<LogRule>,
 }
 
 impl Default for DisplaySettings {
     fn default() -> Self {
-        Self { scale: 1.0, muted_icons: false, card_flow: "center".into(), card_sort: "default".into() }
+        Self { scale: 1.0, muted_icons: false, card_flow: "center".into(), card_sort: "default".into(), highlight_logs: true, log_rules: Vec::new() }
     }
 }
 
