@@ -39,11 +39,16 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: 20
+        spacing: theme.space.xxl
 
         SettingsSection {
             label: "Ofuda"
             width: parent.width
+            action: M3Button {
+                text: qsTr("New prefix")
+                variant: "tonal"
+                onClicked: root.createRequested()
+            }
 
             Text {
                 text: qsTr("Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.")
@@ -52,20 +57,6 @@ Item {
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
-            }
-
-            Item {
-                width: parent.width
-                height: newPrefixBtn.height
-
-                M3Button {
-                    id: newPrefixBtn
-                    anchors.right: parent.right
-                    anchors.rightMargin: 14
-                    text: qsTr("New prefix")
-                    variant: "tonal"
-                    onClicked: root.createRequested()
-                }
             }
 
             Column {

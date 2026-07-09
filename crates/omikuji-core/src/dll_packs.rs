@@ -1,14 +1,13 @@
 // dll pack cache; downloaded dxvk/vkd3d/dxvk-nvapi/d3d-extras archives sit under
-// components/{source.name}/{tag}/. per-source subfolder prevents tag collisions between
+// components/layers/{source.name}/{tag}/. per-source subfolder prevents tag collisions between
 // sources (e.g. DXVK and DXVK-NVAPI both shipping "v2.4"). per-prefix apply copies dlls
 // into {prefix}/drive_c/windows/system32/ and syswow64/ and tracks applied versions in
 // {prefix}/.omikuji/dll_versions.toml so we skip redndant copies on every launch.
 
 use crate::archive_source;
-use crate::component_state;
+use crate::components_config::{self, ArchiveSource};
 use crate::launch::WineVariant;
 use crate::library::Game;
-use crate::settings::ArchiveSource;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -17,16 +16,16 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 pub fn list_sources() -> Vec<ArchiveSource> {
-    crate::settings::get().dll_packs.clone()
+    components_config::get().layers
 }
 
 pub fn source_by_name(name: &str) -> Option<ArchiveSource> {
     list_sources().into_iter().find(|s| s.name == name)
 }
 
-// per-source root: components/{source.name}/. versions land inside as {tag}/.
+// per-source root: components/layers/{source.name}/. versions land inside as {tag}/.
 pub fn source_root(source: &ArchiveSource) -> PathBuf {
-    crate::dll_packs_dir().join(&source.name)
+    crate::layers_dir().join(&source.name)
 }
 
 pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<archive_source::ReleaseInfo>> {
@@ -87,16 +86,16 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
         InjectedVersions::default()
     };
 
-    let state = component_state::get();
+    let state = components_config::get();
     let mut changed = false;
 
-    for (name, tag) in &state.dll_packs {
+    for (name, tag) in &state.active {
         // legacy state files used the literal "disabled" string; the ui writes "" which set_active_version turns into a removed key, but be defensive about both
         if tag.is_empty() || tag == "disabled" {
             continue;
         }
 
-        let pack_root = crate::dll_packs_dir().join(name).join(tag);
+        let pack_root = crate::layers_dir().join(name).join(tag);
         if !pack_root.exists() {
             tracing::warn!("active pack {}/{} not installed, skipping", name, tag);
             continue;
@@ -133,10 +132,11 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     // when dxvk-nvapi is active, locate nvngx.dll and _nvngx.dll from the host nvidia driver
     // install and copy into system32. the ngx registry key points dlss at that location.
     // no-op on systems without nvidia drivers. dont own a nvidia gpu so we just hope this works
-    let nvapi_active = state
-        .dll_packs
-        .iter()
-        .any(|(n, t)| n == "DXVK-NVAPI" && !t.is_empty() && t != "disabled");
+    let nvapi_active = state.active.iter().any(|(n, t)| {
+        !t.is_empty()
+            && t != "disabled"
+            && state.layers.iter().any(|s| s.name == *n && s.kind == "dxvk_nvapi")
+    });
     if nvapi_active && is_64bit {
         if let Some(nvidia_wine_dir) = find_nvidia_wine_dir() {
             let mut copied = false;

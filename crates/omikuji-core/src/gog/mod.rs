@@ -280,8 +280,12 @@ impl GogStore {
     }
 }
 
+pub fn gog_dir() -> PathBuf {
+    crate::runtime_dir().join("gog")
+}
+
 fn registry_path() -> PathBuf {
-    crate::data_dir().join("gog").join("installed.json")
+    gog_dir().join("installed.json")
 }
 
 fn has_install_marker(dir: &Path) -> bool {
@@ -775,7 +779,7 @@ pub fn find_gogdl() -> Option<PathBuf> {
 }
 
 pub fn gog_auth_path() -> PathBuf {
-    crate::data_dir().join("gog").join("auth.json")
+    gog_dir().join("auth.json")
 }
 
 // gogdl caches per-game manifests here and consults them on every
@@ -784,7 +788,7 @@ pub fn gog_auth_path() -> PathBuf {
 // on disk. we point gogdl at our own dir via GOGDL_CONFIG_PATH so we
 // can wipe it on fresh installs without touching the user's wider env.
 pub fn gogdl_config_dir() -> PathBuf {
-    crate::data_dir().join("gog").join("gogdl_state")
+    gog_dir().join("gogdl_state")
 }
 
 // wipe gogdl's cached manifests for a given app id so the next install
@@ -840,7 +844,7 @@ fn urlencoding_simple(s: &str) -> String {
 }
 
 fn user_data_path() -> PathBuf {
-    crate::data_dir().join("gog").join("user.json")
+    gog_dir().join("user.json")
 }
 
 fn read_user_data() -> Option<(String, String)> {

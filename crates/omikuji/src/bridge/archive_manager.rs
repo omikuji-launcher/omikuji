@@ -8,10 +8,9 @@
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 use omikuji_core::archive_source::{self, ReleaseInfo};
-use omikuji_core::component_state;
+use omikuji_core::components_config::{self, ArchiveSource};
 use omikuji_core::dll_packs;
 use omikuji_core::runners;
-use omikuji_core::settings::ArchiveSource;
 use std::pin::Pin;
 use std::thread;
 
@@ -90,6 +89,10 @@ pub mod qobject {
             error: QString,
         );
 
+        #[qsignal]
+        #[cxx_name = "sourcesChanged"]
+        fn sources_changed(self: Pin<&mut ArchiveManagerBridge>);
+
         #[qinvokable]
         #[cxx_name = "listRunners"]
         fn list_runners(self: &ArchiveManagerBridge) -> QString;
@@ -135,6 +138,22 @@ pub mod qobject {
         );
 
         #[qinvokable]
+        #[cxx_name = "addSource"]
+        fn add_source(
+            self: Pin<&mut ArchiveManagerBridge>,
+            category: QString,
+            source_json: QString,
+        ) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "removeSource"]
+        fn remove_source(
+            self: Pin<&mut ArchiveManagerBridge>,
+            category: QString,
+            name: QString,
+        ) -> QString;
+
+        #[qinvokable]
         #[cxx_name = "dllPackActiveVersion"]
         fn dll_pack_active_version(
             self: &ArchiveManagerBridge,
@@ -164,6 +183,11 @@ fn sources_for(category: &str) -> Vec<ArchiveSource> {
         "dll_packs" => dll_packs::list_sources(),
         _ => Vec::new(),
     }
+}
+
+// the ui speaks "dll_packs", components.toml calls them layers
+fn core_category(category: &str) -> &str {
+    if category == "dll_packs" { "layers" } else { category }
 }
 
 fn source_lookup(category: &str, name: &str) -> Option<ArchiveSource> {
@@ -283,7 +307,7 @@ impl qobject::ArchiveManagerBridge {
         };
 
         let dest_root = match cat.as_str() {
-            "runners" => omikuji_core::runners_dir(),
+            "runners" => runners::source_root(&src),
             "dll_packs" => dll_packs::source_root(&src),
             other => {
                 self.as_mut().install_failed(
@@ -340,9 +364,36 @@ impl qobject::ArchiveManagerBridge {
         }
     }
 
+    fn add_source(mut self: Pin<&mut Self>, category: QString, source_json: QString) -> QString {
+        let source: ArchiveSource = match serde_json::from_str(&source_json.to_string()) {
+            Ok(s) => s,
+            Err(e) => return QString::from(&format!("source parse: {}", e)),
+        };
+        match components_config::add_source(core_category(&category.to_string()), source) {
+            Ok(_) => {
+                self.as_mut().sources_changed();
+                QString::from("")
+            }
+            Err(e) => QString::from(&format!("{:#}", e)),
+        }
+    }
+
+    fn remove_source(mut self: Pin<&mut Self>, category: QString, name: QString) -> QString {
+        match components_config::remove_source(
+            core_category(&category.to_string()),
+            &name.to_string(),
+        ) {
+            Ok(_) => {
+                self.as_mut().sources_changed();
+                QString::from("")
+            }
+            Err(e) => QString::from(&format!("{:#}", e)),
+        }
+    }
+
     fn dll_pack_active_version(&self, source: QString) -> QString {
         let name = source.to_string();
-        QString::from(&component_state::active_version(&name))
+        QString::from(&components_config::active_version(&name))
     }
 
     fn set_dll_pack_active_version(
@@ -352,7 +403,7 @@ impl qobject::ArchiveManagerBridge {
     ) {
         let name = source.to_string();
         let tag_s = tag.to_string();
-        if let Err(e) = component_state::set_active_version(&name, &tag_s) {
+        if let Err(e) = components_config::set_active_version(&name, &tag_s) {
             tracing::error!("save failed for {}: {}", name, e);
         }
     }

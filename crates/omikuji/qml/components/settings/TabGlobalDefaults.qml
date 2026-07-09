@@ -118,7 +118,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: 20
+        spacing: theme.space.xxl
 
         Item {
             width: parent.width

@@ -649,8 +649,7 @@ fn cleanup_source_state(entry: &DownloadEntry) {
         "gog" => {
             // destructive_cleanup on Install kind already rm -rf's install_path
             // for us, so this is a no-op there. left explicit for symmetry
-            let support = crate::data_dir()
-                .join("gog")
+            let support = crate::gog::gog_dir()
                 .join("support")
                 .join(&entry.app_id);
             if support.exists() {

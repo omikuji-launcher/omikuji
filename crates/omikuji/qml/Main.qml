@@ -144,6 +144,8 @@ ApplicationWindow {
 
     OfudaBridge { id: ofudaBridge }
 
+    MigrationBridge { id: migrationBridge }
+
     property var archiveActiveInstalls: ({})
 
     // bumped on runner changes so consumers re-query witout restart
@@ -1007,6 +1009,31 @@ property real cardZoom: uiSettings.cardZoom
         onVersionDeleted: (category, sourceName, tag) => {
             if (category === "runners") root.runnersVersion++
         }
+        onRemoveSourceRequested: (category, sourceName) => {
+            removeSourceConfirm.message = qsTr("Removes \"%1\" from your sources. Installed versions stay on disk and keep working; adding a source with the same name picks them up again.").arg(sourceName)
+            archiveManageDialog.escEnabled = false
+            removeSourceConfirm.show({ category: category, source: sourceName })
+        }
+    }
+
+    ArchiveSourceDialog {
+        id: archiveSourceDialog
+        anchors.fill: parent
+        archiveManager: archiveManager
+    }
+
+    ConfirmDialog {
+        id: removeSourceConfirm
+        anchors.fill: parent
+        destructive: true
+        confirmText: qsTr("Remove")
+        onConfirmed: (p) => {
+            archiveManageDialog.escEnabled = true
+            const err = archiveManager.removeSource(p.category, p.source)
+            if (err === "") archiveManageDialog.hide()
+            else toastManager.show("error", qsTr("Couldn't remove source"), err)
+        }
+        onCancelled: archiveManageDialog.escEnabled = true
     }
 
     Instantiator {
@@ -1068,6 +1095,13 @@ property real cardZoom: uiSettings.cardZoom
         anchors.fill: parent
         gameModel: root.gameModelRef
         onLaunchReady: (idx, skip) => root.doLaunch(idx, skip)
+    }
+
+    MigrationDialog {
+        id: migrationDialog
+        anchors.fill: parent
+        bridge: migrationBridge
+        Component.onCompleted: if (migrationBridge.pending()) start()
     }
 
     PrefixDetailDialog {
@@ -1212,6 +1246,7 @@ property real cardZoom: uiSettings.cardZoom
                 onManageRequested: (category, source, kind) => {
                     archiveManageDialog.show(category, source, kind)
                 }
+                onAddSourceRequested: (category) => archiveSourceDialog.show(category)
                 onManageSetsRequested: (kind) => (kind === "dll" ? dllSetsDialog : envSetsDialog).openManage()
                 onCategoryAddRequested: categoriesController.showAdd()
                 onCategoryEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)

@@ -178,6 +178,7 @@ fn main() {
                 "qml/components/categories/CategoriesController.qml",
                 // dialogs
                 "qml/components/dialogs/ArchiveManageDialog.qml",
+                "qml/components/dialogs/ArchiveSourceDialog.qml",
                 "qml/components/dialogs/CategoryEditDialog.qml",
                 "qml/components/dialogs/ConfirmDialog.qml",
                 "qml/components/popups/ContextMenu.qml",
@@ -192,6 +193,7 @@ fn main() {
                 "qml/components/dialogs/PrefixDetailDialog.qml",
                 "qml/components/dialogs/PrefixPrepDialog.qml",
                 "qml/components/dialogs/GameLogsWindow.qml",
+                "qml/components/dialogs/MigrationDialog.qml",
                 "qml/components/dialogs/SetsDialog.qml",
                 "qml/components/dialogs/UpdateAvailableDialog.qml",
                 // downloads
@@ -255,6 +257,7 @@ fn main() {
                 "qml/components/controls/M3SpinBox.qml",
                 "qml/components/controls/M3Switch.qml",
                 "qml/components/controls/M3TextField.qml",
+                "qml/components/controls/OutputLog.qml",
                 "qml/components/controls/PlayButton.qml",
                 "qml/components/popups/PopupSurface.qml",
                 "qml/components/cards/StatusBadge.qml",
@@ -276,6 +279,7 @@ fn main() {
         "src/bridge/download_model.rs",
         "src/bridge/ui_settings.rs",
         "src/bridge/components.rs",
+        "src/bridge/migration.rs",
         "src/bridge/ofuda.rs",
         "src/bridge/archive_manager.rs",
         "src/bridge/defaults.rs",

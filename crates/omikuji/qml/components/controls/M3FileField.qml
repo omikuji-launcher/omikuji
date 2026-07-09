@@ -75,10 +75,7 @@ Item {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 verticalAlignment: Text.AlignVCenter
-                x: inputArea.x + Math.min(
-                    inputArea.contentWidth + 2,
-                    inputArea.width - implicitWidth - 4
-                )
+                x: inputArea.x + inputArea.contentWidth + 2
                 width: Math.max(0, Math.min(
                     implicitWidth,
                     parent.width - 12 - x

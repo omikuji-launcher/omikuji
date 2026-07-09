@@ -26,7 +26,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: 20
+        spacing: theme.space.xxl
 
         SettingsSection {
             label: "omikuji"

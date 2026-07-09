@@ -6,6 +6,7 @@ Item {
 
     property string icon: ""
     property string label: ""
+    property Component action: null
     default property alias content: sectionContent.children
 
     implicitWidth: parent ? parent.width : 400
@@ -14,7 +15,7 @@ Item {
     Item {
         id: header
         width: parent.width
-        height: 28
+        height: actionLoader.active ? Math.max(28, actionLoader.height) : 28
 
         Text {
             id: headerLabel
@@ -31,10 +32,19 @@ Item {
         Rectangle {
             anchors.left: headerLabel.right
             anchors.leftMargin: 12
-            anchors.right: parent.right
+            anchors.right: actionLoader.active ? actionLoader.left : parent.right
+            anchors.rightMargin: actionLoader.active ? 12 : 0
             anchors.verticalCenter: parent.verticalCenter
             height: 1
             color: theme.separator
+        }
+
+        Loader {
+            id: actionLoader
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            active: root.action !== null
+            sourceComponent: root.action
         }
     }
 

@@ -11,33 +11,13 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Settings {
     pub paths: PathsSettings,
     pub assets: AssetsSettings,
     pub components: ComponentsSettings,
     pub steam: SteamSettings,
-    #[serde(default = "default_runners")]
-    pub runners: Vec<ArchiveSource>,
-    #[serde(default = "default_dll_packs")]
-    pub dll_packs: Vec<ArchiveSource>,
-}
-
-// manually implemented so the first-run write populates [[runners]] and
-// [[dll_packs]] with shipped defaults. derived Default would give Vec::new()
-// for both, leaving the fresh settings.toml misssing those sections.
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            paths: PathsSettings::default(),
-            assets: AssetsSettings::default(),
-            components: ComponentsSettings::default(),
-            steam: SteamSettings::default(),
-            runners: default_runners(),
-            dll_packs: default_dll_packs(),
-        }
-    }
 }
 
 // empty api_key disables remote playtime sync; local process-tracking still works
@@ -55,8 +35,9 @@ pub struct PathsSettings {
     pub data_dir: String,
     pub library_dir: String,
     pub gachas_dir: String,
+    pub components_dir: String,
     pub runners_dir: String,
-    pub dll_packs_dir: String,
+    pub layers_dir: String,
     pub prefixes_dir: String,
     pub cache_dir: String,
     pub logs_dir: String,
@@ -73,8 +54,9 @@ impl Default for PathsSettings {
             data_dir: base.to_string_lossy().into_owned(),
             library_dir: s("library"),
             gachas_dir: s("gachas"),
-            runners_dir: s("runners"),
-            dll_packs_dir: s("components"),
+            components_dir: s("components"),
+            runners_dir: String::new(),
+            layers_dir: String::new(),
             prefixes_dir: s("prefixes"),
             cache_dir: s("cache"),
             logs_dir: s("logs"),
@@ -125,77 +107,6 @@ impl Default for ComponentsSettings {
     }
 }
 
-// generic fetchable archive source; same fetch/extract pipeline for both
-// runners and dll packs, different install target. users add entries via
-// [[runners]] / [[dll_packs]] without touching code.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ArchiveSource {
-    pub name: String,
-    pub kind: String,
-    pub api_url: String,
-    pub asset_pattern: String,
-    pub extract: String,
-}
-
-fn default_runners() -> Vec<ArchiveSource> {
-    vec![
-        ArchiveSource {
-            name: "Proton-Spritz".into(),
-            kind: "proton".into(),
-            api_url: "https://api.github.com/repos/NelloKudo/proton-cachyos/releases".into(),
-            asset_pattern: "-x86_64.tar.xz".into(),
-            extract: "tar_xz".into(),
-        },
-        ArchiveSource {
-            name: "Proton-GE".into(),
-            kind: "proton".into(),
-            api_url: "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases".into(),
-            asset_pattern: ".tar.gz".into(),
-            extract: "tar_gz".into(),
-        },
-        ArchiveSource {
-            name: "Dawn Winery Proton".into(),
-            kind: "proton".into(),
-            api_url: "https://dawn.wine/api/v1/repos/dawn-winery/dwproton/releases".into(),
-            asset_pattern: ".tar.xz".into(),
-            extract: "tar_xz".into(),
-        },
-        ArchiveSource {
-            name: "Proton-Cachyos".into(),
-            kind: "proton".into(),
-            api_url: "https://api.github.com/repos/CachyOS/proton-cachyos/releases".into(),
-            asset_pattern: ".tar.xz".into(),
-            extract: "tar_xz".into(),
-        },
-    ]
-}
-
-fn default_dll_packs() -> Vec<ArchiveSource> {
-    vec![
-        ArchiveSource {
-            name: "DXVK".into(),
-            kind: "dxvk".into(),
-            api_url: "https://api.github.com/repos/doitsujin/dxvk/releases".into(),
-            asset_pattern: ".tar.gz".into(),
-            extract: "tar_gz".into(),
-        },
-        ArchiveSource {
-            name: "VKD3D-Proton".into(),
-            kind: "vkd3d".into(),
-            api_url: "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases".into(),
-            asset_pattern: ".tar.zst".into(),
-            extract: "tar_zst".into(),
-        },
-        ArchiveSource {
-            name: "DXVK-NVAPI".into(),
-            kind: "dxvk_nvapi".into(),
-            api_url: "https://api.github.com/repos/jp7677/dxvk-nvapi/releases".into(),
-            asset_pattern: ".tar.gz".into(),
-            extract: "tar_gz".into(),
-        },
-    ]
-}
-
 static SETTINGS: OnceLock<Settings> = OnceLock::new();
 
 // fixed anchor; uses dirs::data_dir() directly, NOT our own settings abstractin,
@@ -215,7 +126,7 @@ fn load_or_default() -> Settings {
     let path = settings_path();
     if !path.exists() {
         let defaults = Settings::default();
-        if let Err(e) = write_defaults(&path, &defaults) {
+        if let Err(e) = save(&defaults) {
             tracing::warn!("couldn't write defaults to {}: {} - running in-memory only", path.display(), e);
         }
         return defaults;
@@ -236,7 +147,8 @@ fn load_or_default() -> Settings {
     }
 }
 
-fn write_defaults(path: &PathBuf, settings: &Settings) -> std::io::Result<()> {
+pub fn save(settings: &Settings) -> std::io::Result<()> {
+    let path = settings_path();
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }

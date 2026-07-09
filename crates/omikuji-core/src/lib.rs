@@ -1,8 +1,8 @@
 pub use anyhow;
 
 pub mod archive_source;
-pub mod component_state;
 pub mod components;
+pub mod components_config;
 pub mod defaults;
 pub mod desktop;
 pub mod discord;
@@ -22,6 +22,7 @@ pub mod kuro;
 pub mod launch;
 pub mod library;
 pub mod media;
+pub mod migration;
 pub mod notifications;
 pub mod prefixes;
 pub mod process;
@@ -46,12 +47,24 @@ pub fn gachas_dir() -> PathBuf {
     settings::expand(&settings::get().paths.gachas_dir)
 }
 
-pub fn runners_dir() -> PathBuf {
-    settings::expand(&settings::get().paths.runners_dir)
+pub fn components_dir() -> PathBuf {
+    settings::expand(&settings::get().paths.components_dir)
 }
 
-pub fn dll_packs_dir() -> PathBuf {
-    settings::expand(&settings::get().paths.dll_packs_dir)
+pub fn runners_dir() -> PathBuf {
+    components_subdir(&settings::get().paths.runners_dir, "runners")
+}
+
+pub fn layers_dir() -> PathBuf {
+    components_subdir(&settings::get().paths.layers_dir, "layers")
+}
+
+fn components_subdir(override_path: &str, sub: &str) -> PathBuf {
+    if override_path.is_empty() {
+        components_dir().join(sub)
+    } else {
+        settings::expand(override_path)
+    }
 }
 
 pub fn prefixes_dir() -> PathBuf {

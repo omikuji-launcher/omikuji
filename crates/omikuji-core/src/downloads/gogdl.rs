@@ -113,8 +113,7 @@ impl DownloadSource for GogdlSource {
 }
 
 fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
-    let support_dir = crate::data_dir()
-        .join("gog")
+    let support_dir = crate::gog::gog_dir()
         .join("support")
         .join(&entry.app_id);
     let _ = std::fs::create_dir_all(&support_dir);

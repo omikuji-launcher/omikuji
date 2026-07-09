@@ -95,29 +95,10 @@ DialogCard {
                 font.pixelSize: 12
             }
 
-            Rectangle {
+            OutputLog {
                 width: parent.width
                 height: 200
-                color: theme.bgAlt
-                radius: theme.radius.sm
-                clip: true
-
-                ScrollView {
-                    anchors.fill: parent
-                    anchors.margins: 8
-
-                    TextArea {
-                        readOnly: true
-                        wrapMode: TextArea.Wrap
-                        selectByMouse: true
-                        color: theme.textMuted
-                        font.family: "monospace"
-                        font.pixelSize: 12
-                        background: Rectangle { color: "transparent" }
-                        text: root.outputText
-                        onTextChanged: cursorPosition = length
-                    }
-                }
+                text: root.outputText
             }
         }
 

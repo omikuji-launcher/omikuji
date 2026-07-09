@@ -14,6 +14,7 @@ Item {
     property var activeInstalls: ({})
 
     signal manageRequested(string category, string source, string kind)
+    signal addSourceRequested(string category)
 
     readonly property var runtimeMeta: ({
         "umu-run":   { label: "umu-run",    desc: qsTr("Launcher wrapper needed for Proton.") },
@@ -111,6 +112,7 @@ Item {
         enabled: archiveManager !== null
         function onInstallCompleted(category, source, tag, dir) { root.refreshInstalledCounts() }
         function onInstallFailed(category, source, tag, err)   { root.refreshInstalledCounts() }
+        function onSourcesChanged() { root.loadSources() }
     }
 
     // polls for manual deletions and external edits without waiting for an install event, only runs while this tab is loaded
@@ -126,11 +128,16 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: 20
+        spacing: theme.space.xxl
 
         SettingsSection {
             label: qsTr("Translation Layers")
             width: parent.width
+            action: M3Button {
+                text: qsTr("Add source")
+                variant: "tonal"
+                onClicked: root.addSourceRequested("dll_packs")
+            }
 
             Column {
                 width: parent.width
@@ -159,7 +166,7 @@ Item {
 
                 Text {
                     visible: root.dllPacks.length === 0
-                    text: qsTr("No DLL packs configured. Add [[dll_packs]] entries to settings.toml.")
+                    text: qsTr("No translation layers configured yet.")
                     color: theme.textSubtle
                     font.pixelSize: 12
                     width: parent.width
@@ -171,6 +178,11 @@ Item {
         SettingsSection {
             label: qsTr("Runners")
             width: parent.width
+            action: M3Button {
+                text: qsTr("Add source")
+                variant: "tonal"
+                onClicked: root.addSourceRequested("runners")
+            }
 
             Column {
                 width: parent.width
@@ -192,7 +204,7 @@ Item {
 
                 Text {
                     visible: root.runners.length === 0
-                    text: qsTr("No runners configured. Add [[runners]] entries to settings.toml.")
+                    text: qsTr("No runners configured yet.")
                     color: theme.textSubtle
                     font.pixelSize: 12
                     width: parent.width

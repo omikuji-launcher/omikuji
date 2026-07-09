@@ -1,8 +1,8 @@
 use crate::archive_source;
-use crate::settings::ArchiveSource;
+use crate::components_config::{self, ArchiveSource};
 use anyhow::Result;
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub fn runners_dir() -> PathBuf {
@@ -10,11 +10,15 @@ pub fn runners_dir() -> PathBuf {
 }
 
 pub fn list_sources() -> Vec<ArchiveSource> {
-    crate::settings::get().runners.clone()
+    components_config::get().runners
 }
 
 pub fn source_by_name(name: &str) -> Option<ArchiveSource> {
     list_sources().into_iter().find(|s| s.name == name)
+}
+
+pub fn source_root(source: &ArchiveSource) -> PathBuf {
+    runners_dir().join(&source.name)
 }
 
 pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<archive_source::ReleaseInfo>> {
@@ -25,39 +29,66 @@ pub async fn install_version(
     source: &ArchiveSource,
     release: &archive_source::ReleaseInfo,
 ) -> Result<PathBuf> {
-    archive_source::install_version("runners", source, release, &runners_dir()).await
+    archive_source::install_version("runners", source, release, &source_root(source)).await
 }
 
 pub fn list_installed(source: &ArchiveSource) -> Vec<String> {
-    archive_source::list_installed(source, &runners_dir())
+    archive_source::list_installed(source, &source_root(source))
 }
 
 pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
-    archive_source::delete_version(source, &runners_dir(), tag)
+    archive_source::delete_version(source, &source_root(source), tag)
+}
+
+fn is_runner_dir(path: &Path) -> bool {
+    path.join("bin/wine").exists()
+        || path.join("files/bin/wine64").exists()
+        || path.join("proton").exists()
+}
+
+pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
+    let root = runners_dir();
+    let direct = root.join(version);
+    if direct.is_dir() {
+        return Some(direct);
+    }
+    std::fs::read_dir(&root)
+        .ok()?
+        .flatten()
+        .map(|e| e.path().join(version))
+        .find(|p| p.is_dir())
 }
 
 pub fn list_installed_runners() -> Vec<(String, String)> {
     let mut runners = vec![];
-    
+
+    let push_runner = |list: &mut Vec<(String, String)>, path: &Path| {
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            list.push((name.to_string(), String::new()));
+        }
+    };
+
     if let Ok(entries) = std::fs::read_dir(runners_dir()) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
-                let name = path.file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("");
-                
-                let has_wine = path.join("bin/wine").exists();
-                let has_proton = path.join("files/bin/wine64").exists()
-                    || path.join("proton").exists();
-                
-                if has_wine || has_proton {
-                    runners.push((name.to_string(), String::new()));
+            if !path.is_dir() {
+                continue;
+            }
+            if is_runner_dir(&path) {
+                push_runner(&mut runners, &path);
+                continue;
+            }
+            if let Ok(children) = std::fs::read_dir(&path) {
+                for child in children.flatten() {
+                    let child_path = child.path();
+                    if child_path.is_dir() && is_runner_dir(&child_path) {
+                        push_runner(&mut runners, &child_path);
+                    }
                 }
             }
         }
     }
-    
+
     for (name, path) in crate::steam::local::iter_steam_protons() {
         let label = crate::steam::local::proton_display_name(&path).unwrap_or_default();
         runners.push((format!("steam:{name}"), label));

@@ -22,6 +22,7 @@ DialogCard {
 
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
+    signal removeSourceRequested(string category, string sourceName)
 
     maxWidth: 720
     scrollable: false
@@ -67,6 +68,13 @@ DialogCard {
     }
 
     onCloseRequested: { root.closed(); root.close() }
+
+    footerLeft: M3Button {
+        text: qsTr("Remove source")
+        variant: "tonal"
+        danger: true
+        onClicked: root.removeSourceRequested(root.category, root.sourceName)
+    }
 
     actions: Row {
         M3Button {

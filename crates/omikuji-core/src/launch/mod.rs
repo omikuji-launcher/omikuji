@@ -478,7 +478,8 @@ pub fn build_env(game: &Game, variant: WineVariant, wine_exe: &Path) -> HashMap<
             crate::steam::local::resolve_or_default_proton(Some(steam_version))
                 .unwrap_or_default()
         } else {
-            runners_dir().join(&game.wine.version)
+            crate::runners::installed_runner_dir(&game.wine.version)
+                .unwrap_or_else(|| crate::runners_dir().join(&game.wine.version))
         };
         env.insert("PROTONPATH".to_string(), proton_path.to_string_lossy().to_string());
         env.insert("PROTON_VERB".to_string(), "run".to_string());
@@ -613,22 +614,19 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
             Ok(PathBuf::from("wine"))
         }
         WineVariant::WineGE => {
-            let runner_dir = runners_dir().join(version);
-            let wine_bin = runner_dir.join("bin").join("wine");
-
-            if wine_bin.exists() {
-                Ok(wine_bin)
-            } else {
-                anyhow::bail!("Runner `{}` not found.", version);
-            }
+            crate::runners::installed_runner_dir(version)
+                .map(|d| d.join("bin").join("wine"))
+                .filter(|p| p.exists())
+                .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version))
         }
         WineVariant::Proton => {
             let umu_run = find_umu_run()
                 .ok_or_else(|| anyhow::Error::new(ComponentMissing { name: "umu-run".to_string() }))?;
 
-            let runner_dir = runners_dir().join(version);
-            let proton_files = runner_dir.join("files");
-            if !proton_files.exists() {
+            let has_files = crate::runners::installed_runner_dir(version)
+                .map(|d| d.join("files").exists())
+                .unwrap_or(false);
+            if !has_files {
                 anyhow::bail!("Runner `{}` not found.", version);
             }
 
@@ -781,10 +779,6 @@ fn resolve_working_dir(game: &Game) -> PathBuf {
     } else {
         PathBuf::from(&game.launch.working_dir)
     }
-}
-
-fn runners_dir() -> PathBuf {
-    crate::runners_dir()
 }
 
 fn prefixes_dir() -> PathBuf {

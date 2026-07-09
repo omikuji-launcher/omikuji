@@ -69,33 +69,13 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Rectangle {
+        OutputLog {
             anchors.top: prepHeader.bottom
             anchors.topMargin: theme.space.sm
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            color: theme.bgAlt
-            radius: theme.radius.sm
-            clip: true
-
-            ScrollView {
-                anchors.fill: parent
-                anchors.margins: 8
-
-                TextArea {
-                    id: outputArea
-                    readOnly: true
-                    wrapMode: TextArea.Wrap
-                    selectByMouse: true
-                    color: theme.textMuted
-                    font.family: "monospace"
-                    font.pixelSize: 12
-                    background: Rectangle { color: "transparent" }
-                    text: root.outputText
-                    onTextChanged: cursorPosition = length
-                }
-            }
+            text: root.outputText
         }
     }
 

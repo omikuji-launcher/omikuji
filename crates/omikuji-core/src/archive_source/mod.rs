@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 use std::collections::VecDeque;
 
-use crate::settings::ArchiveSource;
+use crate::components_config::ArchiveSource;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseInfo {
@@ -234,6 +234,10 @@ fn read_sidecar(dir: &Path) -> Option<InstallSidecar> {
     let path = dir.join(SIDECAR_FILENAME);
     let body = fs::read_to_string(path).ok()?;
     serde_json::from_str::<InstallSidecar>(&body).ok()
+}
+
+pub fn installed_source_tag(dir: &Path) -> Option<(String, String)> {
+    read_sidecar(dir).map(|sc| (sc.source, sc.tag))
 }
 
 async fn download_bytes(
