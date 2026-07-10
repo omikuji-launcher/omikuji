@@ -339,8 +339,8 @@ impl Library {
                             .and_then(|m| m.created().or_else(|_| m.modified()).ok())
                             .unwrap_or(std::time::UNIX_EPOCH);
                         game.metadata.added = rfc3339_of(t);
-                        if let Ok(contents) = toml::to_string_pretty(&game) {
-                            let _ = fs::write(&path, contents);
+                        if let Ok(contents) = Self::game_toml(&game) {
+                            let _ = crate::fs_util::write_atomic(&path, contents);
                         }
                     }
                     games.push(game)
@@ -390,6 +390,14 @@ impl Library {
         Self::save_game_static(game)
     }
 
+    fn game_toml(game: &Game) -> Result<String, toml::ser::Error> {
+        let contents = toml::to_string_pretty(game)?;
+        Ok(contents.replace(
+            "\n[source]\n",
+            "\n# this section is used by omikuji to identify a game and behave accordingly, please do not touch unless you know why\n[source]\n",
+        ))
+    }
+
     pub fn save_game_static(game: &Game) -> Result<()> {
         let dir = Self::library_dir();
         fs::create_dir_all(&dir)?;
@@ -408,8 +416,8 @@ impl Library {
             }
         };
 
-        let contents = toml::to_string_pretty(game)?;
-        fs::write(&path, contents)
+        let contents = Self::game_toml(game)?;
+        crate::fs_util::write_atomic(&path, contents)
             .with_context(|| format!("writing {}", path.display()))?;
 
         Ok(())
