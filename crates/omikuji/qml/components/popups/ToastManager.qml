@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Layouts
 import "../primitives"
+import "../controls"
 
 
 // built on ListView so add/remove gives smooth stack shifts, not instant pops
@@ -11,7 +11,6 @@ Item {
     property int maxVisible: 5
     readonly property int toastWidth: 340
     readonly property int toastSpacing: 10
-    readonly property int toastRadius: 18
 
     property int nextId: 0
 
@@ -85,7 +84,7 @@ Item {
             }
         }
 
-        delegate: Rectangle {
+        delegate: PopupSurface {
             id: toast
             required property int index
             required property int toastId
@@ -93,57 +92,44 @@ Item {
             required property string title
             required property string message
 
-            width: root.toastWidth
-            height: toastCol.implicitHeight + 22
-            radius: root.toastRadius
-            color: theme.popup
-            border.width: 1
-            border.color: theme.alpha(theme.text, 0.08)
-
-            Rectangle {
-                z: -1
-                anchors.fill: parent
-                anchors.topMargin: 3
-                anchors.bottomMargin: -3
-                radius: parent.radius
-                color: "transparent"
-                border.width: 0
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: -2
-                    radius: parent.radius + 2
-                    color: "transparent"
-                    border.width: 2
-                    border.color: Qt.rgba(0, 0, 0, 0.08)
-                    opacity: 0.5
+            readonly property color levelColor: {
+                switch (level) {
+                    case "success": return theme.success
+                    case "warning": return theme.warning
+                    case "error":   return theme.error
+                    default:        return theme.accent
+                }
+            }
+            readonly property string levelIcon: {
+                switch (level) {
+                    case "success": return "check_circle_fill"
+                    case "warning": return "warning_fill"
+                    case "error":   return "error_fill"
+                    default:        return "info_fill"
                 }
             }
 
-            Rectangle {
-                id: strip
+            width: root.toastWidth
+            height: toastCol.implicitHeight + 24
+            radius: theme.radius.lg
+
+            SvgIcon {
                 anchors.left: parent.left
-                anchors.leftMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                width: 3
-                height: parent.height - 22
-                radius: width / 2
-                color: {
-                    switch (toast.level) {
-                        case "success": return theme.success
-                        case "warning": return theme.warning
-                        case "error":   return theme.error
-                        default:        return theme.accent
-                    }
-                }
+                anchors.leftMargin: 14
+                anchors.top: parent.top
+                anchors.topMargin: 12
+                name: toast.levelIcon
+                size: 20
+                color: toast.levelColor
             }
 
             Column {
                 id: toastCol
-                anchors.left: strip.right
+                anchors.left: parent.left
+                anchors.leftMargin: 44
                 anchors.right: closeBtn.left
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: 14
                 anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
                 spacing: 3
 
                 Text {
@@ -166,39 +152,15 @@ Item {
                 }
             }
 
-            Item {
+            IconButton {
                 id: closeBtn
-                width: 30
-                height: 30
+                icon: "close"
+                size: 28
+                rounded: true
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 6
-
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 3
-                    radius: width / 2
-                    color: closeArea.containsMouse
-                        ? theme.alpha(theme.text, 0.08)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                }
-
-                SvgIcon {
-                    anchors.centerIn: parent
-                    name: "close"
-                    size: 14
-                    color: closeArea.containsMouse ? theme.text : theme.textSubtle
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                }
-
-                MouseArea {
-                    id: closeArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: toastModel.remove(toast.index)
-                }
+                anchors.margins: 8
+                onClicked: toastModel.remove(toast.index)
             }
 
             // paused while hovered so users can read longer messages
