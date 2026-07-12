@@ -38,7 +38,7 @@ Item {
                 label: qsTr("CPU Cores")
                 description: qsTr("0 = no limit")
                 width: parent.width
-                contentRightMargin: 52
+                contentRightMargin: 74
                 M3SpinBox {
                     from: 0
                     to: gameModel ? Math.max(1, gameModel.cpuCoreCount()) : 1
@@ -148,6 +148,7 @@ Item {
                 SettingsRow {
                     label: qsTr("FPS Limit")
                     width: parent.width
+                    contentRightMargin: 74
                     M3SpinBox {
                         from: 0
                         to: 999
@@ -161,6 +162,7 @@ Item {
                 SettingsRow {
                     label: qsTr("Refresh Rate")
                     width: parent.width
+                    contentRightMargin: 74
                     M3SpinBox {
                         from: 0
                         to: 999

@@ -504,6 +504,7 @@ Item {
                     SettingsRow {
                         label: qsTr("FPS Limit")
                         width: parent.width - 32
+                        contentRightMargin: 78
                         M3SpinBox {
                             id: fpsSpinBox
                             from: 0
@@ -526,6 +527,7 @@ Item {
                     SettingsRow {
                         label: qsTr("Refresh Rate")
                         width: parent.width - 32
+                        contentRightMargin: 78
                         M3SpinBox {
                             id: refreshRateSpinBox
                             from: 0
@@ -603,7 +605,7 @@ Item {
                 label: qsTr("CPU Cores")
                 description: qsTr("0 = no limit")
                 width: parent.width
-                contentRightMargin: 52
+                contentRightMargin: 74
                 Row {
                     spacing: 12
                     M3SpinBox {
