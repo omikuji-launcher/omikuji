@@ -126,27 +126,15 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
 
-                Row {
-                    spacing: 12
+                M3Slider {
+                    width: 220
+                    valueText: uiSettings ? Math.round(uiSettings.uiScale * 100) + "%" : "100%"
+                    from: 0.7
+                    to: 2.0
+                    stepSize: 0.05
+                    value: uiSettings ? uiSettings.uiScale : 1.0
+                    onMoved: (val) => uiSettings.applyUiScale(val)
                     anchors.verticalCenter: parent.verticalCenter
-
-                    M3Slider {
-                        width: 220
-                        showValue: false
-                        from: 0.7
-                        to: 2.0
-                        stepSize: 0.05
-                        value: uiSettings ? uiSettings.uiScale : 1.0
-                        onMoved: (val) => uiSettings.applyUiScale(val)
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: uiSettings ? Math.round(uiSettings.uiScale * 100) + "%" : "100%"
-                        color: theme.text
-                        font.pixelSize: 13
-                        width: 50
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
             }
 
@@ -155,27 +143,15 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
 
-                Row {
-                    spacing: 12
+                M3Slider {
+                    width: 220
+                    valueText: uiSettings ? Math.round(uiSettings.cardZoom * 100) + "%" : "100%"
+                    from: 0.6
+                    to: 1.5
+                    stepSize: 0.05
+                    value: uiSettings ? uiSettings.cardZoom : 1.0
+                    onMoved: (val) => uiSettings.applyCardZoom(val)
                     anchors.verticalCenter: parent.verticalCenter
-
-                    M3Slider {
-                        width: 220
-                        showValue: false
-                        from: 0.6
-                        to: 1.5
-                        stepSize: 0.05
-                        value: uiSettings ? uiSettings.cardZoom : 1.0
-                        onMoved: (val) => uiSettings.applyCardZoom(val)
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: uiSettings ? Math.round(uiSettings.cardZoom * 100) + "%" : "100%"
-                        color: theme.text
-                        font.pixelSize: 13
-                        width: 50
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
             }
 
@@ -184,27 +160,15 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
 
-                Row {
-                    spacing: 12
+                M3Slider {
+                    width: 220
+                    valueText: uiSettings ? uiSettings.cardSpacing + "px" : "16px"
+                    from: 4
+                    to: 40
+                    stepSize: 2
+                    value: uiSettings ? uiSettings.cardSpacing : 16
+                    onMoved: (val) => uiSettings.applyCardSpacing(Math.round(val))
                     anchors.verticalCenter: parent.verticalCenter
-
-                    M3Slider {
-                        width: 220
-                        showValue: false
-                        from: 4
-                        to: 40
-                        stepSize: 2
-                        value: uiSettings ? uiSettings.cardSpacing : 16
-                        onMoved: (val) => uiSettings.applyCardSpacing(Math.round(val))
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: uiSettings ? uiSettings.cardSpacing + "px" : "16px"
-                        color: theme.text
-                        font.pixelSize: 13
-                        width: 50
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
             }
 

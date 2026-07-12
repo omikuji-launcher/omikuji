@@ -9,6 +9,7 @@ Item {
     property real value: 0
     property string label: ""
     property bool showValue: true
+    property string valueText: String(Math.round(value))
 
     signal moved(real value)
 
@@ -22,26 +23,31 @@ Item {
     property real stopDotSize: 4
 
     implicitWidth: 200
-    implicitHeight: labelRow.visible
-        ? labelRow.height + 8 + slider.height
+    implicitHeight: header.visible
+        ? header.height + 8 + slider.height
         : slider.height
 
-    Row {
-        id: labelRow
-        spacing: 8
-        visible: root.label !== ""
+    Item {
+        id: header
+        visible: root.label !== "" || root.showValue
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: childrenRect.height
 
         Text {
+            visible: root.label !== ""
+            anchors.left: parent.left
             text: root.label
             color: theme.textMuted
             font.pixelSize: 13
             font.weight: Font.Medium
         }
         Text {
-            text: Math.round(root.value)
+            visible: root.showValue
+            anchors.right: parent.right
+            text: root.valueText
             color: theme.text
             font.pixelSize: 13
-            visible: root.showValue
         }
     }
 

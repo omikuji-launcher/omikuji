@@ -50,78 +50,26 @@ Popup {
             width: parent.width
             spacing: 14
 
-            Column {
+            M3Slider {
                 width: parent.width
-                spacing: 8
-
-                Row {
-                    width: parent.width
-                    spacing: 8
-
-                    Text {
-                        text: qsTr("Card size")
-                        color: theme.textMuted
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Item { height: 1; width: parent.width - zoomVal.width - x - 16 }
-                    Text {
-                        id: zoomVal
-                        text: Math.round(root.zoomValue * 100) + "%"
-                        color: theme.text
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                M3Slider {
-                    width: parent.width
-                    label: ""
-                    showValue: false
-                    from: root.zoomFrom
-                    to: root.zoomTo
-                    stepSize: root.zoomStep
-                    value: root.zoomValue
-                    onMoved: root.zoomMoved(value)
-                }
+                label: qsTr("Card size")
+                valueText: Math.round(root.zoomValue * 100) + "%"
+                from: root.zoomFrom
+                to: root.zoomTo
+                stepSize: root.zoomStep
+                value: root.zoomValue
+                onMoved: root.zoomMoved(value)
             }
 
-            Column {
+            M3Slider {
                 width: parent.width
-                spacing: 8
-
-                Row {
-                    width: parent.width
-                    spacing: 8
-
-                    Text {
-                        text: qsTr("Card spacing")
-                        color: theme.textMuted
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Item { height: 1; width: parent.width - spacingVal.width - x - 16 }
-                    Text {
-                        id: spacingVal
-                        text: Math.round(root.spacingValue) + "px"
-                        color: theme.text
-                        font.pixelSize: 12
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                M3Slider {
-                    width: parent.width
-                    label: ""
-                    showValue: false
-                    from: root.spacingFrom
-                    to: root.spacingTo
-                    stepSize: root.spacingStep
-                    value: root.spacingValue
-                    onMoved: root.spacingMoved(Math.round(value))
-                }
+                label: qsTr("Card spacing")
+                valueText: Math.round(root.spacingValue) + "px"
+                from: root.spacingFrom
+                to: root.spacingTo
+                stepSize: root.spacingStep
+                value: root.spacingValue
+                onMoved: root.spacingMoved(Math.round(value))
             }
 
             Column {
@@ -132,7 +80,7 @@ Popup {
                 Text {
                     text: qsTr("Sort by")
                     color: theme.textMuted
-                    font.pixelSize: 12
+                    font.pixelSize: 13
                     font.weight: Font.Medium
                 }
 

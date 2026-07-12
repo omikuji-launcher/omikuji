@@ -91,6 +91,22 @@ Item {
                     Row {
                         spacing: 10
 
+                        IconButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            icon: "close"
+                            size: 24
+                            danger: true
+                            visible: root._hasOverride(modelData.key) && uiSettings && !uiSettings.followSystemColors
+                            onClicked: uiSettings.setColorOverride(modelData.key, "")
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root._hasOverride(modelData.key) ? root.overrides[modelData.key] : qsTr("system")
+                            color: root._hasOverride(modelData.key) ? theme.text : theme.textSubtle
+                            font.pixelSize: 13
+                        }
+
                         Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 28
@@ -110,22 +126,6 @@ Item {
                                     pickerDialog.open()
                                 }
                             }
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root._hasOverride(modelData.key) ? root.overrides[modelData.key] : qsTr("system")
-                            color: root._hasOverride(modelData.key) ? theme.text : theme.textSubtle
-                            font.pixelSize: 13
-                        }
-
-                        IconButton {
-                            anchors.verticalCenter: parent.verticalCenter
-                            icon: "close"
-                            size: 24
-                            danger: true
-                            visible: root._hasOverride(modelData.key) && uiSettings && !uiSettings.followSystemColors
-                            onClicked: uiSettings.setColorOverride(modelData.key, "")
                         }
                     }
                 }

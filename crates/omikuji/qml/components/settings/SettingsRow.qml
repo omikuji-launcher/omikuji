@@ -46,6 +46,6 @@ Item {
         anchors.rightMargin: root.contentRightMargin
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: root._content ? root._content.implicitWidth : 0
+        width: root._content ? root._content.width : 0
     }
 }
