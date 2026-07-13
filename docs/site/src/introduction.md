@@ -5,7 +5,7 @@
     </a>
 </div>
 
-Built against omikuji `v0.4.4`.
+User guide built on `0.4.4`, dev guide built on `0.7.0`.
 
 \- If you're a wandering user, start here: [User Guide](user/installation.md).
 

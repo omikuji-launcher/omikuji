@@ -47,14 +47,19 @@ impl qobject::Counter {
 
 ## Wiring it up
 
-`build.rs` has two lists. A new bridge `.rs` goes in `.files([...])`, a new `.qml` goes in `qml_files([...])`.
+`build.rs` has two lists. A new handwritten bridge `.rs` goes in the `kushi::stage_files([...])` list, a new `.qml` goes in `qml_files([...])`.
 
 ```rust
-.files([
-    "src/bridge/counter.rs",
-    // ...
-])
+let staged = kushi::stage_files(
+    [
+        "src/bridge/counter.rs",
+        // ...
+    ],
+    &out_dir,
+);
 ```
+
+The staging copies each file into `OUT_DIR` before handing it to cxx-qt: cxx-qt-build accepts only one directory per QML module ([QTBUG-93443](https://bugreports.qt.io/browse/QTBUG-93443)), and the generated bridges already live there. rustc compiles the originals in `src/bridge/` as normal modules; the copies only feed cxx-qt's parser.
 
 Forgetting to register a new `.qml` is the usual trip: use `MyWidget {}` somewhere and you get "MyWidget is not a type" at runtime, with no compile error and nothing from `qmllint`. Add the file to `qml_files` and rebuild.
 
@@ -111,7 +116,7 @@ Reach for `set_*` when QML needs to react to the change. Use `rust_mut().get_mut
 
 Adding one user-visible value is more steps than it looks. A property that persists needs a field on the Rust struct, the `#[qproperty]` line, an entry wherever the struct is built (`Default`, or a `from_settings`), and usually an invokable that sets the value and writes it to disk. Settings also mirror into a core struct, so the same field name shows up in the core type, the bridge struct, and two or three conversion functions.
 
-That repetition is why the bridge files use `macro_rules!`. `apply_setting!` in `ui_settings.rs` stamps out the set-and-persist invokable bodies; `defaults_fields!` and `game_fields!` build whole families of getters and setters from a single field table. The rule of thumb: when the only thing that changes between copies is a name (a field, a type, a signal), that is a macro's job, not copy-paste. [Adding things](adding.md) has the full add-a-setting walkthrough.
+That repetition is handled two ways. For settings and the download model, the whole mirror is generated from a declaration; see [Generated bridges](generated.md). In the handwritten bridges, `macro_rules!` does the same job in-file: `defaults_fields!` and `game_fields!` build whole families of getters and setters from a single field table. The rule of thumb: when the only thing that changes between copies is a name (a field, a type, a signal), that is generation's job, not copy-paste. [Adding things](adding.md) has the full add-a-setting walkthrough.
 
 ## Threading
 

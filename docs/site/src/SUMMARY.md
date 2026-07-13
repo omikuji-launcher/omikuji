@@ -14,5 +14,6 @@
 
 - [Overview](dev/overview.md)
 - [The cxx-qt bridge](dev/cxx-qt.md)
+- [Generated bridges](dev/generated.md)
 - [Adding things](dev/adding.md)
 - [Translations](dev/translations.md)
