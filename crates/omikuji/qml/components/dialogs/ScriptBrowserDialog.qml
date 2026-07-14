@@ -169,7 +169,10 @@ DialogCard {
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: false
+                        sourceSize.width: 72
+                        sourceSize.height: 72
                         layer.enabled: visible
+                        layer.smooth: true
                         layer.effect: OpacityMask {
                             maskSource: Rectangle {
                                 width: iconBox.width
