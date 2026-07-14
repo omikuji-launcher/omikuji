@@ -149,6 +149,8 @@ pub fn execute<F: FnMut(&str)>(
 }
 
 fn shell<F: FnMut(&str)>(text: &str, prefix: &Path, cwd: &Path, on_line: &mut F) -> Result<()> {
+    use std::sync::mpsc;
+
     let mut child = std::process::Command::new("sh")
         .arg("-c")
         .arg(format!("exec 2>&1\n{text}"))
@@ -158,12 +160,32 @@ fn shell<F: FnMut(&str)>(text: &str, prefix: &Path, cwd: &Path, on_line: &mut F)
         .stdout(std::process::Stdio::piped())
         .spawn()
         .context("failed to spawn sh")?;
+
+    let (tx, rx) = mpsc::channel();
     if let Some(out) = child.stdout.take() {
-        for line in std::io::BufReader::new(out).lines().map_while(Result::ok) {
-            on_line(&line);
-        }
+        std::thread::spawn(move || {
+            for line in std::io::BufReader::new(out).lines().map_while(Result::ok) {
+                if tx.send(line).is_err() {
+                    break;
+                }
+            }
+        });
     }
-    let status = child.wait()?;
+
+    let status = loop {
+        match rx.recv_timeout(std::time::Duration::from_millis(200)) {
+            Ok(line) => on_line(&line),
+            Err(mpsc::RecvTimeoutError::Disconnected) => break child.wait()?,
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                if let Some(status) = child.try_wait()? {
+                    while let Ok(line) = rx.try_recv() {
+                        on_line(&line);
+                    }
+                    break status;
+                }
+            }
+        }
+    };
     if !status.success() {
         bail!("shell step exited with {status}");
     }
