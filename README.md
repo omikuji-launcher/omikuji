@@ -7,9 +7,9 @@ Manages wine/proton runners, wineprefixes, DXVK/VKD3D, and game launching. Impor
 ## Read the docs! 
 
 > [!IMPORTANT]
-> You feel lost, want more infos or just waste time? Read the [Docs](https://reakjra.github.io/omikuji).
+> You feel lost, want more infos or just waste time? Read the [Docs](https://omikuji-launcher.github.io/omikuji/).
 
-- [Configuration](https://reakjra.github.io/omikuji/user/configuration.html): `settings.toml`, custom runners, DLL packs
+- [Configuration](https://omikuji-launcher.github.io/omikuji//user/configuration.html): `settings.toml`, custom runners, DLL packs
 - [Nix Home Manager options](docs/hm-module.md): Every options available in the Home Manager module
 
 ## Screenshots
@@ -203,7 +203,7 @@ Not implemented/WIP/Planning to add:
 
 Bug reports (especially these), requests and PRs welcome. A few notes:
 
-- For translations contributions, check the [translation guide](https://reakjra.github.io/omikuji/dev/translations.html)
+- For translations contributions, check the [translation guide](https://omikuji-launcher.github.io/omikuji/dev/translations.html)
 - To get debug logs, in your terminal: RUST_LOG=debug omikuji 
 - Open an issue before a big change so we can talk about it first.
 - Match the existing code style. (literally just make it better than mine)
@@ -213,7 +213,7 @@ Bug reports (especially these), requests and PRs welcome. A few notes:
 
 - assets repo: [omikuji-assets](https://github.com/reakjra/omikuji-assets)
 
-> See also: [Dev Infos](https://reakjra.github.io/omikuji/dev/overview.html)
+> See also: [Dev Infos](https://omikuji-launcher.github.io/omikujihttps://omikuji-launcher.github.io/omikuji//dev/overview.html)
 
 ## License
 
