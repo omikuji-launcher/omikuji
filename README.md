@@ -211,6 +211,8 @@ Bug reports (especially these), requests and PRs welcome. A few notes:
 - Be thorough in explaining a issue/request/PR, im dummy
 - Whatever other 20 reasons people usually list in their contributing section
 
+
+- Community scripts: [omikuji-scripts](https://github.com/reakjra/omikuji-scripts)
 - assets repo: [omikuji-assets](https://github.com/reakjra/omikuji-assets)
 
 > See also: [Dev Infos](https://omikuji-launcher.github.io/omikujihttps://omikuji-launcher.github.io/omikuji//dev/overview.html)
