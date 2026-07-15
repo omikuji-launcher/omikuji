@@ -237,7 +237,7 @@ in
         map (
           # lutris seems to not detect wine/proton if the name has some caps
           package:
-          (lib.nameValuePair "omikuji/runners/${formatWineName package}" {
+          (lib.nameValuePair "omikuji/components/runners/${formatWineName package}" {
             source = package;
           })
         ) packages;
