@@ -5,6 +5,7 @@ import "../primitives"
 import "../lib/RunnerGrouping.js" as RG
 
 DialogCard {
+    sizeKey: "script_run"
     id: root
 
     property var scriptsBridge: null
@@ -320,6 +321,12 @@ DialogCard {
                 width: parent.width
                 height: 220
                 visible: root.sourceExpanded
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    onWheel: (wheel) => wheel.accepted = true
+                }
 
                 Flickable {
                     id: srcFlick

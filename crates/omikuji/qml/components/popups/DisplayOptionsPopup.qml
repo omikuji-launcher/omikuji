@@ -35,6 +35,8 @@ Popup {
 
     background: PopupSurface {}
 
+    PopupZoom { target: root }
+
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
         NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: 120; easing.type: Easing.OutCubic }

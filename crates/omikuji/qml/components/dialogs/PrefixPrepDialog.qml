@@ -4,6 +4,7 @@ import "../controls"
 
 
 DialogCard {
+    sizeKey: "prefix_prep"
     id: root
 
     property var gameModel: null

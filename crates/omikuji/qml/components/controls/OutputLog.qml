@@ -21,6 +21,12 @@ Rectangle {
 
     Component.onCompleted: highlighter.attach(area.textDocument)
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        onWheel: (wheel) => wheel.accepted = true
+    }
+
     ScrollView {
         anchors.fill: parent
         anchors.margins: 8

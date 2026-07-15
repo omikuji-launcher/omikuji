@@ -92,6 +92,18 @@ Item {
 
     height: 56
 
+    RectangularGlow {
+        anchors.fill: bar
+        anchors.topMargin: 4
+        anchors.bottomMargin: -4
+        glowRadius: 20
+        spread: 0.06
+        color: Qt.rgba(0, 0, 0, 0.45)
+        cornerRadius: theme.radius.lg + 20
+        opacity: bar.opacity
+        visible: bar.visible
+    }
+
     Squircle {
         id: bar
         anchors.horizontalCenter: parent.horizontalCenter
@@ -106,16 +118,6 @@ Item {
 
         Behavior on opacity {
             NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-        }
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            transparentBorder: true
-            horizontalOffset: 0
-            verticalOffset: 4
-            radius: 20
-            samples: 41
-            color: Qt.rgba(0, 0, 0, 0.45)
         }
 
         Item {

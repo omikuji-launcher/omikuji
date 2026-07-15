@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
+import "../controls"
 import "../primitives"
 
 Item {
@@ -26,8 +27,15 @@ Item {
 
     property bool escEnabled: true
 
+    property bool resizable: true
+    property string sizeKey: ""
+    property real minWidth: 320
+    property real minHeight: 220
+
     function open() { shown = true }
     function close() { shown = false }
+
+    onShownChanged: if (shown && sizeKey !== "") resizer.loadSize()
 
     Shortcut {
         sequence: "Escape"
@@ -55,8 +63,8 @@ Item {
         id: cardWrap
         property bool isDropdownHost: true
         anchors.centerIn: parent
-        width: Math.min(root.maxWidth, root.width - theme.space.xxl * 2)
-        height: Math.min(root.height - theme.space.xxl * 2, root.fillHeight ? root.preferredHeight : naturalHeight)
+        width: resizer.widthFor(root.maxWidth)
+        height: resizer.heightFor(root.fillHeight ? root.preferredHeight : naturalHeight)
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.96
         visible: opacity > 0.01
@@ -161,6 +169,14 @@ Item {
             anchors.rightMargin: theme.space.xl
             active: root.actions !== null && cardWrap.visible
             sourceComponent: root.actions
+        }
+
+        ResizeGrips {
+            id: resizer
+            visible: root.resizable
+            sizeKey: root.sizeKey
+            minWidth: root.minWidth
+            minHeight: root.minHeight
         }
     }
 }

@@ -4,6 +4,7 @@ import "../controls"
 import "../primitives"
 
 DialogCard {
+    sizeKey: "log_rules"
     id: root
 
     property var uiSettings: null

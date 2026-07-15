@@ -5,6 +5,7 @@ import "../controls"
 import "../primitives"
 
 DialogCard {
+    sizeKey: "script_browser"
     id: root
 
     property var scriptsBridge: null

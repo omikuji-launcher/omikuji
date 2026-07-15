@@ -4,6 +4,7 @@ import "../controls"
 import "../lib/Format.js" as Format
 
 DialogCard {
+    sizeKey: "update_available"
     id: root
 
     property string gameId: ""

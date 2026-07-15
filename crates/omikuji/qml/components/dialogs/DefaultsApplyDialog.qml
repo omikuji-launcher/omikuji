@@ -4,6 +4,7 @@ import "../controls"
 import "../primitives"
 
 DialogCard {
+    sizeKey: "defaults_apply"
     id: root
 
     property var defaults: null

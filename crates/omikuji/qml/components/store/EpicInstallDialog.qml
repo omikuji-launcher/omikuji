@@ -8,6 +8,7 @@ import "../primitives"
 import "../lib/Format.js" as Format
 
 DialogCard {
+    sizeKey: "epic_install"
     id: root
 
     property var gameModel: null

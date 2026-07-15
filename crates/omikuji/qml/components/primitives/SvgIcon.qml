@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Item {
     id: icon
@@ -9,15 +9,12 @@ Item {
     property int size: 20
     property bool _fillMissing: false
 
+    readonly property int _res: Math.max(1, Math.round(size * theme.uiScale))
+
     onNameChanged: _fillMissing = false
 
     width: size
     height: size
-
-    // does this even work? im blind, they all look blurry to me wtf
-    layer.enabled: true
-    layer.smooth: true
-    layer.textureSize: Qt.size(size * 2, size * 2)
 
     Image {
         id: img
@@ -27,14 +24,17 @@ Item {
             let fill = theme.filledIcons && !icon._fillMissing && !name.endsWith("_fill")
             return "qrc:/qt/qml/omikuji/qml/icons/" + name + (fill ? "_fill" : "") + ".svg"
         }
-        sourceSize: Qt.size(icon.size * 2, icon.size * 2)
-        visible: false
+        sourceSize: Qt.size(icon._res, icon._res)
+        layer.enabled: true
+        layer.smooth: true
+        layer.textureSize: Qt.size(icon._res, icon._res)
+        layer.effect: MultiEffect {
+            contrast: -1
+            brightness: 0.5
+            colorization: 1
+            colorizationColor: Qt.rgba(icon.color.r, icon.color.g, icon.color.b, 1)
+            opacity: icon.color.a
+        }
         onStatusChanged: if (status === Image.Error && theme.filledIcons && !icon._fillMissing) Qt.callLater(function() { icon._fillMissing = true })
-    }
-
-    ColorOverlay {
-        anchors.fill: img
-        source: img
-        color: icon.color
     }
 }

@@ -4,6 +4,7 @@ import "../primitives"
 
 
 DialogCard {
+    sizeKey: "prefix_detail"
     id: root
 
     property var ofudaBridge: null

@@ -40,6 +40,7 @@ ApplicationWindow {
         fontFamily: uiSettings.fontFamily
         fillFields: uiSettings.fillFields
         radiusScale: uiSettings.radiusScale
+        uiScale: root.uiScale
     }
 
     Connections {
@@ -1211,6 +1212,7 @@ property real cardZoom: uiSettings.cardZoom
     SettingsModal {
         id: gameSettingsModal
         shown: root.activeModal === "gameSettings"
+        sizeKey: "game_settings"
         onCloseRequested: { if (pageItem) pageItem.closeAction(); root.activeModal = "" }
         pageComponent: Component {
             GameSettingsPage {
@@ -1232,6 +1234,7 @@ property real cardZoom: uiSettings.cardZoom
     SettingsModal {
         id: addGameModal
         shown: root.activeModal === "addGame"
+        sizeKey: "add_game"
         onCloseRequested: { if (pageItem) pageItem.closeAction(); root.activeModal = "" }
         pageComponent: Component {
             AddGamePage {
@@ -1267,6 +1270,7 @@ property real cardZoom: uiSettings.cardZoom
     SettingsModal {
         id: globalSettingsModal
         shown: root.activeModal === "globalSettings"
+        sizeKey: "global_settings"
         onCloseRequested: root.activeModal = ""
         pageComponent: Component {
             GlobalSettingsPage {

@@ -4,6 +4,7 @@ import "../controls"
 import "../primitives"
 
 DialogCard {
+    sizeKey: "sets"
     id: root
 
     property var libRead: function() { return "[]" }

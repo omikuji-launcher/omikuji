@@ -4,6 +4,7 @@ import "../controls"
 import "../primitives"
 
 DialogCard {
+    sizeKey: "game_categories"
     id: root
 
     property var gameModel: null

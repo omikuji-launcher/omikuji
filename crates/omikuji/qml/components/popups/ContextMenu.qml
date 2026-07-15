@@ -72,82 +72,82 @@ Popup {
         return itemWidth + padding * 2
     }
 
+    // openers work in window coords (visual size = logical * zoom), popup x/y wants the parent frame, mixing the two caused the deep-nested corner bug
+    function _moveTo(winX, winY) {
+        let p = parent ? parent.mapFromItem(null, winX, winY) : Qt.point(winX, winY)
+        x = p.x
+        y = p.y
+    }
+
     function openAbove(anchorItem) {
         if (!anchorItem) { open(); return }
         let win = anchorItem.Window.window
-        let p = anchorItem.mapToItem(null, anchorItem.width / 2, 0)
-        let w = _computedWidth()
-        let h = _computedHeight()
-        let nx = p.x - w / 2
-        let ny = p.y - h - 4
+        let z = theme.uiScale
+        let w = _computedWidth() * z
+        let h = _computedHeight() * z
+        let a = anchorItem.mapToItem(null, anchorItem.width / 2, 0)
+        let nx = a.x - w / 2
+        let ny = a.y - h - 4
         if (win) {
             if (nx < 4) nx = 4
             if (nx + w > win.width - 4) nx = win.width - w - 4
             if (ny < 4) ny = 4
         }
-        x = nx
-        y = ny
+        _moveTo(nx, ny)
         open()
     }
 
-    // Popup x/y is in the parent coord frame but overflow checks need the window frame, mixing the two caused the deep-nested corner bug
     function openBelow(anchorItem) {
         if (!anchorItem) { open(); return }
         if (!parent) { open(); return }
         let win = anchorItem.Window.window
-        let w = _computedWidth()
-        let h = _computedHeight()
+        let z = theme.uiScale
+        let w = _computedWidth() * z
+        let h = _computedHeight() * z
 
-        let p = anchorItem.mapToItem(parent, 0, anchorItem.height + 4)
-        let nx = p.x
-        let ny = p.y
-
-        let abs = anchorItem.mapToItem(null, 0, anchorItem.height + 4)
+        let a = anchorItem.mapToItem(null, 0, anchorItem.height + 4)
         if (win) {
-            if (abs.y + h > win.height - 4) {
+            if (a.y + h > win.height - 4) {
                 openAbove(anchorItem)
                 return
             }
-            let overflowRight = (abs.x + w) - (win.width - 4)
-            if (overflowRight > 0) nx -= overflowRight
+            let overflowRight = (a.x + w) - (win.width - 4)
+            if (overflowRight > 0) a.x -= overflowRight
         }
 
-        x = nx
-        y = ny
+        _moveTo(a.x, a.y)
         open()
     }
 
     function openAtCursor(winX, winY) {
         let anchorItem = parent || null
         let win = anchorItem ? anchorItem.Window.window : null
-        let w = _computedWidth()
-        let h = _computedHeight()
+        let z = theme.uiScale
+        let w = _computedWidth() * z
+        let h = _computedHeight() * z
         let nx = winX + 4
         let ny = winY + 4
         if (win) {
             if (nx + w > win.width - 4) nx = win.width - w - 4
             if (ny + h > win.height - 4) ny = win.height - h - 4
         }
-        x = Math.max(4, nx)
-        y = Math.max(4, ny)
+        _moveTo(Math.max(4, nx), Math.max(4, ny))
         open()
     }
 
     function openBeside(anchorItem, side) {
         if (!anchorItem || !parent) { open(); return }
         let win = anchorItem.Window.window
-        let w = _computedWidth()
-        let h = _computedHeight()
-        let dx = side === -1 ? -w - padding + 4 : anchorItem.width + padding - 4
-        let p = anchorItem.mapToItem(parent, dx, -padding)
-        let ny = p.y
+        let z = theme.uiScale
+        let h = _computedHeight() * z
+        let dx = side === -1 ? -_computedWidth() - padding + 4 : anchorItem.width + padding - 4
+        let a = anchorItem.mapToItem(null, dx, -padding)
+        let ny = a.y
         if (win) {
-            let absY = anchorItem.mapToItem(null, 0, -padding).y
-            let overflow = absY + h - (win.height - 4)
+            let overflow = ny + h - (win.height - 4)
             if (overflow > 0) ny -= overflow
         }
-        x = p.x
-        y = Math.max(4, ny)
+        _moveTo(a.x, Math.max(4, ny))
         open()
     }
 
@@ -189,7 +189,7 @@ Popup {
         let w = sub._computedWidth()
         let win = _submenuAnchor.Window.window
         let absRight = _submenuAnchor.mapToItem(null, _submenuAnchor.width + padding - 4, 0).x
-        _submenuSide = (win && absRight + w > win.width - 4) ? -1 : 1
+        _submenuSide = (win && absRight + w * theme.uiScale > win.width - 4) ? -1 : 1
         sub.openBeside(_submenuAnchor, _submenuSide)
     }
 
@@ -220,6 +220,8 @@ Popup {
     }
 
     background: PopupSurface {}
+
+    PopupZoom { target: root }
 
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }

@@ -56,6 +56,8 @@ Popup {
         radius: 7
     }
 
+    PopupZoom { target: root }
+
     contentItem: Text {
         id: label
         text: root.text

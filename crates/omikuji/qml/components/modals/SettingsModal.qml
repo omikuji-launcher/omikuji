@@ -14,10 +14,14 @@ Item {
 
     property bool shown: false
     property Component pageComponent: null
+    property bool resizable: true
+    property string sizeKey: ""
 
     readonly property alias pageItem: pageLoader.item
 
     signal closeRequested()
+
+    onShownChanged: if (shown && sizeKey !== "") resizer.loadSize()
 
     Shortcut {
         sequence: "Escape"
@@ -46,8 +50,8 @@ Item {
         property bool isDropdownHost: true
         x: Math.round((parent.width - width) / 2)
         y: Math.round((parent.height - height) / 2)
-        width: Math.round(parent.width * 0.95)
-        height: Math.round(parent.height * 0.95)
+        width: Math.round(resizer.widthFor(parent.width * 0.95))
+        height: Math.round(resizer.heightFor(parent.height * 0.95))
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.97
         visible: opacity > 0.01
@@ -203,6 +207,15 @@ Item {
                     sourceComponent: root.pageComponent
                 }
             }
+        }
+
+        ResizeGrips {
+            id: resizer
+            visible: root.resizable
+            sizeKey: root.sizeKey
+            minWidth: 720
+            minHeight: 480
+            frameMargin: theme.space.lg * 2
         }
     }
 }

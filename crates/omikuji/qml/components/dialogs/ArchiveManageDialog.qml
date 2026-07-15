@@ -5,6 +5,7 @@ import "../primitives"
 
 
 DialogCard {
+    sizeKey: "archive_manage"
     id: root
 
     property var archiveManager: null

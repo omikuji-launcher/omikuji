@@ -202,6 +202,7 @@ fn main() {
         .json_accessor("env_sets", "Vec<KvSet>", "env_sets", "env_sets_changed")
         .json_accessor("dll_sets", "Vec<KvSet>", "dll_sets", "dll_sets_changed")
         .json_accessor("log_rules", "Vec<LogRule>", "display.log_rules", "log_rules_changed")
+        .json_accessor("dialog_sizes", "BTreeMap<String, [f64; 2]>", "dialog_sizes", "dialog_sizes_changed")
         .raw_field_persisted("color_overrides", "BTreeMap<String, String>", "s.theme.colors.clone()", "s.theme.colors = self.color_overrides.clone();")
         .raw_field("watcher", "Option<FileWatcher>", "None")
         .raw_field("suppress_reload_until", "Option<Instant>", "None")
@@ -385,8 +386,10 @@ fn main() {
                 "qml/components/controls/M3TextField.qml",
                 "qml/components/controls/OutputLog.qml",
                 "qml/components/controls/PlayButton.qml",
+                "qml/components/controls/ResizeGrips.qml",
                 "qml/components/controls/ThemedLogHighlighter.qml",
                 "qml/components/popups/PopupSurface.qml",
+                "qml/components/popups/PopupZoom.qml",
                 "qml/components/cards/StatusBadge.qml",
                 "qml/components/cards/StoreCardAction.qml",
                 "qml/components/primitives/Sparkline.qml",

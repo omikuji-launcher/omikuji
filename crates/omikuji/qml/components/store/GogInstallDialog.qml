@@ -8,6 +8,7 @@ import "../primitives"
 import "../lib/Format.js" as Format
 
 DialogCard {
+    sizeKey: "gog_install"
     id: root
 
     property var gameModel: null
