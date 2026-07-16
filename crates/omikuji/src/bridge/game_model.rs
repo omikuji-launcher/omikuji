@@ -39,6 +39,7 @@ pub mod qobject {
         #[base = QAbstractListModel]
         #[qproperty(i32, count)]
         #[qproperty(bool, preparing)]
+        #[qproperty(bool, wine_command_running, cxx_name = "wineCommandRunning")]
         type GameModel = super::GameModelRust;
     }
 
@@ -104,6 +105,14 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "prepareFinished"]
         fn prepare_finished(self: Pin<&mut GameModel>, ok: bool, error: &QString);
+
+        #[qsignal]
+        #[cxx_name = "wineCommandOutput"]
+        fn wine_command_output(self: Pin<&mut GameModel>, line: &QString);
+
+        #[qsignal]
+        #[cxx_name = "wineCommandFinished"]
+        fn wine_command_finished(self: Pin<&mut GameModel>, ok: bool, error: &QString);
 
         #[qsignal]
         fn error_required(
@@ -258,6 +267,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn run_wine_tool(self: &GameModel, game_id: &QString, tool: &QString);
+
+        #[qinvokable]
+        fn run_wine_command(self: Pin<&mut GameModel>, game_id: &QString, command: &QString);
 
         #[qinvokable]
         fn run_wine_exe(self: &GameModel, game_id: &QString, exe_path: &QString);
@@ -634,6 +646,7 @@ pub struct GameModelRust {
     // in-memory staging slot for the add-game page. cleared on commit/discard.
     draft: Option<Game>,
     preparing: bool,
+    wine_command_running: bool,
     sort_mode: SortMode,
     dirty_order: HashSet<String>,
 }
@@ -644,7 +657,7 @@ impl Default for GameModelRust {
         let sort_mode = SortMode::parse(&UiSettings::load().display.card_sort);
         library.game.sort_by(|a, b| sort_mode.cmp(a, b));
         let count = library.game.len() as i32;
-        Self { library, count, draft: None, preparing: false, sort_mode, dirty_order: Default::default() }
+        Self { library, count, draft: None, preparing: false, wine_command_running: false, sort_mode, dirty_order: Default::default() }
     }
 }
 
@@ -1369,6 +1382,15 @@ impl qobject::GameModel {
         map.insert(
             QString::from("favourite"),
             QVariant::from(&game.metadata.favourite),
+        );
+        let prefix_path = if game.source.kind == "steam" && !game.source.app_id.is_empty() {
+            omikuji_core::steam::local::find_steam_prefix(&game.source.app_id).unwrap_or_default()
+        } else {
+            omikuji_core::launch::prefix_path_for(game)
+        };
+        map.insert(
+            QString::from("prefixPath"),
+            QVariant::from(&QString::from(&*prefix_path.to_string_lossy())),
         );
         map.insert(
             QString::from("hidden"),

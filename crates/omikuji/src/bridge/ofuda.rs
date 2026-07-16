@@ -16,6 +16,7 @@ pub mod qobject {
         #[qobject]
         #[qml_element]
         #[qproperty(bool, creating)]
+        #[qproperty(bool, command_running, cxx_name = "commandRunning")]
         type OfudaBridge = super::OfudaRust;
     }
 
@@ -31,6 +32,14 @@ pub mod qobject {
         #[cxx_name = "createOutput"]
         fn create_output(self: Pin<&mut OfudaBridge>, line: QString);
 
+        #[qsignal]
+        #[cxx_name = "commandOutput"]
+        fn command_output(self: Pin<&mut OfudaBridge>, line: QString);
+
+        #[qsignal]
+        #[cxx_name = "commandFinished"]
+        fn command_finished(self: Pin<&mut OfudaBridge>, ok: bool, error: QString);
+
         #[qinvokable]
         #[cxx_name = "listJson"]
         fn list_json(self: &OfudaBridge) -> QString;
@@ -38,6 +47,15 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "runTool"]
         fn run_tool(self: &OfudaBridge, path: &QString, tool: &QString, runner: &QString) -> bool;
+
+        #[qinvokable]
+        #[cxx_name = "runCommand"]
+        fn run_command(
+            self: Pin<&mut OfudaBridge>,
+            path: &QString,
+            runner: &QString,
+            command: &QString,
+        );
 
         #[qinvokable]
         #[cxx_name = "openFolder"]
@@ -67,6 +85,19 @@ pub mod qobject {
 pub struct OfudaRust {
     watcher: Option<DirWatcher>,
     creating: bool,
+    command_running: bool,
+}
+
+fn prefix_game(path: &QString, runner: &QString) -> omikuji_core::library::Game {
+    let prefix = path.to_string();
+    let runner = runner.to_string();
+    omikuji_core::library::Game::with_options(
+        "Ofuda".to_string(),
+        std::path::PathBuf::new(),
+        (!prefix.is_empty()).then_some(prefix),
+        Some("wine".to_string()),
+        (!runner.is_empty()).then_some(runner),
+    )
 }
 
 impl qobject::OfudaBridge {
@@ -88,31 +119,47 @@ impl qobject::OfudaBridge {
 
     fn run_tool(&self, path: &QString, tool: &QString, runner: &QString) -> bool {
         use omikuji_core::wine_tools::WineTool;
-        let tool = match tool.to_string().as_str() {
-            "winecfg" => WineTool::Winecfg,
-            "winetricks" => WineTool::Winetricks,
-            "kill" => WineTool::KillWineserver,
-            other => {
-                tracing::warn!("unknown ofuda tool: {other}");
-                return false;
-            }
+        let name = tool.to_string();
+        let Some(tool) = WineTool::from_name(&name) else {
+            tracing::warn!("unknown ofuda tool: {name}");
+            return false;
         };
-        let prefix = path.to_string();
-        let runner = runner.to_string();
-        let game = omikuji_core::library::Game::with_options(
-            "Ofuda".to_string(),
-            std::path::PathBuf::new(),
-            (!prefix.is_empty()).then_some(prefix),
-            Some("wine".to_string()),
-            (!runner.is_empty()).then_some(runner),
-        );
-        match omikuji_core::wine_tools::run(&game, tool) {
+        match omikuji_core::wine_tools::run(&prefix_game(path, runner), tool) {
             Ok(_) => true,
             Err(e) => {
                 tracing::error!("ofuda run_tool failed: {e}");
                 false
             }
         }
+    }
+
+    fn run_command(mut self: Pin<&mut Self>, path: &QString, runner: &QString, command: &QString) {
+        use omikuji_core::wine_tools::{self, WineTool};
+        if self.command_running {
+            return;
+        }
+        let Some(tool) = WineTool::from_command_line(&command.to_string()) else {
+            return;
+        };
+        self.as_mut().set_command_running(true);
+        let qt = self.as_mut().qt_thread();
+        let line_qt = qt.clone();
+        wine_tools::run_detached(
+            prefix_game(path, runner),
+            tool,
+            move |line| {
+                let l = line.to_string();
+                let _ = line_qt.queue(move |mut obj: Pin<&mut qobject::OfudaBridge>| {
+                    obj.as_mut().command_output(QString::from(&l));
+                });
+            },
+            move |ok, err| {
+                let _ = qt.queue(move |mut obj: Pin<&mut qobject::OfudaBridge>| {
+                    obj.as_mut().set_command_running(false);
+                    obj.as_mut().command_finished(ok, QString::from(&err));
+                });
+            },
+        );
     }
 
     fn open_folder(&self, path: &QString) -> bool {

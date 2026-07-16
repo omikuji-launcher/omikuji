@@ -312,6 +312,7 @@ fn main() {
                 "qml/components/dialogs/PrefixCreateDialog.qml",
                 "qml/components/dialogs/PrefixDetailDialog.qml",
                 "qml/components/dialogs/PrefixPrepDialog.qml",
+                "qml/components/dialogs/RunCommandDialog.qml",
                 "qml/components/dialogs/LogRulesDialog.qml",
                 "qml/components/dialogs/GameLogsWindow.qml",
                 "qml/components/dialogs/MigrationDialog.qml",

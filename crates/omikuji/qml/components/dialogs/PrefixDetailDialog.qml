@@ -13,6 +13,7 @@ DialogCard {
     readonly property var games: prefix.games || []
 
     signal deleteRequested(var prefix)
+    signal runCommandRequested(var prefix)
 
     maxWidth: 540
     title: prefix.name || ""
@@ -29,6 +30,8 @@ DialogCard {
     function invokeTool(act) {
         if (act === "open") {
             if (ofudaBridge) ofudaBridge.openFolder(prefix.path || "")
+        } else if (act === "run_command") {
+            runCommandRequested(prefix)
         } else {
             runTool(act)
         }
@@ -37,6 +40,8 @@ DialogCard {
     readonly property var tools: [
         { icon: "settings", label: "Winecfg",                  act: "winecfg" },
         { icon: "download", label: "Winetricks",               act: "winetricks" },
+        { icon: "terminal", label: qsTr("Run wine command"),   act: "run_command" },
+        { icon: "desktop_windows", label: qsTr("Console (wineconsole)"), act: "cmd" },
         { icon: "folder",   label: qsTr("Open folder"),        act: "open" },
         { icon: "close",    label: qsTr("Kill wineserver"),    act: "kill" }
     ]
@@ -61,7 +66,7 @@ DialogCard {
                 anchors.leftMargin: theme.space.md
                 anchors.rightMargin: theme.space.md
                 text: root.prefix.path || ""
-                color: theme.textMuted
+                color: theme.accent
                 font.pixelSize: 12
                 font.family: "monospace"
                 wrapMode: Text.WrapAnywhere

@@ -391,7 +391,8 @@ ApplicationWindow {
             runner: game["runner"] || "",
             runnerType: game["runnerType"] || "",
             gameId: game["gameId"] || "",
-            sourceAppId: game["sourceAppId"] || ""
+            sourceAppId: game["sourceAppId"] || "",
+            prefixPath: game["prefixPath"] || ""
         }
         refreshSelectedDownloadActivity()
     }
@@ -1153,6 +1154,11 @@ property real cardZoom: uiSettings.cardZoom
             prefixDetailDialog.escEnabled = false
             deletePrefixConfirm.show(p)
         }
+        onRunCommandRequested: (p) => {
+            prefixDetailDialog.escEnabled = false
+            ofudaRunCommandDialog.prefix = p
+            ofudaRunCommandDialog.show("", p.path || "")
+        }
     }
 
     ConfirmDialog {
@@ -1170,6 +1176,35 @@ property real cardZoom: uiSettings.cardZoom
         onCancelled: prefixDetailDialog.escEnabled = true
     }
 
+    RunCommandDialog {
+        id: ofudaRunCommandDialog
+        anchors.fill: parent
+        property var prefix: ({})
+        running: ofudaBridge.commandRunning
+        onSubmitted: (cmd) => ofudaBridge.runCommand(prefix.path || "", prefix.runner || "", cmd)
+        onShownChanged: if (!shown) prefixDetailDialog.escEnabled = true
+
+        Connections {
+            target: ofudaBridge
+            function onCommandOutput(line) { ofudaRunCommandDialog.appendLine(line) }
+            function onCommandFinished(ok, error) { ofudaRunCommandDialog.commandDone(ok, error) }
+        }
+    }
+
+    RunCommandDialog {
+        id: gameRunCommandDialog
+        anchors.fill: parent
+        property string gameId: ""
+        running: gameModel.wineCommandRunning
+        onSubmitted: (cmd) => gameModel.run_wine_command(gameId, cmd)
+
+        Connections {
+            target: gameModel
+            function onWineCommandOutput(line) { gameRunCommandDialog.appendLine(line) }
+            function onWineCommandFinished(ok, error) { gameRunCommandDialog.commandDone(ok, error) }
+        }
+    }
+
     ContextMenu {
         id: wineToolsMenu
         property string pendingRunExeRequestId: ""
@@ -1181,8 +1216,9 @@ property real cardZoom: uiSettings.cardZoom
             { text: qsTr("Command Prompt (cmd)"),    action: "cmd" },
             { text: qsTr("File Explorer (explorer)"), action: "explorer" },
             { text: qsTr("Run EXE in prefix…"),      action: "run_exe" },
+            { text: qsTr("Run wine command…"),       action: "run_command" },
             { text: qsTr("Kill wineserver"),         action: "killwineserver", danger: true }
-        ] // TODO: dry up the dispatcher mighjt aswell kill it
+        ]
 
         onItemClicked: (action) => {
             if (!root.selectedGame || !root.selectedGame.gameId) return
@@ -1191,6 +1227,9 @@ property real cardZoom: uiSettings.cardZoom
                 let rid = "wine_run_exe_" + Date.now().toString(36)
                 pendingRunExeRequestId = rid
                 gameModel.open_file_dialog(rid, false, qsTr("Select EXE to run in prefix"), "/home", "")
+            } else if (action === "run_command") {
+                gameRunCommandDialog.gameId = gid
+                gameRunCommandDialog.show(root.selectedGame.name || "", root.selectedGame.prefixPath || "")
             } else {
                 gameModel.run_wine_tool(gid, action)
             }

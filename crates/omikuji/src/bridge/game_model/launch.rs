@@ -179,7 +179,6 @@ impl super::qobject::GameModel {
         omikuji_core::process::stop_game(&id);
     }
 
-    // tool name must match one of the WineTool enum arms below; unknown names are dropped
     pub fn run_wine_tool(&self, game_id: &QString, tool: &QString) {
         let id = game_id.to_string();
         let tool_name = tool.to_string();
@@ -193,17 +192,9 @@ impl super::qobject::GameModel {
             tracing::warn!("game '{}' not found", id);
             return;
         };
-        let t = match tool_name.as_str() {
-            "winecfg" => omikuji_core::wine_tools::WineTool::Winecfg,
-            "winetricks" => omikuji_core::wine_tools::WineTool::Winetricks,
-            "regedit" => omikuji_core::wine_tools::WineTool::Regedit,
-            "cmd" => omikuji_core::wine_tools::WineTool::Cmd,
-            "explorer" => omikuji_core::wine_tools::WineTool::Explorer,
-            "killwineserver" => omikuji_core::wine_tools::WineTool::KillWineserver,
-            other => {
-                tracing::warn!("unknown tool '{}'", other);
-                return;
-            }
+        let Some(t) = omikuji_core::wine_tools::WineTool::from_name(&tool_name) else {
+            tracing::warn!("unknown tool '{}'", tool_name);
+            return;
         };
         let display_name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
@@ -224,6 +215,47 @@ impl super::qobject::GameModel {
                 );
             }
         });
+    }
+
+    pub fn run_wine_command(mut self: Pin<&mut Self>, game_id: &QString, command: &QString) {
+        use cxx_qt::Threading;
+        if self.wine_command_running {
+            return;
+        }
+        let id = game_id.to_string();
+        let Some(game) = self
+            .library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == id)
+            .cloned()
+        else {
+            tracing::warn!("game '{}' not found", id);
+            return;
+        };
+        let Some(tool) = omikuji_core::wine_tools::WineTool::from_command_line(&command.to_string())
+        else {
+            return;
+        };
+        self.as_mut().set_wine_command_running(true);
+        let qt = self.as_mut().qt_thread();
+        let line_qt = qt.clone();
+        omikuji_core::wine_tools::run_detached(
+            game,
+            tool,
+            move |line| {
+                let l = line.to_string();
+                let _ = line_qt.queue(move |mut obj: Pin<&mut super::qobject::GameModel>| {
+                    obj.as_mut().wine_command_output(&QString::from(&l));
+                });
+            },
+            move |ok, err| {
+                let _ = qt.queue(move |mut obj: Pin<&mut super::qobject::GameModel>| {
+                    obj.as_mut().set_wine_command_running(false);
+                    obj.as_mut().wine_command_finished(ok, &QString::from(&err));
+                });
+            },
+        );
     }
 
     pub fn run_wine_exe(&self, game_id: &QString, exe_path: &QString) {

@@ -9,6 +9,7 @@ Item {
     property bool readOnly: false
 
     signal textEdited(string text)
+    signal accepted()
 
     implicitWidth: 200
     implicitHeight: label ? labelText.height + 4 + field.height : field.height
@@ -51,6 +52,7 @@ Item {
             selectByMouse: true
 
             onTextEdited: root.textEdited(input.text)
+            onAccepted: root.accepted()
 
             Text {
                 anchors.fill: parent

@@ -5,6 +5,7 @@ DialogCard {
     id: root
 
     property string message: ""
+    property string detail: ""
     property string confirmText: qsTr("Confirm")
     property string cancelText: qsTr("Cancel")
     property bool destructive: false
@@ -23,13 +24,27 @@ DialogCard {
 
     onCloseRequested: { root.cancelled(root.payload); root.close() }
 
-    body: Text {
+    body: Column {
         width: parent.width
-        text: root.message
-        color: theme.textMuted
-        font.pixelSize: theme.type.body.size
-        wrapMode: Text.Wrap
-        visible: text.length > 0
+        spacing: theme.space.sm
+
+        Text {
+            width: parent.width
+            text: root.detail
+            color: theme.accent
+            font.pixelSize: 12
+            font.family: "monospace"
+            wrapMode: Text.WrapAnywhere
+            visible: text.length > 0
+        }
+        Text {
+            width: parent.width
+            text: root.message
+            color: theme.textMuted
+            font.pixelSize: theme.type.body.size
+            wrapMode: Text.Wrap
+            visible: text.length > 0
+        }
     }
 
     actions: Row {

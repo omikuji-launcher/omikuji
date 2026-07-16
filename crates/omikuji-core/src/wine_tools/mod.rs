@@ -15,6 +15,34 @@ pub enum WineTool {
     RunExe(PathBuf),
     // wineserver -k (or wineboot -k for proton). useful when a crashed game leaves wineserver running (took it from lutris).
     KillWineserver,
+    Custom(Vec<String>),
+}
+
+impl WineTool {
+    pub fn from_name(name: &str) -> Option<Self> {
+        Some(match name {
+            "winecfg" => Self::Winecfg,
+            "winetricks" => Self::Winetricks,
+            "regedit" => Self::Regedit,
+            "cmd" => Self::Cmd,
+            "explorer" => Self::Explorer,
+            "kill" | "killwineserver" => Self::KillWineserver,
+            _ => return None,
+        })
+    }
+
+    pub fn from_command_line(line: &str) -> Option<Self> {
+        let tokens: Vec<String> = line.split_whitespace().map(str::to_string).collect();
+        (!tokens.is_empty()).then_some(Self::Custom(tokens))
+    }
+
+    fn is_winetricks(&self) -> bool {
+        match self {
+            Self::Winetricks | Self::WinetricksVerbs(_) => true,
+            Self::Custom(args) => args.first().is_some_and(|a| a == "winetricks"),
+            _ => false,
+        }
+    }
 }
 
 pub fn run(game: &Game, tool: WineTool) -> Result<Child> {
@@ -25,20 +53,48 @@ pub fn run(game: &Game, tool: WineTool) -> Result<Child> {
 pub fn run_streamed<F: FnMut(&str)>(game: &Game, tool: WineTool, mut on_line: F) -> Result<()> {
     let mut cmd = build_wine_command(game, &tool)?;
     cmd.stdin(Stdio::null());
-    cmd.stdout(Stdio::null());
+    cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
     let mut child = cmd.spawn().map_err(|e| anyhow!("failed to spawn wine tool: {}", e))?;
-    if let Some(stderr) = child.stderr.take() {
-        use std::io::BufRead;
-        for line in std::io::BufReader::new(stderr).lines().map_while(Result::ok) {
-            on_line(&line);
-        }
+    let (tx, rx) = std::sync::mpsc::channel();
+    if let Some(out) = child.stdout.take() {
+        pipe_lines(out, tx.clone());
+    }
+    if let Some(err) = child.stderr.take() {
+        pipe_lines(err, tx.clone());
+    }
+    drop(tx);
+    for line in rx {
+        on_line(&line);
     }
     let status = child.wait()?;
     if !status.success() {
         anyhow::bail!("{:?} exited with {}", tool, status);
     }
     Ok(())
+}
+
+pub fn run_detached<L, D>(game: Game, tool: WineTool, on_line: L, on_done: D)
+where
+    L: FnMut(&str) + Send + 'static,
+    D: FnOnce(bool, String) + Send + 'static,
+{
+    std::thread::spawn(move || {
+        let (ok, err) = match run_streamed(&game, tool, on_line) {
+            Ok(_) => (true, String::new()),
+            Err(e) => (false, e.to_string()),
+        };
+        on_done(ok, err);
+    });
+}
+
+fn pipe_lines<R: std::io::Read + Send + 'static>(reader: R, tx: std::sync::mpsc::Sender<String>) {
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        for line in std::io::BufReader::new(reader).lines().map_while(Result::ok) {
+            let _ = tx.send(line);
+        }
+    });
 }
 
 fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
@@ -78,7 +134,7 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     let mut env = build_env(g, variant, &wine_exe, EnvPurpose::Tool);
 
     // fuck this shit lmao
-    if matches!(tool, WineTool::Winetricks | WineTool::WinetricksVerbs(_))
+    if tool.is_winetricks()
         && let Some(bundle) = staged_ca_bundle()
     {
         let b = bundle.to_string_lossy().into_owned();
@@ -145,6 +201,16 @@ fn build_command(
                 Ok((find_winetricks()?, args))
             }
         }
+        WineTool::Custom(args) => match args.split_first() {
+            Some((first, rest)) if first == "winetricks" => {
+                if variant == WineVariant::Proton {
+                    Ok((wine_exe.to_path_buf(), args.clone()))
+                } else {
+                    Ok((find_winetricks()?, rest.to_vec()))
+                }
+            }
+            _ => Ok((wine_exe.to_path_buf(), args.clone())),
+        },
         WineTool::KillWineserver => {
             if variant == WineVariant::Proton {
                 // wineboot -k tears down the session cleanly; invoking wineserver directly races with umu's lifecycle

@@ -162,6 +162,7 @@ Item {
                     removeWithPrefixConfirm.message = others > 0
                         ? qsTr("This removes %1 and deletes its prefix. %n other game(s) use this prefix and will lose it too. It won't be recoverable.", "", others).arg(nm)
                         : qsTr("This removes %1 and deletes its prefix. It won't be recoverable.").arg(nm)
+                    removeWithPrefixConfirm.detail = info.path || (g && g.prefixPath) || ""
                     removeWithPrefixConfirm.show({ idx: idx })
                     break
                 }
