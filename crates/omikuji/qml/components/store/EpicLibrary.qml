@@ -12,6 +12,7 @@ Item {
 
     property var epicModel: null
     property real cardZoom: 1.0
+    property string cardStyle: "normal"
     property int cardSpacing: 16
     property bool cardElevation: false
     property string searchText: ""
@@ -80,7 +81,8 @@ Item {
             required property int index
 
             width: 180 * root.cardZoom
-            height: 240 * root.cardZoom
+            height: styledHeight
+            cardStyle: root.cardStyle
             elevation: root.cardElevation
 
             property bool isInstalled: modelData.isInstalled

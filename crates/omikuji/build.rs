@@ -190,6 +190,7 @@ fn main() {
         .prop_at("highlight_logs", kushi::Kind::Bool, "display.highlight_logs")
         .prop_custom_apply("card_flow", kushi::Kind::QString, "display.card_flow")
         .prop_custom_apply("card_sort", kushi::Kind::QString, "display.card_sort")
+        .prop_at("card_style", kushi::Kind::QString, "display.card_style")
         .prop_at("console_background", kushi::Kind::QString, "console_mode.background")
         .prop_custom_apply("follow_system_colors", kushi::Kind::Bool, "theme.follow_system_colors")
         .prop_custom_apply("follow_system_font", kushi::Kind::Bool, "theme.follow_system_font")

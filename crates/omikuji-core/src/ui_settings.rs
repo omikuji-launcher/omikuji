@@ -177,13 +177,14 @@ pub struct DisplaySettings {
     pub dim_hidden: bool,
     pub card_flow: String,
     pub card_sort: String,
+    pub card_style: String,
     pub highlight_logs: bool,
     pub log_rules: Vec<LogRule>,
 }
 
 impl Default for DisplaySettings {
     fn default() -> Self {
-        Self { scale: 1.0, muted_icons: false, filled_icons: false, show_hidden: false, dim_hidden: false, card_flow: "center".into(), card_sort: "default".into(), highlight_logs: true, log_rules: Vec::new() }
+        Self { scale: 1.0, muted_icons: false, filled_icons: false, show_hidden: false, dim_hidden: false, card_flow: "center".into(), card_sort: "default".into(), card_style: "normal".into(), highlight_logs: true, log_rules: Vec::new() }
     }
 }
 

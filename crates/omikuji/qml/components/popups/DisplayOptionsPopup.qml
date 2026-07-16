@@ -20,11 +20,13 @@ Popup {
     property bool showSort: false
     property bool showHiddenValue: false
     property bool showHiddenOption: false
+    property string cardStyleValue: "normal"
 
     signal zoomMoved(real value)
     signal spacingMoved(int value)
     signal sortSelected(string value)
     signal showHiddenToggled(bool value)
+    signal cardStyleSelected(string value)
 
     padding: 16
     margins: 0
@@ -63,7 +65,7 @@ Popup {
                 to: root.zoomTo
                 stepSize: root.zoomStep
                 value: root.zoomValue
-                onMoved: root.zoomMoved(value)
+                onMoved: (val) => root.zoomMoved(val)
             }
 
             M3Slider {
@@ -74,7 +76,7 @@ Popup {
                 to: root.spacingTo
                 stepSize: root.spacingStep
                 value: root.spacingValue
-                onMoved: root.spacingMoved(Math.round(value))
+                onMoved: (val) => root.spacingMoved(Math.round(val))
             }
 
             Column {
@@ -99,6 +101,30 @@ Popup {
                     ]
                     currentIndex: Math.max(0, options.findIndex(o => o.value === root.sortValue))
                     onSelected: (value) => root.sortSelected(value)
+                }
+            }
+
+            Column {
+                width: parent.width
+                spacing: 8
+                visible: root.showHiddenOption
+
+                Text {
+                    text: qsTr("Card style")
+                    color: theme.textMuted
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                }
+
+                M3Dropdown {
+                    width: parent.width
+                    options: [
+                        { label: qsTr("Normal"), value: "normal" },
+                        { label: qsTr("Fit"), value: "fit" },
+                        { label: qsTr("Frameless"), value: "frameless" }
+                    ]
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === root.cardStyleValue))
+                    onSelected: (value) => root.cardStyleSelected(value)
                 }
             }
 

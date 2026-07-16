@@ -223,6 +223,24 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Card style")
+                description: qsTr("Normal crops to fill, Fit shows the whole image, Frameless makes the image the card")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+
+                M3Dropdown {
+                    width: 200
+                    options: [
+                        { label: qsTr("Normal"), value: "normal" },
+                        { label: qsTr("Fit"), value: "fit" },
+                        { label: qsTr("Frameless"), value: "frameless" }
+                    ]
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (uiSettings ? uiSettings.cardStyle : "normal")))
+                    onSelected: (value) => uiSettings.applyCardStyle(value)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Show hidden games")
                 description: qsTr("Keep games marked as hidden visible in the library")
                 labelWidth: root.rowLabelWidth

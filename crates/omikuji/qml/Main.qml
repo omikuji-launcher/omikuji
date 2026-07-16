@@ -505,6 +505,7 @@ ApplicationWindow {
     }
 
 property real cardZoom: uiSettings.cardZoom
+    property string cardStyle: uiSettings.cardStyle
     readonly property int cardBaseWidth: 180
     readonly property int cardBaseHeight: 240
 
@@ -663,6 +664,7 @@ property real cardZoom: uiSettings.cardZoom
         showSort: root.currentView === "library"
         showHiddenValue: uiSettings.showHidden
         showHiddenOption: root.currentView === "library"
+        cardStyleValue: uiSettings.cardStyle
 
         onAddClicked: root.activeModal = "addGame"
         onInstallScriptClicked: scriptBrowserDialog.show()
@@ -671,6 +673,7 @@ property real cardZoom: uiSettings.cardZoom
         onSpacingMoved: (v) => uiSettings.applyCardSpacing(v)
         onSortSelected: (v) => uiSettings.applyCardSort(v)
         onShowHiddenToggled: (v) => uiSettings.applyShowHidden(v)
+        onCardStyleSelected: (v) => uiSettings.applyCardStyle(v)
     }
 
     Item {
@@ -713,6 +716,7 @@ property real cardZoom: uiSettings.cardZoom
                 cardBaseWidth: root.cardBaseWidth
                 cardBaseHeight: root.cardBaseHeight
                 cardFlow: uiSettings.cardFlow
+                cardStyle: root.cardStyle
                 cardSort: uiSettings.cardSort
                 showHidden: uiSettings.showHidden
                 dimHidden: uiSettings.dimHidden
@@ -772,6 +776,7 @@ property real cardZoom: uiSettings.cardZoom
             sourceComponent: SteamLibrary {
                 gameModel: root.gameModelRef
                 cardZoom: root.cardZoom
+                cardStyle: root.cardStyle
                 cardSpacing: uiSettings.cardSpacing
                 cardElevation: uiSettings.cardElevation
                 cardFlow: uiSettings.cardFlow
@@ -793,6 +798,7 @@ property real cardZoom: uiSettings.cardZoom
             sourceComponent: EpicLibrary {
                 epicModel: root.epicModelRef
                 cardZoom: root.cardZoom
+                cardStyle: root.cardStyle
                 cardSpacing: uiSettings.cardSpacing
                 cardElevation: uiSettings.cardElevation
                 cardFlow: uiSettings.cardFlow
@@ -817,6 +823,7 @@ property real cardZoom: uiSettings.cardZoom
             sourceComponent: GogLibrary {
                 gogModel: root.gogModelRef
                 cardZoom: root.cardZoom
+                cardStyle: root.cardStyle
                 cardSpacing: uiSettings.cardSpacing
                 cardElevation: uiSettings.cardElevation
                 cardFlow: uiSettings.cardFlow
@@ -848,6 +855,7 @@ property real cardZoom: uiSettings.cardZoom
             sourceComponent: GachaLibrary {
                 gameModel: root.gameModelRef
                 cardZoom: root.cardZoom
+                cardStyle: root.cardStyle
                 cardSpacing: uiSettings.cardSpacing
                 cardElevation: uiSettings.cardElevation
                 cardFlow: uiSettings.cardFlow

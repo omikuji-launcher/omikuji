@@ -12,6 +12,7 @@ Item {
     property real cardZoom: 1.0
     property int cardSpacing: 16
     property string cardFlow: "center"
+    property string cardStyle: "normal"
     property bool cardElevation: false
     property int cardBaseWidth: 180
     property int cardBaseHeight: 240
@@ -100,9 +101,10 @@ Item {
             required property bool hidden
 
             width: root.cardBaseWidth * root.cardZoom
-            height: root.cardBaseHeight * root.cardZoom
+            height: styledHeight
 
             elevation: root.cardElevation && dragProxy.dragCard !== cardDelegate
+            cardStyle: root.cardStyle
             selected: index === root.selectedIndex
             dimmed: root.dimHidden && hidden
             cardVisible: (root.searchText === "" ||

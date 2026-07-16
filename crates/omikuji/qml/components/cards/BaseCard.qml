@@ -15,6 +15,18 @@ Item {
     property int letterFontSize: 48
     property color letterColor: theme.textFaint
     property real imageOpacity: 1.0
+    property string cardStyle: "normal"
+
+    readonly property bool imageFit: cardStyle === "fit"
+    readonly property bool frameless: cardStyle === "frameless"
+
+    readonly property real imageAspect: bannerImg.implicitWidth > 0 && bannerImg.implicitHeight > 0
+        ? bannerImg.implicitWidth / bannerImg.implicitHeight
+        : 0
+
+    readonly property real styledHeight: frameless && imageAspect > 0
+        ? Math.round(width / imageAspect) + 40
+        : (imageFit ? 290 : 240) * (width / 180)
 
     property string leftIconName: ""
     property int leftIconSize: 20
@@ -83,49 +95,71 @@ Item {
         color: root.selected && root.selectedBgTint.a > 0
             ? root.selectedBgTint
             : theme.cardBg
-        border.width: root.selected ? root.selectedBorderWidth : 0
-        border.color: root.selectedBorderColor
         scale: root.reordering ? 1.0
             : cardHover.containsPress ? 0.96
             : (cardHover.containsMouse ? 1.02 : 1.0)
 
         Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-        Behavior on border.width { NumberAnimation { duration: 100 } }
 
         Item {
             id: bannerClip
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: 8
-            height: parent.height - 44
-            layer.enabled: true
-            layer.smooth: true
-            layer.textureSize: Qt.size(width * 2, height * 2)
+            anchors.margins: root.frameless ? 0 : 8
+            height: parent.height - (root.frameless ? 40 : 44)
 
             Rectangle {
                 anchors.fill: parent
                 color: root.placeholderTint
                 radius: theme.radius.md
+                visible: !bannerImg.visible
             }
 
-            Image {
-                id: bannerImg
+            Item {
+                id: imageFrame
                 anchors.fill: parent
-                source: root.imageSource
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                sourceSize.width: 360
-                sourceSize.height: 480
-                onStatusChanged: {
-                    if (status === Image.Error && root.imageFallback != "" && source != root.imageFallback) {
-                        source = root.imageFallback
+
+                layer.enabled: true
+                layer.smooth: true
+                layer.textureSize: Qt.size(width * 2, height * 2)
+
+                Image {
+                    id: bannerImg
+                    anchors.fill: parent
+                    source: root.imageSource
+                    fillMode: root.imageFit ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                    asynchronous: true
+                    sourceSize.width: 360
+                    sourceSize.height: 480
+                    onStatusChanged: {
+                        if (status === Image.Error && root.imageFallback != "" && source != root.imageFallback) {
+                            source = root.imageFallback
+                        }
+                    }
+                    // without cache false QQuickPixmapCache holds decoded pixmaps long after the Image dies, so idle-unloading a store tab doesnt free RAM. some days update: IT STILL DOESNT FREE THE RAM. Fuck you Qt.
+                    cache: false
+                    visible: status === Image.Ready
+                    opacity: root.imageOpacity
+                }
+
+                layer.effect: OpacityMask {
+                    maskSource: Item {
+                        width: imageFrame.width
+                        height: imageFrame.height
+
+                        Rectangle {
+                            x: (parent.width - width) / 2
+                            y: root.frameless ? 0 : (parent.height - height) / 2
+                            width: root.imageFit && !root.frameless && bannerImg.visible
+                                ? bannerImg.paintedWidth : parent.width
+                            height: root.frameless
+                                ? parent.height + radius
+                                : root.imageFit && bannerImg.visible ? bannerImg.paintedHeight : parent.height
+                            radius: root.frameless ? theme.radius.lg : theme.radius.md
+                        }
                     }
                 }
-                // without cache false QQuickPixmapCache holds decoded pixmaps long after the Image dies, so idle-unloading a store tab doesnt free RAM. some days update: IT STILL DOESNT FREE THE RAM. Fuck you Qt.
-                cache: false
-                visible: status === Image.Ready
-                opacity: root.imageOpacity
             }
 
             Text {
@@ -137,14 +171,6 @@ Item {
                 font.pixelSize: root.letterFontSize
                 font.weight: Font.Bold
                 visible: !bannerImg.visible
-            }
-
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: bannerClip.width
-                    height: bannerClip.height
-                    radius: theme.radius.md
-                }
             }
         }
 
@@ -211,10 +237,12 @@ Item {
             anchors.fill: parent
             radius: theme.radius.lg
             color: "transparent"
-            border.width: 1
-            border.color: cardHover.containsMouse ? theme.cardBorderHover : theme.cardBorder
+            border.width: root.selected ? root.selectedBorderWidth : 1
+            border.color: root.selected ? root.selectedBorderColor
+                : cardHover.containsMouse ? theme.cardBorderHover : theme.cardBorder
 
             Behavior on border.color { ColorAnimation { duration: 150 } }
+            Behavior on border.width { NumberAnimation { duration: 100 } }
         }
     }
 
