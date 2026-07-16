@@ -6,9 +6,10 @@ Item {
     id: root
     width: 180
     clip: true
-    property int minWidth: 140
+    property int minWidth: 56
     property int maxWidth: 320
-    property int collapseThreshold: 80
+    property int collapseThreshold: 36
+    readonly property bool iconOnly: width < 110
 
     property int currentIndex: 0
     property string currentStore: ""
@@ -32,6 +33,22 @@ Item {
 
     property var tabs: []
 
+    readonly property var storeDefs: [
+        { name: "Steam", label: "Steam", icon: "steam", shown: root.showSteam },
+        { name: "Epic", label: "Epic Games", icon: "shield_moon", shown: root.showEpic },
+        { name: "GOG", label: "GOG", icon: "gog", shown: root.showGog },
+        { name: "HoYo", label: qsTr("Gachas"), icon: "local_activity", shown: root.showGachas }
+    ]
+
+    function _storeOffset(name) {
+        let y = 0
+        for (let i = 0; i < storeDefs.length; i++) {
+            if (storeDefs[i].name === name) return y
+            if (storeDefs[i].shown) y += 42
+        }
+        return y
+    }
+
     function _loadCategories() {
         if (!uiSettings) return
         let raw = uiSettings.categoriesJson()
@@ -54,6 +71,103 @@ Item {
         function onCategoriesChanged() { root._loadCategories() }
     }
 
+    component NavItem: Item {
+        id: navItem
+        property string icon: ""
+        property string label: ""
+        property bool selected: false
+        property bool badge: false
+        signal activated()
+
+        width: root.width
+        height: 40
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width - 20
+            height: 36
+            radius: 18
+            color: navItemMouse.containsMouse && !navItem.selected
+                ? theme.alpha(theme.text, 0.06)
+                : "transparent"
+            visible: !navItem.selected
+
+            Behavior on color {
+                ColorAnimation { duration: 100 }
+            }
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.leftMargin: root.iconOnly ? (root.width - 18) / 2 : 20
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 10
+            z: 1
+
+            Behavior on anchors.leftMargin {
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            }
+
+            Item {
+                width: 18
+                height: 18
+                anchors.verticalCenter: parent.verticalCenter
+
+                SvgIcon {
+                    anchors.fill: parent
+                    name: navItem.icon
+                    size: 18
+                    color: navItem.selected ? theme.accent : theme.icon
+
+                    Behavior on color {
+                        ColorAnimation { duration: 100 }
+                    }
+                }
+
+                Rectangle {
+                    width: 8
+                    height: 8
+                    radius: 4
+                    color: theme.accent
+                    border.width: 2
+                    border.color: theme.navBg
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.rightMargin: -2
+                    anchors.topMargin: -2
+                    visible: navItem.badge
+                    scale: visible ? 1.0 : 0.0
+
+                    Behavior on scale {
+                        NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+                    }
+                }
+            }
+
+            Text {
+                text: navItem.label
+                color: theme.text
+                font.pixelSize: 13
+                font.weight: navItem.selected ? Font.DemiBold : Font.Normal
+                anchors.verticalCenter: parent.verticalCenter
+                opacity: root.iconOnly ? 0 : 1
+                visible: opacity > 0
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 120 }
+                }
+            }
+        }
+
+        MouseArea {
+            id: navItemMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: navItem.activated()
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: theme.navBg
@@ -62,7 +176,11 @@ Item {
     Text {
         id: appTitle
         anchors.top: parent.top
-        anchors.topMargin: 20
+        anchors.topMargin: root.iconOnly ? 0 : 20
+
+        Behavior on anchors.topMargin {
+            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
         anchors.left: parent.left
         anchors.leftMargin: 20
         anchors.right: parent.right
@@ -72,6 +190,15 @@ Item {
         font.pixelSize: 20
         font.weight: Font.DemiBold
         elide: Text.ElideRight
+        opacity: root.iconOnly ? 0 : 1
+        height: root.iconOnly ? 0 : implicitHeight
+
+        Behavior on opacity {
+            NumberAnimation { duration: 120 }
+        }
+        Behavior on height {
+            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+        }
     }
 
     Rectangle {
@@ -86,10 +213,8 @@ Item {
         property real baseY: {
             if (root.currentBottom === "downloads") return downloadsBtn.y
             if (root.currentBottom === "settings")  return settingsBtn.y
-            if (root.currentStore === "Steam")     return navScroll.y + storesList.y + steamItem.y
-            if (root.currentStore === "Epic")      return navScroll.y + storesList.y + epicItem.y
-            if (root.currentStore === "GOG")       return navScroll.y + storesList.y + gogItem.y
-            if (root.currentStore === "HoYo")      return navScroll.y + storesList.y + hoyoItem.y
+            if (root.currentStore !== "")
+                return navScroll.y + storesList.y + root._storeOffset(root.currentStore)
             return navScroll.y + tabList.y + root.currentIndex * 42
         }
 
@@ -126,485 +251,111 @@ Item {
             width: navScroll.width
             height: storesList.y + storesList.height + 8
 
-    Text {
-        id: libraryHeader
-        anchors.top: parent.top
-        anchors.topMargin: visible ? 12 : 0
-        anchors.left: parent.left
-        anchors.leftMargin: 20
-        text: qsTr("Library")
-        color: theme.textMuted
-        font.pixelSize: 12
-        font.weight: Font.Medium
-        visible: root.tabs.length > 0
-        height: visible ? implicitHeight : 0
-    }
+            Text {
+                id: libraryHeader
+                anchors.top: parent.top
+                anchors.topMargin: visible ? 12 : 0
+                anchors.left: parent.left
+                anchors.leftMargin: 20
+                text: qsTr("Library")
+                color: theme.textMuted
+                font.pixelSize: 12
+                font.weight: Font.Medium
+                visible: root.tabs.length > 0 && !root.iconOnly
+                height: visible ? implicitHeight : 0
+            }
 
-    Column {
-        id: tabList
-        anchors.top: libraryHeader.bottom
-        anchors.topMargin: 8
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 2
-        z: 1
+            Column {
+                id: tabList
+                anchors.top: libraryHeader.bottom
+                anchors.topMargin: 8
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 2
+                z: 1
 
-        Repeater {
-            model: root.tabs
+                Repeater {
+                    model: root.tabs
 
-            Item {
-                required property var modelData
-                required property int index
+                    NavItem {
+                        required property var modelData
+                        required property int index
 
-                width: root.width
-                height: 40
-
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: parent.width - 20
-                    height: 36
-                    radius: 18
-                    color: tabHover.containsMouse && !(index === root.currentIndex && root.currentStore === "" && root.currentBottom === "")
-                        ? theme.alpha(theme.text, 0.06)
-                        : "transparent"
-                    visible: !(index === root.currentIndex && root.currentStore === "" && root.currentBottom === "")
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Row {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 20
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 10
-
-                    SvgIcon {
-                        name: modelData.icon
-                        size: 18
-                        color: index === root.currentIndex && root.currentStore === "" && root.currentBottom === ""
-                            ? theme.accent
-                            : theme.icon
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Behavior on color {
-                            ColorAnimation { duration: 100 }
+                        icon: modelData.icon
+                        label: modelData.label
+                        selected: index === root.currentIndex && root.currentStore === "" && root.currentBottom === ""
+                        onActivated: {
+                            root.currentIndex = index
+                            root.currentStore = ""
+                            root.tabSelected(index)
                         }
                     }
-
-                    Text {
-                        text: modelData.label
-                        color: theme.text
-                        font.pixelSize: 13
-                        font.weight: (index === root.currentIndex && root.currentStore === "" && root.currentBottom === "") ? Font.DemiBold : Font.Normal
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
+            }
 
-                MouseArea {
-                    id: tabHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.currentIndex = index
-                        root.currentStore = ""
-                        root.tabSelected(index)
+            Text {
+                id: storesHeader
+                anchors.top: tabList.bottom
+                anchors.topMargin: visible ? 24 : 0
+                anchors.left: parent.left
+                anchors.leftMargin: 20
+                text: qsTr("Stores")
+                color: theme.textMuted
+                font.pixelSize: 12
+                font.weight: Font.Medium
+                visible: (root.showSteam || root.showEpic || root.showGog || root.showGachas) && !root.iconOnly
+                height: visible ? implicitHeight : 0
+            }
+
+            Column {
+                id: storesList
+                anchors.top: storesHeader.bottom
+                anchors.topMargin: root.iconOnly ? 24 : 8
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 2
+                z: 1
+
+                Repeater {
+                    model: root.storeDefs
+
+                    NavItem {
+                        required property var modelData
+
+                        visible: modelData.shown
+                        height: visible ? 40 : 0
+                        icon: modelData.icon
+                        label: modelData.label
+                        selected: root.currentStore === modelData.name && root.currentBottom === ""
+                        onActivated: {
+                            root.currentStore = modelData.name
+                            root.storeSelected(modelData.name)
+                        }
                     }
                 }
             }
         }
     }
 
-    Text {
-        id: storesHeader
-        anchors.top: tabList.bottom
-        anchors.topMargin: visible ? 24 : 0
-        anchors.left: parent.left
-        anchors.leftMargin: 20
-        text: qsTr("Stores")
-        color: theme.textMuted
-        font.pixelSize: 12
-        font.weight: Font.Medium
-        visible: root.showSteam || root.showEpic || root.showGog || root.showGachas
-        height: visible ? implicitHeight : 0
-    }
-
-    Column {
-        id: storesList
-        anchors.top: storesHeader.bottom
-        anchors.topMargin: 8
-        anchors.left: parent.left
-        anchors.right: parent.right
-        spacing: 2
-        z: 1
-
-        Item {
-            id: steamItem
-            width: root.width
-            height: visible ? 40 : 0
-            visible: root.showSteam
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - 20
-                height: 36
-                radius: 18
-                color: steamHover.containsMouse && (root.currentStore !== "Steam" || root.currentBottom !== "")
-                    ? theme.alpha(theme.text, 0.06)
-                    : "transparent"
-                visible: (root.currentStore !== "Steam" || root.currentBottom !== "")
-
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-
-                SvgIcon {
-                    name: "steam"
-                    size: 18
-                    color: root.currentStore === "Steam" && root.currentBottom === "" ? theme.accent : theme.icon
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Text {
-                    text: "Steam"
-                    color: theme.text
-                    font.pixelSize: 13
-                    font.weight: root.currentStore === "Steam" && root.currentBottom === "" ? Font.DemiBold : Font.Normal
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            MouseArea {
-                id: steamHover
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    root.currentStore = "Steam"
-                    root.storeSelected("Steam")
-                }
-            }
-        }
-
-        Item {
-            id: epicItem
-            width: root.width
-            height: visible ? 40 : 0
-            visible: root.showEpic
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - 20
-                height: 36
-                radius: 18
-                color: epicHover.containsMouse && (root.currentStore !== "Epic" || root.currentBottom !== "")
-                    ? theme.alpha(theme.text, 0.06)
-                    : "transparent"
-                visible: (root.currentStore !== "Epic" || root.currentBottom !== "")
-
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-
-                SvgIcon {
-                    name: "shield_moon"
-                    size: 18
-                    color: root.currentStore === "Epic" && root.currentBottom === "" ? theme.accent : theme.icon
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Text {
-                    text: "Epic Games"
-                    color: theme.text
-                    font.pixelSize: 13
-                    font.weight: root.currentStore === "Epic" && root.currentBottom === "" ? Font.DemiBold : Font.Normal
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            MouseArea {
-                id: epicHover
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    root.currentStore = "Epic"
-                    root.storeSelected("Epic")
-                }
-            }
-        }
-
-        Item {
-            id: gogItem
-            width: root.width
-            height: visible ? 40 : 0
-            visible: root.showGog
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - 20
-                height: 36
-                radius: 18
-                color: gogHover.containsMouse && (root.currentStore !== "GOG" || root.currentBottom !== "")
-                    ? theme.alpha(theme.text, 0.06)
-                    : "transparent"
-                visible: (root.currentStore !== "GOG" || root.currentBottom !== "")
-
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-
-                SvgIcon {
-                    name: "gog"
-                    size: 18
-                    color: root.currentStore === "GOG" && root.currentBottom === "" ? theme.accent : theme.icon
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Text {
-                    text: "GOG"
-                    color: theme.text
-                    font.pixelSize: 13
-                    font.weight: root.currentStore === "GOG" && root.currentBottom === "" ? Font.DemiBold : Font.Normal
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            MouseArea {
-                id: gogHover
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    root.currentStore = "GOG"
-                    root.storeSelected("GOG")
-                }
-            }
-        }
-
-        Item {
-            id: hoyoItem
-            width: root.width
-            height: visible ? 40 : 0
-            visible: root.showGachas
-
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width - 20
-                height: 36
-                radius: 18
-                color: hoyoHover.containsMouse && (root.currentStore !== "HoYo" || root.currentBottom !== "")
-                    ? theme.alpha(theme.text, 0.06)
-                    : "transparent"
-                visible: (root.currentStore !== "HoYo" || root.currentBottom !== "")
-
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 20
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 10
-
-                SvgIcon {
-                    name: "local_activity"
-                    size: 18
-                    color: root.currentStore === "HoYo" && root.currentBottom === "" ? theme.accent : theme.icon
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Text {
-                    text: qsTr("Gachas")
-                    color: theme.text
-                    font.pixelSize: 13
-                    font.weight: root.currentStore === "HoYo" && root.currentBottom === "" ? Font.DemiBold : Font.Normal
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
-
-            MouseArea {
-                id: hoyoHover
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    root.currentStore = "HoYo"
-                    root.storeSelected("HoYo")
-                }
-            }
-        }
-    }
-        }
-    }
-
-    Item {
+    NavItem {
         id: downloadsBtn
         anchors.bottom: settingsBtn.top
         anchors.bottomMargin: 4
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 40
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width - 20
-            height: 36
-            radius: 18
-            color: downloadsHover.containsMouse && root.currentBottom !== "downloads"
-                ? theme.alpha(theme.text, 0.06)
-                : "transparent"
-            visible: root.currentBottom !== "downloads"
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 20
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 10
-            z: 1
-
-            Item {
-                width: 18
-                height: 18
-                anchors.verticalCenter: parent.verticalCenter
-
-                SvgIcon {
-                    anchors.fill: parent
-                    name: "download"
-                    size: 18
-                    color: root.currentBottom === "downloads" ? theme.accent : theme.icon
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                }
-
-                Rectangle {
-                    width: 8
-                    height: 8
-                    radius: 4
-                    color: theme.accent
-                    border.width: 2
-                    border.color: theme.navBg
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.rightMargin: -2
-                    anchors.topMargin: -2
-                    visible: root.downloadCount > 0
-                    scale: visible ? 1.0 : 0.0
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
-                }
-            }
-
-            Text {
-                text: root.downloadCount > 0 ? qsTr("Downloads (%1)").arg(root.downloadCount) : qsTr("Downloads")
-                color: theme.text
-                font.pixelSize: 13
-                font.weight: root.currentBottom === "downloads" ? Font.DemiBold : Font.Normal
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
-
-        MouseArea {
-            id: downloadsHover
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.downloadsClicked()
-        }
+        icon: "download"
+        label: root.downloadCount > 0 ? qsTr("Downloads (%1)").arg(root.downloadCount) : qsTr("Downloads")
+        selected: root.currentBottom === "downloads"
+        badge: root.downloadCount > 0
+        onActivated: root.downloadsClicked()
     }
 
-    Item {
+    NavItem {
         id: settingsBtn
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 16
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 40
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width - 20
-            height: 36
-            radius: 18
-            color: settingsHover.containsMouse && root.currentBottom !== "settings"
-                ? theme.alpha(theme.text, 0.06)
-                : "transparent"
-            visible: root.currentBottom !== "settings"
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 20
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 10
-            z: 1
-
-            SvgIcon {
-                name: "settings"
-                size: 18
-                color: root.currentBottom === "settings" ? theme.accent : theme.icon
-                anchors.verticalCenter: parent.verticalCenter
-                Behavior on color { ColorAnimation { duration: 100 } }
-            }
-
-            Text {
-                text: qsTr("Settings")
-                color: theme.text
-                font.pixelSize: 13
-                font.weight: root.currentBottom === "settings" ? Font.DemiBold : Font.Normal
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
-
-        MouseArea {
-            id: settingsHover
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.settingsClicked()
-        }
+        icon: "settings"
+        label: qsTr("Settings")
+        selected: root.currentBottom === "settings"
+        onActivated: root.settingsClicked()
     }
 
     MouseArea {

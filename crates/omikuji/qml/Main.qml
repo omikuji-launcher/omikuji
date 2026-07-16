@@ -643,7 +643,7 @@ property real cardZoom: uiSettings.cardZoom
         z: 100
 
         currentTabLabel: root.currentViewLabel
-        showTitle: uiSettings.navCollapsed
+        showTitle: uiSettings.navCollapsed || navTabs.iconOnly
         leftInset: navTabs.width
 
         showAddButton: root.currentView === "library"
