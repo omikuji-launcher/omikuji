@@ -110,6 +110,7 @@ impl ProcessManager {
         cmd.current_dir(&config.working_dir);
         cmd.env_clear();
         cmd.envs(&config.env);
+        cmd.env("OMIKUJI_GAME_ID", &config.game_id);
 
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
@@ -451,21 +452,31 @@ pub fn stop_game(game_id: &str) -> bool {
         let sid = pid;
         let game_id = game_id.to_string();
         std::thread::spawn(move || {
-            let term_pids = session_pids(sid);
-            tracing::debug!("SIGTERM to {} session members", term_pids.len());
+            let gather = || {
+                let mut pids = session_pids(sid);
+                for p in marker_pids(&game_id) {
+                    if !pids.contains(&p) {
+                        pids.push(p);
+                    }
+                }
+                pids
+            };
+
+            let term_pids = gather();
+            tracing::debug!("SIGTERM to {} tracked pids", term_pids.len());
             for p in &term_pids {
                 let _ = kill(Pid::from_raw(*p as i32), Signal::SIGTERM);
             }
 
             for _ in 0..30 {
                 std::thread::sleep(std::time::Duration::from_millis(100));
-                if !session_has_live_process(sid) {
+                if gather().is_empty() {
                     tracing::info!("game '{}' stopped gracefully", game_id);
                     return;
                 }
             }
 
-            let kill_pids = session_pids(sid);
+            let kill_pids = gather();
             tracing::warn!("game '{}' ignored SIGTERM, SIGKILLing {} survivors", game_id, kill_pids.len());
             for p in &kill_pids {
                 let _ = kill(Pid::from_raw(*p as i32), Signal::SIGKILL);
@@ -508,8 +519,34 @@ fn session_pids(sid: u32) -> Vec<u32> {
     pids
 }
 
+#[cfg(target_os = "linux")]
+fn marker_pids(game_id: &str) -> Vec<u32> {
+    let my_pid = std::process::id();
+    let needle = format!("OMIKUJI_GAME_ID={game_id}");
+    let mut pids = Vec::new();
+
+    let Ok(entries) = std::fs::read_dir("/proc") else { return pids; };
+
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let Some(name_str) = name.to_str() else { continue; };
+        let Ok(pid) = name_str.parse::<u32>() else { continue; };
+        if pid == my_pid { continue; }
+
+        let Ok(environ) = std::fs::read(entry.path().join("environ")) else { continue; };
+        if environ.split(|b| *b == 0).any(|e| e == needle.as_bytes()) {
+            pids.push(pid);
+        }
+    }
+    pids
+}
+
+// i mean the launcher isnt even meant at all outside linux but well, do it now and forget it forever
 #[cfg(not(target_os = "linux"))]
 fn session_pids(_sid: u32) -> Vec<u32> { Vec::new() }
+
+#[cfg(not(target_os = "linux"))]
+fn marker_pids(_game_id: &str) -> Vec<u32> { Vec::new() }
 
 fn session_has_live_process(sid: u32) -> bool {
     !session_pids(sid).is_empty()
