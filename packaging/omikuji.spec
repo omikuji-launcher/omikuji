@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.7.0
+Version:        0.8.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,21 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Fri Jul 17 2026 reakjra <reakjra@proton.me> - 0.8.0-1
+- Added community scripts
+- Fixed super blurry zoom
+- Env-marker to properly track multiple running games
+- Wine command prompt along the other winetools
+- Run wine commands dialog along other winetools
+- Custom template literals for input fields
+- Icon-only collapsable navbar
+- 3-mode (Normal, Fit, Frameless) game cards style
+- Resizible modals and dialogs
+- Maximizable modals/dialogs size on near-full window size
+- Customizable font sizes with its modal
+- Move envs/dlls sets to "Presets" tab in settings
+- Epic and GOG games installations dialogues expandable details (plot and system requirements)
+
 * Mon Jul 13 2026 reakjra <reakjra@proton.me> - 0.7.0-1
 - Kuro games now use krpdiff to update.
 - Fix winetricks not opening by not inheriting blank DISPLAY env (#51)

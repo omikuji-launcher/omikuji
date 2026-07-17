@@ -22,6 +22,25 @@
     </p>
   </description>
   <releases>
+    <release version="0.8.0" date="2026-07-17">
+      <description>
+        <ul>
+          <li>Added community scripts</li>
+          <li>Fixed super blurry zoom</li>
+          <li>Added Env-marker to properly track multiple running games</li>
+          <li>Added Wine command prompt along the other winetools</li>
+          <li>Added run wine commands dialog along other winetools</li>
+          <li>Added custom template literals for input fields</li>
+          <li>Added icons-only collapsable navbar</li>
+          <li>Added 3-mode (Normal, Fit, Frameless) game cards style</li>
+          <li>Added esizable modals and dialogs</li>
+          <li>Added maximizable modals/dialogs size on near-full window size</li>
+          <li>Added customizable font sizes with its modal</li>
+          <li>Added move envs/dlls sets to "Presets" tab in settings</li>
+          <li>Added Epic and GOG games installations dialogs expandable details (plot and system requiremenst)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.7.0" date="2026-07-13">
       <description>
         <ul>

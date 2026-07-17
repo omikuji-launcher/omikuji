@@ -522,6 +522,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/cpufeatures/cpufeatures-0.2.17.crate",
+        "sha256": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280",
+        "dest": "cargo/vendor/cpufeatures-0.2.17"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280\", \"files\": {}}",
+        "dest": "cargo/vendor/cpufeatures-0.2.17",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/crc32fast/crc32fast-1.5.0.crate",
         "sha256": "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511",
         "dest": "cargo/vendor/crc32fast-1.5.0"
@@ -2766,6 +2779,19 @@
         "type": "inline",
         "contents": "{\"package\": \"d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd\", \"files\": {}}",
         "dest": "cargo/vendor/serde_urlencoded-0.7.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/sha2/sha2-0.10.9.crate",
+        "sha256": "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283",
+        "dest": "cargo/vendor/sha2-0.10.9"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283\", \"files\": {}}",
+        "dest": "cargo/vendor/sha2-0.10.9",
         "dest-filename": ".cargo-checksum.json"
     },
     {

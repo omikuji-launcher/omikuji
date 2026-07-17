@@ -1,6 +1,6 @@
 [package]
 name = "omikuji-core"
-version = "0.7.0"
+version = "0.8.0"
 description = "Core library for omikuji — wine apps launcher logic"
 license = "GPL-3.0-or-later"
 edition = "2024"
