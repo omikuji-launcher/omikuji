@@ -11,7 +11,7 @@ Text {
     visible: active
     text: active ? resolver(source) : ""
     color: theme.accent
-    font.pixelSize: 11
+    font.pixelSize: theme.type.micro.size
     font.family: "monospace"
     elide: Text.ElideMiddle
 }

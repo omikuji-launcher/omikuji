@@ -106,7 +106,7 @@ DialogCard {
                 text: root.renderMessage(root.message)
                 textFormat: Text.RichText
                 color: theme.text
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 wrapMode: Text.Wrap
             }
         }

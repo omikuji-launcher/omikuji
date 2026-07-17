@@ -68,7 +68,7 @@ DialogCard {
                     visible: root.contextTitle !== ""
                     text: root.contextTitle
                     color: theme.text
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.weight: Font.Medium
                     elide: Text.ElideRight
                 }
@@ -76,7 +76,7 @@ DialogCard {
                     width: parent.width
                     text: root.contextText
                     color: theme.accent
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     font.family: "monospace"
                     wrapMode: Text.WrapAnywhere
                 }

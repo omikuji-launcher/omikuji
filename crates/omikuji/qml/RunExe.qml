@@ -33,7 +33,10 @@ ApplicationWindow {
 
     UiSettingsBridge {
         id: uiSettings
-        Component.onCompleted: theme.overrides = JSON.parse(overridesJson())
+        Component.onCompleted: {
+            theme.overrides = JSON.parse(overridesJson())
+            theme.fontSizes = JSON.parse(fontSizesJson())
+        }
     }
 
     Theme {
@@ -51,6 +54,9 @@ ApplicationWindow {
         target: uiSettings
         function onThemeChanged() {
             theme.overrides = JSON.parse(uiSettings.overridesJson())
+        }
+        function onFontSizesChanged() {
+            theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
         }
     }
 

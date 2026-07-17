@@ -52,7 +52,7 @@ Item {
         Text {
             text: row.displayName
             color: theme.text
-            font.pixelSize: 14
+            font.pixelSize: theme.type.body.size
             font.weight: Font.Medium
             elide: Text.ElideRight
             Layout.maximumWidth: parent.width * 0.45
@@ -67,7 +67,7 @@ Item {
             Layout.fillWidth: true
             text: row.metaLine()
             color: row.isFailed ? theme.error : theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             elide: Text.ElideRight
         }
 

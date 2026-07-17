@@ -87,7 +87,7 @@ Popup {
                 Text {
                     text: qsTr("Sort by")
                     color: theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.weight: Font.Medium
                 }
 
@@ -112,7 +112,7 @@ Popup {
                 Text {
                     text: qsTr("Card style")
                     color: theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.weight: Font.Medium
                 }
 

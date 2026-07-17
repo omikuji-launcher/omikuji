@@ -147,7 +147,7 @@ Item {
                     Text {
                         text: root.displayedGame ? root.displayedGame.name : ""
                         color: theme.text
-                        font.pixelSize: 14
+                        font.pixelSize: theme.type.body.size
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
                         // bar.width not leftWrap.width, leftWrap is momentarily 0 during init while rightCluster resolves
@@ -177,7 +177,7 @@ Item {
                             text: hours >= 1 ? Math.floor(hours) + "h " + Math.round((hours % 1) * 60) + "m"
                                              : Math.round(hours * 60) + "m"
                             color: theme.textMuted
-                            font.pixelSize: 12
+                            font.pixelSize: theme.type.caption.size
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -202,7 +202,7 @@ Item {
                         Text {
                             text: root.displayedGame ? root.displayedGame.lastPlayed : ""
                             color: theme.textSubtle
-                            font.pixelSize: 12
+                            font.pixelSize: theme.type.caption.size
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
@@ -216,7 +216,7 @@ Item {
                     Text {
                         text: root.displayedGame ? root.displayedGame.runner : ""
                         color: theme.textFaint
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -324,7 +324,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: root.activityLabel()
                             color: theme.text
-                            font.pixelSize: 12
+                            font.pixelSize: theme.type.micro.size
                             font.weight: Font.DemiBold
                         }
                     }

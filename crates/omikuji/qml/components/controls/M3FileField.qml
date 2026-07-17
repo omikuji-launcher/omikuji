@@ -31,7 +31,7 @@ Item {
         id: labelText
         text: root.label
         color: inputArea.activeFocus ? theme.accent : theme.textMuted
-        font.pixelSize: 14
+        font.pixelSize: theme.type.body.size
         font.weight: Font.Medium
         visible: root.label !== ""
 
@@ -65,7 +65,7 @@ Item {
                 anchors.rightMargin: 12
                 verticalAlignment: TextInput.AlignVCenter
                 color: root.readOnly ? theme.textMuted : theme.text
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 clip: true
                 readOnly: root.readOnly
                 selectByMouse: !root.readOnly
@@ -89,7 +89,7 @@ Item {
                 ))
                 text: root.trailingHint
                 color: theme.alpha(theme.text, 0.4)
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 elide: Text.ElideRight
                 visible: root.trailingHint !== "" && inputArea.text !== ""
             }
@@ -100,7 +100,7 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 text: root.placeholder
                 color: theme.textSubtle
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 visible: inputArea.text === "" && !inputArea.activeFocus
             }
         }

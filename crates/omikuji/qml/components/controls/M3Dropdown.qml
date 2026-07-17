@@ -58,7 +58,7 @@ Item {
         id: labelText
         text: root.label
         color: popup.visible ? theme.accent : theme.textMuted
-        font.pixelSize: 13
+        font.pixelSize: theme.type.label.size
         font.weight: Font.Medium
         visible: root.label !== ""
 
@@ -83,7 +83,7 @@ Item {
                 return (opt && !opt.header) ? opt.label : ""
             }
             color: theme.text
-            font.pixelSize: 14
+            font.pixelSize: theme.type.body.size
         }
 
         SvgIcon {
@@ -244,7 +244,7 @@ Item {
                             anchors.bottomMargin: 4
                             text: modelData.label
                             color: theme.textMuted
-                            font.pixelSize: 14
+                            font.pixelSize: theme.type.body.size
                             font.weight: Font.Medium
                         }
 
@@ -255,7 +255,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.label
                             color: index === root.currentIndex ? theme.accent : theme.text
-                            font.pixelSize: 14
+                            font.pixelSize: theme.type.body.size
                             font.weight: index === root.currentIndex ? Font.Medium : Font.Normal
                         }
 

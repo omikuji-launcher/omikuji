@@ -61,7 +61,7 @@ DialogCard {
                         ? qsTr("Moving things around, hold on...")
                         : qsTr("This version reorganizes the data folder: runners and graphics layers now live under components/, GOG data moves into runtime/, and sources move to components.toml. Folders you relocated in settings stay where they are.")
             color: root.errorText !== "" ? theme.error : theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 

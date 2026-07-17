@@ -131,7 +131,7 @@ DialogCard {
             visible: root.errorText !== ""
             text: root.errorText
             color: theme.error
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -187,7 +187,7 @@ DialogCard {
                         visible: !iconImg.visible
                         text: modelData.name.charAt(0).toUpperCase()
                         color: theme.accent
-                        font.pixelSize: 16
+                        font.pixelSize: theme.type.title.size
                         font.weight: Font.DemiBold
                     }
                 }
@@ -205,7 +205,7 @@ DialogCard {
                         Text {
                             text: modelData.name
                             color: theme.text
-                            font.pixelSize: 14
+                            font.pixelSize: theme.type.body.size
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
@@ -229,7 +229,7 @@ DialogCard {
                         text: modelData.description
                         visible: modelData.description !== ""
                         color: theme.textMuted
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                         elide: Text.ElideRight
                     }
                 }
@@ -245,13 +245,13 @@ DialogCard {
                         anchors.right: parent.right
                         text: modelData.author
                         color: theme.textMuted
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                     }
                     Text {
                         anchors.right: parent.right
                         text: modelData.modified
                         color: theme.textSubtle
-                        font.pixelSize: 11
+                        font.pixelSize: theme.type.micro.size
                     }
                 }
 
@@ -302,7 +302,7 @@ DialogCard {
                 : qsTr("No scripts match your search.")
             horizontalAlignment: Text.AlignHCenter
             color: theme.textMuted
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
         }
     }
 

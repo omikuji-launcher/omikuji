@@ -73,7 +73,7 @@ Item {
             Text {
                 text: qsTr("Pick an icon")
                 color: theme.text
-                font.pixelSize: 17
+                font.pixelSize: theme.type.title.size
                 font.weight: Font.DemiBold
             }
 

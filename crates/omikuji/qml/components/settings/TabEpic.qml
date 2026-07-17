@@ -74,7 +74,7 @@ Item {
                         ? qsTr("No save path detected yet — a toast will appear when discovery finishes, or enter one manually below.")
                         : qsTr("Save path: %1").arg(config["source.save_path"])
                     color: theme.textMuted
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     wrapMode: Text.WordWrap
                     width: parent.width
                 }

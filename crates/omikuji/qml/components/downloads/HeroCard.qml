@@ -59,7 +59,7 @@ Item {
         Text {
             text: parent.value
             color: theme.text
-            font.pixelSize: 15
+            font.pixelSize: theme.type.subtitle.size
             font.weight: Font.DemiBold
         }
     }
@@ -109,7 +109,7 @@ Item {
                         Text {
                             text: hero.displayName
                             color: theme.text
-                            font.pixelSize: 19
+                            font.pixelSize: theme.type.headline.size
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                             Layout.maximumWidth: parent.width * 0.7
@@ -147,7 +147,7 @@ Item {
                     Text {
                         text: hero.status
                         color: hero.isUninterruptible ? theme.warning : theme.textMuted
-                        font.pixelSize: 13
+                        font.pixelSize: theme.type.label.size
                     }
 
                     Item { Layout.fillHeight: true }
@@ -201,7 +201,7 @@ Item {
                                 Text {
                                     text: hero.isPaused ? "—" : Format.formatSpeed(hero.netBps)
                                     color: theme.text
-                                    font.pixelSize: 15
+                                    font.pixelSize: theme.type.subtitle.size
                                     font.weight: Font.DemiBold
                                 }
                                 CapsLabel { text: qsTr("Net"); size: 9 }
@@ -215,7 +215,7 @@ Item {
                                     Layout.alignment: Qt.AlignRight
                                     text: hero.isPaused ? "—" : Format.formatSpeed(hero.diskBps)
                                     color: theme.textMuted
-                                    font.pixelSize: 15
+                                    font.pixelSize: theme.type.subtitle.size
                                     font.weight: Font.DemiBold
                                 }
                                 CapsLabel {

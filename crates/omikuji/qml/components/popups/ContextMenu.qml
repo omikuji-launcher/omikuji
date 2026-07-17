@@ -283,7 +283,7 @@ Popup {
                                 : modelData.accent
                                     ? theme.accent
                                     : theme.text
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                         }
 
                         SvgIcon {

@@ -82,6 +82,13 @@ QtObject {
 
     property real radiusScale: 1.0
 
+    property var fontSizes: ({})
+    readonly property var fontDefaults: ({ micro: 12, caption: 12, label: 14, body: 14, subtitle: 16, title: 16, headline: 18, display: 22 })
+    function _fontPx(role) {
+        var v = fontSizes[role]
+        return v > 0 ? v : fontDefaults[role]
+    }
+
     readonly property QtObject radius: QtObject {
         readonly property int xs: Math.round(6 * theme.radiusScale)
         readonly property int sm: Math.round(8 * theme.radiusScale)
@@ -115,12 +122,13 @@ QtObject {
     }
 
     readonly property QtObject type: QtObject {
-        readonly property var display: ({ size: 22, weight: Font.DemiBold })
-        readonly property var title: ({ size: 16, weight: Font.DemiBold })
-        readonly property var subtitle: ({ size: 14, weight: Font.Medium })
-        readonly property var body: ({ size: 14, weight: Font.Normal })
-        readonly property var label: ({ size: 13, weight: Font.Medium })
-        readonly property var caption: ({ size: 12, weight: Font.Normal })
-        readonly property var micro: ({ size: 11, weight: Font.Medium })
+        readonly property var display: ({ size: theme._fontPx("display"), weight: Font.DemiBold })
+        readonly property var headline: ({ size: theme._fontPx("headline"), weight: Font.DemiBold })
+        readonly property var title: ({ size: theme._fontPx("title"), weight: Font.DemiBold })
+        readonly property var subtitle: ({ size: theme._fontPx("subtitle"), weight: Font.Medium })
+        readonly property var body: ({ size: theme._fontPx("body"), weight: Font.Normal })
+        readonly property var label: ({ size: theme._fontPx("label"), weight: Font.Medium })
+        readonly property var caption: ({ size: theme._fontPx("caption"), weight: Font.Normal })
+        readonly property var micro: ({ size: theme._fontPx("micro"), weight: Font.Medium })
     }
 }

@@ -9,6 +9,8 @@ Item {
 
     property var uiSettings: null
 
+    signal manageFontSizesRequested()
+
     readonly property int rowLabelWidth: 200
 
     readonly property var tokens: [
@@ -104,7 +106,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: root._hasOverride(modelData.key) ? root.overrides[modelData.key] : qsTr("system")
                             color: root._hasOverride(modelData.key) ? theme.text : theme.textSubtle
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                         }
 
                         Rectangle {
@@ -171,6 +173,18 @@ Item {
                         return 0
                     }
                     onSelected: (value) => uiSettings.applyFontFamily(value)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Font sizes")
+                description: qsTr("Per-role text sizes used across the app.")
+                labelWidth: root.rowLabelWidth
+
+                M3Button {
+                    text: qsTr("Manage")
+                    variant: "tonal"
+                    onClicked: root.manageFontSizesRequested()
                 }
             }
         }

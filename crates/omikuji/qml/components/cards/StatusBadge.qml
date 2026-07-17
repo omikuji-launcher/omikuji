@@ -41,7 +41,7 @@ Item {
             id: label
             text: badge.info.text
             color: badge.info.color
-            font.pixelSize: 12
+            font.pixelSize: theme.type.micro.size
             font.weight: Font.Medium
         }
     }

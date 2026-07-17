@@ -136,7 +136,7 @@ Item {
                     width: parent.width
                     text: toast.title
                     color: theme.text
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                     visible: text.length > 0
@@ -146,7 +146,7 @@ Item {
                     width: parent.width
                     text: toast.message
                     color: theme.textMuted
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     wrapMode: Text.WordWrap
                     visible: text.length > 0
                 }

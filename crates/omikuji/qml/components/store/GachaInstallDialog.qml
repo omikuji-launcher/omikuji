@@ -284,7 +284,7 @@ DialogCard {
                 Layout.fillWidth: true
                 text: root.displayName ? qsTr("Install %1").arg(root.displayName) : qsTr("Install")
                 color: theme.text
-                font.pixelSize: 18
+                font.pixelSize: theme.type.headline.size
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -298,7 +298,7 @@ DialogCard {
             Text {
                 text: qsTr("Edition")
                 color: theme.textMuted
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 font.weight: Font.Medium
             }
 
@@ -334,7 +334,7 @@ DialogCard {
                             anchors.centerIn: parent
                             text: modelData.label
                             color: index === root.editionIndex ? theme.accent : theme.text
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                             font.weight: index === root.editionIndex ? Font.DemiBold : Font.Normal
                         }
 
@@ -358,7 +358,7 @@ DialogCard {
             Text {
                 text: qsTr("Voice Packs")
                 color: theme.textMuted
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 font.weight: Font.Medium
             }
 
@@ -390,7 +390,7 @@ DialogCard {
                         Text {
                             text: modelData.label
                             color: theme.text
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                             Layout.fillWidth: true
                         }
                     }
@@ -442,7 +442,7 @@ DialogCard {
                         && root.installFreeBytes < root.installBytes
                         && !root.existingInstall
                         ? "#e06060" : theme.textFaint)
-                font.pixelSize: 11
+                font.pixelSize: theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -485,7 +485,7 @@ DialogCard {
                     : (root.downloadBytes >= 0 && root.tempFreeBytes >= 0
                         && root.tempFreeBytes < root.downloadBytes
                         ? "#e06060" : theme.textFaint)
-                font.pixelSize: 11
+                font.pixelSize: theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4

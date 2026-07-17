@@ -73,7 +73,7 @@ Item {
                 visible: gameModel ? gameModel.is_flatpak() : false
                 text: qsTr("It seems you're using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.")
                 color: theme.warning
-                font.pixelSize: 12
+                font.pixelSize: theme.type.micro.size
                 font.weight: Font.Medium
                 wrapMode: Text.WordWrap
             }

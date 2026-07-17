@@ -135,7 +135,7 @@ DialogCard {
                     Text {
                         text: root.sourceName
                         color: theme.text
-                        font.pixelSize: 18
+                        font.pixelSize: theme.type.headline.size
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -150,7 +150,7 @@ DialogCard {
                             anchors.centerIn: parent
                             text: root.sourceKind
                             color: theme.accent
-                            font.pixelSize: 10
+                            font.pixelSize: theme.type.micro.size
                             font.weight: Font.Medium
                             font.capitalization: Font.AllUppercase
                             font.letterSpacing: 0.6
@@ -164,7 +164,7 @@ DialogCard {
                         : root.errorMessage !== "" ? root.errorMessage
                         : qsTr("No versions loaded yet")
                     color: root.errorMessage !== "" ? theme.error : theme.textSubtle
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                 }
             }
         }
@@ -197,7 +197,7 @@ DialogCard {
                     : root.errorMessage !== "" ? qsTr("Couldn't load versions.")
                     : qsTr("No versions available.")
                 color: theme.textSubtle
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
             }
 
             delegate: Item {
@@ -245,7 +245,7 @@ DialogCard {
                     Text {
                         text: tag
                         color: theme.text
-                        font.pixelSize: 13
+                        font.pixelSize: theme.type.label.size
                         font.weight: Font.Medium
                         font.family: "monospace"
                         width: 220
@@ -256,7 +256,7 @@ DialogCard {
                     Text {
                         text: publishedAt.length >= 10 ? publishedAt.substring(0, 10) : publishedAt
                         color: theme.textSubtle
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                         font.family: "monospace"
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -266,7 +266,7 @@ DialogCard {
                             ? (assetSize / (1024 * 1024)).toFixed(1) + " MB"
                             : ""
                         color: theme.textSubtle
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -300,7 +300,7 @@ DialogCard {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("Installed")
                             color: theme.success
-                            font.pixelSize: 12
+                            font.pixelSize: theme.type.micro.size
                             font.weight: Font.Medium
                         }
 
@@ -323,7 +323,7 @@ DialogCard {
                         visible: busy
                         text: qsTr("Working…")
                         color: theme.textMuted
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                     }
                 }
 

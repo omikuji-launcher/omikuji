@@ -31,7 +31,7 @@ Item {
         anchors.centerIn: parent
         text: loading ? qsTr("Loading Steam games...") : qsTr("No Steam games found")
         color: theme.textFaint
-        font.pixelSize: 13
+        font.pixelSize: theme.type.label.size
         visible: loading || steamGames.length === 0
         z: 10
     }

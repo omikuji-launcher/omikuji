@@ -492,7 +492,7 @@ Item {
                                 Text {
                                     text: wrapper.name
                                     color: theme.text
-                                    font.pixelSize: 15
+                                    font.pixelSize: theme.type.subtitle.size
                                 }
                                 Text {
                                     text: {
@@ -506,7 +506,7 @@ Item {
                                         return k
                                     }
                                     color: theme.textSubtle
-                                    font.pixelSize: 12
+                                    font.pixelSize: theme.type.caption.size
                                 }
                             }
                         }
@@ -609,7 +609,7 @@ Item {
                     Text {
                         text: qsTr("Add category")
                         color: theme.accent
-                        font.pixelSize: 14
+                        font.pixelSize: theme.type.body.size
                         font.weight: Font.Medium
                         anchors.verticalCenter: parent.verticalCenter
                     }

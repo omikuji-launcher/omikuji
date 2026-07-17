@@ -18,7 +18,7 @@ Item {
             id: label
             text: root.text
             color: root.textColor
-            font.pixelSize: 16
+            font.pixelSize: theme.type.title.size
             font.weight: Font.Medium
             anchors.verticalCenter: parent.verticalCenter
         }

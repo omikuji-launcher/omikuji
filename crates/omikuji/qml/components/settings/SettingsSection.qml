@@ -23,7 +23,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: root.label
             color: theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.micro.size
             font.weight: Font.DemiBold
             font.capitalization: Font.AllUppercase
             font.letterSpacing: 0.6

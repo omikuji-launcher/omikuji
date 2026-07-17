@@ -107,7 +107,7 @@ DialogCard {
             width: parent.width
             text: root.normalizedUrl()
             color: theme.textSubtle
-            font.pixelSize: 11
+            font.pixelSize: theme.type.micro.size
             font.family: "monospace"
             elide: Text.ElideRight
         }
@@ -138,7 +138,7 @@ DialogCard {
             width: parent.width
             text: qsTr("GitHub and Codeberg repo links are converted to their releases API automatically. The asset filter is a substring that picks the right release file; leave it empty to take the first one.")
             color: theme.textSubtle
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -147,7 +147,7 @@ DialogCard {
             width: parent.width
             text: root.errorText
             color: theme.error
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
     }

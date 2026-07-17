@@ -67,7 +67,7 @@ DialogCard {
                 anchors.rightMargin: theme.space.md
                 text: root.prefix.path || ""
                 color: theme.accent
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
                 font.family: "monospace"
                 wrapMode: Text.WrapAnywhere
             }
@@ -81,7 +81,7 @@ DialogCard {
             Text {
                 text: qsTr("Used by")
                 color: theme.textSubtle
-                font.pixelSize: 11
+                font.pixelSize: theme.type.micro.size
                 font.weight: Font.DemiBold
             }
             Repeater {
@@ -91,7 +91,7 @@ DialogCard {
                     width: parent.width
                     text: modelData
                     color: theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     elide: Text.ElideRight
                 }
             }
@@ -102,7 +102,7 @@ DialogCard {
             visible: root.games.length === 0
             text: qsTr("Orphan prefix, no game uses it.")
             color: theme.textSubtle
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -146,7 +146,7 @@ DialogCard {
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.label
                             color: theme.text
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                         }
                     }
 

@@ -125,7 +125,7 @@ Window {
                     Layout.fillWidth: true
                     text: logWindow.gameName
                     color: logWindow.theme.text
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
@@ -159,7 +159,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("Follow")
                             color: logWindow.theme.text
-                            font.pixelSize: 12
+                            font.pixelSize: theme.type.caption.size
                         }
                     }
 
@@ -244,7 +244,7 @@ Window {
                 selectByMouse: true
                 color: logWindow.theme.text
                 font.family: "monospace"
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 leftPadding: 14
                 rightPadding: 14
                 topPadding: 10
@@ -352,7 +352,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 160
                 color: logWindow.theme.text
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 clip: true
                 selectionColor: logWindow.theme.accent
                 selectedTextColor: logWindow.theme.accentText
@@ -363,7 +363,7 @@ Window {
                     verticalAlignment: Text.AlignVCenter
                     text: qsTr("Search...")
                     color: logWindow.theme.textSubtle
-                    font.pixelSize: 14
+                    font.pixelSize: theme.type.body.size
                     visible: !searchInput.text && !searchInput.activeFocus
                 }
 
@@ -376,7 +376,7 @@ Window {
                 horizontalAlignment: Text.AlignHCenter
                 text: floatingBar.matchCount > 0 ? (floatingBar.currentMatchIndex + 1) + "/" + floatingBar.matchCount : "0/0"
                 color: logWindow.theme.textSubtle
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
             }
 
             Row {

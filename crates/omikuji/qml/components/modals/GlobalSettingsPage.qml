@@ -23,6 +23,7 @@ Item {
 
     signal defaultsApplyToExistingRequested()
     signal manageSetsRequested(string kind)
+    signal manageFontSizesRequested()
 
     signal prefixOpenRequested(var prefix)
     signal prefixCreateRequested()
@@ -42,6 +43,7 @@ Item {
         { label: qsTr("Components"), kind: "components", icon: "layers" },
         { label: "Ofuda",            kind: "ofuda",      icon: "ofuda" },
         { label: qsTr("Defaults"),   kind: "defaults",   icon: "settings" },
+        { label: qsTr("Presets"),    kind: "presets",    icon: "view_list" },
         { label: qsTr("Interface"),  kind: "ui",         icon: "tune" },
         { label: qsTr("Theme"),      kind: "theme",      icon: "imagesmode" },
         { label: qsTr("About"),      kind: "about",      icon: "verified" }
@@ -98,8 +100,15 @@ Item {
                 item.gameModel = root.gameModel
                 item.uiSettings = root.uiSettings
                 item.applyToExistingRequested.connect(() => root.defaultsApplyToExistingRequested())
-                item.manageSetsRequested.connect((kind) => root.manageSetsRequested(kind))
             }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "presets"
+            visible: active
+            source: "../settings/TabGlobalPresets.qml"
+            onLoaded: item.manageSetsRequested.connect((kind) => root.manageSetsRequested(kind))
         }
 
         Loader {
@@ -123,6 +132,7 @@ Item {
             source: "../settings/TabGlobalTheme.qml"
             onLoaded: {
                 item.uiSettings = root.uiSettings
+                item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
             }
         }
 

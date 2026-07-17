@@ -242,7 +242,7 @@ DialogCard {
                             Layout.fillWidth: true
                             text: setRow.modelData.name
                             color: theme.text
-                            font.pixelSize: 14
+                            font.pixelSize: theme.type.body.size
                             elide: Text.ElideRight
                         }
 

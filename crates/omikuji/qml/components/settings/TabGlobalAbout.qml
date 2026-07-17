@@ -39,12 +39,12 @@ Item {
                 Text {
                     text: qsTr("A Qt/QML based wine apps launcher for Linux.")
                     color: theme.text
-                    font.pixelSize: 15
+                    font.pixelSize: theme.type.subtitle.size
                 }
                 Text {
                     text: qsTr("Version %1").arg(root.appVersion)
                     color: theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     font.family: "monospace"
                 }
             }
@@ -57,7 +57,7 @@ Item {
             Text {
                 text: qsTr("GPL-3.0-or-later. omikuji is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.")
                 color: theme.textSubtle
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 lineHeight: 1.4
@@ -86,14 +86,14 @@ Item {
                         Text {
                             text: modelData.label
                             color: theme.textMuted
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                             width: 80
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             text: "<a href='" + modelData.url + "' style='color:" + theme.accent + "'>" + modelData.url + "</a>"
                             color: theme.accent
-                            font.pixelSize: 13
+                            font.pixelSize: theme.type.label.size
                             font.family: "monospace"
                             textFormat: Text.RichText
                             onLinkActivated: (link) => Qt.openUrlExternally(link)
@@ -121,7 +121,7 @@ Item {
                     selectByMouse: true
                     color: theme.text
                     font.family: "monospace"
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     leftPadding: 12
                     rightPadding: 12
                     topPadding: 10

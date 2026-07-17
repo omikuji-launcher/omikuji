@@ -40,7 +40,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: qsTr("Play")
             color: theme.accentOn
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
             font.weight: Font.DemiBold
         }
     }

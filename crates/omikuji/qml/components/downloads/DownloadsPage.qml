@@ -80,14 +80,14 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("No active downloads")
                 color: theme.textMuted
-                font.pixelSize: 16
+                font.pixelSize: theme.type.title.size
                 font.weight: Font.Medium
             }
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("Install a game from one of the connected stores to see it here.")
                 color: theme.textFaint
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
             }
         }
     }

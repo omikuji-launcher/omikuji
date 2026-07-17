@@ -168,7 +168,7 @@ Item {
                     visible: root.dllPacks.length === 0
                     text: qsTr("No translation layers configured yet.")
                     color: theme.textSubtle
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
@@ -206,7 +206,7 @@ Item {
                     visible: root.runners.length === 0
                     text: qsTr("No runners configured yet.")
                     color: theme.textSubtle
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
@@ -220,7 +220,7 @@ Item {
             Text {
                 text: qsTr("External tools omikuji downloads on first run. Reinstall if a version is stale or corrupted.")
                 color: theme.textSubtle
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
@@ -280,7 +280,7 @@ Item {
                                     Text {
                                         text: meta.label
                                         color: theme.text
-                                        font.pixelSize: 14
+                                        font.pixelSize: theme.type.body.size
                                         font.weight: Font.DemiBold
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
@@ -288,7 +288,7 @@ Item {
                                         visible: status.version && status.version.length > 0
                                         text: status.version
                                         color: theme.textMuted
-                                        font.pixelSize: 12
+                                        font.pixelSize: theme.type.caption.size
                                         font.family: "monospace"
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
@@ -298,7 +298,7 @@ Item {
                                             ? qsTr("downloading %1%").arg(Math.round(status.percent))
                                             : status.status
                                         color: theme.accent
-                                        font.pixelSize: 12
+                                        font.pixelSize: theme.type.caption.size
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
@@ -306,7 +306,7 @@ Item {
                                 Text {
                                     text: status.status === "failed" && status.error ? status.error : meta.desc
                                     color: status.status === "failed" ? theme.error : theme.textSubtle
-                                    font.pixelSize: 12
+                                    font.pixelSize: theme.type.caption.size
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }

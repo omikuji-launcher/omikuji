@@ -79,7 +79,7 @@ DialogCard {
             Layout.fillWidth: true
             text: qsTr("Sections you tick will be written to every game's TOML, overwriting their current values for those fields. Untouched sections stay as they are per-game.")
             color: theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.Wrap
             lineHeight: 1.35
         }
@@ -88,7 +88,7 @@ DialogCard {
             Layout.fillWidth: true
             text: qsTr("Nothing to apply — set some fields in the Defaults tab first.")
             color: theme.textSubtle
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
             wrapMode: Text.Wrap
             visible: root.availableSections.length === 0
         }
@@ -143,7 +143,7 @@ DialogCard {
                             Text {
                                 text: root.sectionLabels[modelData] || modelData
                                 color: theme.text
-                                font.pixelSize: 14
+                                font.pixelSize: theme.type.body.size
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
@@ -197,14 +197,14 @@ DialogCard {
                     Text {
                         text: qsTr("Replace env / DLL tables")
                         color: theme.text
-                        font.pixelSize: 13
+                        font.pixelSize: theme.type.label.size
                     }
                     Text {
                         text: root.replaceMaps
                             ? qsTr("wipes the game's keys, then writes the global ones")
                             : qsTr("merges global keys into the game (game keys win on conflict)")
                         color: theme.textSubtle
-                        font.pixelSize: 11
+                        font.pixelSize: theme.type.micro.size
                     }
                 }
             }
@@ -225,7 +225,7 @@ DialogCard {
         verticalAlignment: Text.AlignVCenter
         text: root.gameModel ? qsTr("Affects %n game(s)", "", root.gameModel.count) : ""
         color: theme.textSubtle
-        font.pixelSize: 12
+        font.pixelSize: theme.type.caption.size
         visible: text.length > 0
     }
 

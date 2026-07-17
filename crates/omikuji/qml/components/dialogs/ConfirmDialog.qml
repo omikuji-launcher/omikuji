@@ -32,7 +32,7 @@ DialogCard {
             width: parent.width
             text: root.detail
             color: theme.accent
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             font.family: "monospace"
             wrapMode: Text.WrapAnywhere
             visible: text.length > 0

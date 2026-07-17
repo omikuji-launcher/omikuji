@@ -21,7 +21,7 @@ DialogCard {
             width: parent.width
             text: qsTr("Custom ${variable} tokens, usable in launch fields, prefix, install paths, scripts and image overrides. Values may reference the built-ins below.")
             color: theme.textSubtle
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
             wrapMode: Text.WordWrap
         }
 
@@ -44,7 +44,7 @@ DialogCard {
                 + "${logs_path}        " + qsTr("logs root") + "\n"
                 + "${runtime_path}     " + qsTr("runtime root")
             color: theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             font.family: "monospace"
         }
 

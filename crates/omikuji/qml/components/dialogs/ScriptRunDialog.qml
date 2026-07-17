@@ -132,7 +132,7 @@ DialogCard {
             visible: (root.detail.description || "") !== ""
             text: root.detail.description || ""
             color: theme.textMuted
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
             wrapMode: Text.WordWrap
         }
 
@@ -161,7 +161,7 @@ DialogCard {
                     width: parent.width - 18 - theme.space.sm
                     text: root.detail.note || ""
                     color: theme.text
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -192,7 +192,7 @@ DialogCard {
                     width: parent.width - 18 - theme.space.sm
                     text: qsTr("This script runs arbitrary shell commands. Review the source below before installing.")
                     color: theme.error
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -276,7 +276,7 @@ DialogCard {
                     visible: root.prefixOptions.length === 0
                     text: qsTr("No prefixes yet — create one in Settings → Ofuda first.")
                     color: theme.warning
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                 }
             }
         }
@@ -343,7 +343,7 @@ DialogCard {
                         selectByMouse: true
                         color: theme.text
                         font.family: "monospace"
-                        font.pixelSize: 12
+                        font.pixelSize: theme.type.caption.size
                     }
 
                     ScrollBar.vertical: ThinScrollBar {}
@@ -361,7 +361,7 @@ DialogCard {
                 visible: root.busy
                 text: qsTr("Installing…")
                 color: theme.accent
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
             }
             OutputLog {
                 width: parent.width
@@ -397,7 +397,7 @@ DialogCard {
                         ? qsTr("Script finished.")
                         : qsTr("%1 was added to your library.").arg(root.detail.gameName || root.detail.name || qsTr("The game"))
                     color: theme.success
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -408,7 +408,7 @@ DialogCard {
             visible: root.errorText !== ""
             text: root.errorText
             color: theme.error
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 

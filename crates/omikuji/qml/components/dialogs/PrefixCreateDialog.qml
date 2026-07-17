@@ -92,7 +92,7 @@ DialogCard {
                 visible: root.busy
                 text: qsTr("Setting up your Ofuda…")
                 color: theme.accent
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
             }
 
             OutputLog {
@@ -107,7 +107,7 @@ DialogCard {
             width: parent.width
             text: root.errorText
             color: theme.error
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
     }

@@ -86,7 +86,7 @@ Item {
                 anchors.fill: parent
                 text: (root.zeroPlaceholder !== "" && root.value === 0) ? root.zeroPlaceholder : root.value
                 color: theme.text
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 selectByMouse: true

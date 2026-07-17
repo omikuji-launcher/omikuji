@@ -52,7 +52,7 @@ Item {
         width: Math.min(implicitWidth, root.width * 0.5)
         text: root.currentTabLabel
         color: theme.text
-        font.pixelSize: 20
+        font.pixelSize: theme.type.display.size
         font.weight: Font.DemiBold
         elide: Text.ElideRight
         visible: root.showTitle
@@ -85,7 +85,7 @@ Item {
                 id: searchInput
                 width: searchBar.width - 44
                 color: theme.text
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 clip: true
                 anchors.verticalCenter: parent.verticalCenter
                 selectionColor: theme.accent
@@ -96,7 +96,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Search games...")
                     color: theme.textSubtle
-                    font.pixelSize: 14
+                    font.pixelSize: theme.type.body.size
                     visible: !searchInput.text && !searchInput.activeFocus
                 }
             }

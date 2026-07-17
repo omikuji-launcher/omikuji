@@ -36,7 +36,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.title
             color: theme.text
-            font.pixelSize: 20
+            font.pixelSize: theme.type.display.size
             font.weight: Font.Bold
         }
 
@@ -45,7 +45,7 @@ Item {
             width: parent.width
             text: root.description
             color: theme.textMuted
-            font.pixelSize: 14
+            font.pixelSize: theme.type.body.size
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
         }
@@ -54,7 +54,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Open Login Page")
             color: linkMouseArea.containsMouse ? Qt.lighter(theme.accent, 1.1) : theme.accent
-            font.pixelSize: 14
+            font.pixelSize: theme.type.body.size
             font.weight: Font.DemiBold
             Behavior on color { ColorAnimation { duration: theme.dur.xfast } }
 
@@ -98,7 +98,7 @@ Item {
                     ? qsTr("Installing %1...").arg(root.toolName)
                     : qsTr("No %1 found. Install it to log in.").arg(root.toolName)
                 color: theme.textMuted
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
             }

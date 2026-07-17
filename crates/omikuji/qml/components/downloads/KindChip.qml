@@ -22,7 +22,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.labels[root.kind] || root.kind
         color: root.tone
-        font.pixelSize: 11
+        font.pixelSize: theme.type.micro.size
         font.weight: Font.DemiBold
         font.capitalization: Font.AllUppercase
         font.letterSpacing: 0.5

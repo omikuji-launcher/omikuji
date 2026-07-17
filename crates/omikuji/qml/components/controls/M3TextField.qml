@@ -26,7 +26,7 @@ Item {
         id: labelText
         text: root.label
         color: input.activeFocus ? theme.accent : theme.textMuted
-        font.pixelSize: 14
+        font.pixelSize: theme.type.body.size
         font.weight: Font.Medium
         visible: root.label !== ""
 
@@ -51,7 +51,7 @@ Item {
             anchors.rightMargin: 12
             verticalAlignment: TextInput.AlignVCenter
             color: theme.text
-            font.pixelSize: 14
+            font.pixelSize: theme.type.body.size
             clip: true
             readOnly: root.readOnly
             selectionColor: theme.accent
@@ -66,7 +66,7 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 text: root.placeholder
                 color: theme.textSubtle
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 visible: !input.text && !input.activeFocus
             }
         }

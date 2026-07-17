@@ -53,7 +53,7 @@ Item {
             Text {
                 text: qsTr("Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.")
                 color: theme.textSubtle
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
@@ -89,7 +89,7 @@ Item {
                             Text {
                                 text: rowItem.modelData.name
                                 color: theme.text
-                                font.pixelSize: 14
+                                font.pixelSize: theme.type.body.size
                                 font.weight: Font.DemiBold
                                 width: parent.width
                                 elide: Text.ElideRight
@@ -101,7 +101,7 @@ Item {
                                         ? qsTr("1 game")
                                         : qsTr("%1 games").arg(rowItem.modelData.gameCount)
                                 color: theme.textSubtle
-                                font.pixelSize: 12
+                                font.pixelSize: theme.type.caption.size
                                 width: parent.width
                                 elide: Text.ElideRight
                             }
@@ -123,7 +123,7 @@ Item {
                     visible: root.prefixes.length === 0
                     text: qsTr("No prefixes yet.")
                     color: theme.textSubtle
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }

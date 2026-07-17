@@ -66,7 +66,7 @@ DialogCard {
                 ? root.errorText
                 : qsTr("First launch for this game, setting up the wine prefix. It'll start once this finishes.")
             color: root.errorText !== "" ? theme.error : theme.textMuted
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 

@@ -98,9 +98,9 @@ DialogCard {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: theme.space.sm
-                    Text { text: root.fromVersion || "?"; color: theme.textMuted; font.pixelSize: 14; font.family: "monospace" }
-                    Text { text: "→"; color: theme.textMuted; font.pixelSize: 14 }
-                    Text { text: root.toVersion || "?"; color: theme.accent; font.pixelSize: 14; font.family: "monospace"; font.weight: Font.DemiBold }
+                    Text { text: root.fromVersion || "?"; color: theme.textMuted; font.pixelSize: theme.type.body.size; font.family: "monospace" }
+                    Text { text: "→"; color: theme.textMuted; font.pixelSize: theme.type.body.size }
+                    Text { text: root.toVersion || "?"; color: theme.accent; font.pixelSize: theme.type.body.size; font.family: "monospace"; font.weight: Font.DemiBold }
                     Item { Layout.fillWidth: true }
                 }
 

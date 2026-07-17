@@ -50,7 +50,7 @@ Item {
                     Text {
                         text: root.sourceName
                         color: theme.text
-                        font.pixelSize: 14
+                        font.pixelSize: theme.type.body.size
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -65,7 +65,7 @@ Item {
                             anchors.centerIn: parent
                             text: root.sourceKind
                             color: theme.accent
-                            font.pixelSize: 9
+                            font.pixelSize: theme.type.micro.size
                             font.weight: Font.Medium
                             font.capitalization: Font.AllUppercase
                             font.letterSpacing: 0.6
@@ -80,7 +80,7 @@ Item {
                             ? qsTr("1 version installed")
                             : qsTr("%1 versions installed").arg(root.installedCount)
                     color: root.installedCount > 0 ? theme.success : theme.textSubtle
-                    font.pixelSize: 12
+                    font.pixelSize: theme.type.caption.size
                 }
             }
         }
@@ -122,7 +122,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: qsTr("Auto install on prefix")
             color: theme.text
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
         }
 
         M3Dropdown {
@@ -149,7 +149,7 @@ Item {
 
             TextMetrics {
                 id: labelMetrics
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 text: root.activeVersion === "" ? qsTr("Disabled") : root.activeVersion
             }
         }

@@ -27,13 +27,13 @@ Item {
             id: labelText
             text: root.label
             color: theme.text
-            font.pixelSize: 15
+            font.pixelSize: theme.type.subtitle.size
         }
 
         Text {
             text: root.description
             color: theme.textSubtle
-            font.pixelSize: 13
+            font.pixelSize: theme.type.label.size
             width: parent.width
             wrapMode: Text.WordWrap
             visible: root.description !== ""

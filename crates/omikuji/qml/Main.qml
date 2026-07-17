@@ -48,6 +48,9 @@ ApplicationWindow {
         function onThemeChanged() {
             theme.overrides = JSON.parse(uiSettings.overridesJson())
         }
+        function onFontSizesChanged() {
+            theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+        }
         function onCardSortChanged() {
             gameModel.applySortMode(uiSettings.cardSort)
         }
@@ -58,6 +61,7 @@ ApplicationWindow {
         Component.onCompleted: {
             initWatcher()
             theme.overrides = JSON.parse(overridesJson())
+            theme.fontSizes = JSON.parse(fontSizesJson())
         }
         onShowTrayIconChanged: {
             trayBridge.setEnabled(showTrayIcon)
@@ -1015,6 +1019,11 @@ property real cardZoom: uiSettings.cardZoom
         manageTitle: qsTr("Manage DLL sets")
     }
 
+    FontSizesDialog {
+        id: fontSizesDialog
+        uiSettings: root.uiSettingsRef
+    }
+
     TemplateVarsDialog {
         id: templateVarsDialog
         anchors.fill: parent
@@ -1344,6 +1353,7 @@ property real cardZoom: uiSettings.cardZoom
                     if (kind === "vars") templateVarsDialog.open()
                     else (kind === "dll" ? dllSetsDialog : envSetsDialog).openManage()
                 }
+                onManageFontSizesRequested: fontSizesDialog.open()
                 onManageLogRulesRequested: logRulesDialog.show()
                 onCategoryAddRequested: categoriesController.showAdd()
                 onCategoryEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)

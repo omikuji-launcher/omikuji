@@ -47,7 +47,7 @@ Popup {
         id: sizer
         visible: false
         text: root.text
-        font.pixelSize: 12
+        font.pixelSize: theme.type.caption.size
         font.hintingPreference: Font.PreferNoHinting
     }
 
@@ -62,7 +62,7 @@ Popup {
         id: label
         text: root.text
         color: theme.tooltipText
-        font.pixelSize: 12
+        font.pixelSize: theme.type.caption.size
         font.hintingPreference: Font.PreferNoHinting
         leftPadding: root.padH
         rightPadding: root.padH

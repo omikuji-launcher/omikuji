@@ -204,6 +204,7 @@ fn main() {
         .json_accessor("dll_sets", "Vec<KvSet>", "dll_sets", "dll_sets_changed")
         .json_accessor("log_rules", "Vec<LogRule>", "display.log_rules", "log_rules_changed")
         .json_accessor("dialog_sizes", "BTreeMap<String, [f64; 2]>", "dialog_sizes", "dialog_sizes_changed")
+        .json_accessor("font_sizes", "BTreeMap<String, u32>", "theme.fonts", "font_sizes_changed")
         .json_accessor("template_vars", "BTreeMap<String, String>", "template_vars", "template_vars_changed")
         .raw_field_persisted("color_overrides", "BTreeMap<String, String>", "s.theme.colors.clone()", "s.theme.colors = self.color_overrides.clone();")
         .raw_field("watcher", "Option<FileWatcher>", "None")
@@ -316,6 +317,7 @@ fn main() {
                 "qml/components/dialogs/PrefixPrepDialog.qml",
                 "qml/components/dialogs/RunCommandDialog.qml",
                 "qml/components/dialogs/TemplateVarsDialog.qml",
+                "qml/components/dialogs/FontSizesDialog.qml",
                 "qml/components/controls/ExpansionHint.qml",
                 "qml/components/dialogs/LogRulesDialog.qml",
                 "qml/components/dialogs/GameLogsWindow.qml",
@@ -358,6 +360,7 @@ fn main() {
                 "qml/components/settings/TabGlobalComponents.qml",
                 "qml/components/settings/TabGlobalDefaults.qml",
                 "qml/components/settings/TabGlobalOfuda.qml",
+                "qml/components/settings/TabGlobalPresets.qml",
                 "qml/components/settings/TabGlobalTheme.qml",
                 "qml/components/settings/TabGlobalUi.qml",
                 "qml/components/settings/TabRunnerOptions.qml",

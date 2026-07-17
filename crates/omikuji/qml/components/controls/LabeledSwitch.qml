@@ -20,7 +20,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         text: root.label
         color: root.enabled ? theme.text : theme.textSubtle
-        font.pixelSize: 15
+        font.pixelSize: theme.type.subtitle.size
         elide: Text.ElideRight
     }
 

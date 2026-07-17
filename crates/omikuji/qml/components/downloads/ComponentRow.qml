@@ -51,7 +51,7 @@ Rectangle {
             Text {
                 text: row.name
                 color: theme.text
-                font.pixelSize: 14
+                font.pixelSize: theme.type.body.size
                 font.weight: Font.Medium
             }
 
@@ -63,7 +63,7 @@ Rectangle {
                           + (row.status === "downloading" ? " · " + Math.round(row.percent) + "%" : "…"))
                     : qsTr("Pending")
                 color: row.isFailed ? (theme.error || "#e06060") : theme.textMuted
-                font.pixelSize: 12
+                font.pixelSize: theme.type.caption.size
                 elide: Text.ElideRight
             }
 

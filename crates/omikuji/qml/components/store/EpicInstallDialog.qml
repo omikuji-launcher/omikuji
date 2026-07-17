@@ -190,7 +190,7 @@ DialogCard {
                 Layout.fillWidth: true
                 text: root.gameData ? qsTr("Install %1").arg(root.gameData.title) : qsTr("Install")
                 color: theme.text
-                font.pixelSize: 18
+                font.pixelSize: theme.type.headline.size
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -269,7 +269,7 @@ DialogCard {
                 color: (root.existingInstallBytes > 0 || root.hasResumeState)
                     ? theme.accent
                     : (root.hasEnoughSpace() ? theme.textFaint : "#e06060")
-                font.pixelSize: 11
+                font.pixelSize: theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -279,7 +279,7 @@ DialogCard {
             Text {
                 text: qsTr("Epic Games allows only one install. To reinstall elsewhere, delete the game files first.")
                 color: theme.accent
-                font.pixelSize: 11
+                font.pixelSize: theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4

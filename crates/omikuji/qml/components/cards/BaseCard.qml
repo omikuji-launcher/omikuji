@@ -214,7 +214,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 text: root.title
                 color: theme.text
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 font.weight: Font.Medium
                 elide: Text.ElideRight
                 maximumLineCount: 1

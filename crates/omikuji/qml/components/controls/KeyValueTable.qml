@@ -99,7 +99,7 @@ Item {
                 Text {
                     text: "="
                     color: theme.textSubtle
-                    font.pixelSize: 14
+                    font.pixelSize: theme.type.body.size
                     Layout.alignment: Qt.AlignTop
                     Layout.topMargin: 14
                 }
@@ -159,7 +159,7 @@ Item {
                 Text {
                     text: root.addLabel
                     color: addArea.containsMouse ? theme.text : theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                     anchors.verticalCenter: parent.verticalCenter
 
                     Behavior on color {

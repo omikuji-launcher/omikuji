@@ -57,7 +57,7 @@ Item {
                 Text {
                     text: qsTr("Logged in as: %1").arg(gogModel ? gogModel.displayName : "")
                     color: theme.textMuted
-                    font.pixelSize: 13
+                    font.pixelSize: theme.type.label.size
                 }
 
                 Item { Layout.fillWidth: true }
@@ -142,7 +142,7 @@ Item {
                                 return dl.status
                             }
                             color: theme.accentOn
-                            font.pixelSize: 11
+                            font.pixelSize: theme.type.micro.size
                             font.weight: Font.Bold
                         }
                     }
@@ -185,7 +185,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("No games in this store")
                 color: theme.textMuted
-                font.pixelSize: 16
+                font.pixelSize: theme.type.title.size
                 font.weight: Font.Medium
             }
         }

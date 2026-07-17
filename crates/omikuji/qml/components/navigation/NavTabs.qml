@@ -147,7 +147,7 @@ Item {
             Text {
                 text: navItem.label
                 color: theme.text
-                font.pixelSize: 13
+                font.pixelSize: theme.type.label.size
                 font.weight: navItem.selected ? Font.DemiBold : Font.Normal
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: root.iconOnly ? 0 : 1
@@ -187,7 +187,7 @@ Item {
         anchors.rightMargin: 20
         text: root.headerLabel
         color: theme.text
-        font.pixelSize: 20
+        font.pixelSize: theme.type.display.size
         font.weight: Font.DemiBold
         elide: Text.ElideRight
         opacity: root.iconOnly ? 0 : 1
@@ -259,7 +259,7 @@ Item {
                 anchors.leftMargin: 20
                 text: qsTr("Library")
                 color: theme.textMuted
-                font.pixelSize: 12
+                font.pixelSize: theme.type.micro.size
                 font.weight: Font.Medium
                 visible: root.tabs.length > 0 && !root.iconOnly
                 height: visible ? implicitHeight : 0
@@ -301,7 +301,7 @@ Item {
                 anchors.leftMargin: 20
                 text: qsTr("Stores")
                 color: theme.textMuted
-                font.pixelSize: 12
+                font.pixelSize: theme.type.micro.size
                 font.weight: Font.Medium
                 visible: (root.showSteam || root.showEpic || root.showGog || root.showGachas) && !root.iconOnly
                 height: visible ? implicitHeight : 0

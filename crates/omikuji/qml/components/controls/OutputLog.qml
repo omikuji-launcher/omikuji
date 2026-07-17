@@ -38,7 +38,7 @@ Rectangle {
             selectByMouse: true
             color: theme.textMuted
             font.family: "monospace"
-            font.pixelSize: 12
+            font.pixelSize: theme.type.caption.size
             background: Rectangle { color: "transparent" }
             onTextChanged: if (root.follow) cursorPosition = length
         }

@@ -157,7 +157,7 @@ Item {
                     Text {
                         text: qsTr("NTSync is only applied when the selected Wine version is Proton.")
                         color: theme.textSubtle
-                        font.pixelSize: 13
+                        font.pixelSize: theme.type.label.size
                         visible: !root.isProtonWine
                         Layout.columnSpan: 2
                         wrapMode: Text.WordWrap
