@@ -99,6 +99,7 @@ Item {
             required property string runnerType
             required property string runner
             required property bool hidden
+            required property bool favourite
 
             width: root.cardBaseWidth * root.cardZoom
             height: styledHeight
@@ -110,6 +111,7 @@ Item {
             cardVisible: (root.searchText === "" ||
                          name.toLowerCase().includes(root.searchText.toLowerCase())) &&
                          (root.showHidden || !hidden) &&
+                         (root.filterKind !== "favourite" || favourite) &&
                          root.gamePassesFilter(index)
             reorderable: root.reorderActive
             onClicked: root.gameClicked(index)

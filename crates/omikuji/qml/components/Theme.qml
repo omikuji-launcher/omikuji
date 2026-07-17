@@ -25,7 +25,6 @@ QtObject {
     property color bg: _resolve("bg", active.base, "#111111")
     property color bgAlt: Qt.darker(bg, 1.1)
     property color surface: _resolve("surface", active.base, "#111111")
-    property color surfaceHover: Qt.lighter(surface, 1.1)
     property color surfaceBorder: Qt.rgba(text.r, text.g, text.b, 0.08)
 
     property color text: _resolve("text", active.windowText, "#c5c6c6")
