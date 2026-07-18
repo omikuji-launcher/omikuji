@@ -40,6 +40,7 @@ done
 sed -i "s/^version = \".*\"/version = \"$VER\"/" "$CARGO_APP"
 sed -i "s/^version = \".*\"/version = \"$VER\"/" "$CARGO_CORE"
 sed -i "s/^pkgver=.*/pkgver=$VER/" "$PKGBUILD_BIN"
+sed -i "s/^pkgrel=.*/pkgrel=1/" "$PKGBUILD_BIN"
 sed -i "s/tag: \"v.*\"/tag: \"v$VER\"/" "$FLATPAK"
 sed -i "s/^Version:.*/Version:        $VER/" "$SPEC"
 
@@ -66,6 +67,7 @@ printf '\n%s%s  bumped > %s  (%s)%s\n' "$B" "$G" "$VER" "$DATE" "$X"
 hr
 grep -HE '^version = ' "$CARGO_APP" "$CARGO_CORE" || true
 grep -HE '^pkgver='    "$PKGBUILD_BIN" || true
+grep -HE '^pkgrel='    "$PKGBUILD_BIN" || true
 grep -HE 'tag: "v'     "$FLATPAK" || true
 grep -HE '^Version:'   "$SPEC" || true
 grep -HE "release version=\"$VER\"" "$METAINFO" || true
