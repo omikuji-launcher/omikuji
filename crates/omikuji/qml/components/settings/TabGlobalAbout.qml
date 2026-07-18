@@ -13,7 +13,7 @@ Item {
     readonly property string appVersion: gameModel ? gameModel.app_version() : ""
     readonly property string repoUrl: "https://github.com/reakjra/omikuji"
     readonly property string assetsRepoUrl: "https://github.com/reakjra/omikuji-assets"
-    readonly property string docsUrl: "https://reakjra.github.io/omikuji"
+    readonly property string docsUrl: "https://omikuji-launcher.github.io/omikuji/"
 
     implicitHeight: content.height
 
