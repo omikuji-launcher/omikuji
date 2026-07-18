@@ -76,7 +76,10 @@ Item {
         Text {
             anchors.left: parent.left
             anchors.leftMargin: 12
+            anchors.right: chevronIcon.left
+            anchors.rightMargin: 6
             anchors.verticalCenter: parent.verticalCenter
+            elide: Text.ElideRight
             text: {
                 if (root.options.length === 0) return ""
                 var opt = root.options[root.currentIndex]

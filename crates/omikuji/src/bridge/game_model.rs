@@ -249,6 +249,9 @@ pub mod qobject {
         fn list_runners(self: &GameModel) -> QString;
 
         #[qinvokable]
+        fn runner_is_proton(self: &GameModel, version: &QString) -> bool;
+
+        #[qinvokable]
         fn list_gpus(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -1664,6 +1667,13 @@ impl qobject::GameModel {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[]"),
         }
+    }
+
+    fn runner_is_proton(&self, version: &QString) -> bool {
+        matches!(
+            omikuji_core::launch::WineVariant::from_version(&version.to_string()),
+            omikuji_core::launch::WineVariant::Proton
+        )
     }
 
     fn list_gpus(&self) -> QString {

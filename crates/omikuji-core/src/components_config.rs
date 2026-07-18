@@ -8,8 +8,6 @@ pub struct ArchiveSource {
     pub name: String,
     pub kind: String,
     pub api_url: String,
-    pub asset_pattern: String,
-    pub extract: String,
     #[serde(default)]
     pub desc: String,
 }
@@ -32,13 +30,11 @@ impl Default for ComponentsConfig {
     }
 }
 
-fn src(name: &str, kind: &str, api_url: &str, asset_pattern: &str, extract: &str) -> ArchiveSource {
+fn src(name: &str, kind: &str, api_url: &str) -> ArchiveSource {
     ArchiveSource {
         name: name.into(),
         kind: kind.into(),
         api_url: api_url.into(),
-        asset_pattern: asset_pattern.into(),
-        extract: extract.into(),
         desc: String::new(),
     }
 }
@@ -49,29 +45,21 @@ pub fn default_runners() -> Vec<ArchiveSource> {
             "Proton-Spritz",
             "proton",
             "https://api.github.com/repos/NelloKudo/proton-cachyos/releases",
-            "-x86_64.tar.xz",
-            "tar_xz",
         ),
         src(
             "Proton-GE",
             "proton",
             "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases",
-            ".tar.gz",
-            "tar_gz",
         ),
         src(
             "Dawn Winery Proton",
             "proton",
             "https://dawn.wine/api/v1/repos/dawn-winery/dwproton/releases",
-            ".tar.xz",
-            "tar_xz",
         ),
         src(
             "Proton-Cachyos",
             "proton",
             "https://api.github.com/repos/CachyOS/proton-cachyos/releases",
-            ".tar.xz",
-            "tar_xz",
         ),
     ]
 }
@@ -82,22 +70,16 @@ pub fn default_layers() -> Vec<ArchiveSource> {
             "DXVK",
             "dxvk",
             "https://api.github.com/repos/doitsujin/dxvk/releases",
-            ".tar.gz",
-            "tar_gz",
         ),
         src(
             "VKD3D-Proton",
             "vkd3d",
             "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases",
-            ".tar.zst",
-            "tar_zst",
         ),
         src(
             "DXVK-NVAPI",
             "dxvk_nvapi",
             "https://api.github.com/repos/jp7677/dxvk-nvapi/releases",
-            ".tar.gz",
-            "tar_gz",
         ),
     ]
 }

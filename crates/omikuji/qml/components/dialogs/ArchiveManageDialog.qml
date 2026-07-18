@@ -16,7 +16,7 @@ DialogCard {
     property string sourceKind: ""
 
     property var versions: []
-    property var installedTags: ({})
+    property var installedDirs: ({})
 
     property string errorMessage: ""
     property bool fetching: false
@@ -24,6 +24,7 @@ DialogCard {
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
     signal removeSourceRequested(string category, string sourceName)
+    signal moveToSteamRequested(string sourceName, string tag)
 
     maxWidth: 720
     scrollable: false
@@ -35,7 +36,7 @@ DialogCard {
         sourceName = name
         sourceKind = kind
         versions = []
-        installedTags = ({})
+        installedDirs = ({})
         errorMessage = ""
         refreshInstalled()
         open()
@@ -54,10 +55,10 @@ DialogCard {
             let list = JSON.parse(raw) || []
             let map = ({})
             for (let i = 0; i < list.length; i++) map[list[i]] = true
-            installedTags = map
+            installedDirs = map
         } catch (e) {
-            console.warn("installedTags parse failed:", e)
-            installedTags = ({})
+            console.warn("installedDirs parse failed:", e)
+            installedDirs = ({})
         }
     }
 
@@ -201,18 +202,47 @@ DialogCard {
             }
 
             delegate: Item {
+                id: versionRow
                 required property int index
                 required property var modelData
 
                 readonly property string tag: modelData.tag || ""
                 readonly property string publishedAt: modelData.published_at || ""
-                readonly property int assetSize: modelData.asset_size || 0
-                readonly property bool installed: root.installedTags[tag] === true
+                readonly property var assets: modelData.assets || []
+                property int assetIndex: {
+                    for (var i = 0; i < assets.length; i++)
+                        if (assets[i].name === modelData.asset_name) return i
+                    return 0
+                }
+                readonly property var chosenAsset: assets[assetIndex] || null
+                readonly property int assetSize: chosenAsset ? (chosenAsset.size || 0) : (modelData.asset_size || 0)
+                readonly property var assetStems: assets.map(a => String(a.name).replace(/\.(tar\.(gz|xz|zst)|zip)$/, ""))
+                readonly property var assetLabels: {
+                    var stems = assetStems
+                    if (stems.length < 2) return stems
+                    var prefix = stems[0]
+                    for (var i = 1; i < stems.length; i++) {
+                        while (prefix.length > 0 && stems[i].indexOf(prefix) !== 0)
+                            prefix = prefix.substring(0, prefix.length - 1)
+                    }
+                    var labels = stems.map(s => {
+                        var r = s.substring(prefix.length).replace(/^[-_.]+/, "")
+                        return r === "" ? "x86_64" : r
+                    })
+                    var counts = {}
+                    labels.forEach(l => counts[l] = (counts[l] || 0) + 1)
+                    return labels.map((l, i) => {
+                        if (counts[l] < 2) return l
+                        var m = String(assets[i].name).match(/\.(tar\.(gz|xz|zst)|zip)$/)
+                        return m ? l + " · " + m[0].substring(1) : l
+                    })
+                }
+                readonly property bool installed: root.installedDirs[assetStems[assetIndex]] === true
                 readonly property bool busy:
                     root.activeInstalls[root.category + "/" + root.sourceName + "/" + tag] !== undefined
 
                 width: ListView.view.width
-                height: 54
+                height: 64
 
                 Rectangle {
                     anchors.fill: parent
@@ -234,96 +264,130 @@ DialogCard {
                     acceptedButtons: Qt.NoButton
                 }
 
-                Row {
+                Column {
                     anchors.left: parent.left
                     anchors.leftMargin: 24
                     anchors.right: actionSlot.left
                     anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 14
+                    spacing: 3
 
                     Text {
+                        width: parent.width
                         text: tag
                         color: theme.text
                         font.pixelSize: theme.type.label.size
                         font.weight: Font.Medium
                         font.family: "monospace"
-                        width: 220
                         elide: Text.ElideRight
-                        anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Text {
-                        text: publishedAt.length >= 10 ? publishedAt.substring(0, 10) : publishedAt
+                        width: parent.width
+                        text: {
+                            var parts = []
+                            if (assetSize > 0) parts.push((assetSize / (1024 * 1024)).toFixed(1) + " MB")
+                            if (publishedAt.length >= 10) parts.push(publishedAt.substring(0, 10))
+                            return parts.join("  ·  ")
+                        }
                         color: theme.textSubtle
                         font.pixelSize: theme.type.caption.size
                         font.family: "monospace"
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Text {
-                        text: assetSize > 0
-                            ? (assetSize / (1024 * 1024)).toFixed(1) + " MB"
-                            : ""
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.caption.size
-                        anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
                     }
                 }
 
-                Item {
+                Row {
                     id: actionSlot
                     anchors.right: parent.right
                     anchors.rightMargin: 20
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 96
-                    height: 30
+                    spacing: 14
 
-                    M3Button {
-                        anchors.centerIn: parent
-                        visible: !installed && !busy
-                        text: qsTr("Install")
-                        variant: "filled"
-                        onClicked: archiveManager.installVersion(
-                            root.category,
-                            root.sourceName,
-                            JSON.stringify(modelData)
-                        )
+                    IconButton {
+                        visible: installed && root.category === "runners"
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: "steam"
+                        size: 28
+                        rounded: true
+                        onClicked: root.moveToSteamRequested(root.sourceName, assetStems[assetIndex])
                     }
 
-                    Row {
-                        anchors.centerIn: parent
-                        visible: installed && !busy
-                        spacing: 8
+                    M3Dropdown {
+                        visible: assets.length > 1
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(versionRow.width - 380, assetMetrics.width + 56)
+                        fieldHeight: 30
+                        options: assetLabels.map((l, i) => ({ label: l, value: i }))
+                        currentIndex: assetIndex
+                        onSelected: (v) => assetIndex = v
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: qsTr("Installed")
-                            color: theme.success
-                            font.pixelSize: theme.type.micro.size
-                            font.weight: Font.Medium
+                        TextMetrics {
+                            id: assetMetrics
+                            font.pixelSize: theme.type.body.size
+                            text: assetLabels[assetIndex] || ""
                         }
+                    }
 
-                        IconButton {
-                            anchors.verticalCenter: parent.verticalCenter
-                            icon: "close"
-                            size: 28
-                            rounded: true
-                            danger: true
+                    Item {
+                        width: 132
+                        height: 30
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        M3Button {
+                            anchors.centerIn: parent
+                            visible: !installed && !busy
+                            text: qsTr("Install")
+                            variant: "filled"
                             onClicked: {
-                                archiveManager.deleteVersion(root.category, root.sourceName, tag)
-                                root.refreshInstalled()
-                                root.versionDeleted(root.category, root.sourceName, tag)
+                                var payload = JSON.parse(JSON.stringify(modelData))
+                                if (chosenAsset) {
+                                    payload.asset_name = chosenAsset.name
+                                    payload.asset_url = chosenAsset.url
+                                    payload.asset_size = chosenAsset.size
+                                }
+                                archiveManager.installVersion(
+                                    root.category,
+                                    root.sourceName,
+                                    JSON.stringify(payload)
+                                )
                             }
                         }
-                    }
 
-                    Text {
-                        anchors.centerIn: parent
-                        visible: busy
-                        text: qsTr("Working…")
-                        color: theme.textMuted
-                        font.pixelSize: theme.type.caption.size
+                        Row {
+                            anchors.centerIn: parent
+                            visible: installed && !busy
+                            spacing: 8
+
+                            M3Button {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: qsTr("Installed")
+                                variant: "tonal"
+                                enabled: false
+                                opacity: 0.75
+                            }
+
+                            IconButton {
+                                anchors.verticalCenter: parent.verticalCenter
+                                icon: "close"
+                                size: 28
+                                rounded: true
+                                danger: true
+                                onClicked: {
+                                    archiveManager.deleteVersion(root.category, root.sourceName, assetStems[assetIndex])
+                                    root.refreshInstalled()
+                                    root.versionDeleted(root.category, root.sourceName, assetStems[assetIndex])
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: busy
+                            text: qsTr("Working…")
+                            color: theme.textMuted
+                            font.pixelSize: theme.type.caption.size
+                        }
                     }
                 }
 

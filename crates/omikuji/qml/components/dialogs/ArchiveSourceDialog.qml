@@ -14,8 +14,6 @@ DialogCard {
     property string descValue: ""
     property string kindValue: ""
     property string urlValue: ""
-    property string patternValue: ""
-    property string extractValue: ""
 
     readonly property var kindOptions: category === "runners"
         ? [
@@ -37,7 +35,6 @@ DialogCard {
         nameValue = ""
         descValue = ""
         urlValue = ""
-        patternValue = ""
         errorText = ""
         open()
     }
@@ -58,8 +55,6 @@ DialogCard {
             name: nameValue.trim(),
             kind: kindValue,
             api_url: normalizedUrl(),
-            asset_pattern: patternValue.trim(),
-            extract: extractValue,
             desc: descValue.trim()
         }))
         if (err && err.length > 0) errorText = err
@@ -112,31 +107,9 @@ DialogCard {
             elide: Text.ElideRight
         }
 
-        M3TextField {
-            label: qsTr("Asset filter")
-            placeholder: qsTr("optional, e.g. x86_64")
-            width: parent.width
-            text: root.patternValue
-            onTextEdited: (t) => root.patternValue = t
-        }
-
-        M3Dropdown {
-            label: qsTr("Archive format")
-            width: parent.width
-            options: [
-                { label: ".tar.gz", value: "tar_gz" },
-                { label: ".tar.xz", value: "tar_xz" },
-                { label: ".tar.zst", value: "tar_zst" },
-                { label: ".zip", value: "zip" }
-            ]
-            currentIndex: root.category === "runners" ? 1 : 0
-            onSelected: (v) => root.extractValue = v
-            Component.onCompleted: root.extractValue = currentValue
-        }
-
         Text {
             width: parent.width
-            text: qsTr("GitHub and Codeberg repo links are converted to their releases API automatically. The asset filter is a substring that picks the right release file; leave it empty to take the first one.")
+            text: qsTr("GitHub and Codeberg repo links are converted to their releases API automatically.")
             color: theme.textSubtle
             font.pixelSize: theme.type.caption.size
             wrapMode: Text.WordWrap

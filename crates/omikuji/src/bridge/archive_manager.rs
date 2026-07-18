@@ -149,6 +149,23 @@ pub mod qobject {
             name: QString,
         ) -> QString;
 
+        #[qsignal]
+        #[cxx_name = "moveToSteamDone"]
+        fn move_to_steam_done(self: Pin<&mut ArchiveManagerBridge>, tag: QString, error: QString);
+
+        #[qinvokable]
+        #[cxx_name = "listSteamRoots"]
+        fn list_steam_roots(self: &ArchiveManagerBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "moveToSteam"]
+        fn move_to_steam(
+            self: Pin<&mut ArchiveManagerBridge>,
+            source: QString,
+            tag: QString,
+            roots_json: QString,
+        );
+
         #[qinvokable]
         #[cxx_name = "dllPackActiveVersion"]
         fn dll_pack_active_version(self: &ArchiveManagerBridge, source: QString) -> QString;
@@ -381,6 +398,43 @@ impl qobject::ArchiveManagerBridge {
             }
             Err(e) => QString::from(&format!("{:#}", e)),
         }
+    }
+
+    fn list_steam_roots(&self) -> QString {
+        let roots: Vec<(String, String)> = omikuji_core::steam::local::steam_install_roots()
+            .into_iter()
+            .map(|(label, path)| (label, path.to_string_lossy().into_owned()))
+            .collect();
+        QString::from(&serde_json::to_string(&roots).unwrap_or_else(|_| "[]".into()))
+    }
+
+    fn move_to_steam(mut self: Pin<&mut Self>, source: QString, tag: QString, roots_json: QString) {
+        let name = source.to_string();
+        let tag_s = tag.to_string();
+        let roots: Vec<std::path::PathBuf> =
+            serde_json::from_str::<Vec<String>>(&roots_json.to_string())
+                .unwrap_or_default()
+                .into_iter()
+                .map(std::path::PathBuf::from)
+                .collect();
+        let Some(src) = source_lookup("runners", &name) else {
+            self.as_mut().move_to_steam_done(
+                QString::from(&tag_s),
+                QString::from(&format!("unknown source: {}", name)),
+            );
+            return;
+        };
+        let qt_thread = self.as_mut().qt_thread();
+        thread::spawn(move || {
+            let err = runners::move_to_steam(&src, &tag_s, &roots)
+                .err()
+                .map(|e| format!("{:#}", e))
+                .unwrap_or_default();
+            let _ = qt_thread.queue(move |mut this: Pin<&mut qobject::ArchiveManagerBridge>| {
+                this.as_mut()
+                    .move_to_steam_done(QString::from(&tag_s), QString::from(&err));
+            });
+        });
     }
 
     fn dll_pack_active_version(&self, source: QString) -> QString {

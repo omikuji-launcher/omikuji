@@ -67,17 +67,18 @@ fn looks_like_proton(s: &str) -> bool {
 impl WineVariant {
     pub fn from_version(version: &str) -> Self {
         if version.is_empty() || version == "system" {
-            WineVariant::System
-        } else if looks_like_proton(version) {
-            WineVariant::Proton
-        } else if let Some(rest) = version.strip_prefix("steam:") {
-            if looks_like_proton(rest) {
-                WineVariant::Proton
-            } else {
-                WineVariant::WineGE
-            }
-        } else {
-            WineVariant::WineGE
+            return WineVariant::System;
+        }
+        let name = version.strip_prefix("steam:");
+        let dir = match name {
+            Some(rest) => crate::steam::local::find_proton_install(rest),
+            None => crate::runners::installed_runner_dir(version),
+        };
+        match dir {
+            Some(dir) if crate::runners::is_proton_dir(&dir) => WineVariant::Proton,
+            Some(_) => WineVariant::WineGE,
+            None if looks_like_proton(name.unwrap_or(version)) => WineVariant::Proton,
+            None => WineVariant::WineGE,
         }
     }
 }

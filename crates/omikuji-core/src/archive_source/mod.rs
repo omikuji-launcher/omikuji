@@ -19,6 +19,15 @@ pub struct ReleaseInfo {
     pub asset_name: String,
     pub asset_url: String,
     pub asset_size: u64,
+    #[serde(default)]
+    pub assets: Vec<AssetInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AssetInfo {
+    pub name: String,
+    pub url: String,
+    pub size: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -64,6 +73,54 @@ fn push(ev: ArchiveEvent) {
     queue().lock().unwrap().push_back(ev);
 }
 
+const ARCHIVE_EXTS: &[(&str, &str)] = &[
+    (".tar.gz", "tar_gz"),
+    (".tar.xz", "tar_xz"),
+    (".tar.zst", "tar_zst"),
+    (".zip", "zip"),
+];
+
+fn asset_stem(name: &str) -> &str {
+    ARCHIVE_EXTS
+        .iter()
+        .find_map(|(ext, _)| name.strip_suffix(ext))
+        .unwrap_or(name)
+}
+
+fn extract_strategy(name: &str) -> Option<&'static str> {
+    ARCHIVE_EXTS
+        .iter()
+        .find(|(ext, _)| name.ends_with(ext))
+        .map(|(_, strategy)| *strategy)
+}
+
+fn installable_assets(assets: &[serde_json::Value]) -> Vec<AssetInfo> {
+    assets
+        .iter()
+        .filter_map(|a| {
+            let name = a.get("name").and_then(|v| v.as_str())?;
+            extract_strategy(name)?;
+            Some(AssetInfo {
+                name: name.to_string(),
+                url: a
+                    .get("browser_download_url")
+                    .and_then(|v| v.as_str())?
+                    .to_string(),
+                size: a.get("size").and_then(|v| v.as_u64()).unwrap_or(0),
+            })
+        })
+        .collect()
+}
+
+fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
+    let native = |a: &&AssetInfo| !a.name.contains("arm64") && !a.name.contains("aarch64");
+    assets
+        .iter()
+        .find(native)
+        .or_else(|| assets.first())
+        .cloned()
+}
+
 pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> {
     let client = reqwest::Client::builder()
         .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
@@ -98,37 +155,22 @@ pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> 
             .and_then(|v| v.as_array())
             .unwrap_or(&empty_assets);
 
-        let Some(asset) = assets.iter().find(|a| {
-            a.get("name")
-                .and_then(|v| v.as_str())
-                .map(|n| n.contains(&source.asset_pattern))
-                .unwrap_or(false)
-        }) else {
+        let assets = installable_assets(assets);
+        let Some(default) = default_asset(&assets) else {
             continue;
         };
 
-        let asset_name = asset
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
-        let asset_url = asset
-            .get("browser_download_url")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
-        let asset_size = asset.get("size").and_then(|v| v.as_u64()).unwrap_or(0);
-
-        if tag.is_empty() || asset_url.is_empty() {
+        if tag.is_empty() {
             continue;
         }
 
         out.push(ReleaseInfo {
             tag,
             published_at: published,
-            asset_name,
-            asset_url,
-            asset_size,
+            asset_name: default.name,
+            asset_url: default.url,
+            asset_size: default.size,
+            assets,
         });
     }
     Ok(out)
@@ -191,7 +233,7 @@ async fn install_inner(
     let _ = fs::remove_dir_all(&staging);
     fs::create_dir_all(&staging)?;
 
-    match source.extract.as_str() {
+    match extract_strategy(&release.asset_name).unwrap_or_default() {
         "tar_gz" => {
             let reader = flate2::read::GzDecoder::new(std::io::Cursor::new(&bytes));
             tar::Archive::new(reader).unpack(&staging)?;
@@ -207,13 +249,19 @@ async fn install_inner(
         "zip" => {
             zip::ZipArchive::new(std::io::Cursor::new(&bytes))?.extract(&staging)?;
         }
-        other => {
+        _ => {
             let _ = fs::remove_dir_all(&staging);
-            return Err(anyhow!("unknown extract strategy: {}", other));
+            return Err(anyhow!("unknown archive type: {}", release.asset_name));
         }
     }
 
-    let final_dir = dest_root.join(&release.tag);
+    let stem = asset_stem(&release.asset_name);
+    let final_dir = dest_root.join(if stem.is_empty() { &release.tag } else { stem });
+    if let Some(old) = installed_dir(&source.name, dest_root, &release.tag)
+        && old.file_name().and_then(|n| n.to_str()) == Some(release.tag.as_str())
+    {
+        let _ = fs::remove_dir_all(&old);
+    }
     let _ = fs::remove_dir_all(&final_dir);
 
     let entries: Vec<PathBuf> = fs::read_dir(&staging)?
@@ -316,17 +364,28 @@ pub fn list_installed(source: &ArchiveSource, dest_root: &Path) -> Vec<String> {
         }
         if let Some(sc) = read_sidecar(&path)
             && sc.source == source.name
-            && !sc.tag.is_empty()
+            && let Some(name) = path.file_name().and_then(|n| n.to_str())
         {
-            out.push(sc.tag);
+            out.push(name.to_string());
         }
     }
     out.sort();
     out
 }
 
-pub fn delete_version(source: &ArchiveSource, dest_root: &Path, tag: &str) -> Result<()> {
-    let dir = dest_root.join(tag);
+pub fn installed_dir(source_name: &str, dest_root: &Path, tag: &str) -> Option<PathBuf> {
+    fs::read_dir(dest_root)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .find(|p| {
+            p.is_dir()
+                && read_sidecar(p).is_some_and(|sc| sc.source == source_name && sc.tag == tag)
+        })
+}
+
+pub fn delete_version(source: &ArchiveSource, dest_root: &Path, name: &str) -> Result<()> {
+    let dir = dest_root.join(name);
     if !dir.exists() {
         return Ok(());
     }
@@ -335,15 +394,10 @@ pub fn delete_version(source: &ArchiveSource, dest_root: &Path, tag: &str) -> Re
             fs::remove_dir_all(&dir)?;
             Ok(())
         }
-        Some(sc) => Err(anyhow!(
-            "refusing to delete {}: sidecar claims source '{}', requested '{}'",
+        _ => Err(anyhow!(
+            "refusing to delete {}: not installed by {}",
             dir.display(),
-            sc.source,
             source.name
-        )),
-        None => Err(anyhow!(
-            "refusing to delete {}: no sidecar (manually placed?)",
-            dir.display()
         )),
     }
 }

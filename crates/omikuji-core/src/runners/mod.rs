@@ -40,10 +40,42 @@ pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
     archive_source::delete_version(source, &source_root(source), tag)
 }
 
+pub fn is_proton_dir(path: &Path) -> bool {
+    path.join("proton").exists()
+}
+
+pub fn move_to_steam(source: &ArchiveSource, name: &str, roots: &[PathBuf]) -> Result<()> {
+    use anyhow::bail;
+    let src = source_root(source).join(name);
+    if !src.is_dir() {
+        bail!("not installed: {name}");
+    }
+    if !src.join("compatibilitytool.vdf").exists() {
+        bail!("{name} ships no compatibilitytool.vdf, Steam would not list it");
+    }
+    let mut targets = vec![];
+    for root in roots {
+        let ctd = root.join("compatibilitytools.d");
+        std::fs::create_dir_all(&ctd)?;
+        targets.push(ctd.join(&name));
+    }
+    for dest in &targets {
+        let _ = std::fs::remove_dir_all(dest);
+    }
+    if let [dest] = targets.as_slice()
+        && std::fs::rename(&src, dest).is_ok()
+    {
+        return Ok(());
+    }
+    for dest in &targets {
+        crate::fs_util::copy_dir_all(&src, dest)?;
+    }
+    std::fs::remove_dir_all(&src)?;
+    Ok(())
+}
+
 fn is_runner_dir(path: &Path) -> bool {
-    path.join("bin/wine").exists()
-        || path.join("files/bin/wine64").exists()
-        || path.join("proton").exists()
+    path.join("bin/wine").exists() || path.join("files/bin/wine64").exists() || is_proton_dir(path)
 }
 
 pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
@@ -59,12 +91,17 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
         .find(|p| p.is_dir())
 }
 
-pub fn list_installed_runners() -> Vec<(String, String)> {
+pub fn list_installed_runners() -> Vec<(String, String, String)> {
     let mut runners = vec![];
 
-    let push_runner = |list: &mut Vec<(String, String)>, path: &Path| {
+    let push_runner = |list: &mut Vec<(String, String, String)>, path: &Path| {
         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            list.push((name.to_string(), String::new()));
+            let kind = if is_proton_dir(path) {
+                "proton"
+            } else {
+                "wine"
+            };
+            list.push((name.to_string(), String::new(), kind.to_string()));
         }
     };
 
@@ -91,15 +128,15 @@ pub fn list_installed_runners() -> Vec<(String, String)> {
 
     for (name, path) in crate::steam::local::iter_steam_protons() {
         let label = crate::steam::local::proton_display_name(&path).unwrap_or_default();
-        runners.push((format!("steam:{name}"), label));
+        runners.push((format!("steam:{name}"), label, "proton".to_string()));
     }
 
     for name in system_wine_paths().keys() {
-        runners.push((format!("system:{name}"), String::new()));
+        runners.push((format!("system:{name}"), String::new(), "wine".to_string()));
     }
 
     if which::which("wine").is_ok() {
-        runners.push(("system".to_string(), String::new()));
+        runners.push(("system".to_string(), String::new(), "wine".to_string()));
     }
 
     runners.sort();

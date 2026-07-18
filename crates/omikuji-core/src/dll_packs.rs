@@ -1,6 +1,6 @@
 // dll pack cache; downloaded dxvk/vkd3d/dxvk-nvapi/d3d-extras archives sit under
-// components/layers/{source.name}/{tag}/. per-source subfolder prevents tag collisions between
-// sources (e.g. DXVK and DXVK-NVAPI both shipping "v2.4"). per-prefix apply copies dlls
+// components/layers/{source.name}/{archive name}/. per-source subfolder prevents tag collisions
+// between sources (e.g. DXVK and DXVK-NVAPI both shipping "v2.4"). per-prefix apply copies dlls
 // into {prefix}/drive_c/windows/system32/ and syswow64/ and tracks applied versions in
 // {prefix}/.omikuji/dll_versions.toml so we skip redndant copies on every launch.
 
@@ -98,11 +98,13 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
             continue;
         }
 
-        let pack_root = crate::layers_dir().join(name).join(tag);
-        if !pack_root.exists() {
+        let root = crate::layers_dir().join(name);
+        let Some(pack_root) = archive_source::installed_dir(name, &root, tag)
+            .or_else(|| root.join(tag).exists().then(|| root.join(tag)))
+        else {
             tracing::warn!("active pack {}/{} not installed, skipping", name, tag);
             continue;
-        }
+        };
 
         if applied.dll_packs.get(name).map(|v| v.as_str()) == Some(tag.as_str()) {
             continue;

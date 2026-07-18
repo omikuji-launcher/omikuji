@@ -38,8 +38,9 @@ function groupRunners(rawList, opts) {
         var raw = rawList[i]
         var value = Array.isArray(raw) ? raw[0] : raw
         var name = Array.isArray(raw) ? raw[1] : ""
+        var kind = Array.isArray(raw) && raw.length > 2 ? raw[2] : ""
         var entry = { label: displayLabel(value, name), value: value }
-        if (isProton(value)) proton.push(entry)
+        if (kind === "proton" || (kind === "" && isProton(value))) proton.push(entry)
         else wine.push(entry)
     }
     proton.sort(compareDesc)

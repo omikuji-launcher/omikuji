@@ -23,8 +23,7 @@ Item {
     property bool isProtonWine: isProtonVersion(config["wine.version"] || "")
 
     function isProtonVersion(version) {
-        let v = String(version || "").toLowerCase()
-        return v.indexOf("proton") !== -1
+        return gameModel.runner_is_proton(String(version || ""))
     }
 
     Column {

@@ -1057,12 +1057,29 @@ property real cardZoom: uiSettings.cardZoom
             archiveManageDialog.escEnabled = false
             removeSourceConfirm.show({ category: category, source: sourceName })
         }
+        onMoveToSteamRequested: (sourceName, tag) => steamMoveDialog.show(sourceName, tag)
     }
 
     ArchiveSourceDialog {
         id: archiveSourceDialog
         anchors.fill: parent
         archiveManager: archiveManager
+    }
+
+    SteamMoveDialog {
+        id: steamMoveDialog
+        anchors.fill: parent
+        archiveManager: archiveManager
+    }
+
+    Connections {
+        target: archiveManager
+        function onMoveToSteamDone(tag, error) {
+            if (error && error.length > 0) return
+            root.runnersVersion++
+            archiveManageDialog.refreshInstalled()
+            toastManager.show("success", qsTr("%1 moved to Steam").arg(tag), qsTr("Restart Steam to see it."))
+        }
     }
 
     ConfirmDialog {

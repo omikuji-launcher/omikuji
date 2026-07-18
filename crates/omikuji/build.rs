@@ -324,6 +324,7 @@ fn main() {
         "qml/components/dialogs/GameLogsWindow.qml",
         "qml/components/dialogs/MigrationDialog.qml",
         "qml/components/dialogs/SetsDialog.qml",
+        "qml/components/dialogs/SteamMoveDialog.qml",
         "qml/components/dialogs/ScriptBrowserDialog.qml",
         "qml/components/dialogs/ScriptRunDialog.qml",
         "qml/components/dialogs/UpdateAvailableDialog.qml",

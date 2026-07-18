@@ -27,6 +27,33 @@ pub fn find_steam_dir() -> Option<PathBuf> {
     None
 }
 
+pub fn steam_install_roots() -> Vec<(String, PathBuf)> {
+    let mut roots: Vec<(String, PathBuf)> = vec![];
+    for dir in STEAM_DATA_DIRS {
+        if dir.starts_with("/usr") {
+            continue;
+        }
+        let expanded = shellexpand::tilde(dir);
+        let path = Path::new(expanded.as_ref());
+        if !path.join("steamapps").exists() {
+            continue;
+        }
+        let real = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+        if roots.iter().any(|(_, p)| *p == real) {
+            continue;
+        }
+        let label = if dir.contains(".var/app") {
+            "Steam (Flatpak)"
+        } else if dir.contains("/snap/") {
+            "Steam (Snap)"
+        } else {
+            "Steam"
+        };
+        roots.push((label.to_string(), real));
+    }
+    roots
+}
+
 pub fn iter_compat_tools_dirs() -> Vec<PathBuf> {
     let mut dirs = vec![];
     for dir in STEAM_DATA_DIRS {
