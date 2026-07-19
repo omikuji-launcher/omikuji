@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.8.0
+Version:        0.8.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,11 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sun Jul 19 2026 reakjra <reakjra@proton.me> - 0.8.1-1
+- Fix GOG and Epic Games imports
+- Refractor runners and components fetcher
+- Refractor proton/wine kinds detection
+
 * Fri Jul 17 2026 reakjra <reakjra@proton.me> - 0.8.0-1
 - Added community scripts
 - Fixed super blurry zoom

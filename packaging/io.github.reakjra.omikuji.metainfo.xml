@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.8.1" date="2026-07-19">
+      <description>
+        <ul>
+          <li>Fix GOG and Epic Games imports</li>
+          <li>Refractor runners and components fetcher</li>
+          <li>Refractor proton/wine kinds detection</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.8.0" date="2026-07-17">
       <description>
         <ul>
