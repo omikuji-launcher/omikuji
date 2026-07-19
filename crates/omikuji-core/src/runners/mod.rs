@@ -57,7 +57,7 @@ pub fn move_to_steam(source: &ArchiveSource, name: &str, roots: &[PathBuf]) -> R
     for root in roots {
         let ctd = root.join("compatibilitytools.d");
         std::fs::create_dir_all(&ctd)?;
-        targets.push(ctd.join(&name));
+        targets.push(ctd.join(name));
     }
     for dest in &targets {
         let _ = std::fs::remove_dir_all(dest);

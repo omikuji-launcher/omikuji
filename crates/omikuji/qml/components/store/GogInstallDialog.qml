@@ -45,6 +45,8 @@ DialogCard {
     property bool hasResumeState: false
 
     readonly property bool isImportMode: gameData && gameData.isInstalled === true
+    readonly property bool hasUntrackedInstall: !isImportMode && !hasResumeState && existingInstallBytes > 1048576
+    readonly property bool importExisting: (isImportMode && gameData.hasLibraryEntry !== true) || hasUntrackedInstall
 
     readonly property string effectiveInstallPath: {
         if (!gameData) return ""
@@ -356,7 +358,8 @@ DialogCard {
                 if (root.gameData && root.gameData.isInstalled) {
                     return root.gameData.hasLibraryEntry ? qsTr("Repair") : qsTr("Import")
                 }
-                if (root.existingInstallBytes > 0 || root.hasResumeState) return qsTr("Resume")
+                if (root.hasResumeState) return qsTr("Resume")
+                if (root.hasUntrackedInstall) return qsTr("Import")
                 return qsTr("Install")
             }
             variant: "filled"
@@ -370,7 +373,8 @@ DialogCard {
                     root.effectiveInstallPath,
                     root.prefixPath,
                     runner,
-                    root.isImportMode
+                    root.isImportMode,
+                    root.importExisting
                 )
                 if (id && id.length > 0) {
                     root.installEnqueued(id)

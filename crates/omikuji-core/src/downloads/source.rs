@@ -20,4 +20,10 @@ pub trait DownloadSource: Send + Sync {
     async fn repair(&self, _entry: &DownloadEntry) -> Result<()> {
         Err(anyhow!("this source does not support repair"))
     }
+
+    async fn import_existing(&self, _entry: &DownloadEntry) -> Result<()> {
+        Err(anyhow!(
+            "this source does not support importing existing installs"
+        ))
+    }
 }

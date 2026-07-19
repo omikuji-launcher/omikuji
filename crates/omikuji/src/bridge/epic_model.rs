@@ -77,6 +77,7 @@ pub mod qobject {
             prefix_path: &QString,
             runner_version: &QString,
             is_import: bool,
+            import_existing: bool,
         ) -> QString;
 
         #[qinvokable]
@@ -358,6 +359,7 @@ impl qobject::EpicModel {
         prefix_path: &QString,
         runner_version: &QString,
         is_import: bool,
+        import_existing: bool,
     ) -> QString {
         let i = index as usize;
         let Some(game) = self.rust().games.get(i).cloned() else {
@@ -382,8 +384,12 @@ impl qobject::EpicModel {
             },
             runner_version: runner_version.to_string(),
             temp_dir: None,
-            kind: omikuji_core::downloads::DownloadKind::Install,
-            destructive_cleanup: !is_import,
+            kind: if import_existing {
+                omikuji_core::downloads::DownloadKind::ImportExisting
+            } else {
+                omikuji_core::downloads::DownloadKind::Install
+            },
+            destructive_cleanup: !is_import && !import_existing,
             start_paused: false,
         };
 

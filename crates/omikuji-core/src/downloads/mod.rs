@@ -73,6 +73,7 @@ pub enum DownloadKind {
         from_version: String,
     },
     Repair,
+    ImportExisting,
 }
 
 #[derive(Debug, Clone)]
@@ -540,6 +541,7 @@ impl DownloadManager {
                 DownloadKind::Install => source.install(&entry).await,
                 DownloadKind::Update { .. } => source.update(&entry).await,
                 DownloadKind::Repair => source.repair(&entry).await,
+                DownloadKind::ImportExisting => source.import_existing(&entry).await,
             };
 
             let final_signal = {
@@ -851,11 +853,17 @@ fn set_failed(id: &str, err: String) {
     }
     inner
         .events
-        .push_back(DownloadEvent::Failed(id.to_string(), err));
+        .push_back(DownloadEvent::Failed(id.to_string(), err.clone()));
     save_queue(&inner.entries);
     drop(inner);
     let label = name.unwrap_or_default();
     finish_bar(id, &label, "failed");
+    let title = if label.is_empty() {
+        "Download failed".to_string()
+    } else {
+        label
+    };
+    crate::notifications::error(title, err);
 }
 
 fn complete(entry: &DownloadEntry) {

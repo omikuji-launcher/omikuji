@@ -92,6 +92,27 @@ impl DownloadSource for GogdlSource {
         let child = spawn_download(&gogdl, entry)?;
         run_with_progress(child, entry).await
     }
+
+    async fn import_existing(&self, entry: &DownloadEntry) -> Result<()> {
+        let root = resolve_install_root(&entry.install_path, &entry.app_id)
+            .unwrap_or_else(|| entry.install_path.clone());
+        if !dir_has_info_marker(&root, &entry.app_id) {
+            anyhow::bail!(
+                "no GOG install for this game found at {}",
+                entry.install_path.display()
+            );
+        }
+        let exe = find_game_exe(&root, &entry.app_id).unwrap_or_default();
+        if exe.is_empty() {
+            tracing::warn!(
+                "no launchable exe found for {} under {} - the play button will need a manual exe path",
+                entry.app_id,
+                root.display()
+            );
+        }
+        crate::gog::record_install(&entry.app_id, &root, &exe, &entry.display_name)?;
+        Ok(())
+    }
 }
 
 fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {

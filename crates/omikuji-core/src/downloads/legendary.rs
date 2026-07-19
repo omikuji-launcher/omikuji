@@ -31,12 +31,15 @@ pub fn find_legendary() -> Option<PathBuf> {
     candidates.into_iter().flatten().find(|p| p.exists())
 }
 
+pub fn require_legendary() -> Result<PathBuf> {
+    find_legendary()
+        .ok_or_else(|| anyhow!("Legendary not found - reinstall it from Settings > Components"))
+}
+
 #[async_trait]
 impl DownloadSource for LegendarySource {
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
-        let legendary = find_legendary().ok_or_else(|| anyhow!(
-            "legendary not found — install it with `pipx install legendary-gl` or `pip install --user legendary-gl`, then restart omikuji"
-        ))?;
+        let legendary = require_legendary()?;
 
         let base_path = entry.install_path.parent().ok_or_else(|| {
             anyhow!(
@@ -116,9 +119,7 @@ impl DownloadSource for LegendarySource {
     }
 
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
-        let legendary = find_legendary().ok_or_else(|| anyhow!(
-            "legendary not found — install it with `pipx install legendary-gl` or `pip install --user legendary-gl`, then restart omikuji"
-        ))?;
+        let legendary = require_legendary()?;
 
         let mut cmd = Command::new(&legendary);
         cmd.arg("update")
@@ -135,6 +136,42 @@ impl DownloadSource for LegendarySource {
             .map_err(|e| anyhow!("failed to spawn legendary update: {}", e))?;
 
         run_with_progress(child, entry).await
+    }
+
+    async fn import_existing(&self, entry: &DownloadEntry) -> Result<()> {
+        let legendary = require_legendary()?;
+
+        let output = Command::new(&legendary)
+            .arg("-y")
+            .arg("import")
+            .arg("--platform")
+            .arg("Windows")
+            .arg(&entry.app_id)
+            .arg(&entry.install_path)
+            .output()
+            .await
+            .map_err(|e| anyhow!("failed to run legendary import: {}", e))?;
+
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            let line = err
+                .lines()
+                .rev()
+                .find(|l| l.contains("ERROR"))
+                .or_else(|| err.lines().rev().find(|l| !l.trim().is_empty()))
+                .unwrap_or("no output");
+            let msg = line.splitn(2, "ERROR: ").last().unwrap_or(line).trim();
+            anyhow::bail!("import failed: {}", msg);
+        }
+
+        if crate::epic::find_installed_info(&entry.app_id).is_none() {
+            anyhow::bail!(
+                "legendary import exited cleanly but installed.json has no record for {}",
+                entry.app_id
+            );
+        }
+
+        Ok(())
     }
 }
 

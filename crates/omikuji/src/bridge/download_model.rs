@@ -28,6 +28,7 @@ fn kind_label(k: &DownloadKind) -> &'static str {
         DownloadKind::Install => "install",
         DownloadKind::Update { .. } => "update",
         DownloadKind::Repair => "repair",
+        DownloadKind::ImportExisting => "import",
     }
 }
 

@@ -30,9 +30,7 @@ impl DownloadSource for HoyoSource {
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
         let from_version = match &entry.kind {
             DownloadKind::Update { from_version } => from_version.clone(),
-            DownloadKind::Install | DownloadKind::Repair => {
-                return Err(anyhow!("update() called on a non-update entry"));
-            }
+            _ => return Err(anyhow!("update() called on a non-update entry")),
         };
 
         let parsed = parse_app_id(&entry.app_id)?;

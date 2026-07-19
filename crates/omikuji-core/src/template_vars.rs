@@ -40,7 +40,9 @@ fn root_paths() -> Vec<(String, String)> {
     ]
 }
 
-static USER_VARS: Mutex<Option<(SystemTime, Vec<(String, String)>)>> = Mutex::new(None);
+type UserVarsCache = Option<(SystemTime, Vec<(String, String)>)>;
+
+static USER_VARS: Mutex<UserVarsCache> = Mutex::new(None);
 
 fn user_vars() -> Vec<(String, String)> {
     let mtime = std::fs::metadata(crate::ui_settings::ui_settings_path())

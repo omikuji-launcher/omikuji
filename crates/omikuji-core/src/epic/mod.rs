@@ -1,6 +1,7 @@
 pub mod eos_overlay;
 pub mod updates;
 
+use crate::downloads::legendary::require_legendary;
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -48,7 +49,7 @@ impl EpicStore {
     }
 
     pub async fn login(&mut self, code: &str) -> Result<String> {
-        let bin = legendary_bin()?;
+        let bin = require_legendary()?;
         let output = AsyncCommand::new(&bin)
             .arg("auth")
             .arg("--code")
@@ -75,7 +76,7 @@ impl EpicStore {
     }
 
     pub async fn logout(&mut self) -> Result<()> {
-        if let Ok(bin) = legendary_bin() {
+        if let Ok(bin) = require_legendary() {
             let _ = AsyncCommand::new(&bin)
                 .arg("auth")
                 .arg("--delete")
@@ -95,7 +96,7 @@ impl EpicStore {
 
     pub async fn list_games(&mut self) -> Result<Vec<EpicGame>> {
         migrate_image_cache_once();
-        let bin = legendary_bin()?;
+        let bin = require_legendary()?;
         tracing::info!("fetching library via legendary list --json ...");
         let output = AsyncCommand::new(&bin)
             .arg("list")
@@ -195,15 +196,6 @@ impl EpicStore {
     }
 }
 
-fn legendary_bin() -> Result<PathBuf> {
-    crate::downloads::legendary::find_legendary().ok_or_else(|| {
-        anyhow!(
-            "legendary not found — install it or place the binary at {}",
-            crate::runtime_dir().join("legendary").display()
-        )
-    })
-}
-
 fn legendary_user_json() -> Option<PathBuf> {
     Some(dirs::config_dir()?.join("legendary").join("user.json"))
 }
@@ -264,7 +256,7 @@ pub struct InstallSize {
 }
 
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
-    let bin = legendary_bin()?;
+    let bin = require_legendary()?;
     let output = AsyncCommand::new(&bin)
         .arg("info")
         .arg(app_name)
@@ -377,7 +369,7 @@ fn installed_save_path(app_name: &str) -> Option<String> {
 }
 
 pub fn discover_save_path(game: &crate::library::Game) -> Result<String> {
-    let bin = legendary_bin()?;
+    let bin = require_legendary()?;
     let app_name = if game.source.app_id.is_empty() {
         &game.metadata.id
     } else {
@@ -408,7 +400,7 @@ pub fn sync_saves_download(app_name: &str, save_path: &str) -> Result<()> {
     if save_path.is_empty() {
         return Ok(());
     }
-    let bin = legendary_bin()?;
+    let bin = require_legendary()?;
     tracing::info!("downloading saves for '{}' to '{}'", app_name, save_path);
 
     let status = std::process::Command::new(&bin)
@@ -430,7 +422,7 @@ pub fn sync_saves_upload(app_name: &str, save_path: &str) -> Result<()> {
     if save_path.is_empty() {
         return Ok(());
     }
-    let bin = legendary_bin()?;
+    let bin = require_legendary()?;
     tracing::info!("uploading saves for '{}' from '{}'", app_name, save_path);
 
     let status = std::process::Command::new(&bin)

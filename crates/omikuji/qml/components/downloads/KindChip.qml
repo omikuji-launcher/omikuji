@@ -9,7 +9,8 @@ Rectangle {
     readonly property var labels: ({
         install: qsTr("Install"),
         update: qsTr("Update"),
-        repair: qsTr("Repair")
+        repair: qsTr("Repair"),
+        "import": qsTr("Import")
     })
 
     width: label.implicitWidth + 16
