@@ -7,6 +7,7 @@ ScrollBar {
     policy: ScrollBar.AsNeeded
     padding: 2
     minimumSize: 0.1
+    visible: size > 0 && size < 1
 
     onActiveChanged: if (!active) hideTimer.restart()
     Timer { id: hideTimer; interval: 1400 }
