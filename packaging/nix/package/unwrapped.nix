@@ -2,7 +2,6 @@
   lib,
   flakeRoot ? ../../../.,
   rustPlatform,
-  fetchFromGitHub,
   qt6,
   pkg-config,
   cmake,
@@ -48,6 +47,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   doCheck = false;
 
+  # Needed for omikuji to be able to run appimages
+  qtWrapperArgs = [
+    "--prefix APPIMAGE_EXTRACT_AND_RUN : 1"
+  ];  
+  
   prePatch = ''
     substituteInPlace ./crates/omikuji/build.rs \
       --replace-fail '"/usr/lib/qt6/bin/qsb"' '"${qtEnv}/bin/qsb"'
