@@ -85,6 +85,7 @@ Item {
             source: "../settings/TabGlobalOfuda.qml"
             onLoaded: {
                 item.ofudaBridge = root.ofudaBridge
+                item.uiSettings = root.uiSettings
                 item.openRequested.connect((p) => root.prefixOpenRequested(p))
                 item.createRequested.connect(() => root.prefixCreateRequested())
             }

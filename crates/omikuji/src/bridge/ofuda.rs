@@ -45,6 +45,10 @@ pub mod qobject {
         fn list_json(self: &OfudaBridge) -> QString;
 
         #[qinvokable]
+        #[cxx_name = "listSteamJson"]
+        fn list_steam_json(self: &OfudaBridge) -> QString;
+
+        #[qinvokable]
         #[cxx_name = "runTool"]
         fn run_tool(self: &OfudaBridge, path: &QString, tool: &QString, runner: &QString) -> bool;
 
@@ -100,21 +104,30 @@ fn prefix_game(path: &QString, runner: &QString) -> omikuji_core::library::Game 
     )
 }
 
+fn prefixes_json(list: Vec<core_prefixes::PrefixInfo>, kind: &str) -> QString {
+    let list: Vec<serde_json::Value> = list
+        .into_iter()
+        .map(|p| {
+            serde_json::json!({
+                "path": p.path.to_string_lossy(),
+                "name": p.name,
+                "gameCount": p.games.len(),
+                "games": p.games,
+                "runner": p.runner,
+                "kind": kind,
+            })
+        })
+        .collect();
+    QString::from(&serde_json::Value::Array(list).to_string())
+}
+
 impl qobject::OfudaBridge {
     fn list_json(&self) -> QString {
-        let list: Vec<serde_json::Value> = core_prefixes::list_prefixes()
-            .into_iter()
-            .map(|p| {
-                serde_json::json!({
-                    "path": p.path.to_string_lossy(),
-                    "name": p.name,
-                    "gameCount": p.games.len(),
-                    "games": p.games,
-                    "runner": p.runner,
-                })
-            })
-            .collect();
-        QString::from(&serde_json::Value::Array(list).to_string())
+        prefixes_json(core_prefixes::list_prefixes(), "omikuji")
+    }
+
+    fn list_steam_json(&self) -> QString {
+        prefixes_json(core_prefixes::list_steam_prefixes(), "steam")
     }
 
     fn run_tool(&self, path: &QString, tool: &QString, runner: &QString) -> bool {

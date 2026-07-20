@@ -192,6 +192,7 @@ fn main() {
         .prop_at("filled_icons", kushi::Kind::Bool, "display.filled_icons")
         .prop_at("show_hidden", kushi::Kind::Bool, "display.show_hidden")
         .prop_at("dim_hidden", kushi::Kind::Bool, "display.dim_hidden")
+        .prop_at("show_steam_prefixes", kushi::Kind::Bool, "display.show_steam_prefixes")
         .prop_at("highlight_logs", kushi::Kind::Bool, "display.highlight_logs")
         .prop_custom_apply("card_flow", kushi::Kind::QString, "display.card_flow")
         .prop_custom_apply("card_sort", kushi::Kind::QString, "display.card_sort")

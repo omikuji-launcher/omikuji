@@ -84,6 +84,44 @@ pub fn list_prefixes() -> Vec<PrefixInfo> {
         .collect()
 }
 
+pub fn list_steam_prefixes() -> Vec<PrefixInfo> {
+    let games = Library::load().map(|l| l.game).unwrap_or_default();
+    let mut acc: BTreeMap<PathBuf, Acc> = BTreeMap::new();
+
+    for game in &games {
+        if game.source.kind != "steam" || game.source.app_id.is_empty() {
+            continue;
+        }
+        let Some(pfx) = crate::steam::local::find_steam_prefix(&game.source.app_id) else {
+            continue;
+        };
+        let entry = acc.entry(canonical(&pfx)).or_insert_with(|| Acc {
+            display: pfx,
+            games: Vec::new(),
+            runner: steam_runner(&game.source.app_id),
+        });
+        entry.games.push(game.metadata.name.clone());
+    }
+
+    acc.into_values()
+        .map(|a| PrefixInfo {
+            name: a.games.first().cloned().unwrap_or_default(),
+            path: a.display,
+            games: a.games,
+            runner: a.runner,
+        })
+        .collect()
+}
+
+fn steam_runner(app_id: &str) -> String {
+    let stamped = crate::steam::local::find_steam_proton_version(app_id);
+    crate::steam::local::resolve_or_default_proton(stamped.as_deref())
+        .and_then(|p| p.file_name().map(|s| s.to_string_lossy().into_owned()))
+        .or(stamped)
+        .map(|name| format!("steam:{name}"))
+        .unwrap_or_default()
+}
+
 fn preset_verbs(preset: &str) -> Vec<String> {
     let verbs: &[&str] = match preset {
         "game" => &[

@@ -11,6 +11,7 @@ DialogCard {
     property var prefix: ({})
 
     readonly property var games: prefix.games || []
+    readonly property bool isSteam: (prefix.kind || "") === "steam"
 
     signal deleteRequested(var prefix)
     signal runCommandRequested(var prefix)
@@ -73,6 +74,15 @@ DialogCard {
             }
         }
 
+        Text {
+            width: parent.width
+            visible: root.isSteam
+            text: qsTr("This is a Steam prefix. Steam owns its files, omikuji only runs tools inside it.")
+            color: theme.textSubtle
+            font.pixelSize: theme.type.caption.size
+            wrapMode: Text.WordWrap
+        }
+
         Column {
             width: parent.width
             spacing: 3
@@ -112,29 +122,32 @@ DialogCard {
             color: theme.alpha(theme.text, 0.1)
         }
 
-        Column {
+        Grid {
             width: parent.width
-            spacing: 2
+            columns: 2
+            spacing: theme.space.sm
 
             Repeater {
                 model: root.tools
 
                 delegate: Item {
                     required property var modelData
-                    width: parent.width
-                    height: 40
+                    width: (parent.width - theme.space.sm) / 2
+                    height: 46
 
                     Squircle {
                         anchors.fill: parent
-                        radius: theme.radius.sm
-                        fillColor: toolMouse.containsMouse ? theme.stateHover : "transparent"
+                        radius: theme.radius.md
+                        fillColor: theme.alpha(theme.text, toolMouse.containsMouse ? 0.14 : 0.06)
                     }
 
                     Row {
                         anchors.left: parent.left
-                        anchors.leftMargin: 12
+                        anchors.leftMargin: theme.space.md
+                        anchors.right: parent.right
+                        anchors.rightMargin: theme.space.sm
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 12
+                        spacing: theme.space.md
 
                         SvgIcon {
                             anchors.verticalCenter: parent.verticalCenter
@@ -147,6 +160,8 @@ DialogCard {
                             text: modelData.label
                             color: theme.text
                             font.pixelSize: theme.type.label.size
+                            elide: Text.ElideRight
+                            width: Math.min(implicitWidth, parent.width - 18 - theme.space.md)
                         }
                     }
 
@@ -163,6 +178,7 @@ DialogCard {
     }
 
     footerLeft: M3Button {
+        visible: !root.isSteam
         text: qsTr("Delete prefix")
         variant: "tonal"
         danger: true
