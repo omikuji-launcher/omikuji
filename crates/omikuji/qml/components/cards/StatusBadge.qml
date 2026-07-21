@@ -19,7 +19,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 14
+        radius: theme.radius.pill
         color: Qt.rgba(0, 0, 0, 0.4)
         border.width: 1
         border.color: Qt.rgba(badge.info.color.r, badge.info.color.g, badge.info.color.b, 0.4)

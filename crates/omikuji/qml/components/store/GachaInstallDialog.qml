@@ -311,7 +311,7 @@ DialogCard {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: 18
+                            radius: theme.radius.pill
                             color: index === root.editionIndex
                                 ? theme.alpha(theme.accent, 0.15)
                                 : edBtnHover.containsMouse

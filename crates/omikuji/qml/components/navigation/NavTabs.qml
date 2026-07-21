@@ -86,7 +86,7 @@ Item {
             anchors.centerIn: parent
             width: parent.width - 20
             height: 36
-            radius: 18
+            radius: theme.radius.pill
             color: navItemMouse.containsMouse && !navItem.selected
                 ? theme.alpha(theme.text, 0.06)
                 : "transparent"
@@ -206,7 +206,7 @@ Item {
         x: 10
         width: root.width - 20
         height: 36
-        radius: 18
+        radius: theme.radius.pill
         color: theme.alpha(theme.accent, 0.15)
         z: 0
 

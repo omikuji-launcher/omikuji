@@ -88,14 +88,23 @@ QtObject {
         return v > 0 ? v : fontDefaults[role]
     }
 
+    property var radiusOverrides: ({})
+    readonly property var radiusDefaults: ({ xs: 6, sm: 8, md: 12, lg: 16, xl: 22, xxl: 28, pill: 999 })
+    function _radPx(role) {
+        var v = radiusOverrides[role]
+        if (v !== undefined) return v
+        var d = radiusDefaults[role]
+        return role === "pill" ? d : Math.round(d * radiusScale)
+    }
+
     readonly property QtObject radius: QtObject {
-        readonly property int xs: Math.round(6 * theme.radiusScale)
-        readonly property int sm: Math.round(8 * theme.radiusScale)
-        readonly property int md: Math.round(12 * theme.radiusScale)
-        readonly property int lg: Math.round(16 * theme.radiusScale)
-        readonly property int xl: Math.round(22 * theme.radiusScale)
-        readonly property int xxl: Math.round(28 * theme.radiusScale)
-        readonly property int pill: 999
+        readonly property int xs: theme._radPx("xs")
+        readonly property int sm: theme._radPx("sm")
+        readonly property int md: theme._radPx("md")
+        readonly property int lg: theme._radPx("lg")
+        readonly property int xl: theme._radPx("xl")
+        readonly property int xxl: theme._radPx("xxl")
+        readonly property int pill: theme._radPx("pill")
     }
 
     readonly property QtObject space: QtObject {

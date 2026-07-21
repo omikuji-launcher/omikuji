@@ -24,6 +24,7 @@ Item {
     signal defaultsApplyToExistingRequested()
     signal manageSetsRequested(string kind)
     signal manageFontSizesRequested()
+    signal manageRadiiRequested()
 
     signal prefixOpenRequested(var prefix)
     signal prefixCreateRequested()
@@ -134,6 +135,7 @@ Item {
             onLoaded: {
                 item.uiSettings = root.uiSettings
                 item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
+                item.manageRadiiRequested.connect(() => root.manageRadiiRequested())
             }
         }
 

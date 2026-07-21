@@ -36,6 +36,7 @@ ApplicationWindow {
         Component.onCompleted: {
             theme.overrides = JSON.parse(overridesJson())
             theme.fontSizes = JSON.parse(fontSizesJson())
+            theme.radiusOverrides = JSON.parse(radiusOverridesJson())
         }
     }
 
@@ -57,6 +58,9 @@ ApplicationWindow {
         }
         function onFontSizesChanged() {
             theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+        }
+        function onRadiusOverridesChanged() {
+            theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
         }
     }
 

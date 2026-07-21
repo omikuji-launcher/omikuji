@@ -249,6 +249,7 @@ pub struct ThemeSettings {
     pub fill_fields: bool,
     pub radius_scale: f64,
     pub fonts: BTreeMap<String, u32>,
+    pub radii: BTreeMap<String, u32>,
 }
 
 impl Default for ThemeSettings {
@@ -261,6 +262,7 @@ impl Default for ThemeSettings {
             fill_fields: true,
             radius_scale: 1.0,
             fonts: BTreeMap::new(),
+            radii: BTreeMap::new(),
         }
     }
 }

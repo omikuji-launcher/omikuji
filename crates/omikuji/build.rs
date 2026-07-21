@@ -211,6 +211,7 @@ fn main() {
         .json_accessor("log_rules", "Vec<LogRule>", "display.log_rules", "log_rules_changed")
         .json_accessor("dialog_sizes", "BTreeMap<String, [f64; 2]>", "dialog_sizes", "dialog_sizes_changed")
         .json_accessor("font_sizes", "BTreeMap<String, u32>", "theme.fonts", "font_sizes_changed")
+        .json_accessor("radius_overrides", "BTreeMap<String, u32>", "theme.radii", "radius_overrides_changed")
         .json_accessor("template_vars", "BTreeMap<String, String>", "template_vars", "template_vars_changed")
         .raw_field_persisted("color_overrides", "BTreeMap<String, String>", "s.theme.colors.clone()", "s.theme.colors = self.color_overrides.clone();")
         .raw_field("watcher", "Option<FileWatcher>", "None")
@@ -309,6 +310,7 @@ fn main() {
         "qml/components/popups/ContextMenu.qml",
         "qml/components/dialogs/DialogCard.qml",
         "qml/components/dialogs/DialogSection.qml",
+        "qml/components/dialogs/RadiiDialog.qml",
         "qml/components/dialogs/DefaultsApplyDialog.qml",
         "qml/components/store/EpicInstallDialog.qml",
         "qml/components/store/GachaInstallDialog.qml",

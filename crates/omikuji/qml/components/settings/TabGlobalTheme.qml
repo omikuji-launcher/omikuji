@@ -10,6 +10,7 @@ Item {
     property var uiSettings: null
 
     signal manageFontSizesRequested()
+    signal manageRadiiRequested()
 
     readonly property int rowLabelWidth: 200
 
@@ -185,6 +186,23 @@ Item {
                     text: qsTr("Manage")
                     variant: "tonal"
                     onClicked: root.manageFontSizesRequested()
+                }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Shape")
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Corner radius")
+                description: qsTr("Per-token corner rounding used across the app.")
+                labelWidth: root.rowLabelWidth
+
+                M3Button {
+                    text: qsTr("Manage")
+                    variant: "tonal"
+                    onClicked: root.manageRadiiRequested()
                 }
             }
         }

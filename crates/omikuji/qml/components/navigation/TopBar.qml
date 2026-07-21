@@ -64,7 +64,7 @@ Item {
         x: (root.width - root.leftInset) / 2 - width / 2
         width: Math.min(360, parent.width * 0.4)
         height: 34
-        radius: 17
+        radius: theme.radius.pill
         focused: searchInput.activeFocus
         visible: root.showSearch
 

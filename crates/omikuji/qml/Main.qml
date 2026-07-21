@@ -51,6 +51,9 @@ ApplicationWindow {
         function onFontSizesChanged() {
             theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
         }
+        function onRadiusOverridesChanged() {
+            theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
+        }
         function onCardSortChanged() {
             gameModel.applySortMode(uiSettings.cardSort)
         }
@@ -62,6 +65,7 @@ ApplicationWindow {
             initWatcher()
             theme.overrides = JSON.parse(overridesJson())
             theme.fontSizes = JSON.parse(fontSizesJson())
+            theme.radiusOverrides = JSON.parse(radiusOverridesJson())
         }
         onShowTrayIconChanged: {
             trayBridge.setEnabled(showTrayIcon)
@@ -1030,6 +1034,11 @@ property real cardZoom: uiSettings.cardZoom
         uiSettings: root.uiSettingsRef
     }
 
+    RadiiDialog {
+        id: radiiDialog
+        uiSettings: root.uiSettingsRef
+    }
+
     TemplateVarsDialog {
         id: templateVarsDialog
         anchors.fill: parent
@@ -1377,6 +1386,7 @@ property real cardZoom: uiSettings.cardZoom
                     else (kind === "dll" ? dllSetsDialog : envSetsDialog).openManage()
                 }
                 onManageFontSizesRequested: fontSizesDialog.open()
+                onManageRadiiRequested: radiiDialog.open()
                 onManageLogRulesRequested: logRulesDialog.show()
                 onCategoryAddRequested: categoriesController.showAdd()
                 onCategoryEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)
