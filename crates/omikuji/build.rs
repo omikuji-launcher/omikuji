@@ -308,6 +308,7 @@ fn main() {
         "qml/components/dialogs/ConfirmDialog.qml",
         "qml/components/popups/ContextMenu.qml",
         "qml/components/dialogs/DialogCard.qml",
+        "qml/components/dialogs/DialogSection.qml",
         "qml/components/dialogs/DefaultsApplyDialog.qml",
         "qml/components/store/EpicInstallDialog.qml",
         "qml/components/store/GachaInstallDialog.qml",

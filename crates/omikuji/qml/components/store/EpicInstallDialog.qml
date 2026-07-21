@@ -196,7 +196,7 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: 18
+        spacing: theme.space.lg
 
         RowLayout {
             Layout.fillWidth: true
@@ -310,25 +310,30 @@ DialogCard {
             }
         }
 
-        M3FileField {
+        ColumnLayout {
             Layout.fillWidth: true
-            label: qsTr("Prefix path (optional)")
-            placeholder: qsTr("auto — created per game")
-            selectFolder: true
-            gameModel: root.gameModel
-            text: root.prefixPath
-            onTextEdited: (t) => root.prefixPath = t
-            onAccepted: (p) => root.prefixPath = p
-        }
+            spacing: theme.space.md
 
-        M3Dropdown {
-            Layout.fillWidth: true
-            label: qsTr("Runner")
-            options: root.runnerOptions
-            currentIndex: root.runnerIndex
-            onSelected: (v) => {
-                for (let i = 0; i < root.runnerOptions.length; i++) {
-                    if (root.runnerOptions[i].value === v) { root.runnerIndex = i; break }
+            M3FileField {
+                Layout.fillWidth: true
+                label: qsTr("Prefix path (optional)")
+                placeholder: qsTr("auto — created per game")
+                selectFolder: true
+                gameModel: root.gameModel
+                text: root.prefixPath
+                onTextEdited: (t) => root.prefixPath = t
+                onAccepted: (p) => root.prefixPath = p
+            }
+
+            M3Dropdown {
+                Layout.fillWidth: true
+                label: qsTr("Runner")
+                options: root.runnerOptions
+                currentIndex: root.runnerIndex
+                onSelected: (v) => {
+                    for (let i = 0; i < root.runnerOptions.length; i++) {
+                        if (root.runnerOptions[i].value === v) { root.runnerIndex = i; break }
+                    }
                 }
             }
         }

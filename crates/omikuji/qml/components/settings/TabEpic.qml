@@ -30,7 +30,7 @@ Item {
                 label: "EOS Overlay"
                 description: gameModel && gameModel.epic_overlay_is_installed()
                     ? qsTr("in-game overlay for friends, invites and achievements")
-                    : qsTr("installs on first enable — one-time download")
+                    : qsTr("installs on first enable - one-time download")
                 width: parent.width
 
                 M3Switch {
@@ -71,7 +71,7 @@ Item {
 
                 Text {
                     text: (config["source.save_path"] || "") === ""
-                        ? qsTr("No save path detected yet — a toast will appear when discovery finishes, or enter one manually below.")
+                        ? qsTr("No save path detected yet - a toast will appear when discovery finishes, or enter one manually below.")
                         : qsTr("Save path: %1").arg(config["source.save_path"])
                     color: theme.textMuted
                     font.pixelSize: theme.type.caption.size

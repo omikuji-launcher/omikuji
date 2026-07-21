@@ -1,5 +1,6 @@
 import QtQuick
 import "../controls"
+import "../primitives"
 
 DialogCard {
     id: root
@@ -25,9 +26,20 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Text {
+        Squircle {
             width: parent.width
-            text: "${exe}              " + qsTr("game executable") + "\n"
+            height: builtinsText.implicitHeight + theme.space.md
+            radius: theme.radius.sm
+            fillColor: theme.alpha(theme.text, 0.06)
+
+            Text {
+                id: builtinsText
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: theme.space.md
+                anchors.rightMargin: theme.space.md
+                text: "${exe}              " + qsTr("game executable") + "\n"
                 + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
                 + "${game_prefix}      " + qsTr("the game's resolved prefix") + "\n"
                 + "${game_id}          " + qsTr("internal game id") + "\n"
@@ -42,10 +54,11 @@ DialogCard {
                 + "${runners_path}     " + qsTr("runners root") + "\n"
                 + "${layers_path}      " + qsTr("layers root") + "\n"
                 + "${logs_path}        " + qsTr("logs root") + "\n"
-                + "${runtime_path}     " + qsTr("runtime root")
-            color: theme.textMuted
-            font.pixelSize: theme.type.caption.size
-            font.family: "monospace"
+                    + "${runtime_path}     " + qsTr("runtime root")
+                color: theme.textMuted
+                font.pixelSize: theme.type.caption.size
+                font.family: "monospace"
+            }
         }
 
         KeyValueTable {

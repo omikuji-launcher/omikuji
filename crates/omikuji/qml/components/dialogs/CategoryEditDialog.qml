@@ -46,6 +46,7 @@ DialogCard {
     }
 
     maxWidth: 480
+    title: _editingIndex === -1 ? qsTr("Add category") : qsTr("Edit category")
     escEnabled: !iconPicker.visible
 
     function showAdd() {
@@ -86,13 +87,6 @@ DialogCard {
     body: ColumnLayout {
         width: parent.width
         spacing: theme.space.md
-
-        Text {
-            text: root._editingIndex === -1 ? qsTr("Add category") : qsTr("Edit category")
-            color: theme.text
-            font.pixelSize: theme.type.title.size
-            font.weight: Font.DemiBold
-        }
 
         M3TextField {
             id: nameField

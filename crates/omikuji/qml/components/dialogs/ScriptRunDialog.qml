@@ -274,7 +274,7 @@ DialogCard {
                 }
                 Text {
                     visible: root.prefixOptions.length === 0
-                    text: qsTr("No prefixes yet — create one in Settings → Ofuda first.")
+                    text: qsTr("No prefixes yet - create one in Settings > Ofuda first.")
                     color: theme.warning
                     font.pixelSize: theme.type.caption.size
                 }

@@ -115,7 +115,10 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.AllButtons
-            onClicked: root.closeRequested()
+            onClicked: {
+                forceActiveFocus()
+                root.closeRequested()
+            }
             onWheel: (wheel) => wheel.accepted = true
         }
     }
@@ -159,7 +162,7 @@ Item {
         MouseArea {
             anchors.fill: card
             acceptedButtons: Qt.AllButtons
-            onClicked: {}
+            onClicked: forceActiveFocus()
             onWheel: (wheel) => wheel.accepted = true
         }
 
@@ -224,6 +227,13 @@ Item {
                 anchors.bottom: bodyFlick.bottom
                 anchors.right: parent.right
                 anchors.rightMargin: theme.space.xs
+            }
+
+            MouseArea {
+                width: bodyFlick.contentWidth
+                height: Math.max(bodyFlick.contentHeight, bodyFlick.height)
+                z: -1
+                onClicked: forceActiveFocus()
             }
 
             Loader {

@@ -50,50 +50,49 @@ DialogCard {
     onCloseRequested: close()
 
     body: Column {
-        spacing: theme.space.md
+        spacing: theme.space.lg
         width: parent.width
-
-        Squircle {
-            width: parent.width
-            height: pathText.implicitHeight + theme.space.md
-            radius: theme.radius.sm
-            fillColor: theme.alpha(theme.text, 0.06)
-
-            Text {
-                id: pathText
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: theme.space.md
-                anchors.rightMargin: theme.space.md
-                text: root.prefix.path || ""
-                color: theme.accent
-                font.pixelSize: theme.type.caption.size
-                font.family: "monospace"
-                wrapMode: Text.WrapAnywhere
-            }
-        }
-
-        Text {
-            width: parent.width
-            visible: root.isSteam
-            text: qsTr("This is a Steam prefix. Steam owns its files, omikuji only runs tools inside it.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
 
         Column {
             width: parent.width
-            spacing: 3
-            visible: root.games.length > 0
+            spacing: theme.space.sm
+
+            Squircle {
+                width: parent.width
+                height: pathText.implicitHeight + theme.space.md
+                radius: theme.radius.sm
+                fillColor: theme.alpha(theme.text, 0.06)
+
+                Text {
+                    id: pathText
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: theme.space.md
+                    anchors.rightMargin: theme.space.md
+                    text: root.prefix.path || ""
+                    color: theme.accent
+                    font.pixelSize: theme.type.caption.size
+                    font.family: "monospace"
+                    wrapMode: Text.WrapAnywhere
+                }
+            }
 
             Text {
-                text: qsTr("Used by")
+                width: parent.width
+                visible: root.isSteam
+                text: qsTr("This is a Steam prefix. Steam owns its files, omikuji only runs tools inside it.")
                 color: theme.textSubtle
-                font.pixelSize: theme.type.micro.size
-                font.weight: Font.DemiBold
+                font.pixelSize: theme.type.caption.size
+                wrapMode: Text.WordWrap
             }
+        }
+
+        DialogSection {
+            width: parent.width
+            label: qsTr("Used by")
+            contentSpacing: 3
+
             Repeater {
                 model: root.games
                 delegate: Text {
@@ -105,72 +104,71 @@ DialogCard {
                     elide: Text.ElideRight
                 }
             }
+
+            Text {
+                width: parent.width
+                visible: root.games.length === 0
+                text: qsTr("Orphan prefix, no game uses it.")
+                color: theme.textSubtle
+                font.pixelSize: theme.type.caption.size
+                wrapMode: Text.WordWrap
+            }
         }
 
-        Text {
+        DialogSection {
             width: parent.width
-            visible: root.games.length === 0
-            text: qsTr("Orphan prefix, no game uses it.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
+            label: qsTr("Tools")
 
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: theme.alpha(theme.text, 0.1)
-        }
+            Grid {
+                width: parent.width
+                columns: 2
+                spacing: theme.space.sm
 
-        Grid {
-            width: parent.width
-            columns: 2
-            spacing: theme.space.sm
+                Repeater {
+                    model: root.tools
 
-            Repeater {
-                model: root.tools
+                    delegate: Item {
+                        required property var modelData
+                        width: (parent.width - theme.space.sm) / 2
+                        height: 46
 
-                delegate: Item {
-                    required property var modelData
-                    width: (parent.width - theme.space.sm) / 2
-                    height: 46
-
-                    Squircle {
-                        anchors.fill: parent
-                        radius: theme.radius.md
-                        fillColor: theme.alpha(theme.text, toolMouse.containsMouse ? 0.14 : 0.06)
-                    }
-
-                    Row {
-                        anchors.left: parent.left
-                        anchors.leftMargin: theme.space.md
-                        anchors.right: parent.right
-                        anchors.rightMargin: theme.space.sm
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: theme.space.md
-
-                        SvgIcon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: modelData.icon
-                            size: 18
-                            color: theme.icon
+                        Squircle {
+                            anchors.fill: parent
+                            radius: theme.radius.md
+                            fillColor: theme.alpha(theme.text, toolMouse.containsMouse ? 0.14 : 0.06)
                         }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.label
-                            color: theme.text
-                            font.pixelSize: theme.type.label.size
-                            elide: Text.ElideRight
-                            width: Math.min(implicitWidth, parent.width - 18 - theme.space.md)
-                        }
-                    }
 
-                    MouseArea {
-                        id: toolMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.invokeTool(modelData.act)
+                        Row {
+                            anchors.left: parent.left
+                            anchors.leftMargin: theme.space.md
+                            anchors.right: parent.right
+                            anchors.rightMargin: theme.space.sm
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: theme.space.md
+
+                            SvgIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: modelData.icon
+                                size: 18
+                                color: theme.icon
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: modelData.label
+                                color: theme.text
+                                font.pixelSize: theme.type.label.size
+                                elide: Text.ElideRight
+                                width: Math.min(implicitWidth, parent.width - 18 - theme.space.md)
+                            }
+                        }
+
+                        MouseArea {
+                            id: toolMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.invokeTool(modelData.act)
+                        }
                     }
                 }
             }

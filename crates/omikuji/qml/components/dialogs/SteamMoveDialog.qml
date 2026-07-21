@@ -107,7 +107,7 @@ DialogCard {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        var c = root.checkedPaths
+                        var c = Object.assign({}, root.checkedPaths)
                         c[rootRow.modelData[1]] = !(c[rootRow.modelData[1]] === true)
                         root.checkedPaths = c
                     }

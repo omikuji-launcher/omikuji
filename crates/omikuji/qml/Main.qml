@@ -536,6 +536,11 @@ property real cardZoom: uiSettings.cardZoom
         height: root.height / root.uiScale
         transform: Scale { xScale: root.uiScale; yScale: root.uiScale; origin.x: 0; origin.y: 0 }
 
+    MouseArea {
+        anchors.fill: parent
+        onClicked: forceActiveFocus()
+    }
+
     NavTabs {
         id: navTabs
         anchors.left: parent.left

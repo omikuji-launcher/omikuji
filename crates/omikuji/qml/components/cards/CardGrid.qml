@@ -54,7 +54,10 @@ Item {
             width: parent.width
             height: Math.max(grid.height + 100, gridFlick.height)
             z: 0
-            onClicked: root.backgroundClicked()
+            onClicked: {
+                forceActiveFocus()
+                root.backgroundClicked()
+            }
         }
 
         Flow {

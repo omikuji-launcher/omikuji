@@ -40,7 +40,10 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.AllButtons
-            onClicked: root.closeRequested()
+            onClicked: {
+                forceActiveFocus()
+                root.closeRequested()
+            }
             onWheel: (wheel) => wheel.accepted = true
         }
     }
@@ -78,7 +81,7 @@ Item {
         MouseArea {
             anchors.fill: card
             acceptedButtons: Qt.AllButtons
-            onClicked: {}
+            onClicked: forceActiveFocus()
             onWheel: (wheel) => wheel.accepted = true
         }
 
@@ -199,6 +202,13 @@ Item {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: ThinScrollBar {}
+
+                MouseArea {
+                    width: contentFlick.contentWidth
+                    height: Math.max(contentFlick.contentHeight, contentFlick.height)
+                    z: -1
+                    onClicked: forceActiveFocus()
+                }
 
                 Loader {
                     id: pageLoader

@@ -271,7 +271,7 @@ DialogCard {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: theme.space.md
+            spacing: theme.space.lg
             visible: root.editingIndex >= 0
 
             M3TextField {
@@ -281,61 +281,59 @@ DialogCard {
                 onTextEdited: (t) => root.editName = t
             }
 
-            Text {
-                text: qsTr("Variables")
-                color: theme.textMuted
-                font.pixelSize: theme.type.body.size
-                font.weight: Font.Medium
-            }
-
-            Text {
+            DialogSection {
                 Layout.fillWidth: true
-                text: qsTr("No variables yet.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
-                visible: editVars.count === 0
-            }
+                label: qsTr("Variables")
 
-            Repeater {
-                model: editVars
+                Text {
+                    width: parent.width
+                    text: qsTr("No variables yet.")
+                    color: theme.textSubtle
+                    font.pixelSize: theme.type.caption.size
+                    visible: editVars.count === 0
+                }
 
-                delegate: RowLayout {
-                    required property int index
-                    required property string key
-                    required property string value
+                Repeater {
+                    model: editVars
 
-                    Layout.fillWidth: true
-                    spacing: theme.space.sm
+                    delegate: RowLayout {
+                        required property int index
+                        required property string key
+                        required property string value
 
-                    M3TextField {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        placeholder: root.keyPlaceholder
-                        text: key
-                        onTextEdited: (t) => editVars.setProperty(index, "key", t)
-                    }
+                        width: parent.width
+                        spacing: theme.space.sm
 
-                    M3TextField {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        placeholder: root.valuePlaceholder
-                        text: value
-                        onTextEdited: (t) => editVars.setProperty(index, "value", t)
-                    }
+                        M3TextField {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 1
+                            placeholder: root.keyPlaceholder
+                            text: key
+                            onTextEdited: (t) => editVars.setProperty(index, "key", t)
+                        }
 
-                    IconButton {
-                        icon: "close"
-                        danger: true
-                        onClicked: editVars.remove(index)
+                        M3TextField {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 1
+                            placeholder: root.valuePlaceholder
+                            text: value
+                            onTextEdited: (t) => editVars.setProperty(index, "value", t)
+                        }
+
+                        IconButton {
+                            icon: "close"
+                            danger: true
+                            onClicked: editVars.remove(index)
+                        }
                     }
                 }
-            }
 
-            M3Button {
-                text: qsTr("Add variable")
-                variant: "tonal"
-                icon: "add"
-                onClicked: editVars.append({ key: "", value: "" })
+                M3Button {
+                    text: qsTr("Add variable")
+                    variant: "tonal"
+                    icon: "add"
+                    onClicked: editVars.append({ key: "", value: "" })
+                }
             }
         }
     }

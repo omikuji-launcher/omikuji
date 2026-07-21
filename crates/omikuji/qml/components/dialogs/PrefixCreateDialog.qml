@@ -44,7 +44,7 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: theme.space.lg
 
         Column {
             width: parent.width

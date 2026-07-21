@@ -18,6 +18,7 @@ DialogCard {
     signal requestNewCategory()
 
     maxWidth: 440
+    title: qsTr("Categories")
 
     function show(index) {
         if (!gameModel || index < 0) return
@@ -73,13 +74,6 @@ DialogCard {
     body: ColumnLayout {
         width: parent.width
         spacing: theme.space.sm
-
-        Text {
-            text: qsTr("Categories")
-            color: theme.text
-            font.pixelSize: theme.type.title.size
-            font.weight: Font.DemiBold
-        }
 
         Text {
             Layout.fillWidth: true

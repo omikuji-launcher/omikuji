@@ -32,6 +32,7 @@ DialogCard {
     property bool replaceMaps: false
 
     maxWidth: 520
+    title: qsTr("Apply defaults to existing games")
 
     function show() {
         if (!defaults) return
@@ -69,13 +70,6 @@ DialogCard {
         spacing: theme.space.sm
 
         Text {
-            text: qsTr("Apply defaults to existing games")
-            color: theme.text
-            font.pixelSize: theme.type.title.size
-            font.weight: Font.DemiBold
-        }
-
-        Text {
             Layout.fillWidth: true
             text: qsTr("Sections you tick will be written to every game's TOML, overwriting their current values for those fields. Untouched sections stay as they are per-game.")
             color: theme.textMuted
@@ -86,7 +80,7 @@ DialogCard {
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("Nothing to apply — set some fields in the Defaults tab first.")
+            text: qsTr("Nothing to apply - set some fields in the Defaults tab first.")
             color: theme.textSubtle
             font.pixelSize: theme.type.label.size
             wrapMode: Text.Wrap
