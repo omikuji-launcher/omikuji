@@ -24,22 +24,13 @@ pub fn execute<F: FnMut(&str)>(
     let slug = crate::media::slugify(display_name);
     let id = crate::library::generate_id();
 
-    let prefix = match script.prefix_input() {
-        Some(input) => {
-            let v = values.get(&input.id).map(String::as_str).unwrap_or("");
-            if v.trim().is_empty() {
-                bail!("no value for prefix input \"{}\"", input.id);
-            }
-            PathBuf::from(v)
-        }
-        None => crate::prefixes_dir().join(format!("{slug}-{id}")),
-    };
     let cache = crate::cache_dir()
         .join("scripts")
         .join(format!("{slug}-{id}"));
     std::fs::create_dir_all(&cache)?;
 
-    let mut vars: HashMap<String, String> = crate::template_vars::TemplateVars::global().into_map();
+    let tv = crate::template_vars::TemplateVars::global();
+    let mut vars: HashMap<String, String> = HashMap::new();
     for input in &script.inputs {
         let value = values
             .get(&input.id)
@@ -54,8 +45,20 @@ pub fn execute<F: FnMut(&str)>(
             }
             _ => {}
         }
-        vars.insert(input.id.clone(), value);
+        vars.insert(input.id.clone(), tv.expand(&value));
     }
+
+    let prefix = match script.prefix_input() {
+        Some(input) => {
+            let v = vars.get(&input.id).map(String::as_str).unwrap_or_default();
+            if v.trim().is_empty() {
+                bail!("no value for prefix input \"{}\"", input.id);
+            }
+            PathBuf::from(v)
+        }
+        None => crate::prefixes_dir().join(format!("{slug}-{id}")),
+    };
+
     vars.insert("prefix".into(), prefix.to_string_lossy().into_owned());
     vars.insert("cache".into(), cache.to_string_lossy().into_owned());
     vars.insert(
