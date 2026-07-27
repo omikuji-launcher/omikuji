@@ -10,6 +10,7 @@ Item {
     // user size lives as a fraction of the available frame so it scales with the window
     property real fracW: 0
     property real fracH: 0
+    property real demandH: 0
 
     property real snapIn: 0.995
     property real snapOut: 0.96
@@ -41,7 +42,7 @@ Item {
     function heightFor(fallback) {
         let avail = frame ? frame.height - frameMargin : fallback
         let base = fracH > 0
-            ? Math.min(Math.max(minHeight, Math.round(fracH * avail)), avail)
+            ? Math.min(Math.max(minHeight, Math.round(fracH * avail), demandH), avail)
             : Math.min(fallback, avail)
         return hugT > 0 && frame ? Math.round(base + (frame.height - base) * hugT) : base
     }

@@ -271,6 +271,7 @@ Item {
             sizeKey: root.sizeKey
             minWidth: root.minWidth
             minHeight: root.minHeight
+            demandH: root.fillHeight ? 0 : cardWrap.naturalHeight
         }
     }
 }
