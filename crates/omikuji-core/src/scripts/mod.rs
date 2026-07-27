@@ -80,6 +80,8 @@ pub enum Step {
     },
     RunExe {
         exe: String,
+        #[serde(default)]
+        dll_overrides: HashMap<String, String>,
     },
     Shell {
         run: String,
@@ -93,7 +95,7 @@ impl Step {
             Step::Winetricks { verbs } => format!("winetricks {}", verbs.join(" ")),
             Step::Download { url, .. } => format!("downloading {url}"),
             Step::Extract { archive, .. } => format!("extracting {archive}"),
-            Step::RunExe { exe } => format!("running {exe}"),
+            Step::RunExe { exe, .. } => format!("running {exe}"),
             Step::Shell { .. } => "running shell step".into(),
         }
     }
@@ -240,7 +242,10 @@ impl Script {
                     out.push(archive);
                     out.push(dest);
                 }
-                Step::RunExe { exe } => out.push(exe),
+                Step::RunExe { exe, dll_overrides } => {
+                    out.push(exe);
+                    out.extend(dll_overrides.values().map(String::as_str));
+                }
                 Step::Shell { run } => out.push(run),
             }
         }
@@ -435,6 +440,7 @@ dest = "${prefix}/drive_c/Game"
 [[step]]
 task = "run_exe"
 exe = "${installer}"
+dll_overrides = { powershell = "d" }
 
 [[step]]
 task = "shell"
@@ -459,6 +465,9 @@ d3d11 = "n,b"
         assert!(s.has_shell());
         assert_eq!(s.prefix_input().unwrap().id, "prefix");
         assert_eq!(s.game.as_ref().unwrap().dll_overrides["d3d11"], "n,b");
+        assert!(
+            matches!(&s.steps[4], Step::RunExe { dll_overrides, .. } if dll_overrides["powershell"] == "d")
+        );
         assert!(
             Script::parse(SAMPLE.split("[game]").next().unwrap())
                 .unwrap()

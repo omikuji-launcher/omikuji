@@ -110,12 +110,17 @@ pub fn execute<F: FnMut(&str)>(
                 let dest = PathBuf::from(interpolate(dest, &vars)?);
                 extract_archive(&archive, &dest)?;
             }
-            Step::RunExe { exe } => {
+            Step::RunExe { exe, dll_overrides } => {
                 let exe = PathBuf::from(interpolate(exe, &vars)?);
                 if !exe.is_file() {
                     bail!("exe not found: {}", exe.display());
                 }
-                let mut child = crate::wine_tools::run(&tool_game, WineTool::RunExe(exe))?;
+                let mut game = tool_game.clone();
+                game.wine.dll_overrides = dll_overrides
+                    .iter()
+                    .map(|(k, v)| Ok((k.clone(), interpolate(v, &vars)?)))
+                    .collect::<Result<_>>()?;
+                let mut child = crate::wine_tools::run(&game, WineTool::RunExe(exe))?;
                 on_line("waiting for the program to exit...");
                 let status = child.wait()?;
                 if !status.success() {
