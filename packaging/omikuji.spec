@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.8.1
+Version:        0.8.2
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,14 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Mon Jul 27 2026 reakjra <reakjra@proton.me> - 0.8.2-1
+- Added resize animation for dialogs
+- Added on demand dialog automatic resize
+- Added dlls_override for run_exe step in community scripts
+- Added corner radius option in settings > theme
+- Restyled a bit Ofuda's page
+- Fixed community scripts template literals
+
 * Sun Jul 19 2026 reakjra <reakjra@proton.me> - 0.8.1-1
 - Fix GOG and Epic Games imports
 - Refractor runners and components fetcher

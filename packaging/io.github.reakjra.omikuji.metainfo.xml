@@ -22,6 +22,18 @@
     </p>
   </description>
   <releases>
+    <release version="0.8.2" date="2026-07-27">
+      <description>
+        <ul>
+          <li>Added resize animation for dialogs</li>
+          <li>Added on demand dialog automatic resize</li>
+          <li>Added dlls_override for run_exe step in community scripts</li>
+          <li>Added corner radius option in settings > theme</li>
+          <li>Restyled a bit Ofuda's page</li>
+          <li>Fixed community scripts template literals</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.8.1" date="2026-07-19">
       <description>
         <ul>
