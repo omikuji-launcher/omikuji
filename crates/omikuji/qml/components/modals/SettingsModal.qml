@@ -21,7 +21,10 @@ Item {
 
     signal closeRequested()
 
-    onShownChanged: if (shown && sizeKey !== "") resizer.loadSize()
+    onShownChanged: {
+        resizer.markUnsettled()
+        if (shown && sizeKey !== "") resizer.loadSize()
+    }
 
     Shortcut {
         sequence: "Escape"
@@ -61,6 +64,8 @@ Item {
 
         Behavior on opacity { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
         Behavior on scale { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.emphasized; easing.overshoot: theme.ease.overshoot } }
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
 
         RectangularGlow {
             anchors.fill: card

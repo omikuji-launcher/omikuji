@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import "../controls"
-import "../popups"
 import "../primitives"
 
 DialogCard {
@@ -47,7 +46,7 @@ DialogCard {
 
     maxWidth: 480
     title: _editingIndex === -1 ? qsTr("Add category") : qsTr("Edit category")
-    escEnabled: !iconPicker.visible
+    escEnabled: !iconPicker.shown
 
     function showAdd() {
         _editingIndex = -1
@@ -188,7 +187,7 @@ DialogCard {
         }
     }
 
-    IconPickerPopup {
+    IconPickerDialog {
         id: iconPicker
         anchors.fill: parent
         onPicked: (name) => root.formIcon = name

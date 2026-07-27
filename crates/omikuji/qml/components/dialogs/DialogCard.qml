@@ -47,7 +47,10 @@ Item {
     function open() { shown = true }
     function close() { shown = false }
 
-    onShownChanged: if (shown && sizeKey !== "") resizer.loadSize()
+    onShownChanged: {
+        resizer.markUnsettled()
+        if (shown && sizeKey !== "") resizer.loadSize()
+    }
 
     Shortcut {
         sequence: "Escape"
@@ -129,6 +132,10 @@ Item {
         anchors.centerIn: parent
         width: resizer.widthFor(root.maxWidth)
         height: resizer.heightFor(root.fillHeight ? root.preferredHeight : naturalHeight)
+
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.96
         visible: opacity > 0.01

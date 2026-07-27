@@ -387,7 +387,7 @@ fn main() {
         "qml/components/popups/DisplayOptionsPopup.qml",
         "qml/components/controls/FieldSurface.qml",
         "qml/components/controls/IconButton.qml",
-        "qml/components/popups/IconPickerPopup.qml",
+        "qml/components/dialogs/IconPickerDialog.qml",
         "qml/components/controls/KeyValueTable.qml",
         "qml/components/controls/LabeledSwitch.qml",
         "qml/components/primitives/LoadingDots.qml",

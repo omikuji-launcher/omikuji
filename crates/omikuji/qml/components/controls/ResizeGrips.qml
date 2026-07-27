@@ -11,6 +11,18 @@ Item {
     property real fracW: 0
     property real fracH: 0
     property real demandH: 0
+    property bool dragging: false
+    readonly property bool settled: !dragging && !settleTimer.running
+
+    function markUnsettled() { settleTimer.restart() }
+
+    Timer { id: settleTimer; interval: 220 }
+
+    Connections {
+        target: grips.frame
+        function onWidthChanged() { settleTimer.restart() }
+        function onHeightChanged() { settleTimer.restart() }
+    }
 
     property real snapIn: 0.995
     property real snapOut: 0.96
@@ -86,7 +98,9 @@ Item {
             _startW = grips.parent.width
             _startH = grips.parent.height
             _startPos = mapToItem(grips.frame, mouse.x, mouse.y)
+            grips.dragging = true
         }
+        onCanceled: grips.dragging = false
         onPositionChanged: (mouse) => {
             if (!grips.frame) return
             let p = mapToItem(grips.frame, mouse.x, mouse.y)
@@ -101,7 +115,10 @@ Item {
                 grips.fracH = px / availH
             }
         }
-        onReleased: grips._save()
+        onReleased: {
+            grips.dragging = false
+            grips._save()
+        }
         onDoubleClicked: grips.resetSize()
     }
 
