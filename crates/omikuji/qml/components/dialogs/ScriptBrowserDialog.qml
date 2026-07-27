@@ -157,7 +157,7 @@ DialogCard {
                     width: 36
                     height: 36
                     radius: theme.radius.sm
-                    color: theme.alpha(theme.accent, 0.15)
+                    color: iconImg.visible ? "transparent" : theme.alpha(theme.accent, 0.15)
                     anchors.left: parent.left
                     anchors.leftMargin: theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
