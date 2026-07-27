@@ -123,6 +123,8 @@ pub struct SystemDefaults {
     pub pulse_latency: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cpu_limit: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discord_rpc: Option<bool>,
 }
 
 pub fn defaults_path() -> PathBuf {
@@ -309,6 +311,11 @@ impl Defaults {
         {
             game.system.prevent_sleep = v;
         }
+        if has("discord")
+            && let Some(v) = self.system.discord_rpc
+        {
+            game.system.discord_rpc = v;
+        }
     }
 
     pub fn populated_sections(&self) -> Vec<String> {
@@ -382,6 +389,9 @@ impl Defaults {
         }
         if self.system.prevent_sleep.is_some() {
             out.push("power".into());
+        }
+        if self.system.discord_rpc.is_some() {
+            out.push("discord".into());
         }
         out
     }

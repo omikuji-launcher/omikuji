@@ -24,7 +24,8 @@ DialogCard {
         "gamescope": qsTr("Gamescope"),
         "performance": qsTr("Performance (gamemode, CPU limit)"),
         "audio": qsTr("Audio (Pulse latency)"),
-        "power": qsTr("Power (prevent sleep)")
+        "power": qsTr("Power (prevent sleep)"),
+        "discord": qsTr("Discord (rich presence)")
     })
 
     property var availableSections: []

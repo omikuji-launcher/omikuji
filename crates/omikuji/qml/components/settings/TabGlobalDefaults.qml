@@ -53,38 +53,14 @@ Item {
         function onChanged() { root.refresh() }
     }
 
-    component ResetBadge: Item {
+    component ResetBadge: IconButton {
         property string fieldKey: ""
-        property bool active: root.isSet(fieldKey)
-        width: 24
-        height: 24
+        readonly property bool active: root.isSet(fieldKey)
+        icon: "sync"
         opacity: active ? 1 : 0
         enabled: active
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-
-        Rectangle {
-            anchors.fill: parent
-            radius: width / 2
-            color: iconArea.containsMouse
-                ? theme.alpha(theme.text, 0.10)
-                : "transparent"
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        SvgIcon {
-            anchors.centerIn: parent
-            size: 14
-            name: "sync"
-            color: iconArea.containsMouse ? theme.accent : theme.textSubtle
-        }
-
-        MouseArea {
-            id: iconArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.reset(fieldKey)
-        }
+        Behavior on opacity { NumberAnimation { duration: theme.dur.fast } }
+        onClicked: root.reset(fieldKey)
     }
 
     component ToggleRow: SettingsRow {
@@ -159,7 +135,7 @@ Item {
                     onSelected: (val) => root.update("wine.version", val)
                 }
                 ResetBadge {
-                    anchors.verticalCenter: versionDd.verticalCenter
+                    y: versionDd.boxCenterY - height / 2
                     fieldKey: "wine.version"
                 }
             }
@@ -199,7 +175,7 @@ Item {
                     onSelected: (val) => root.update("wine.prefix_arch", val)
                 }
                 ResetBadge {
-                    anchors.verticalCenter: archDd.verticalCenter
+                    y: archDd.boxCenterY - height / 2
                     fieldKey: "wine.prefix_arch"
                 }
             }
@@ -265,7 +241,7 @@ Item {
                     onMoved: (val) => root.update("wine.dpi", Math.round(val))
                 }
                 ResetBadge {
-                    anchors.verticalCenter: dpiSlider.verticalCenter
+                    y: dpiSlider.boxCenterY - height / 2
                     fieldKey: "wine.dpi"
                 }
             }
@@ -297,7 +273,7 @@ Item {
                     onSelected: (val) => root.update("wine.audio_driver", val)
                 }
                 ResetBadge {
-                    anchors.verticalCenter: audioDd.verticalCenter
+                    y: audioDd.boxCenterY - height / 2
                     fieldKey: "wine.audio_driver"
                 }
             }
@@ -323,7 +299,7 @@ Item {
                     onSelected: (val) => root.update("wine.graphics_driver", val)
                 }
                 ResetBadge {
-                    anchors.verticalCenter: gfxDd.verticalCenter
+                    y: gfxDd.boxCenterY - height / 2
                     fieldKey: "wine.graphics_driver"
                 }
             }
@@ -428,7 +404,7 @@ Item {
                     onSelected: (val) => root.update("graphics.gpu", val)
                 }
                 ResetBadge {
-                    anchors.verticalCenter: gpuDd.verticalCenter
+                    y: gpuDd.boxCenterY - height / 2
                     fieldKey: "graphics.gpu"
                 }
             }
@@ -520,7 +496,7 @@ Item {
                         onSelected: (val) => root.update("graphics.gamescope.filter", val)
                     }
                     ResetBadge {
-                        anchors.verticalCenter: filterDd.verticalCenter
+                        y: filterDd.boxCenterY - height / 2
                         fieldKey: "graphics.gamescope.filter"
                     }
                 }
@@ -540,7 +516,7 @@ Item {
                         onMoved: (val) => root.update("graphics.gamescope.fsr_sharpness", Math.round(val))
                     }
                     ResetBadge {
-                        anchors.verticalCenter: sharpSlider.verticalCenter
+                        y: sharpSlider.boxCenterY - height / 2
                         fieldKey: "graphics.gamescope.fsr_sharpness"
                     }
                 }
@@ -592,6 +568,14 @@ Item {
             width: parent.width
 
             ToggleRow { fieldKey: "system.prevent_sleep"; toggleLabel: qsTr("Prevent Sleep"); toggleDescription: qsTr("inhibit screensaver and sleep") }
+        }
+
+        SettingsSection {
+            label: qsTr("Discord")
+            icon: "local_activity"
+            width: parent.width
+
+            ToggleRow { fieldKey: "system.discord_rpc"; toggleLabel: qsTr("Discord Rich Presence"); toggleDescription: qsTr("show the game on your Discord profile while it runs") }
         }
     }
 }

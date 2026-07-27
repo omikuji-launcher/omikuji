@@ -935,6 +935,7 @@ game_fields! {
     "system.prevent_sleep" => bool, system.prevent_sleep,
     "system.pulse_latency" => bool, system.pulse_latency,
     "system.cpu_limit" => int, system.cpu_limit,
+    "system.discord_rpc" => bool, system.discord_rpc,
 }
 
 fn config_map(game: &Game) -> QMap<QMapPair_QString_QVariant> {

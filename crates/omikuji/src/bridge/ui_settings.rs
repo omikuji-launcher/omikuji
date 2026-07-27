@@ -28,12 +28,6 @@ impl qobject::UiSettingsBridge {
         }
     }
 
-    fn apply_discord_rpc(mut self: Pin<&mut Self>, value: bool) {
-        self.as_mut().set_discord_rpc(value);
-        omikuji_core::discord::set_enabled(value);
-        self.persist();
-    }
-
     fn apply_ui_scale(mut self: Pin<&mut Self>, value: f64) {
         let clamped = value.clamp(0.7, 2.0);
         self.as_mut().set_ui_scale(clamped);
@@ -84,8 +78,7 @@ impl qobject::UiSettingsBridge {
         self.as_mut().theme_changed();
     }
 
-    fn reload_extras(mut self: Pin<&mut Self>, s: &UiSettings) {
-        omikuji_core::discord::set_enabled(s.behavior.discord_rpc);
+    fn reload_extras(mut self: Pin<&mut Self>, _s: &UiSettings) {
         self.as_mut().theme_changed();
     }
 

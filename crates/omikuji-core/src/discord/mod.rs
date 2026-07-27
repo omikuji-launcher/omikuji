@@ -4,7 +4,6 @@ use discord_rich_presence::{
     activity::{Activity, ActivityType, Assets, StatusDisplayType, Timestamps},
 };
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -13,8 +12,6 @@ use crate::library::Game;
 const APP_ID: &str = "1503896994018623709";
 const LAUNCHER_LOGO: &str =
     "https://raw.githubusercontent.com/reakjra/omikuji/master/crates/omikuji/qml/icons/app.png";
-
-static ENABLED: AtomicBool = AtomicBool::new(false);
 
 fn client_cell() -> &'static Mutex<Option<DiscordIpcClient>> {
     static CELL: OnceLock<Mutex<Option<DiscordIpcClient>>> = OnceLock::new();
@@ -26,17 +23,8 @@ fn url_cache() -> &'static Mutex<HashMap<String, Option<String>>> {
     CELL.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-pub fn set_enabled(v: bool) {
-    let was = ENABLED.swap(v, Ordering::Relaxed);
-    if was && !v {
-        std::thread::spawn(|| {
-            let _ = disconnect();
-        });
-    }
-}
-
 pub fn set_playing(game: &Game) {
-    if !ENABLED.load(Ordering::Relaxed) {
+    if !game.system.discord_rpc {
         return;
     }
 
@@ -92,14 +80,6 @@ fn clear_activity_inner() -> Result<()> {
     let mut guard = client_cell().lock().unwrap();
     if let Some(c) = guard.as_mut() {
         c.clear_activity().map_err(|e| anyhow::anyhow!("{}", e))?;
-    }
-    Ok(())
-}
-
-fn disconnect() -> Result<()> {
-    let mut guard = client_cell().lock().unwrap();
-    if let Some(mut c) = guard.take() {
-        let _ = c.close();
     }
     Ok(())
 }

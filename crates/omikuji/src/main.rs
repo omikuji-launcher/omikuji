@@ -56,7 +56,6 @@ async fn main() {
     }
 
     let ui = omikuji_core::ui_settings::UiSettings::load();
-    omikuji_core::discord::set_enabled(ui.behavior.discord_rpc);
 
     if let Ok(lang) = CString::new(ui.language) {
         unsafe { omikuji_install_translator(lang.as_ptr()) };

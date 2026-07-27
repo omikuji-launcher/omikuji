@@ -23,6 +23,8 @@ Item {
     property real stopDotSize: 4
 
     implicitWidth: 200
+    readonly property real boxCenterY: slider.y + slider.height / 2
+
     implicitHeight: header.visible
         ? header.height + 8 + slider.height
         : slider.height

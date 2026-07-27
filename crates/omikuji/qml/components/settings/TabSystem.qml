@@ -80,6 +80,54 @@ Item {
         }
 
         SettingsSection {
+            label: qsTr("Audio")
+            icon: "volume_up"
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Reduce Pulse Latency")
+                width: parent.width
+                M3Switch {
+                    checked: config["system.pulse_latency"] === true
+                    onToggled: (val) => updateField("system.pulse_latency", val)
+                }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Power")
+            icon: "power_settings_new"
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Prevent Sleep")
+                description: qsTr("inhibit screensaver and sleep")
+                width: parent.width
+                M3Switch {
+                    checked: config["system.prevent_sleep"] === true
+                    onToggled: (val) => updateField("system.prevent_sleep", val)
+                }
+            }
+
+        }
+
+        SettingsSection {
+            label: qsTr("Discord")
+            icon: "local_activity"
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Discord Rich Presence")
+                description: qsTr("show this game on your Discord profile while it runs")
+                width: parent.width
+                M3Switch {
+                    checked: config["system.discord_rpc"] === true
+                    onToggled: (val) => updateField("system.discord_rpc", val)
+                }
+            }
+        }
+
+        SettingsSection {
             label: "Gamescope"
             icon: "monitor"
             width: parent.width
@@ -237,37 +285,6 @@ Item {
                     width: parent.width
                     visible: (config["graphics.gamescope.filter"] || "") === "fsr"
                     onMoved: (val) => updateField("graphics.gamescope.fsr_sharpness", Math.round(val))
-                }
-            }
-        }
-
-        SettingsSection {
-            label: qsTr("Audio")
-            icon: "volume_up"
-            width: parent.width
-
-            SettingsRow {
-                label: qsTr("Reduce Pulse Latency")
-                width: parent.width
-                M3Switch {
-                    checked: config["system.pulse_latency"] === true
-                    onToggled: (val) => updateField("system.pulse_latency", val)
-                }
-            }
-        }
-
-        SettingsSection {
-            label: qsTr("Power")
-            icon: "power_settings_new"
-            width: parent.width
-
-            SettingsRow {
-                label: qsTr("Prevent Sleep")
-                description: qsTr("inhibit screensaver and sleep")
-                width: parent.width
-                M3Switch {
-                    checked: config["system.prevent_sleep"] === true
-                    onToggled: (val) => updateField("system.prevent_sleep", val)
                 }
             }
         }

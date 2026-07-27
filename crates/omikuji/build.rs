@@ -186,7 +186,6 @@ fn main() {
         .prop_at("auto_check_gog_updates_on_launch", kushi::Kind::Bool, "behavior.auto_check_gog_updates_on_launch")
         .prop_at("auto_check_updates_on_boot", kushi::Kind::Bool, "behavior.auto_check_updates_on_boot")
         .prop_at("show_tray_icon", kushi::Kind::Bool, "behavior.show_tray_icon")
-        .prop_custom_apply("discord_rpc", kushi::Kind::Bool, "behavior.discord_rpc")
         .prop_custom_apply("ui_scale", kushi::Kind::F64, "display.scale")
         .prop_at("muted_icons", kushi::Kind::Bool, "display.muted_icons")
         .prop_at("filled_icons", kushi::Kind::Bool, "display.filled_icons")

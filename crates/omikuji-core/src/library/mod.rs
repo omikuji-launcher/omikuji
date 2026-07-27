@@ -237,7 +237,7 @@ pub struct GamescopeConfig {
     pub fsr_sharpness: u32,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SystemConfig {
     #[serde(default)]
     pub gamemode: bool,
@@ -247,6 +247,20 @@ pub struct SystemConfig {
     pub pulse_latency: bool,
     #[serde(default)]
     pub cpu_limit: u32,
+    #[serde(default = "default_true")]
+    pub discord_rpc: bool,
+}
+
+impl Default for SystemConfig {
+    fn default() -> Self {
+        Self {
+            gamemode: false,
+            prevent_sleep: false,
+            pulse_latency: false,
+            cpu_limit: 0,
+            discord_rpc: true,
+        }
+    }
 }
 
 pub fn default_color() -> String {
@@ -699,6 +713,11 @@ impl Game {
             &mut self.system.cpu_limit,
             &s.cpu_limit,
             &d.system.cpu_limit,
+        );
+        seed(
+            &mut self.system.discord_rpc,
+            &s.discord_rpc,
+            &d.system.discord_rpc,
         );
     }
 }

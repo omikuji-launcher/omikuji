@@ -52,6 +52,8 @@ Item {
     }
 
     implicitWidth: 200
+    readonly property real boxCenterY: button.y + button.height / 2
+
     implicitHeight: label ? labelText.height + 4 + button.height : button.height
 
     Text {
