@@ -71,8 +71,8 @@ impl Default for PathsSettings {
             library_dir: s("library"),
             gachas_dir: s("gachas"),
             components_dir: s("components"),
-            runners_dir: String::new(),
-            layers_dir: String::new(),
+            runners_dir: s("components/runners"),
+            layers_dir: s("components/layers"),
             prefixes_dir: s("prefixes"),
             cache_dir: s("cache"),
             logs_dir: s("logs"),
@@ -117,7 +117,7 @@ impl Default for ComponentsSettings {
             hpatchz: "https://api.github.com/repos/sisong/HDiffPatch/releases/latest".into(),
             legendary: "https://api.github.com/repos/derrod/legendary/releases/latest".into(),
             gogdl: "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest".into(), // why does gogdl feels like a gurgle. goGLdl
-            jadeite: "https://codeberg.org/api/v1/repos/mkrsym1/jadeite/releases/latest".into(), // might want to ship it as non-default once day. one day 
+            jadeite: "https://codeberg.org/api/v1/repos/mkrsym1/jadeite/releases/latest".into(),
             egl_dummy: "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
         }
     }
@@ -175,7 +175,8 @@ pub fn save(settings: &Settings) -> std::io::Result<()> {
     let body = toml::to_string_pretty(settings).map_err(std::io::Error::other)?;
     let header = "# omikuji settings\n\
                   # edit and restart the launcher to apply.\n\
-                  # paths accept `~` (expanded to $HOME on read).\n\n";
+                  # paths accept `~` (expanded to $HOME on read).\n\n\
+                  # !! data_dir is not changeable! Even if editing the line, it won't actually change it. It's to avoid handling ugly behaviours.\n\n";
     std::fs::write(path, format!("{}{}", header, body))
 }
 
