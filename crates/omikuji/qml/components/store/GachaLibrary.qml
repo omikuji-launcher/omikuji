@@ -1,8 +1,5 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
 import "../cards"
-import "../primitives"
 
 
 Item {
@@ -87,26 +84,6 @@ Item {
         cardZoom: root.cardZoom
         cardSpacing: root.cardSpacing
         cardFlow: root.cardFlow
-
-        headerComponent: Component {
-            RowLayout {
-                anchors.fill: parent
-
-                SvgIcon {
-                    name: "local_activity"
-                    size: 20
-                    color: theme.textMuted
-                }
-
-                Text {
-                    text: qsTr("Gacha Games")
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
-                }
-
-                Item { Layout.fillWidth: true }
-            }
-        }
 
         delegate: BaseCard {
             id: gachaCard

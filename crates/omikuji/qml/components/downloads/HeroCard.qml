@@ -37,6 +37,18 @@ Item {
     readonly property real netBps: netSamples.length > 0 ? netSamples[netSamples.length - 1] : speed
     readonly property real diskBps: diskSamples.length > 0 ? diskSamples[diskSamples.length - 1] : 0
 
+    readonly property real etaBps: {
+        let sum = 0
+        let n = 0
+        for (let i = 0; i < netSamples.length; i++) {
+            if (netSamples[i] > 0) {
+                sum += netSamples[i]
+                n++
+            }
+        }
+        return n > 0 ? sum / n : speed
+    }
+
     Timer {
         interval: 1000
         repeat: true
@@ -163,8 +175,8 @@ Item {
                         StatCell {
                             label: qsTr("ETA")
                             minWidth: 96
-                            value: !hero.isUninterruptible && !hero.isPaused && hero.speed > 0 && hero.bytesTotal > hero.bytesDownloaded
-                                ? Format.formatEta((hero.bytesTotal - hero.bytesDownloaded) / hero.speed)
+                            value: !hero.isUninterruptible && !hero.isPaused && hero.etaBps > 0 && hero.bytesTotal > hero.bytesDownloaded
+                                ? Format.formatEta((hero.bytesTotal - hero.bytesDownloaded) / hero.etaBps)
                                 : "—"
                         }
                         StatCell {

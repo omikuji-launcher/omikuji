@@ -4,13 +4,13 @@ use md5::{Digest, Md5};
 use std::collections::HashSet;
 use std::io::Read;
 use std::path::Path;
-use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
-use std::time::Instant;
+use std::sync::{Arc, Mutex};
 
 use super::api::{self, PatchConfig, ResourceFile, ResourceInfo};
 use super::krpdiff::Krpdiff;
 use super::source::{PARALLEL_FILES, download_one, sanitize_rel};
+use crate::downloads::rate::RateMeter;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
 
 pub(super) async fn run_patch_update(
@@ -33,7 +33,8 @@ pub(super) async fn run_patch_update(
 
     let total: u64 = pidx.resource.iter().map(|r| r.size).sum();
     let downloaded = Arc::new(AtomicU64::new(0));
-    let start = Instant::now();
+    let meter = Arc::new(Mutex::new(RateMeter::new(0)));
+    let meter_for_workers = meter.clone();
 
     let id = entry.id.clone();
     let cdn = info.cdn_url.clone();
@@ -46,6 +47,7 @@ pub(super) async fn run_patch_update(
         let id = id.clone();
         let downloaded = downloaded_for_workers.clone();
         let dl_root = dl_for_workers.clone();
+        let meter = meter_for_workers.clone();
         let base = if file.from_folder.is_empty() {
             patch_base.clone()
         } else {
@@ -55,7 +57,7 @@ pub(super) async fn run_patch_update(
             if check_control(&id) != ControlSignal::None {
                 return Ok::<_, anyhow::Error>(());
             }
-            download_one(&id, &file, &base, &dl_root, &downloaded, total, start).await
+            download_one(&id, &file, &base, &dl_root, &downloaded, total, &meter).await
         }
     }))
     .buffer_unordered(PARALLEL_FILES);
@@ -127,7 +129,7 @@ pub(super) async fn run_patch_update(
                 &out_root,
                 &downloaded,
                 total,
-                start,
+                &meter,
             )
             .await?;
         }

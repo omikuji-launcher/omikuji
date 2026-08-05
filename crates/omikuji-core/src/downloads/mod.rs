@@ -1,5 +1,6 @@
 pub mod io_stats;
 pub(crate) mod proc_tree;
+pub mod rate;
 pub mod source;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};

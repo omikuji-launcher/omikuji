@@ -197,7 +197,9 @@ impl DownloadSource for HoyoSource {
         let total_bytes_arc = Arc::new(AtomicU64::new(0));
         let total_bytes_arc_cb = total_bytes_arc.clone();
         let id_cb = id.clone();
-        let start = std::time::Instant::now();
+        let rate = std::sync::Arc::new(std::sync::Mutex::new(
+            crate::downloads::rate::RateMeter::new(0),
+        ));
 
         set_status(&entry.id, DownloadStatus::Downloading);
 
@@ -213,13 +215,12 @@ impl DownloadSource for HoyoSource {
             } else {
                 0.0
             };
-            let elapsed = start.elapsed().as_secs_f64().max(0.001);
             let bps_basis = if rep.bytes_session > 0 {
                 rep.bytes_session
             } else {
                 done
             };
-            let bps = (bps_basis as f64 / elapsed) as u64;
+            let bps = rate.lock().unwrap().update(bps_basis);
             report_progress(&id_cb, pct, done, total, bps);
         });
 
@@ -495,23 +496,14 @@ async fn download_file_conn(
     let progress_cancelled = cancelled.clone();
 
     let reporter = tokio::spawn(async move {
-        let mut last_bytes: u64 = 0;
-        let mut last_time = std::time::Instant::now();
+        let mut meter = crate::downloads::rate::RateMeter::new(0);
         loop {
             tokio::time::sleep(std::time::Duration::from_millis(250)).await;
             let dl = progress_downloaded.load(Ordering::Relaxed);
-            let now = std::time::Instant::now();
-            let elapsed = now.duration_since(last_time).as_secs_f64();
-            let speed = if elapsed > 0.0 {
-                (dl.saturating_sub(last_bytes) as f64 / elapsed) as u64
-            } else {
-                0
-            };
+            let speed = meter.update(dl);
             let overall = base_offset + dl;
             let pct = (overall as f64 / total_bytes as f64) * 100.0;
             report_progress(&progress_entry_id, pct, overall, total_bytes, speed);
-            last_bytes = dl;
-            last_time = now;
 
             if check_control(&progress_entry_id) != ControlSignal::None {
                 progress_cancelled.store(true, Ordering::Relaxed);
@@ -606,7 +598,7 @@ async fn download_file_simple(
     let mut stream = resp.bytes_stream();
     let mut downloaded: u64 = if resumed { existing } else { 0 };
     let mut last_report = std::time::Instant::now();
-    let mut last_bytes: u64 = downloaded;
+    let mut meter = crate::downloads::rate::RateMeter::new(downloaded);
 
     let mut chunk_count: u64 = 0;
     while let Some(chunk) = stream.next().await {
@@ -617,13 +609,11 @@ async fn download_file_simple(
 
         let now = std::time::Instant::now();
         if now.duration_since(last_report).as_millis() >= 250 {
-            let elapsed = now.duration_since(last_report).as_secs_f64();
-            let speed = (downloaded.saturating_sub(last_bytes) as f64 / elapsed) as u64;
+            let speed = meter.update(downloaded);
             let overall = base_offset + downloaded;
             let pct = (overall as f64 / total_bytes as f64) * 100.0;
             report_progress(entry_id, pct, overall, total_bytes, speed);
             last_report = now;
-            last_bytes = downloaded;
         }
 
         if check_control(entry_id) != ControlSignal::None {

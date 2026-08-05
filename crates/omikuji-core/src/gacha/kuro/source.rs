@@ -2,11 +2,11 @@ use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Instant;
+use std::sync::{Arc, Mutex};
 
 use super::api;
+use crate::downloads::rate::RateMeter;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadKind, DownloadSource, check_control, report_progress,
 };
@@ -60,7 +60,7 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
 
     let total_bytes: u64 = index.resource.iter().map(|r| r.size).sum();
     let downloaded = Arc::new(AtomicU64::new(0));
-    let start = Instant::now();
+    let meter = Arc::new(Mutex::new(RateMeter::new(0)));
 
     let install_root = entry.install_path.clone();
     std::fs::create_dir_all(&install_root)?;
@@ -75,7 +75,7 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
         let downloaded = downloaded.clone();
         let install_root = install_root_for_workers.clone();
         let base_url = base_url.clone();
-        let start = start;
+        let meter = meter.clone();
         let total = total_bytes;
         async move {
             if check_control(&id) != ControlSignal::None {
@@ -88,7 +88,7 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
                 &install_root,
                 &downloaded,
                 total,
-                start,
+                &meter,
             )
             .await
         }
@@ -120,7 +120,7 @@ pub(super) async fn download_one(
     install_root: &Path,
     downloaded: &Arc<AtomicU64>,
     total: u64,
-    start: Instant,
+    meter: &Mutex<RateMeter>,
 ) -> Result<()> {
     let rel = sanitize_rel(&file.dest);
     let dest_path = install_root.join(&rel);
@@ -131,7 +131,7 @@ pub(super) async fn download_one(
     // size-gate instead of md5, hot path; matches aag's integration approach.
     if matches!(std::fs::metadata(&dest_path), Ok(m) if m.len() == file.size) {
         downloaded.fetch_add(file.size, Ordering::Relaxed);
-        tick_progress(id, downloaded, total, start);
+        tick_progress(id, downloaded, total, meter);
         return Ok(());
     }
 
@@ -184,21 +184,20 @@ pub(super) async fn download_one(
             .write_all(&bytes)
             .map_err(|e| anyhow!("write: {}", e))?;
         downloaded.fetch_add(bytes.len() as u64, Ordering::Relaxed);
-        tick_progress(id, downloaded, total, start);
+        tick_progress(id, downloaded, total, meter);
     }
     writer.flush()?;
     Ok(())
 }
 
-fn tick_progress(id: &str, downloaded: &AtomicU64, total: u64, start: Instant) {
+fn tick_progress(id: &str, downloaded: &AtomicU64, total: u64, meter: &Mutex<RateMeter>) {
     let done = downloaded.load(Ordering::Relaxed);
     let pct = if total > 0 {
         (done as f64 / total as f64) * 100.0
     } else {
         0.0
     };
-    let elapsed = start.elapsed().as_secs_f64().max(0.001);
-    let bps = (done as f64 / elapsed) as u64;
+    let bps = meter.lock().unwrap().update(done);
     report_progress(id, pct, done, total, bps);
 }
 
