@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import omikuji 1.0
 import "components"
 import "components/categories"
+import "components/controls"
 import "components/dialogs"
 import "components/downloads"
 import "components/library"
@@ -474,7 +475,6 @@ ApplicationWindow {
             gameModel.drain_update_notifications()
             gameModel.drain_errors()
             gameModel.drain_install_sizes()
-            gameModel.drain_file_dialog_results()
             gameModel.drain_game_details()
             gameModel.drain_game_log_events()
         }
@@ -1170,7 +1170,6 @@ property real cardZoom: uiSettings.cardZoom
         id: scriptBrowserDialog
         anchors.fill: parent
         scriptsBridge: root.scriptsBridgeRef
-        gameModel: root.gameModelRef
         onScriptChosen: (path) => scriptRunDialog.show(path)
     }
 
@@ -1265,7 +1264,6 @@ property real cardZoom: uiSettings.cardZoom
 
     ContextMenu {
         id: wineToolsMenu
-        property string pendingRunExeRequestId: ""
 
         items: [
             { text: qsTr("Configure (winecfg)"),    action: "winecfg" },
@@ -1282,9 +1280,7 @@ property real cardZoom: uiSettings.cardZoom
             if (!root.selectedGame || !root.selectedGame.gameId) return
             let gid = root.selectedGame.gameId
             if (action === "run_exe") {
-                let rid = "wine_run_exe_" + Date.now().toString(36)
-                pendingRunExeRequestId = rid
-                gameModel.open_file_dialog(rid, false, qsTr("Select EXE to run in prefix"), "/home", "")
+                runExePicker.open()
             } else if (action === "run_command") {
                 gameRunCommandDialog.gameId = gid
                 gameRunCommandDialog.show(root.selectedGame.name || "", root.selectedGame.prefixPath || "")
@@ -1293,13 +1289,12 @@ property real cardZoom: uiSettings.cardZoom
             }
         }
 
-        Connections {
-            target: gameModel
-            enabled: wineToolsMenu.pendingRunExeRequestId !== ""
-            function onFile_dialog_result(requestId, path) {
-                if (requestId !== wineToolsMenu.pendingRunExeRequestId) return
-                wineToolsMenu.pendingRunExeRequestId = ""
-                if (path && path !== "" && root.selectedGame && root.selectedGame.gameId) {
+        FilePicker {
+            id: runExePicker
+            title: qsTr("Select EXE to run in prefix")
+            startFolder: "/home"
+            onPicked: (path) => {
+                if (root.selectedGame && root.selectedGame.gameId) {
                     gameModel.run_wine_exe(root.selectedGame.gameId, path)
                 }
             }

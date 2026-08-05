@@ -53,13 +53,6 @@ impl super::qobject::GameModel {
         }
     }
 
-    pub fn drain_file_dialog_results(mut self: Pin<&mut Self>) {
-        for r in omikuji_core::install_sizes::take_file_dialog_pending() {
-            self.as_mut()
-                .file_dialog_result(&QString::from(&r.request_id), &QString::from(&r.path));
-        }
-    }
-
     pub fn drain_install_sizes(mut self: Pin<&mut Self>) {
         for r in omikuji_core::install_sizes::take_pending() {
             let payload = serde_json::json!({

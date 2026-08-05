@@ -68,13 +68,6 @@ ApplicationWindow {
 
     DefaultsBridge { id: defaults }
 
-    Timer {
-        interval: 200
-        repeat: true
-        running: true
-        onTriggered: gameModel.drain_file_dialog_results()
-    }
-
     Shortcut {
         sequence: "Escape"
         onActivated: gameModel.quit_now()

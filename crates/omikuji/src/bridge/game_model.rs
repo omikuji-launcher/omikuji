@@ -46,10 +46,6 @@ pub mod qobject {
         #[qsignal]
         fn game_stopped(self: Pin<&mut GameModel>, game_id: &QString);
 
-        // request_id matches the open_file_dialog call that triggered this
-        #[qsignal]
-        fn file_dialog_result(self: Pin<&mut GameModel>, request_id: &QString, path: &QString);
-
         // payload is json: { "download": "123", "install": "456", "error": "" }
         // sizes are stringified u64 becuase js Number loses precision above 2^53
         #[qsignal]
@@ -380,17 +376,6 @@ pub mod qobject {
         #[qinvokable]
         fn steam_sync_playtime(self: Pin<&mut GameModel>);
 
-        // result arrives async via file_dialog_result signal, not as a return value
-        #[qinvokable]
-        fn open_file_dialog(
-            self: Pin<&mut GameModel>,
-            request_id: &QString,
-            select_folder: bool,
-            title: &QString,
-            default_path: &QString,
-            filter: &QString,
-        );
-
         #[qinvokable]
         fn disk_free_space(self: &GameModel, path: &QString) -> QString;
 
@@ -417,9 +402,6 @@ pub mod qobject {
 
         #[qinvokable]
         fn drain_install_sizes(self: Pin<&mut GameModel>);
-
-        #[qinvokable]
-        fn drain_file_dialog_results(self: Pin<&mut GameModel>);
 
         #[qinvokable]
         fn drain_game_details(self: Pin<&mut GameModel>);
@@ -1745,35 +1727,6 @@ impl qobject::GameModel {
 
     fn is_flatpak(&self) -> bool {
         std::env::var("FLATPAK_ID").is_ok()
-    }
-
-    fn open_file_dialog(
-        self: Pin<&mut Self>,
-        request_id: &QString,
-        select_folder: bool,
-        title: &QString,
-        default_path: &QString,
-        filter: &QString,
-    ) {
-        let rid = request_id.to_string();
-        let title_str = title.to_string();
-        let default_str = default_path.to_string();
-        let filter_str = filter.to_string();
-
-        std::thread::spawn(move || {
-            let result = omikuji_core::desktop::show_file_dialog(
-                select_folder,
-                &title_str,
-                &default_str,
-                &filter_str,
-            );
-            omikuji_core::install_sizes::push_file_dialog(
-                omikuji_core::install_sizes::FileDialogResult {
-                    request_id: rid,
-                    path: result,
-                },
-            );
-        });
     }
 
     // glibc malloc_trim: paired with the store-panel Loader unload after hide,

@@ -1,5 +1,4 @@
 import QtQuick
-import QtCore
 import "../primitives"
 
 Item {
@@ -140,7 +139,7 @@ Item {
                 hoverEnabled: !root.readOnly
                 enabled: !root.readOnly
                 cursorShape: root.readOnly ? Qt.ArrowCursor : Qt.PointingHandCursor
-                onClicked: openFileDialog()
+                onClicked: picker.open()
             }
         }
     }
@@ -156,31 +155,17 @@ Item {
         resolver: root.expandWith
     }
 
-    property string _dialogRequestId: ""
-
-    Connections {
-        target: root.gameModel
-        enabled: root._dialogRequestId !== ""
-        function onFile_dialog_result(requestId, path) {
-            if (requestId !== root._dialogRequestId) return
-            root._dialogRequestId = ""
-            if (path && path !== "") {
-                root.textEdited(path)
-                root.accepted(path)
-            }
+    FilePicker {
+        id: picker
+        selectFolder: root.selectFolder
+        title: root.selectFolder ? qsTr("Select Folder") : qsTr("Select File")
+        filter: root.filter
+        startFolder: root.selectFolder
+            ? (root.text || "/home")
+            : (root.text.lastIndexOf("/") > 0 ? root.text.substring(0, root.text.lastIndexOf("/")) : "/home")
+        onPicked: (path) => {
+            root.textEdited(path)
+            root.accepted(path)
         }
-    }
-
-    function openFileDialog() {
-        if (!gameModel) {
-            return
-        }
-
-        let title = root.selectFolder ? qsTr("Select Folder") : qsTr("Select File")
-        let defaultPath = root.text || "/home"
-
-        let id = Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
-        root._dialogRequestId = id
-        gameModel.open_file_dialog(id, root.selectFolder, title, defaultPath, root.filter)
     }
 }

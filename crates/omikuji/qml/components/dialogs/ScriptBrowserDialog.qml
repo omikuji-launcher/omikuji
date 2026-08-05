@@ -9,7 +9,6 @@ DialogCard {
     id: root
 
     property var scriptsBridge: null
-    property var gameModel: null
 
     signal scriptChosen(string tomlPath)
 
@@ -87,26 +86,19 @@ DialogCard {
 
     onCloseRequested: close()
 
-    property string _dialogRequestId: ""
-
-    Connections {
-        target: root.gameModel
-        enabled: root._dialogRequestId !== ""
-        function onFile_dialog_result(requestId, path) {
-            if (requestId !== root._dialogRequestId) return
-            root._dialogRequestId = ""
-            if (path && path !== "") {
-                root.scriptChosen(path)
-                root.close()
-            }
+    FilePicker {
+        id: scriptPicker
+        title: qsTr("Select script")
+        filter: "*.toml"
+        startFolder: "/home"
+        onPicked: (path) => {
+            root.scriptChosen(path)
+            root.close()
         }
     }
 
     function openFilePicker() {
-        if (!gameModel) return
-        let id = Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
-        _dialogRequestId = id
-        gameModel.open_file_dialog(id, false, qsTr("Select script"), "/home", "*.toml")
+        scriptPicker.open()
     }
 
     body: Item {

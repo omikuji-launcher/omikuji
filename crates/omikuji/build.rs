@@ -387,6 +387,7 @@ fn main() {
         "qml/components/cards/CardGrid.qml",
         "qml/components/popups/DisplayOptionsPopup.qml",
         "qml/components/controls/FieldSurface.qml",
+        "qml/components/controls/FilePicker.qml",
         "qml/components/controls/IconButton.qml",
         "qml/components/dialogs/IconPickerDialog.qml",
         "qml/components/controls/KeyValueTable.qml",

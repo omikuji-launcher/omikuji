@@ -101,15 +101,12 @@ DialogCard {
         }
     }
 
-    property string _locateRequestId: ""
-
-    Connections {
-        target: root.gameModel
-        enabled: root._locateRequestId !== ""
-        function onFile_dialog_result(requestId, path) {
-            if (requestId !== root._locateRequestId) return
-            root._locateRequestId = ""
-            if (!path || path === "" || root.pendingGameJson === "") return
+    FilePicker {
+        id: exePicker
+        title: qsTr("Locate the game exe")
+        startFolder: "/home"
+        onPicked: (path) => {
+            if (root.pendingGameJson === "") return
             let game = JSON.parse(root.pendingGameJson)
             game.exe = path
             root.registerGame(JSON.stringify(game))
@@ -117,10 +114,7 @@ DialogCard {
     }
 
     function locateExe() {
-        if (!gameModel) return
-        let id = Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
-        _locateRequestId = id
-        gameModel.open_file_dialog(id, false, qsTr("Locate the game exe"), "/home", "")
+        exePicker.open()
     }
 
     body: Column {
