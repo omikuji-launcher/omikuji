@@ -183,7 +183,6 @@ impl Default for NavSettings {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
-#[derive(Default)]
 pub struct BehaviorSettings {
     pub minimize_on_launch: bool,
     pub save_game_logs: bool,
@@ -192,6 +191,22 @@ pub struct BehaviorSettings {
     pub auto_check_updates_on_boot: bool,
     pub show_tray_icon: bool,
     pub double_click_launches: bool,
+    pub discord_show_launcher: bool,
+}
+
+impl Default for BehaviorSettings {
+    fn default() -> Self {
+        Self {
+            minimize_on_launch: false,
+            save_game_logs: false,
+            auto_check_epic_updates_on_launch: false,
+            auto_check_gog_updates_on_launch: false,
+            auto_check_updates_on_boot: false,
+            show_tray_icon: false,
+            double_click_launches: false,
+            discord_show_launcher: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]

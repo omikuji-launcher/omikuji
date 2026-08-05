@@ -36,17 +36,23 @@ pub fn set_playing(game: &Game) {
             .map(|d| d.as_secs() as i64)
             .unwrap_or(0);
 
-        let activity = Activity::new()
+        let mut activity = Activity::new()
             .name(&game.metadata.name)
             .activity_type(ActivityType::Playing)
             .status_display_type(StatusDisplayType::Name)
-            .state("Playing on Omikuji")
             .timestamps(Timestamps::new().start(now))
             .assets(
                 Assets::new()
                     .large_image(&image)
                     .large_text(&game.metadata.name),
             );
+
+        if crate::ui_settings::UiSettings::load()
+            .behavior
+            .discord_show_launcher
+        {
+            activity = activity.state("Playing on Omikuji");
+        }
 
         if let Err(e) = send_activity(activity) {
             tracing::error!("set_playing failed: {}", e);

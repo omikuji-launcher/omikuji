@@ -337,6 +337,16 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Show app name in Discord RPC")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: uiSettings ? uiSettings.discordShowLauncher : true
+                    onToggled: (val) => uiSettings.applyDiscordShowLauncher(val)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Unload store tabs")
                 description: qsTr("After 15s idle")
                 labelWidth: root.rowLabelWidth
