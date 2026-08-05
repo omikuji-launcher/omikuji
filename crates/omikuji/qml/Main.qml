@@ -1409,6 +1409,4 @@ property real cardZoom: uiSettings.cardZoom
 }
 
 // TODO might just really need to spend a week just on un-spaghettifying the whole qml. just sayin
-// TODO refractor game cards (need proper indexes for sorting)
-// TODO restyle toast
 // TODO kill dropshadow so we can drop qt6-5compat

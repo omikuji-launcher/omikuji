@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Controls
+import "../primitives"
 
 // Flow+Repeater not GridView becuase GridView only repositions on model changes, we need the slide when a card flips visible false for filtering
 Item {
@@ -49,6 +51,8 @@ Item {
         flickDeceleration: 3000
         maximumFlickVelocity: 1500
 
+        ScrollBar.vertical: ThinScrollBar { padding: 4 }
+
         // covers the whole scrollable area so clicks on empty flow space falls through
         MouseArea {
             width: parent.width
@@ -88,23 +92,6 @@ Item {
                 id: repeater
                 delegate: root.delegate
             }
-        }
-    }
-
-    // y measured from gridFlick.y so a headered panel doesnt start the scrollbar inside the header
-    Rectangle {
-        anchors.right: parent.right
-        anchors.rightMargin: 4
-        y: gridFlick.y + 8 + gridFlick.contentY / Math.max(1, gridFlick.contentHeight) * (gridFlick.height - 16)
-        width: 3
-        height: Math.max(30, gridFlick.height / Math.max(1, gridFlick.contentHeight) * (gridFlick.height - 16))
-        radius: 2
-        color: theme.textFaint
-        visible: gridFlick.contentHeight > gridFlick.height
-        opacity: gridFlick.moving ? 0.8 : 0.3
-
-        Behavior on opacity {
-            NumberAnimation { duration: 200 }
         }
     }
 }
