@@ -122,19 +122,17 @@ Item {
 
             SettingsRow {
                 label: qsTr("UI zoom")
-                description: "Ctrl +, Ctrl −"
+                description: "Ctrl +, Ctrl -"
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
-                M3Slider {
-                    width: 220
-                    valueText: uiSettings ? Math.round(uiSettings.uiScale * 100) + "%" : "100%"
-                    from: 0.7
-                    to: 2.0
-                    stepSize: 0.05
-                    value: uiSettings ? uiSettings.uiScale : 1.0
-                    onMoved: (val) => uiSettings.applyUiScale(val)
-                    anchors.verticalCenter: parent.verticalCenter
+                M3SpinBox {
+                    from: 70
+                    to: 200
+                    stepSize: 5
+                    Component.onCompleted: value = uiSettings ? Math.round(uiSettings.uiScale * 100) : 100
+                    onMoved: (val) => uiSettings.applyUiScale(val / 100)
                 }
             }
 

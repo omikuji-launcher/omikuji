@@ -133,8 +133,7 @@ Item {
                 if (root.stepSize > 0) {
                     raw = Math.round(raw / root.stepSize) * root.stepSize
                 }
-                root.value = Math.max(root.from, Math.min(root.to, raw))
-                root.moved(root.value)
+                root.moved(Math.max(root.from, Math.min(root.to, raw)))
             }
         }
     }

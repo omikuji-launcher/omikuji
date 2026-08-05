@@ -15,6 +15,8 @@ Item {
     implicitWidth: boxRow.implicitWidth
     implicitHeight: 36
 
+    readonly property string _displayText: (zeroPlaceholder !== "" && value === 0) ? zeroPlaceholder : String(value)
+
     function _clamp(v) { return Math.max(root.from, Math.min(root.to, v)) }
     function _bump(delta) {
         let next = _clamp(root.value + delta * root.stepSize)
@@ -84,7 +86,7 @@ Item {
             TextInput {
                 id: valueInput
                 anchors.fill: parent
-                text: (root.zeroPlaceholder !== "" && root.value === 0) ? root.zeroPlaceholder : root.value
+                text: root._displayText
                 color: theme.text
                 font.pixelSize: theme.type.body.size
                 horizontalAlignment: TextInput.AlignHCenter
@@ -100,7 +102,7 @@ Item {
                         root.value = clamped
                         root.moved(clamped)
                     }
-                    text = (root.zeroPlaceholder !== "" && root.value === 0) ? root.zeroPlaceholder : root.value
+                    text = Qt.binding(() => root._displayText)
                 }
                 Keys.onUpPressed: root._bump(1)
                 Keys.onDownPressed: root._bump(-1)
