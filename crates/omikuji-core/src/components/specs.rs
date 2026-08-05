@@ -50,18 +50,6 @@ static COMPONENTS: &[ComponentSpec] = &[
         trigger: Trigger::OnDemand,
     },
     ComponentSpec {
-        name: "jadeite",
-        source: Source::GithubRelease {
-            asset_matcher: |n| n.ends_with(".zip"),
-        },
-        extract: ExtractStrategy::ZipAll {
-            dest_subdir: "jadeite",
-        },
-        dest: "jadeite/jadeite.exe",
-        settings_key: SettingsKey::Jadeite,
-        trigger: Trigger::OnDemand,
-    },
-    ComponentSpec {
         name: "egl-dummy",
         source: Source::DirectUrl { marker: "bundled" },
         extract: ExtractStrategy::Raw,

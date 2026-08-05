@@ -140,7 +140,3 @@ pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -
         0,
     )
 }
-
-pub fn jadeite_dir() -> PathBuf {
-    crate::runtime_dir().join("jadeite")
-}

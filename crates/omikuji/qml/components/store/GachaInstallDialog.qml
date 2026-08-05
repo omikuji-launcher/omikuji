@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../lib/RunnerGrouping.js" as RG
+import "../lib/ArchiveAssets.js" as AA
 import "../controls"
 import "../dialogs"
 import "../primitives"
@@ -12,6 +13,26 @@ DialogCard {
 
     property var gameModel: null
     property var downloadModel: null
+    property var archiveManager: null
+
+    property var advised: null
+    property int assetIndex: 0
+    property bool runnerInstalling: false
+    property string runnerPhase: ""
+    property real runnerPercent: 0
+    property string runnerError: ""
+
+    readonly property bool hasAdvised: advised !== null && advised !== undefined
+    readonly property var advisedAssets: hasAdvised ? advised.assets : []
+    readonly property var advisedStems: AA.stems(advisedAssets)
+    readonly property var advisedLabels: AA.labels(advisedAssets)
+    readonly property string chosenStem: advisedStems[assetIndex] || ""
+    readonly property bool advisedInstalled:
+        hasAdvised && chosenStem !== "" && advised.installedDirs.indexOf(chosenStem) >= 0
+    readonly property bool advisedSelected:
+        hasAdvised && runnerOptions.length > 0
+        && runnerOptions[runnerIndex] && runnerOptions[runnerIndex].isAdvisedEntry === true
+    readonly property color advisedTint: advisedInstalled ? theme.success : theme.warning
 
     property int runnersVersion: 0
     onRunnersVersionChanged: if (root.shown) loadRunners()
@@ -159,6 +180,12 @@ DialogCard {
         existingTempSegments = 0
         existingInstall = false
         existingVersion = ""
+        advised = null
+        assetIndex = 0
+        runnerInstalling = false
+        runnerPhase = ""
+        runnerPercent = 0
+        runnerError = ""
         sizeFetchDebounce.stop()
     }
 
@@ -186,6 +213,7 @@ DialogCard {
         installPath = defaultInstallPath()
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
+        loadAdvised()
         refreshFreeSpace()
         refreshInstallSize()
         refreshExisting()
@@ -213,11 +241,104 @@ DialogCard {
         try { arr = JSON.parse(raw) || [] } catch (e) { arr = [] }
         let opts = RG.groupRunners(arr)
         if (opts.length === 0) opts = [{ label: "System Wine", value: "system" }]
-        runnerOptions = opts
 
-        let prefs = (manifest && manifest.runner_preference) ? manifest.runner_preference : []
+        if (hasAdvised) {
+            opts = [{
+                label: advised.tag,
+                value: "__advised__",
+                isAdvisedEntry: true,
+                tint: advisedTint
+            }].concat(opts)
+            runnerOptions = opts
+            runnerIndex = 0
+            return
+        }
+
+        runnerOptions = opts
         let def = defaults ? (defaults.getConfig()["wine.version"] || "") : ""
-        runnerIndex = RG.preferredIndex(opts, def, prefs)
+        runnerIndex = RG.preferredIndex(opts, def, [])
+    }
+
+    function loadAdvised() {
+        advised = null
+        assetIndex = 0
+        runnerError = ""
+        let link = manifest ? (manifest.runner || "") : ""
+        if (!archiveManager || link === "") return
+        archiveManager.fetchAdvisedRunner(link)
+    }
+
+    function selectedRunner() {
+        if (advisedSelected && chosenStem !== "") return chosenStem
+        return runnerOptions.length > 0 ? runnerOptions[runnerIndex].value : "system"
+    }
+
+    function startInstall() {
+        if (advisedSelected && !advisedInstalled) {
+            runnerError = ""
+            runnerPhase = ""
+            runnerPercent = 0
+            runnerInstalling = true
+            archiveManager.installAdvisedRunner(
+                manifest.runner, advisedAssets[assetIndex].name
+            )
+            return
+        }
+        commitInstall()
+    }
+
+    function commitInstall() {
+        let runner = selectedRunner()
+        if (existingInstall) {
+            let gid = gameModel.gacha_import_after_install(
+                manifestId, editionId, displayName, effectiveInstallPath, runner, prefixPath
+            )
+            imported(gid || "")
+            close()
+            return
+        }
+        let id = downloadModel.enqueue_gacha(
+            manifestId, editionId, voicesSelected().join(","),
+            displayName, effectiveInstallPath, runner, prefixPath, tempPath
+        )
+        if (id && id.length > 0) installEnqueued(id)
+        close()
+    }
+
+    Connections {
+        target: root.archiveManager
+
+        function onAdvisedRunnerReady(json, error) {
+            if (error && error.length > 0) {
+                root.advised = null
+                root.runnerError = error
+                return
+            }
+            try { root.advised = JSON.parse(json) } catch (e) { root.advised = null }
+            root.assetIndex = 0
+            root.loadRunners()
+        }
+    }
+
+    Connections {
+        target: root.archiveManager
+        enabled: root.runnerInstalling
+
+        function onInstallProgress(category, source, tag, phase, percent) {
+            if (!root.hasAdvised || tag !== root.advised.tag) return
+            root.runnerPhase = phase
+            root.runnerPercent = percent
+        }
+        function onInstallCompleted(category, source, tag, dir) {
+            if (!root.hasAdvised || tag !== root.advised.tag) return
+            root.runnerInstalling = false
+            root.commitInstall()
+        }
+        function onInstallFailed(category, source, tag, error) {
+            if (!root.hasAdvised || tag !== root.advised.tag) return
+            root.runnerInstalling = false
+            root.runnerError = error
+        }
     }
 
     function refreshFreeSpace() {
@@ -497,12 +618,53 @@ DialogCard {
             M3Dropdown {
                 Layout.fillWidth: true
                 label: qsTr("Runner")
+                labelSuffix: root.advisedSelected
+                    ? (root.advisedInstalled
+                        ? qsTr("This runner is adviced to play this game, and is installed.")
+                        : qsTr("This runner is adviced to play this game."))
+                    : ""
+                labelSuffixColor: root.advisedTint
+                enabled: !root.runnerInstalling
                 options: root.runnerOptions
                 currentIndex: root.runnerIndex
                 onSelected: (v) => {
                     for (let i = 0; i < root.runnerOptions.length; i++) {
                         if (root.runnerOptions[i].value === v) { root.runnerIndex = i; break }
                     }
+                }
+            }
+
+            M3Dropdown {
+                Layout.fillWidth: true
+                visible: root.advisedSelected && root.advisedAssets.length > 1
+                label: qsTr("Release file")
+                enabled: !root.runnerInstalling
+                options: root.advisedLabels.map((l, i) => ({ label: l, value: i }))
+                currentIndex: root.assetIndex
+                onSelected: (v) => root.assetIndex = v
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: root.runnerInstalling || root.runnerError !== ""
+                spacing: theme.space.xs
+
+                Text {
+                    Layout.fillWidth: true
+                    text: root.runnerError !== ""
+                        ? root.runnerError
+                        : qsTr("Installing the runner... %1").arg(root.runnerPhase)
+                    color: root.runnerError !== "" ? theme.error : theme.textMuted
+                    font.pixelSize: theme.type.caption.size
+                    wrapMode: Text.WordWrap
+                }
+
+                WavyProgressBar {
+                    Layout.fillWidth: true
+                    visible: root.runnerInstalling
+                    value: root.runnerPercent / 100
+                    fillColor: theme.accent
+                    trackColor: theme.alpha(theme.text, 0.16)
                 }
             }
         }
@@ -524,38 +686,8 @@ DialogCard {
             enabled: root.manifest !== null
                 && root.installPath.trim().length > 0
                 && root.hasEnoughSpace()
-            onClicked: {
-                let runner = root.runnerOptions.length > 0
-                    ? root.runnerOptions[root.runnerIndex].value
-                    : "system"
-                if (root.existingInstall) {
-                    let gid = root.gameModel.gacha_import_after_install(
-                        root.manifestId,
-                        root.editionId,
-                        root.displayName,
-                        root.effectiveInstallPath,
-                        runner,
-                        root.prefixPath
-                    )
-                    root.imported(gid || "")
-                    root.close()
-                    return
-                }
-                let id = root.downloadModel.enqueue_gacha(
-                    root.manifestId,
-                    root.editionId,
-                    root.voicesSelected().join(","),
-                    root.displayName,
-                    root.effectiveInstallPath,
-                    runner,
-                    root.prefixPath,
-                    root.tempPath
-                )
-                if (id && id.length > 0) {
-                    root.installEnqueued(id)
-                }
-                root.close()
-            }
+                && !root.runnerInstalling
+            onClicked: root.startInstall()
         }
     }
 }

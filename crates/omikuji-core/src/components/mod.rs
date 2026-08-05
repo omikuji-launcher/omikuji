@@ -70,14 +70,12 @@ pub fn gog_tools() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
-pub fn gacha_tools(publisher_slug: &str, launch_patch: &str) -> Vec<&'static ComponentSpec> {
+pub fn gacha_tools(publisher_slug: &str) -> Vec<&'static ComponentSpec> {
     let needs_hpatchz = matches!(publisher_slug, "hoyoverse" | "hypergryph");
-    let needs_jadeite = launch_patch == "jadeite";
     specs::all()
         .iter()
         .filter(|s| match s.settings_key {
             SettingsKey::Hpatchz => needs_hpatchz,
-            SettingsKey::Jadeite => needs_jadeite,
             _ => false,
         })
         .collect()
@@ -195,7 +193,6 @@ fn url_for(key: SettingsKey) -> Result<String> {
         SettingsKey::Hpatchz => &s.hpatchz,
         SettingsKey::Legendary => &s.legendary,
         SettingsKey::Gogdl => &s.gogdl,
-        SettingsKey::Jadeite => &s.jadeite,
         SettingsKey::EglDummy => &s.egl_dummy,
     };
     if value.trim().is_empty() {
@@ -363,23 +360,6 @@ fn install_bytes(spec: &ComponentSpec, bytes: &[u8]) -> Result<()> {
             drop(out);
             chmod_exec(&tmp)?;
             fs::rename(&tmp, &dest)?;
-        }
-        ExtractStrategy::ZipAll { dest_subdir } => {
-            // staging dir + atomic rename avoids half-populated installs on crash
-            let target = runtime.join(dest_subdir);
-            let staging = runtime.join(format!(".staging-{}", spec.name));
-            let _ = fs::remove_dir_all(&staging);
-            fs::create_dir_all(&staging)?;
-
-            let reader = std::io::Cursor::new(bytes);
-            let mut archive = zip::ZipArchive::new(reader)?;
-            archive.extract(&staging)?;
-
-            let _ = fs::remove_dir_all(&target);
-            if let Some(parent) = target.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            fs::rename(&staging, &target)?;
         }
     }
     Ok(())

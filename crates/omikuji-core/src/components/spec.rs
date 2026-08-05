@@ -20,7 +20,6 @@ pub enum SettingsKey {
     Hpatchz,
     Legendary,
     Gogdl,
-    Jadeite,
     EglDummy,
 }
 
@@ -37,8 +36,6 @@ pub enum ExtractStrategy {
     Tar { inner_path: &'static str },
     TarGz { inner_path: &'static str },
     Zip { inner_path: &'static str },
-    // extract entire zip tree, needed for dir-shipped components like jadeite
-    ZipAll { dest_subdir: &'static str },
 }
 
 #[derive(Debug, Clone)]

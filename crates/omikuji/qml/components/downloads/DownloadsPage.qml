@@ -19,7 +19,7 @@ Item {
 
     // patched row-by-row so we dont reparse the full json on every progress tick
     property var componentStatuses: ({})
-    readonly property var componentOrder: ["umu-run", "hpatchz", "legendary", "gogdl", "jadeite", "egl-dummy"]
+    readonly property var componentOrder: ["umu-run", "hpatchz", "legendary", "gogdl", "egl-dummy"]
     readonly property bool componentsVisible: {
         if (!componentsBridge) return false
         if (componentsBridge.inProgress) return true

@@ -40,7 +40,7 @@ pub struct GachaManifest {
     #[serde(default)]
     pub anti_cheat: String,
     #[serde(default)]
-    pub runner_preference: Vec<String>,
+    pub runner: String,
     #[serde(default)]
     pub telemetry_block: Vec<String>,
     #[serde(default)]
@@ -167,7 +167,7 @@ mod tests {
             category: "Test".into(),
             launch_patch: String::new(),
             anti_cheat: String::new(),
-            runner_preference: vec![],
+            runner: String::new(),
             telemetry_block: vec![],
             env: HashMap::new(),
             letter_fallback: "T".into(),

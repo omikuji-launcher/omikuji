@@ -93,6 +93,14 @@ pub mod qobject {
         #[cxx_name = "sourcesChanged"]
         fn sources_changed(self: Pin<&mut ArchiveManagerBridge>);
 
+        #[qsignal]
+        #[cxx_name = "advisedRunnerReady"]
+        fn advised_runner_ready(
+            self: Pin<&mut ArchiveManagerBridge>,
+            json: QString,
+            error: QString,
+        );
+
         #[qinvokable]
         #[cxx_name = "listRunners"]
         fn list_runners(self: &ArchiveManagerBridge) -> QString;
@@ -112,6 +120,18 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "fetchVersions"]
         fn fetch_versions(self: Pin<&mut ArchiveManagerBridge>, category: QString, source: QString);
+
+        #[qinvokable]
+        #[cxx_name = "fetchAdvisedRunner"]
+        fn fetch_advised_runner(self: Pin<&mut ArchiveManagerBridge>, link: QString);
+
+        #[qinvokable]
+        #[cxx_name = "installAdvisedRunner"]
+        fn install_advised_runner(
+            self: Pin<&mut ArchiveManagerBridge>,
+            link: QString,
+            asset_name: QString,
+        );
 
         // release_json is a single ReleaseInfo object (from a previous versionsReady payload).
         // passing it rather than just the tag avoids a second list round-trip to resolve asset_url.
@@ -208,6 +228,23 @@ fn source_lookup(category: &str, name: &str) -> Option<ArchiveSource> {
     sources_for(category).into_iter().find(|s| s.name == name)
 }
 
+fn resolve_release(link: &str) -> Result<(runners::AdvisedRunner, ReleaseInfo), String> {
+    let advised =
+        runners::resolve_advised(link).ok_or_else(|| format!("unusable runner link: {}", link))?;
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|e| e.to_string())?;
+    let releases = rt
+        .block_on(archive_source::fetch_versions(&advised.source))
+        .map_err(|e| format!("{:#}", e))?;
+    let release = releases
+        .into_iter()
+        .find(|r| r.tag == advised.tag)
+        .ok_or_else(|| format!("no release tagged {}", advised.tag))?;
+    Ok((advised, release))
+}
+
 fn sources_to_json(sources: &[ArchiveSource]) -> String {
     serde_json::to_string(sources).unwrap_or_else(|_| "[]".into())
 }
@@ -287,6 +324,74 @@ impl qobject::ArchiveManagerBridge {
                     }
                 }
             });
+        });
+    }
+
+    fn fetch_advised_runner(mut self: Pin<&mut Self>, link: QString) {
+        let link_s = link.to_string();
+        let qt = self.as_mut().qt_thread();
+        thread::spawn(move || {
+            let emit = |json: String, error: String| {
+                let _ = qt.queue(move |bridge| {
+                    bridge.advised_runner_ready(QString::from(&json), QString::from(&error));
+                });
+            };
+            let (advised, release) = match resolve_release(&link_s) {
+                Ok(v) => v,
+                Err(e) => return emit(String::new(), e),
+            };
+            let installed = archive_source::list_installed(&advised.source, &advised.dest_root());
+            emit(
+                serde_json::json!({
+                    "tag": advised.tag,
+                    "assets": release.assets,
+                    "installedDirs": installed,
+                })
+                .to_string(),
+                String::new(),
+            );
+        });
+    }
+
+    fn install_advised_runner(mut self: Pin<&mut Self>, link: QString, asset_name: QString) {
+        let link_s = link.to_string();
+        let wanted = asset_name.to_string();
+        let qt = self.as_mut().qt_thread();
+        thread::spawn(move || {
+            let (advised, mut release) = match resolve_release(&link_s) {
+                Ok(v) => v,
+                Err(e) => {
+                    let _ = qt.queue(move |bridge| {
+                        bridge.install_failed(
+                            QString::from("runners"),
+                            QString::from(""),
+                            QString::from(""),
+                            QString::from(&e),
+                        );
+                    });
+                    return;
+                }
+            };
+            if !wanted.is_empty()
+                && let Some(asset) = release.assets.iter().find(|a| a.name == wanted).cloned()
+            {
+                release.asset_name = asset.name;
+                release.asset_url = asset.url;
+                release.asset_size = asset.size;
+            }
+            let rt = match tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                Ok(rt) => rt,
+                Err(_) => return,
+            };
+            let _ = rt.block_on(archive_source::install_version(
+                "runners",
+                &advised.source,
+                &release,
+                &advised.dest_root(),
+            ));
         });
     }
 

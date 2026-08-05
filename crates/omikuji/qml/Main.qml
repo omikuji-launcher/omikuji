@@ -953,6 +953,7 @@ property real cardZoom: uiSettings.cardZoom
         gameModel: root.gameModelRef
         downloadModel: downloadModel
         defaults: defaultsBridge
+        archiveManager: root.archiveManagerRef
         runnersVersion: root.runnersVersion
         onInstallEnqueued: {
             navTabs.currentStore = ""

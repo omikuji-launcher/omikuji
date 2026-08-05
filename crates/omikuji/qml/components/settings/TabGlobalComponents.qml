@@ -20,7 +20,6 @@ Item {
         "umu-run":   { label: "umu-run",    desc: qsTr("Launcher wrapper needed for Proton.") },
         "hpatchz":   { label: "HPatchZ",    desc: qsTr("Binary patch tool. Required for gacha diff updates.") },
         "legendary": { label: "Legendary",  desc: qsTr("Epic Games CLI binary.") },
-        "jadeite":   { label: "Jadeite",    desc: qsTr("Compatibility shim for Honkai: Star Rail.") },
         "egl-dummy": { label: "EGL dummy",  desc: qsTr("Dummy EpicGamesLauncher.exe needed for Epic Games imports.") }
     })
 
@@ -231,7 +230,7 @@ Item {
                 spacing: 6
 
                 Repeater {
-                    model: ["umu-run", "hpatchz", "legendary", "jadeite", "egl-dummy"]
+                    model: ["umu-run", "hpatchz", "legendary", "gogdl", "egl-dummy"]
 
                     delegate: Item {
                         required property string modelData

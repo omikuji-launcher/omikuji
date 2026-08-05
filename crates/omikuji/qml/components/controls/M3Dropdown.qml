@@ -14,6 +14,8 @@ Item {
         return (opt && !opt.header) ? opt.value : ""
     }
     property string label: ""
+    property string labelSuffix: ""
+    property color labelSuffixColor: theme.textMuted
     property real fieldHeight: 44
 
     signal selected(var value)
@@ -56,15 +58,26 @@ Item {
 
     implicitHeight: label ? labelText.height + 4 + button.height : button.height
 
-    Text {
+    Row {
         id: labelText
-        text: root.label
-        color: popup.visible ? theme.accent : theme.textMuted
-        font.pixelSize: theme.type.label.size
-        font.weight: Font.Medium
+        spacing: 5
         visible: root.label !== ""
 
-        Behavior on color { ColorAnimation { duration: 100 } }
+        Text {
+            text: root.label
+            color: popup.visible ? theme.accent : theme.textMuted
+            font.pixelSize: theme.type.label.size
+            font.weight: Font.Medium
+
+            Behavior on color { ColorAnimation { duration: 100 } }
+        }
+
+        Text {
+            visible: root.labelSuffix !== ""
+            text: "· " + root.labelSuffix
+            color: root.labelSuffixColor
+            font.pixelSize: theme.type.label.size
+        }
     }
 
     FieldSurface {
@@ -87,7 +100,10 @@ Item {
                 var opt = root.options[root.currentIndex]
                 return (opt && !opt.header) ? opt.label : ""
             }
-            color: theme.text
+            color: {
+                var opt = root.options[root.currentIndex]
+                return (opt && opt.tint) ? opt.tint : theme.text
+            }
             font.pixelSize: theme.type.body.size
         }
 
@@ -231,13 +247,14 @@ Item {
                         required property int index
                         required property var modelData
                         readonly property bool isHeader: modelData && modelData.header === true
+                        readonly property color tint: (modelData && modelData.tint)
+                            ? modelData.tint
+                            : (index === root.currentIndex ? theme.accent : theme.text)
                         width: col.width
                         height: isHeader ? (index === 0 ? 22 : 28) : 40
                         radius: theme.radius.xs
                         color: !isHeader && optionMouse.containsMouse
-                            ? (index === root.currentIndex
-                                ? theme.alpha(theme.accent, 0.18)
-                                : theme.alpha(theme.text, 0.14))
+                            ? theme.alpha(tint, index === root.currentIndex ? 0.18 : 0.14)
                             : "transparent"
 
                         // group caption, non-interactive
@@ -268,9 +285,8 @@ Item {
                             property real pan: 0
                             property bool manualPan: false
                             readonly property color bg: !optionRow.isHeader && optionMouse.containsMouse
-                                ? (index === root.currentIndex
-                                    ? theme.mix(popup.color, theme.accent, 0.18)
-                                    : theme.mix(popup.color, theme.text, 0.14))
+                                ? theme.mix(popup.color, optionRow.tint,
+                                            index === root.currentIndex ? 0.18 : 0.14)
                                 : popup.color
 
                             function panBy(delta) {
@@ -286,7 +302,7 @@ Item {
                                 id: optionText
                                 x: -Math.round(labelClip.pan)
                                 text: modelData.label
-                                color: index === root.currentIndex ? theme.accent : theme.text
+                                color: optionRow.tint
                                 font.pixelSize: theme.type.body.size
                                 font.weight: index === root.currentIndex ? Font.Medium : Font.Normal
                             }

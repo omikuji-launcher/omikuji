@@ -78,7 +78,7 @@ pub struct SourceConfig {
     // populated on first cloud_saves toggle via `legendary sync-saves --accept-path`
     #[serde(default)]
     pub save_path: String,
-    // patch wrapper at launch. currently only "jadeite" (hsr telemetry bypass). set at import time.
+    // patch wrapper at launch, set at import time.
     #[serde(default)]
     pub patch: String,
 }

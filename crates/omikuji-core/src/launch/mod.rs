@@ -212,15 +212,7 @@ fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
     } else {
         let mut cmd = vec![wine_exe.to_string_lossy().to_string()];
         if !game.metadata.exe.as_os_str().is_empty() {
-            // jadeite spawns the game process itself, so extra args go after `--`
-            if game.source.patch == "jadeite" {
-                let jadeite_exe = crate::hoyo::jadeite_dir().join("jadeite.exe");
-                cmd.push(jadeite_exe.to_string_lossy().to_string());
-                cmd.push(game.metadata.exe.to_string_lossy().to_string());
-                cmd.push("--".to_string());
-            } else {
-                cmd.push(game.metadata.exe.to_string_lossy().to_string());
-            }
+            cmd.push(game.metadata.exe.to_string_lossy().to_string());
         }
         for arg in &game.launch.args {
             cmd.push(arg.clone());

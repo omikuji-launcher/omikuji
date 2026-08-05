@@ -36,7 +36,7 @@ Point it at a fork to add your own gachas. hmph.
 
 ## `[components]`
 
-Download URLs for the runtime tools (umu, hpatchz, legendary, gogdl, jadeite, EGL dummy). `umu-run` is fetched on first launch; the rest are fetched when first needed, like a store login or a game install.
+Download URLs for the runtime tools (umu, hpatchz, legendary, gogdl, EGL dummy). `umu-run` is fetched on first launch; the rest are fetched when first needed, like a store login or a game install.
 
 ```toml
 [components]
@@ -44,7 +44,6 @@ umu_run = "https://api.github.com/repos/Open-Wine-Components/umu-launcher/releas
 hpatchz = "https://api.github.com/repos/sisong/HDiffPatch/releases/latest"
 legendary = "https://api.github.com/repos/derrod/legendary/releases/latest"
 gogdl = "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest"
-jadeite = "https://codeberg.org/api/v1/repos/mkrsym1/jadeite/releases/latest"
 egl_dummy = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe"
 ```
 

@@ -34,7 +34,7 @@ That row wires both directions: reading the field into the config map and writin
 
 ## A runtime tool
 
-Runtime tools (umu, legendary, jadeite, ...) are fetched by the component system. To add one:
+Runtime tools (umu, legendary, gogdl, ...) are fetched by the component system. To add one:
 
 1. Add a variant to `SettingsKey` in `omikuji-core/src/components/spec.rs`.
 

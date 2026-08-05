@@ -164,6 +164,7 @@ fn main() {
     qrc_paths.extend(translation_paths);
     qrc_paths.push("qml/components/lib/RunnerGrouping.js".to_string());
     qrc_paths.push("qml/components/lib/Format.js".to_string());
+    qrc_paths.push("qml/components/lib/ArchiveAssets.js".to_string());
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let ui_settings_bridge = kushi::ObjectBridge::new("UiSettingsBridge")

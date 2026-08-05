@@ -235,8 +235,7 @@ impl super::qobject::GameModel {
             return QString::default();
         }
 
-        let tools =
-            omikuji_core::components::gacha_tools(&manifest.publisher_slug, &manifest.launch_patch);
+        let tools = omikuji_core::components::gacha_tools(&manifest.publisher_slug);
         if !tools.is_empty() {
             tokio::spawn(async move {
                 let _ = omikuji_core::components::ensure(&tools).await;

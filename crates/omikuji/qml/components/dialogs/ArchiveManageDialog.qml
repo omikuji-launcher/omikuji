@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../controls"
 import "../primitives"
+import "../lib/ArchiveAssets.js" as AA
 
 
 DialogCard {
@@ -216,27 +217,8 @@ DialogCard {
                 }
                 readonly property var chosenAsset: assets[assetIndex] || null
                 readonly property int assetSize: chosenAsset ? (chosenAsset.size || 0) : (modelData.asset_size || 0)
-                readonly property var assetStems: assets.map(a => String(a.name).replace(/\.(tar\.(gz|xz|zst)|zip)$/, ""))
-                readonly property var assetLabels: {
-                    var stems = assetStems
-                    if (stems.length < 2) return stems
-                    var prefix = stems[0]
-                    for (var i = 1; i < stems.length; i++) {
-                        while (prefix.length > 0 && stems[i].indexOf(prefix) !== 0)
-                            prefix = prefix.substring(0, prefix.length - 1)
-                    }
-                    var labels = stems.map(s => {
-                        var r = s.substring(prefix.length).replace(/^[-_.]+/, "")
-                        return r === "" ? "x86_64" : r
-                    })
-                    var counts = {}
-                    labels.forEach(l => counts[l] = (counts[l] || 0) + 1)
-                    return labels.map((l, i) => {
-                        if (counts[l] < 2) return l
-                        var m = String(assets[i].name).match(/\.(tar\.(gz|xz|zst)|zip)$/)
-                        return m ? l + " · " + m[0].substring(1) : l
-                    })
-                }
+                readonly property var assetStems: AA.stems(assets)
+                readonly property var assetLabels: AA.labels(assets)
                 readonly property bool installed: root.installedDirs[assetStems[assetIndex]] === true
                 readonly property bool busy:
                     root.activeInstalls[root.category + "/" + root.sourceName + "/" + tag] !== undefined
