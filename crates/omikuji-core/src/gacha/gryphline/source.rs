@@ -16,19 +16,19 @@ use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
     report_progress, set_status,
 };
-use crate::gachas::manifest::GachaManifest;
+use crate::gacha::manifest::GachaManifest;
 
-pub struct EndfieldSource;
+pub struct GryphlineSource;
 
-struct ParsedEndfieldApp {
+struct ParsedGryphlineApp {
     manifest: GachaManifest,
     edition_id: String,
     edition_label: String,
     cfg: api::EditionConfig,
 }
 
-fn parse_endfield_app(app_id: &str) -> Result<ParsedEndfieldApp> {
-    let (manifest, edition_id, _) = crate::gachas::strategies::find_for_app_id(app_id)
+fn parse_app_id(app_id: &str) -> Result<ParsedGryphlineApp> {
+    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
     let edition_label = manifest
         .editions
@@ -37,7 +37,7 @@ fn parse_endfield_app(app_id: &str) -> Result<ParsedEndfieldApp> {
         .map(|e| e.label.clone())
         .unwrap_or_else(|| edition_id.clone());
     let cfg = api::EditionConfig::from_manifest(&manifest, &edition_id)?;
-    Ok(ParsedEndfieldApp {
+    Ok(ParsedGryphlineApp {
         manifest,
         edition_id,
         edition_label,
@@ -46,9 +46,9 @@ fn parse_endfield_app(app_id: &str) -> Result<ParsedEndfieldApp> {
 }
 
 #[async_trait]
-impl DownloadSource for EndfieldSource {
+impl DownloadSource for GryphlineSource {
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
-        let parsed = parse_endfield_app(&entry.app_id)?;
+        let parsed = parse_app_id(&entry.app_id)?;
         tracing::info!("install: {} ({})", entry.display_name, parsed.edition_label);
 
         let resp = api::fetch_latest(&parsed.cfg, "").await?;
@@ -90,7 +90,7 @@ impl DownloadSource for EndfieldSource {
             _ => return Err(anyhow!("update() called on a non-update entry")),
         };
 
-        let parsed = parse_endfield_app(&entry.app_id)?;
+        let parsed = parse_app_id(&entry.app_id)?;
         tracing::info!(
             "update: {} {} -> latest",
             parsed.edition_label,
@@ -399,8 +399,14 @@ async fn apply_variant(
 
     let need_dl = !matches!(std::fs::metadata(&blob_path), Ok(m) if m.len() == variant.patch_size);
     if need_dl {
-        crate::hoyo::source::download_file(&url, &blob_path, &entry.id, 0, variant.patch_size)
-            .await?;
+        crate::gacha::hoyo::source::download_file(
+            &url,
+            &blob_path,
+            &entry.id,
+            0,
+            variant.patch_size,
+        )
+        .await?;
     }
 
     let target_abs = install_path_for(
@@ -551,8 +557,14 @@ async fn download_and_extract(
             format_bytes(f.package_size)
         );
 
-        crate::hoyo::source::download_file(&f.url, &temp_path, &entry.id, so_far, total_bytes)
-            .await?;
+        crate::gacha::hoyo::source::download_file(
+            &f.url,
+            &temp_path,
+            &entry.id,
+            so_far,
+            total_bytes,
+        )
+        .await?;
 
         so_far += f.package_size;
     }
@@ -572,7 +584,7 @@ async fn download_and_extract(
             },
         );
         set_status(&entry.id, DownloadStatus::Extracting);
-        crate::hoyo::source::extract_archive(first, &entry.install_path, Some(&entry.id))?;
+        crate::gacha::hoyo::source::extract_archive(first, &entry.install_path, Some(&entry.id))?;
 
         for f in files {
             let fname = f.url.rsplit('/').next().unwrap_or("endfield.zip");
@@ -584,7 +596,7 @@ async fn download_and_extract(
     Ok(())
 }
 
-pub fn cleanup_endfield_state(app_id: &str, install_path: &Path, temp_dir: Option<&Path>) {
+pub fn cleanup_gryphline_state(app_id: &str, install_path: &Path, temp_dir: Option<&Path>) {
     let safe_id = app_id.replace(':', "-");
     let dirname = format!(".omikuji-dl-{}", safe_id);
     let mut candidates: Vec<std::path::PathBuf> = Vec::new();
@@ -602,7 +614,7 @@ pub fn cleanup_endfield_state(app_id: &str, install_path: &Path, temp_dir: Optio
 }
 
 // returns total bytes across files, number of zip-segment files
-pub fn inspect_endfield_temp(
+pub fn inspect_gryphline_temp(
     app_id: &str,
     install_path: &Path,
     temp_dir: Option<&Path>,

@@ -109,16 +109,18 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     // also rewrite wine.version from "steam:{app_id}" to "steam:{proton_dir_name}" using the version stamp in compatdata/version so PROTONPATH resolves correctly.
     let mut effective: Game;
     let g: &Game = if game.source.kind == "steam" && !game.source.app_id.is_empty() {
-        let pfx = crate::steam::local::find_steam_prefix(&game.source.app_id).ok_or_else(|| {
-            anyhow!(
-                "no Steam prefix for this game yet — launch it through Steam \
+        let pfx = crate::store::steam::local::find_steam_prefix(&game.source.app_id).ok_or_else(
+            || {
+                anyhow!(
+                    "no Steam prefix for this game yet — launch it through Steam \
                  at least once so Steam creates compatdata/{}/pfx",
-                game.source.app_id
-            )
-        })?;
+                    game.source.app_id
+                )
+            },
+        )?;
 
-        let stamped = crate::steam::local::find_steam_proton_version(&game.source.app_id);
-        let install = crate::steam::local::resolve_or_default_proton(stamped.as_deref())
+        let stamped = crate::store::steam::local::find_steam_proton_version(&game.source.app_id);
+        let install = crate::store::steam::local::resolve_or_default_proton(stamped.as_deref())
             .ok_or_else(|| {
                 anyhow!(
                     "no Proton install found — install one via Steam or drop \

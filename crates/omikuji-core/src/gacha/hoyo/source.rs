@@ -56,11 +56,11 @@ impl DownloadSource for HoyoSource {
             .ok_or_else(|| anyhow!("no main package info for {}", parsed.display_name))?;
         let target_version = main.tag.clone();
 
-        let target = crate::gachas::strategies::normalize_version(&from_version);
+        let target = crate::gacha::strategies::normalize_version(&from_version);
         let matched_tag = main
             .diff_tags
             .iter()
-            .find(|t| crate::gachas::strategies::normalize_version(t) == target)
+            .find(|t| crate::gacha::strategies::normalize_version(t) == target)
             .cloned();
         let Some(diff_key) = matched_tag else {
             tracing::warn!(
@@ -735,7 +735,7 @@ pub fn extract_archive(archive_path: &Path, dest: &Path, entry_id: Option<&str>)
 }
 
 fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
-    let (manifest, edition_id, _) = crate::gachas::strategies::find_for_app_id(app_id)
+    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
 
     let edition = match edition_id.as_str() {

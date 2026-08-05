@@ -75,7 +75,7 @@ impl ProcessManager {
             && game.source.cloud_saves
             && !game.source.save_path.is_empty()
             && let Err(e) =
-                crate::epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
+                crate::store::epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
         {
             tracing::warn!("cloud save download failed: {} (launching anyway)", e);
         }
@@ -233,8 +233,10 @@ impl ProcessManager {
                 if game.is_epic()
                     && game.source.cloud_saves
                     && !game.source.save_path.is_empty()
-                    && let Err(e) =
-                        crate::epic::sync_saves_upload(&game.source.app_id, &game.source.save_path)
+                    && let Err(e) = crate::store::epic::sync_saves_upload(
+                        &game.source.app_id,
+                        &game.source.save_path,
+                    )
                 {
                     tracing::warn!(pid, "cloud save upload failed: {}", e);
                 }

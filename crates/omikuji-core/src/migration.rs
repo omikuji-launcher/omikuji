@@ -180,7 +180,7 @@ fn move_gog(on_line: &mut impl FnMut(String)) -> Result<()> {
     if !old.is_dir() {
         return Ok(());
     }
-    let new = crate::gog::gog_dir();
+    let new = crate::store::gog::gog_dir();
     if new.exists() {
         on_line("skipping gog (already at destination)".into());
         return Ok(());

@@ -5,13 +5,15 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
-use super::proc_tree::shutdown;
-use super::{ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress};
+use crate::downloads::proc_tree::shutdown;
+use crate::downloads::{
+    ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
+};
 
 pub struct GogdlSource;
 
 fn gogdl_bin() -> Result<PathBuf> {
-    crate::gog::find_gogdl().ok_or_else(|| {
+    crate::store::gog::find_gogdl().ok_or_else(|| {
         anyhow!(
             "gogdl not found — install via first-run components or place at {}",
             crate::runtime_dir().join("gogdl").display()
@@ -26,7 +28,7 @@ impl DownloadSource for GogdlSource {
 
         // ghost-state: if the registry still has this app but files are gone
         // (user wiped the dir, or a prior install didn't finish), drop the stale entry before re-running gogdl, stops a "Completed" flash over an empty dir
-        if let Some(info) = crate::gog::find_installed_info(&entry.app_id) {
+        if let Some(info) = crate::store::gog::find_installed_info(&entry.app_id) {
             let has_marker = info.install_path.exists()
                 && dir_has_info_marker(&info.install_path, &entry.app_id);
             if !has_marker {
@@ -35,13 +37,13 @@ impl DownloadSource for GogdlSource {
                     entry.app_id,
                     info.install_path.display()
                 );
-                let _ = crate::gog::remove_install(&entry.app_id);
+                let _ = crate::store::gog::remove_install(&entry.app_id);
             }
         }
 
         // without this, gogdl reads its cached manifest and can decide "Nothing to do"
         // against an empty install dir. fresh install = fresh manifest. fuck you gogdl ngl
-        crate::gog::wipe_gogdl_manifest_for(&entry.app_id);
+        crate::store::gog::wipe_gogdl_manifest_for(&entry.app_id);
 
         if let Err(e) = std::fs::create_dir_all(&entry.install_path) {
             return Err(anyhow!(
@@ -78,7 +80,8 @@ impl DownloadSource for GogdlSource {
         } else {
             tracing::info!("resolved exe for {}: {}", entry.app_id, exe);
         }
-        if let Err(e) = crate::gog::record_install(&entry.app_id, &final_root, &exe, &title) {
+        if let Err(e) = crate::store::gog::record_install(&entry.app_id, &final_root, &exe, &title)
+        {
             tracing::error!("failed to record install: {}", e);
         }
 
@@ -88,7 +91,7 @@ impl DownloadSource for GogdlSource {
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
         let gogdl = gogdl_bin()?;
         // wipe stale manifest so gogdl sees the latest build before deciding whats to patch
-        crate::gog::wipe_gogdl_manifest_for(&entry.app_id);
+        crate::store::gog::wipe_gogdl_manifest_for(&entry.app_id);
         let child = spawn_download(&gogdl, entry)?;
         run_with_progress(child, entry).await
     }
@@ -110,17 +113,19 @@ impl DownloadSource for GogdlSource {
                 root.display()
             );
         }
-        crate::gog::record_install(&entry.app_id, &root, &exe, &entry.display_name)?;
+        crate::store::gog::record_install(&entry.app_id, &root, &exe, &entry.display_name)?;
         Ok(())
     }
 }
 
 fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
-    let support_dir = crate::gog::gog_dir().join("support").join(&entry.app_id);
+    let support_dir = crate::store::gog::gog_dir()
+        .join("support")
+        .join(&entry.app_id);
     let _ = std::fs::create_dir_all(&support_dir);
 
-    let auth = crate::gog::gog_auth_path();
-    let gogdl_cfg = crate::gog::gogdl_config_dir();
+    let auth = crate::store::gog::gog_auth_path();
+    let gogdl_cfg = crate::store::gog::gogdl_config_dir();
     let _ = std::fs::create_dir_all(&gogdl_cfg);
 
     let mut cmd = Command::new(gogdl);
@@ -149,7 +154,7 @@ fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Chil
 
 async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
     if let Some(pid) = child.id() {
-        super::io_stats::track_child(pid);
+        crate::downloads::io_stats::track_child(pid);
     }
     let stdout = child.stdout.take().expect("stdout piped");
     let stderr = child.stderr.take().expect("stderr piped");

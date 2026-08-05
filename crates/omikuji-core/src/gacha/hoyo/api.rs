@@ -263,7 +263,7 @@ fn parse_size(s: &str) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hoyo::{HoyoEdition, VoiceLocale};
+    use crate::gacha::hoyo::{HoyoEdition, VoiceLocale};
 
     // genshin global biz_id, hardcoded for live test only
     const GENSHIN_GLOBAL: &str = "gopR6Cufr3";

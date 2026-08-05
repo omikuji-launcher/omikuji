@@ -71,7 +71,7 @@ impl WineVariant {
         }
         let name = version.strip_prefix("steam:");
         let dir = match name {
-            Some(rest) => crate::steam::local::find_proton_install(rest),
+            Some(rest) => crate::store::steam::local::find_proton_install(rest),
             None => crate::runners::installed_runner_dir(version),
         };
         match dir {
@@ -180,7 +180,7 @@ fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
     }
 
     let mut command = if game.is_epic() {
-        let legendary = crate::downloads::legendary::find_legendary().ok_or_else(|| {
+        let legendary = crate::store::epic::source::find_legendary().ok_or_else(|| {
             anyhow::Error::new(ComponentMissing {
                 name: "Legendary".to_string(),
             })
@@ -529,7 +529,8 @@ pub fn build_env(
                 .version
                 .strip_prefix("steam:")
                 .unwrap_or(&game.wine.version);
-            crate::steam::local::resolve_or_default_proton(Some(steam_version)).unwrap_or_default()
+            crate::store::steam::local::resolve_or_default_proton(Some(steam_version))
+                .unwrap_or_default()
         } else {
             crate::runners::installed_runner_dir(&game.wine.version)
                 .unwrap_or_else(|| crate::runners_dir().join(&game.wine.version))
@@ -541,7 +542,10 @@ pub fn build_env(
         env.insert("PROTON_VERB".to_string(), "run".to_string());
         env.insert(
             "GAMEID".to_string(),
-            format!("umu-{}", crate::steam::synthetic_appid(&game.metadata.id)),
+            format!(
+                "umu-{}",
+                crate::store::steam::synthetic_appid(&game.metadata.id)
+            ),
         );
     }
 
@@ -722,7 +726,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
 }
 
 fn resolve_steam_runner(version: &str) -> Result<PathBuf> {
-    crate::steam::local::find_proton_install(version)
+    crate::store::steam::local::find_proton_install(version)
         .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version))?;
     find_umu_run().ok_or_else(|| {
         anyhow::Error::new(ComponentMissing {
@@ -860,7 +864,7 @@ pub fn effective_prefix(game: &Game) -> Option<PathBuf> {
             if game.source.app_id.is_empty() {
                 None
             } else {
-                crate::steam::local::find_steam_prefix(&game.source.app_id)
+                crate::store::steam::local::find_steam_prefix(&game.source.app_id)
             }
         }
         _ => Some(prefix_path_for(game)),

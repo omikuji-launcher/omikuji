@@ -9,7 +9,7 @@ use omikuji_core::media;
 
 impl super::qobject::GameModel {
     pub fn steam_get_installed_games(&self) -> QString {
-        let games = omikuji_core::steam::get_installed_games();
+        let games = omikuji_core::store::steam::get_installed_games();
         let json_games: Vec<serde_json::Value> = games
             .iter()
             .map(|g| {
@@ -29,7 +29,7 @@ impl super::qobject::GameModel {
 
     pub fn steam_local_library_image(&self, appid: &QString) -> QString {
         let appid_str = appid.to_string();
-        match omikuji_core::steam::local::find_local_library_image(&appid_str) {
+        match omikuji_core::store::steam::local::find_local_library_image(&appid_str) {
             Some(path) => QString::from(&*path.to_string_lossy()),
             None => QString::default(),
         }
@@ -105,7 +105,7 @@ impl super::qobject::GameModel {
 
         // blocking reqwest inside #[tokio::main] panics; escape to an os thread, then marshal the mutation back via qt_thread.queue
         std::thread::spawn(move || {
-            let fetch_result = omikuji_core::steam::fetch_playtime_data(&api_key);
+            let fetch_result = omikuji_core::store::steam::fetch_playtime_data(&api_key);
 
             let _ = qt_thread.queue(move |mut obj: Pin<&mut super::qobject::GameModel>| {
                 let steam_data = match fetch_result {
@@ -118,7 +118,7 @@ impl super::qobject::GameModel {
 
                 let library = &mut obj.as_mut().rust_mut().get_mut().library;
                 let (updated, total) =
-                    omikuji_core::steam::apply_playtime_data(library, &steam_data);
+                    omikuji_core::store::steam::apply_playtime_data(library, &steam_data);
                 tracing::info!("updated {}/{} steam games", updated, total);
 
                 let mut saved = 0;

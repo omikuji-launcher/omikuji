@@ -21,7 +21,7 @@ impl super::qobject::GameModel {
         omikuji_core::notifications::info(&name, "Checking for updates...");
 
         std::thread::spawn(move || {
-            match omikuji_core::epic::updates::blocking_check_epic_update(&app_id) {
+            match omikuji_core::store::epic::updates::blocking_check_epic_update(&app_id) {
                 Some(info) => {
                     omikuji_core::process::notify_update_required(
                         omikuji_core::process::UpdateNotification {
@@ -59,7 +59,7 @@ impl super::qobject::GameModel {
         omikuji_core::notifications::info(&name, "Checking for updates...");
 
         std::thread::spawn(move || {
-            match omikuji_core::gog::updates::blocking_check_gog_update(&app_id) {
+            match omikuji_core::store::gog::updates::blocking_check_gog_update(&app_id) {
                 Some(info) => {
                     omikuji_core::process::notify_update_required(
                         omikuji_core::process::UpdateNotification {
@@ -144,7 +144,7 @@ impl super::qobject::GameModel {
         std::thread::spawn(move || {
             // epic batches one assets refresh up front, gog as no batch step
             if candidates.iter().any(|c| c.source == "epic") {
-                let _ = omikuji_core::epic::updates::refresh_assets_cache();
+                let _ = omikuji_core::store::epic::updates::refresh_assets_cache();
             }
 
             let existing_app_ids: std::collections::HashSet<String> =
@@ -162,12 +162,14 @@ impl super::qobject::GameModel {
                     continue;
                 }
                 let from_version = match candidate.source.as_str() {
-                    "epic" => omikuji_core::epic::updates::find_update_for(&candidate.app_id)
-                        .map(|i| i.from_version),
-                    "gog" => {
-                        omikuji_core::gog::updates::blocking_check_gog_update(&candidate.app_id)
+                    "epic" => {
+                        omikuji_core::store::epic::updates::find_update_for(&candidate.app_id)
                             .map(|i| i.from_version)
                     }
+                    "gog" => omikuji_core::store::gog::updates::blocking_check_gog_update(
+                        &candidate.app_id,
+                    )
+                    .map(|i| i.from_version),
                     _ => None,
                 };
                 let Some(from_version) = from_version else {
@@ -274,11 +276,11 @@ impl super::qobject::GameModel {
             return false;
         }
         let Some((manifest, _, _)) =
-            omikuji_core::gachas::strategies::find_for_app_id(&game.source.app_id)
+            omikuji_core::gacha::strategies::find_for_app_id(&game.source.app_id)
         else {
             return false;
         };
-        match omikuji_core::gachas::strategies::source_key(&manifest) {
+        match omikuji_core::gacha::strategies::source_key(&manifest) {
             Ok(key) => omikuji_core::downloads::manager().source_supports_repair(key),
             Err(_) => false,
         }
@@ -317,19 +319,19 @@ impl super::qobject::GameModel {
 
 fn resolve_gacha_source(app_id: &str) -> Option<(String, Option<String>)> {
     let Some((manifest, _edition_id, _voices)) =
-        omikuji_core::gachas::strategies::find_for_app_id(app_id)
+        omikuji_core::gacha::strategies::find_for_app_id(app_id)
     else {
         tracing::error!("no gacha manifest for app_id '{}'", app_id);
         return None;
     };
-    let src = match omikuji_core::gachas::strategies::source_key(&manifest) {
+    let src = match omikuji_core::gacha::strategies::source_key(&manifest) {
         Ok(s) => s.to_string(),
         Err(e) => {
             tracing::error!("unknown strategy for '{}': {}", manifest.id, e);
             return None;
         }
     };
-    let poster = omikuji_core::gachas::strategies::resolve_poster(&manifest);
+    let poster = omikuji_core::gacha::strategies::resolve_poster(&manifest);
     Some((
         src,
         if poster.is_empty() {
@@ -349,7 +351,7 @@ fn build_download_request(
 ) -> omikuji_core::downloads::DownloadRequest {
     let exe = &game.metadata.exe;
     let install_path = (game.source.kind == "gacha")
-        .then(|| omikuji_core::gachas::strategies::install_root_for(&game.source.app_id, exe))
+        .then(|| omikuji_core::gacha::strategies::install_root_for(&game.source.app_id, exe))
         .flatten()
         .or_else(|| exe.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| exe.clone());

@@ -2,8 +2,8 @@ use anyhow::Result;
 
 use super::sophon;
 use super::{HoyoEdition, installed_version};
-use crate::gachas::manifest::{GachaManifest, load_all};
-use crate::gachas::strategies::HOYO_SOPHON;
+use crate::gacha::manifest::{GachaManifest, load_all};
+use crate::gacha::strategies::HOYO_SOPHON;
 
 #[derive(Debug, Clone)]
 pub struct UpdateInfo {
@@ -33,15 +33,15 @@ pub async fn check_for_update(
         return Ok(None);
     };
 
-    let target = crate::gachas::strategies::normalize_version(&from_version);
-    if crate::gachas::strategies::normalize_version(&main.tag) == target {
+    let target = crate::gacha::strategies::normalize_version(&from_version);
+    if crate::gacha::strategies::normalize_version(&main.tag) == target {
         return Ok(None);
     }
 
     let matched_tag = main
         .diff_tags
         .iter()
-        .find(|t| crate::gachas::strategies::normalize_version(t) == target)
+        .find(|t| crate::gacha::strategies::normalize_version(t) == target)
         .cloned();
     let can_diff = matched_tag.is_some();
 
@@ -99,7 +99,7 @@ pub async fn check_all_installed() -> Vec<UpdateInfo> {
 }
 
 pub async fn check_by_app_id(app_id: &str) -> Option<UpdateInfo> {
-    let (manifest, edition_id, _) = crate::gachas::strategies::find_for_app_id(app_id)?;
+    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
     let edition = parse_edition(&edition_id)?;
     let biz_id = manifest
         .editions
@@ -129,7 +129,7 @@ pub fn update_app_id(info: &UpdateInfo) -> String {
 }
 
 pub fn current_version(app_id: &str) -> Option<String> {
-    let (manifest, edition_id, _) = crate::gachas::strategies::find_for_app_id(app_id)?;
+    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
     let edition = parse_edition(&edition_id)?;
     installed_version(&manifest.game_slug, edition)
 }

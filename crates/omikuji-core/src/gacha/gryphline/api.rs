@@ -8,7 +8,7 @@
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::gachas::manifest::GachaManifest;
+use crate::gacha::manifest::GachaManifest;
 
 const PLATFORM: &str = "Windows";
 

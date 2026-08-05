@@ -168,7 +168,7 @@ impl qobject::DownloadModel {
         prefix_path: &QString,
         temp_path: &QString,
     ) -> QString {
-        use omikuji_core::gachas::{manifest as gm, strategies};
+        use omikuji_core::gacha::{manifest as gm, strategies};
 
         let mid = manifest_id.to_string();
         let Some(manifest) = gm::find(&mid) else {

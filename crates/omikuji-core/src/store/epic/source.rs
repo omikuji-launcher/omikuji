@@ -8,8 +8,10 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
-use super::proc_tree::shutdown;
-use super::{ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress};
+use crate::downloads::proc_tree::shutdown;
+use crate::downloads::{
+    ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
+};
 
 pub struct LegendarySource;
 
@@ -60,7 +62,7 @@ impl DownloadSource for LegendarySource {
             .to_string();
         let base_path_str = base_path.to_string_lossy().to_string();
 
-        if let Some(info) = crate::epic::find_installed_info(&entry.app_id)
+        if let Some(info) = crate::store::epic::find_installed_info(&entry.app_id)
             && !info.install_path.exists()
         {
             tracing::warn!(
@@ -108,7 +110,7 @@ impl DownloadSource for LegendarySource {
 
         // legendary occasionally exits 0 without writing installed.json (stale
         // lock files, interrupted prior state). without this guard the completion handler tries to import a game that isnt really installed.
-        if crate::epic::find_installed_info(&entry.app_id).is_none() {
+        if crate::store::epic::find_installed_info(&entry.app_id).is_none() {
             return Err(anyhow!(
                 "legendary exited cleanly but installed.json has no record for {} \u{2014} try cancelling and starting again",
                 entry.app_id
@@ -164,7 +166,7 @@ impl DownloadSource for LegendarySource {
             anyhow::bail!("import failed: {}", msg);
         }
 
-        if crate::epic::find_installed_info(&entry.app_id).is_none() {
+        if crate::store::epic::find_installed_info(&entry.app_id).is_none() {
             anyhow::bail!(
                 "legendary import exited cleanly but installed.json has no record for {}",
                 entry.app_id
@@ -177,7 +179,7 @@ impl DownloadSource for LegendarySource {
 
 async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
     if let Some(pid) = child.id() {
-        super::io_stats::track_child(pid);
+        crate::downloads::io_stats::track_child(pid);
     }
     let stdout = child.stdout.take().expect("stdout piped");
     let stderr = child.stderr.take().expect("stderr piped");

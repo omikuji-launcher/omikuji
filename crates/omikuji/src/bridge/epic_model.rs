@@ -2,7 +2,7 @@ use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QByteArray, QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
 use omikuji_core::downloads::{self, DownloadRequest};
-use omikuji_core::epic::{EpicGame, EpicStore};
+use omikuji_core::store::epic::{EpicGame, EpicStore};
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -291,7 +291,7 @@ impl qobject::EpicModel {
 
         tokio::spawn(async move {
             let (cached, imported_pre) = tokio::task::spawn_blocking(|| {
-                let games = omikuji_core::epic::load_cached_library();
+                let games = omikuji_core::store::epic::load_cached_library();
                 let imported: HashSet<String> =
                     omikuji_core::library::Library::app_ids_for_source("epic")
                         .into_iter()

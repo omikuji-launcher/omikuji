@@ -18,7 +18,8 @@ impl super::qobject::GameModel {
             return QString::from(r#"{"bytes":0,"hasResume":false}"#);
         }
         let install = std::path::PathBuf::from(install_s.trim());
-        let (bytes, has_resume) = omikuji_core::gog::inspect_existing_install(&app_s, &install);
+        let (bytes, has_resume) =
+            omikuji_core::store::gog::inspect_existing_install(&app_s, &install);
         QString::from(&format!(
             r#"{{"bytes":{},"hasResume":{}}}"#,
             bytes, has_resume
@@ -30,7 +31,7 @@ impl super::qobject::GameModel {
         let app_name_str = app_name.to_string();
 
         omikuji_core::install_sizes::spawn_fetch(rid, move || async move {
-            omikuji_core::gog::fetch_install_size(&app_name_str)
+            omikuji_core::store::gog::fetch_install_size(&app_name_str)
                 .await
                 .map(|s| (s.download_bytes, s.install_bytes))
                 .map_err(|e| e.to_string())
@@ -42,7 +43,7 @@ impl super::qobject::GameModel {
         let app_name_str = app_name.to_string();
 
         omikuji_core::install_sizes::spawn_fetch_details(rid, move || async move {
-            omikuji_core::gog::fetch_game_details(&app_name_str)
+            omikuji_core::store::gog::fetch_game_details(&app_name_str)
                 .await
                 .map_err(|e| e.to_string())
         });
@@ -72,7 +73,7 @@ impl super::qobject::GameModel {
             return QString::from(&app_name_s);
         }
 
-        let Some(info) = omikuji_core::gog::find_installed_info(&app_name_s) else {
+        let Some(info) = omikuji_core::store::gog::find_installed_info(&app_name_s) else {
             tracing::warn!("no install info for {} - leaving library alone", app_name_s);
             return QString::default();
         };
@@ -151,8 +152,8 @@ impl super::qobject::GameModel {
         let app_id = game.source.app_id.clone();
         let name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
-        let installed = omikuji_core::gog::find_installed_info(&app_id);
-        let wrapper_name = omikuji_core::gog::install_wrapper_dir_name(
+        let installed = omikuji_core::store::gog::find_installed_info(&app_id);
+        let wrapper_name = omikuji_core::store::gog::install_wrapper_dir_name(
             installed
                 .as_ref()
                 .and_then(|i| i.title.as_deref())
@@ -193,7 +194,7 @@ impl super::qobject::GameModel {
                     let _ = std::fs::remove_dir(parent);
                 }
             }
-            if let Err(e) = omikuji_core::gog::remove_install(&app_id) {
+            if let Err(e) = omikuji_core::store::gog::remove_install(&app_id) {
                 tracing::error!("registry remove failed: {}", e);
             }
             if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id_owned) {

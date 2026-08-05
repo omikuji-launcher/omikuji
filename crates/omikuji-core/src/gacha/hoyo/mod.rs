@@ -103,15 +103,15 @@ fn edition_id(edition: HoyoEdition) -> &'static str {
 }
 
 pub fn version_file(game_slug: &str, edition: HoyoEdition) -> PathBuf {
-    crate::gachas::state::version_file(PUBLISHER_SLUG, game_slug, edition_id(edition))
+    crate::gacha::state::version_file(PUBLISHER_SLUG, game_slug, edition_id(edition))
 }
 
 pub fn installed_version(game_slug: &str, edition: HoyoEdition) -> Option<String> {
-    crate::gachas::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition_id(edition))
+    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition_id(edition))
 }
 
 pub fn set_installed_version(game_slug: &str, edition: HoyoEdition, version: &str) {
-    crate::gachas::state::write_installed_version(
+    crate::gacha::state::write_installed_version(
         PUBLISHER_SLUG,
         game_slug,
         edition_id(edition),
@@ -120,7 +120,7 @@ pub fn set_installed_version(game_slug: &str, edition: HoyoEdition, version: &st
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {
-    use crate::gachas::state;
+    use crate::gacha::state;
     if let Some(v) = state::read_install_dotversion(install_path) {
         return Some(v);
     }

@@ -8,7 +8,7 @@
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 
-use crate::gachas::manifest::GachaManifest;
+use crate::gacha::manifest::GachaManifest;
 
 #[derive(Debug, Clone)]
 pub struct ResourceInfo {
@@ -33,10 +33,10 @@ pub struct PatchConfig {
 
 impl ResourceInfo {
     pub fn matching_patch(&self, from_version: &str) -> Option<&PatchConfig> {
-        let target = crate::gachas::strategies::normalize_version(from_version);
+        let target = crate::gacha::strategies::normalize_version(from_version);
         self.patch_configs
             .iter()
-            .find(|p| crate::gachas::strategies::normalize_version(&p.version) == target)
+            .find(|p| crate::gacha::strategies::normalize_version(&p.version) == target)
     }
 }
 

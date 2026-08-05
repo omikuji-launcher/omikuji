@@ -1,7 +1,5 @@
-pub mod gogdl;
 pub mod io_stats;
-pub mod legendary;
-mod proc_tree;
+pub(crate) mod proc_tree;
 pub mod source;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -177,19 +175,25 @@ pub struct DownloadManager {
 lazy_static! {
     static ref MANAGER: Arc<DownloadManager> = {
         let mut sources: HashMap<String, Arc<dyn DownloadSource>> = HashMap::new();
-        sources.insert("epic".to_string(), Arc::new(legendary::LegendarySource));
-        sources.insert("gog".to_string(), Arc::new(gogdl::GogdlSource));
+        sources.insert(
+            "epic".to_string(),
+            Arc::new(crate::store::epic::source::LegendarySource),
+        );
+        sources.insert(
+            "gog".to_string(),
+            Arc::new(crate::store::gog::source::GogdlSource),
+        );
         sources.insert(
             "hoyo".to_string(),
-            Arc::new(crate::hoyo::source::HoyoSource),
+            Arc::new(crate::gacha::hoyo::source::HoyoSource),
         );
         sources.insert(
             "endfield".to_string(),
-            Arc::new(crate::endfield::source::EndfieldSource),
+            Arc::new(crate::gacha::gryphline::source::GryphlineSource),
         );
         sources.insert(
             "kuro".to_string(),
-            Arc::new(crate::kuro::source::KuroSource),
+            Arc::new(crate::gacha::kuro::source::KuroSource),
         );
 
         let restored = load_queue();
@@ -431,7 +435,7 @@ impl DownloadManager {
         // hoyo keeps segments + a per-piece journal in a temp dir
         // if extraction failed those bytes are suspect and we want a truly fresh attempt rather than silently re-extracting teh same corrupt archive.
         if entry.source == "hoyo" {
-            crate::hoyo::source::cleanup_hoyo_state(
+            crate::gacha::hoyo::source::cleanup_hoyo_state(
                 &entry.app_id,
                 &entry.install_path,
                 entry.temp_dir.as_deref(),
@@ -728,27 +732,29 @@ fn cleanup_source_state(entry: &DownloadEntry) {
         "gog" => {
             // destructive_cleanup on Install kind already rm -rf's install_path
             // for us, so this is a no-op there. left explicit for symmetry
-            let support = crate::gog::gog_dir().join("support").join(&entry.app_id);
+            let support = crate::store::gog::gog_dir()
+                .join("support")
+                .join(&entry.app_id);
             if support.exists() {
                 let _ = std::fs::remove_dir_all(&support);
             }
         }
         "hoyo" => {
-            crate::hoyo::source::cleanup_hoyo_state(
+            crate::gacha::hoyo::source::cleanup_hoyo_state(
                 &entry.app_id,
                 &entry.install_path,
                 entry.temp_dir.as_deref(),
             );
         }
         "endfield" => {
-            crate::endfield::source::cleanup_endfield_state(
+            crate::gacha::gryphline::source::cleanup_gryphline_state(
                 &entry.app_id,
                 &entry.install_path,
                 entry.temp_dir.as_deref(),
             );
         }
         "kuro" => {
-            crate::kuro::cleanup_kuro_state(
+            crate::gacha::kuro::cleanup_kuro_state(
                 &entry.app_id,
                 &entry.install_path,
                 entry.temp_dir.as_deref(),

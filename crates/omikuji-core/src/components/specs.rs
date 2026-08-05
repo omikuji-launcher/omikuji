@@ -32,7 +32,7 @@ static COMPONENTS: &[ComponentSpec] = &[
     ComponentSpec {
         name: "legendary",
         source: Source::GithubRelease {
-            asset_matcher: |n| n == "legendary",
+            asset_matcher: |n| n.contains("linux") && n.contains("x64"),
         },
         extract: ExtractStrategy::Raw,
         dest: "legendary",

@@ -35,7 +35,7 @@ impl super::qobject::GameModel {
                 .behavior
                 .auto_check_epic_updates_on_launch
             && let Some(info) =
-                omikuji_core::epic::updates::blocking_check_epic_update(&game.source.app_id)
+                omikuji_core::store::epic::updates::blocking_check_epic_update(&game.source.app_id)
         {
             omikuji_core::process::notify_update_required(
                 omikuji_core::process::UpdateNotification {
@@ -56,7 +56,7 @@ impl super::qobject::GameModel {
                 .behavior
                 .auto_check_gog_updates_on_launch
             && let Some(info) =
-                omikuji_core::gog::updates::blocking_check_gog_update(&game.source.app_id)
+                omikuji_core::store::gog::updates::blocking_check_gog_update(&game.source.app_id)
         {
             omikuji_core::process::notify_update_required(
                 omikuji_core::process::UpdateNotification {
@@ -429,9 +429,9 @@ fn blocking_check_gacha_update(app_id: &str) -> Option<GachaUpdateInfo> {
         };
         rt.block_on(async {
             let (manifest, edition_id, _voices) =
-                omikuji_core::gachas::strategies::find_for_app_id(&aid)?;
+                omikuji_core::gacha::strategies::find_for_app_id(&aid)?;
             let info =
-                omikuji_core::gachas::strategies::check_for_update(&manifest, &edition_id).await?;
+                omikuji_core::gacha::strategies::check_for_update(&manifest, &edition_id).await?;
             Some(GachaUpdateInfo {
                 from_version: info.from_version,
                 to_version: info.to_version,

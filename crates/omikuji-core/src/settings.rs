@@ -114,7 +114,7 @@ impl Default for ComponentsSettings {
         Self {
             umu_run: "https://api.github.com/repos/Open-Wine-Components/umu-launcher/releases/latest".into(),
             hpatchz: "https://api.github.com/repos/sisong/HDiffPatch/releases/latest".into(),
-            legendary: "https://api.github.com/repos/derrod/legendary/releases/latest".into(),
+            legendary: "https://api.github.com/repos/legendary-gl/legendary/releases/latest".into(),
             gogdl: "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest".into(), // why does gogdl feels like a gurgle. goGLdl
             egl_dummy: "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
         }

@@ -14,22 +14,22 @@ pub fn make_app_id(edition_id: &str) -> String {
 }
 
 pub fn version_file(game_slug: &str, edition_id: &str) -> PathBuf {
-    crate::gachas::state::version_file(PUBLISHER_SLUG, game_slug, edition_id)
+    crate::gacha::state::version_file(PUBLISHER_SLUG, game_slug, edition_id)
 }
 
 pub fn installed_version(game_slug: &str, edition_id: &str) -> Option<String> {
-    crate::gachas::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition_id)
+    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition_id)
 }
 
 pub fn set_installed_version(game_slug: &str, edition_id: &str, version: &str) {
-    crate::gachas::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition_id, version);
+    crate::gacha::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition_id, version);
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {
-    if let Some(v) = crate::gachas::state::read_install_dotversion(install_path) {
+    if let Some(v) = crate::gacha::state::read_install_dotversion(install_path) {
         return Some(v);
     }
-    crate::gachas::state::scan_globalgamemanagers(install_path, data_folder, 0)
+    crate::gacha::state::scan_globalgamemanagers(install_path, data_folder, 0)
 }
 
 // gryphline wants a rand_str on every request; not validated server-side per traces

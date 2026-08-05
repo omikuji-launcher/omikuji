@@ -1,7 +1,8 @@
 pub mod eos_overlay;
+pub mod source;
 pub mod updates;
 
-use crate::downloads::legendary::require_legendary;
+use crate::store::epic::source::require_legendary;
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

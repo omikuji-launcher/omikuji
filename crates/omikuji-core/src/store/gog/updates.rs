@@ -18,7 +18,7 @@ struct GoggameInfo {
 }
 
 pub fn blocking_check_gog_update(app_id: &str) -> Option<GogUpdateInfo> {
-    let installed_info = crate::gog::find_installed_info(app_id)?;
+    let installed_info = crate::store::gog::find_installed_info(app_id)?;
     let (installed_build, installed_version) =
         read_installed_meta(&installed_info.install_path, app_id)?;
     let latest_build = fetch_latest_build(app_id)?;

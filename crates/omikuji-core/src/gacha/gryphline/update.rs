@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use super::installed_version;
-use crate::gachas::manifest::GachaManifest;
+use crate::gacha::manifest::GachaManifest;
 
 #[derive(Debug, Clone)]
 pub struct UpdateInfo {
@@ -47,7 +47,7 @@ pub async fn check_for_update(
 }
 
 pub async fn check_by_app_id(app_id: &str) -> Option<UpdateInfo> {
-    let (manifest, edition_id, _) = crate::gachas::strategies::find_for_app_id(app_id)?;
+    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
     match check_for_update(&manifest, &edition_id).await {
         Ok(info) => info,
         Err(e) => {

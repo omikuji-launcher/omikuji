@@ -93,7 +93,7 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
     let dir = icons_dir();
     fs::create_dir_all(&dir).with_context(|| format!("creating icon dir {}", dir.display()))?;
 
-    let appid = crate::steam::synthetic_appid(&game.metadata.id);
+    let appid = crate::store::steam::synthetic_appid(&game.metadata.id);
     let link = dir.join(format!("steam_icon_{}.png", appid));
     let _ = fs::remove_file(&link);
     std::os::unix::fs::symlink(&src, &link)
@@ -127,7 +127,7 @@ pub fn get_game_browse_dir(game: &Game) -> Option<PathBuf> {
     }
 
     if game.runner.runner_type == "steam" {
-        return crate::steam::local::get_game_install_dir(&game.metadata.id);
+        return crate::store::steam::local::get_game_install_dir(&game.metadata.id);
     }
 
     game.metadata.exe.parent().map(|p| p.to_path_buf())

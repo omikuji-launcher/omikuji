@@ -61,7 +61,7 @@ fn shm_mapped_paths(pids: &HashSet<u32>) -> HashSet<PathBuf> {
 // two-phase kill: SIGTERM lets legendary flush its .resume, then killpg the group since a surviving worker keeps the flock'd install lock and bricks the next install.
 // killpg also takes out python's resource_tracker, so the 2GiB shm segment would leak on every cancel; snapshot the mappings while /proc is alive, unlink leftovers after.
 // ALso i got this because after testing the new download page look i cancelled so many downloads my whole session crashed, and everytime i tried to come back in it'd crash again until reboot. You gotta love some stuff man.
-pub(super) async fn shutdown(child: &mut Child) {
+pub(crate) async fn shutdown(child: &mut Child) {
     use nix::sys::signal::{Signal, kill, killpg};
     use nix::unistd::Pid;
 

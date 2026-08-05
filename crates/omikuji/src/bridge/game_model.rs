@@ -1591,8 +1591,7 @@ impl qobject::GameModel {
         };
         let name = game.metadata.name.clone();
         let gacha_manifest = if game.source.kind == "gacha" {
-            omikuji_core::gachas::strategies::find_for_app_id(&game.source.app_id)
-                .map(|(m, _, _)| m)
+            omikuji_core::gacha::strategies::find_for_app_id(&game.source.app_id).map(|(m, _, _)| m)
         } else {
             None
         };
@@ -1601,7 +1600,7 @@ impl qobject::GameModel {
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = media_changed_notifier(qt_thread, id.clone());
         std::thread::spawn(move || match (gacha_manifest, steam_appid) {
-            (Some(m), _) => omikuji_core::gachas::art::fetch_into_library_cache(&m, &id, on_asset),
+            (Some(m), _) => omikuji_core::gacha::art::fetch_into_library_cache(&m, &id, on_asset),
             (_, Some(appid)) => {
                 let _ = media::fetch_steam_media_blocking_with(&appid, on_asset);
             }

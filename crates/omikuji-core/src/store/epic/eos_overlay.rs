@@ -1,4 +1,4 @@
-use crate::downloads::legendary::find_legendary;
+use crate::store::epic::source::find_legendary;
 use anyhow::{Result, anyhow};
 use std::path::{Path, PathBuf};
 use std::process::Command;

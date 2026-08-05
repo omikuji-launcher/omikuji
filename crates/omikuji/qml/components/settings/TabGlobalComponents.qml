@@ -20,6 +20,7 @@ Item {
         "umu-run":   { label: "umu-run",    desc: qsTr("Launcher wrapper needed for Proton.") },
         "hpatchz":   { label: "HPatchZ",    desc: qsTr("Binary patch tool. Required for gacha diff updates.") },
         "legendary": { label: "Legendary",  desc: qsTr("Epic Games CLI binary.") },
+        "gogdl":     { label: "gogdl",      desc: qsTr("GOG CLI binary.") },
         "egl-dummy": { label: "EGL dummy",  desc: qsTr("Dummy EpicGamesLauncher.exe needed for Epic Games imports.") }
     })
 

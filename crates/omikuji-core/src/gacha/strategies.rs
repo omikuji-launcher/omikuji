@@ -205,21 +205,22 @@ pub async fn fetch_install_size(
             let edition = hoyo_edition_from_id(edition_id)?;
             let biz_id = hoyo_biz_id(manifest, edition_id)?;
             let voice_locales = hoyo_voices_from_ids(voices);
-            let s = crate::hoyo::api::fetch_install_size(&biz_id, edition, &voice_locales).await?;
+            let s = crate::gacha::hoyo::api::fetch_install_size(&biz_id, edition, &voice_locales)
+                .await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
             })
         }
         GRYPHLINE_RESOURCE_PATCH => {
-            let s = crate::endfield::api::fetch_install_size(manifest, edition_id).await?;
+            let s = crate::gacha::gryphline::api::fetch_install_size(manifest, edition_id).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
             })
         }
         KURO_RESOURCE_INDEX => {
-            let s = crate::kuro::api::fetch_install_size(manifest, edition_id).await?;
+            let s = crate::gacha::kuro::api::fetch_install_size(manifest, edition_id).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
@@ -238,9 +239,10 @@ pub async fn check_for_update(
         HOYO_SOPHON => {
             let edition = hoyo_edition_from_id(edition_id).ok()?;
             let biz_id = hoyo_biz_id(manifest, edition_id).ok()?;
-            let info = crate::hoyo::update::check_for_update(&biz_id, &manifest.game_slug, edition)
-                .await
-                .ok()??;
+            let info =
+                crate::gacha::hoyo::update::check_for_update(&biz_id, &manifest.game_slug, edition)
+                    .await
+                    .ok()??;
             Some(GachaUpdateInfo {
                 manifest_id: manifest.id.clone(),
                 edition_id: edition_id.to_string(),
@@ -252,7 +254,7 @@ pub async fn check_for_update(
             })
         }
         GRYPHLINE_RESOURCE_PATCH => {
-            let info = crate::endfield::update::check_for_update(manifest, edition_id)
+            let info = crate::gacha::gryphline::update::check_for_update(manifest, edition_id)
                 .await
                 .ok()??;
             Some(GachaUpdateInfo {
@@ -266,7 +268,7 @@ pub async fn check_for_update(
             })
         }
         KURO_RESOURCE_INDEX => {
-            let info = crate::kuro::update::check_for_update(manifest, edition_id)
+            let info = crate::gacha::kuro::update::check_for_update(manifest, edition_id)
                 .await
                 .ok()??;
             Some(GachaUpdateInfo {
@@ -287,12 +289,14 @@ pub fn installed_version(manifest: &GachaManifest, edition_id: &str) -> Option<S
     match manifest.install_strategy.as_str() {
         HOYO_SOPHON => {
             let edition = hoyo_edition_from_id(edition_id).ok()?;
-            crate::hoyo::installed_version(&manifest.game_slug, edition)
+            crate::gacha::hoyo::installed_version(&manifest.game_slug, edition)
         }
         GRYPHLINE_RESOURCE_PATCH => {
-            crate::endfield::installed_version(&manifest.game_slug, edition_id)
+            crate::gacha::gryphline::installed_version(&manifest.game_slug, edition_id)
         }
-        KURO_RESOURCE_INDEX => crate::kuro::installed_version(&manifest.game_slug, edition_id),
+        KURO_RESOURCE_INDEX => {
+            crate::gacha::kuro::installed_version(&manifest.game_slug, edition_id)
+        }
         _ => None,
     }
 }
@@ -304,12 +308,12 @@ pub fn read_install_version(
 ) -> Option<String> {
     let edition = manifest.editions.iter().find(|e| e.id == edition_id)?;
     match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => crate::hoyo::read_install_version(install_path, &edition.data_folder),
+        HOYO_SOPHON => crate::gacha::hoyo::read_install_version(install_path, &edition.data_folder),
         GRYPHLINE_RESOURCE_PATCH => {
-            crate::endfield::read_install_version(install_path, &edition.data_folder)
+            crate::gacha::gryphline::read_install_version(install_path, &edition.data_folder)
         }
         KURO_RESOURCE_INDEX => {
-            crate::kuro::read_install_version(install_path, &edition.data_folder)
+            crate::gacha::kuro::read_install_version(install_path, &edition.data_folder)
         }
         _ => None,
     }
@@ -325,7 +329,7 @@ pub fn inspect_existing(
     let mut info = match manifest.install_strategy.as_str() {
         HOYO_SOPHON => {
             let (bytes, segments) =
-                crate::hoyo::source::inspect_hoyo_temp(&app_id, install_path, temp_dir);
+                crate::gacha::hoyo::source::inspect_hoyo_temp(&app_id, install_path, temp_dir);
             // hoyo has no cheap "is installed" signal without touching the game's own manifest,
             // so fall back to checking whether the edition's exe exists
             let has_install = edition_exe_name(manifest, edition_id)
@@ -338,8 +342,11 @@ pub fn inspect_existing(
             }
         }
         GRYPHLINE_RESOURCE_PATCH => {
-            let (bytes, segments) =
-                crate::endfield::source::inspect_endfield_temp(&app_id, install_path, temp_dir);
+            let (bytes, segments) = crate::gacha::gryphline::source::inspect_gryphline_temp(
+                &app_id,
+                install_path,
+                temp_dir,
+            );
             let has_install = install_path
                 .join(edition_exe_name(manifest, edition_id).unwrap_or("Endfield.exe"))
                 .exists();
@@ -372,11 +379,11 @@ pub fn inspect_existing(
 }
 
 pub fn resolve_poster(manifest: &GachaManifest) -> String {
-    crate::gachas::art::resolve_art(manifest, "grid")
+    crate::gacha::art::resolve_art(manifest, "grid")
 }
 
-fn hoyo_edition_from_id(id: &str) -> Result<crate::hoyo::HoyoEdition> {
-    use crate::hoyo::HoyoEdition;
+fn hoyo_edition_from_id(id: &str) -> Result<crate::gacha::hoyo::HoyoEdition> {
+    use crate::gacha::hoyo::HoyoEdition;
     match id {
         "global" => Ok(HoyoEdition::Global),
         "china" => Ok(HoyoEdition::China),
@@ -384,8 +391,8 @@ fn hoyo_edition_from_id(id: &str) -> Result<crate::hoyo::HoyoEdition> {
     }
 }
 
-fn hoyo_voices_from_ids(ids: &[String]) -> Vec<crate::hoyo::VoiceLocale> {
-    use crate::hoyo::VoiceLocale;
+fn hoyo_voices_from_ids(ids: &[String]) -> Vec<crate::gacha::hoyo::VoiceLocale> {
+    use crate::gacha::hoyo::VoiceLocale;
     ids.iter()
         .filter_map(|id| {
             VoiceLocale::all()

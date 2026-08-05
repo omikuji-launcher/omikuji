@@ -1,4 +1,5 @@
 // little note: FUCK YOU GOG. we love you really but what the fuck
+pub mod source;
 pub mod updates;
 
 use anyhow::{Result, anyhow};
@@ -358,7 +359,7 @@ pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
         .and_then(|e| e.as_str())
         .unwrap_or("");
     let resolved = if exe_rel.is_empty() {
-        crate::downloads::gogdl::find_game_exe_pub(&install_path, app_name)
+        crate::store::gog::source::find_game_exe_pub(&install_path, app_name)
     } else {
         Some(exe_rel.to_string())
     };

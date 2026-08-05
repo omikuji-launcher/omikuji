@@ -28,7 +28,7 @@ pub fn blocking_check_epic_update(app_id: &str) -> Option<EpicUpdateInfo> {
 }
 
 pub fn refresh_assets_cache() -> Option<()> {
-    let bin = crate::downloads::legendary::find_legendary()?;
+    let bin = crate::store::epic::source::find_legendary()?;
     let _ = Command::new(bin)
         .args(["list", "--third-party", "--json"])
         .output()

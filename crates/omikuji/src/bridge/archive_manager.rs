@@ -506,7 +506,7 @@ impl qobject::ArchiveManagerBridge {
     }
 
     fn list_steam_roots(&self) -> QString {
-        let roots: Vec<(String, String)> = omikuji_core::steam::local::steam_install_roots()
+        let roots: Vec<(String, String)> = omikuji_core::store::steam::local::steam_install_roots()
             .into_iter()
             .map(|(label, path)| (label, path.to_string_lossy().into_owned()))
             .collect();

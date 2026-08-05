@@ -114,7 +114,7 @@ impl super::qobject::GameModel {
             return false;
         };
 
-        match omikuji_core::steam::shortcuts::create_shortcut(game) {
+        match omikuji_core::store::steam::shortcuts::create_shortcut(game) {
             Ok(path) => {
                 tracing::info!("created steam shortcut in {}", path.display());
                 true
@@ -132,7 +132,7 @@ impl super::qobject::GameModel {
             return false;
         };
 
-        match omikuji_core::steam::shortcuts::remove_shortcut(game) {
+        match omikuji_core::store::steam::shortcuts::remove_shortcut(game) {
             Ok(_) => true,
             Err(e) => {
                 tracing::error!("remove_steam_shortcut failed: {}", e);
@@ -146,7 +146,7 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.get(idx) else {
             return false;
         };
-        omikuji_core::steam::shortcuts::shortcut_exists(game)
+        omikuji_core::store::steam::shortcuts::shortcut_exists(game)
     }
 
     pub fn steam_shortcut_available(&self, index: i32) -> bool {
@@ -154,6 +154,6 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.get(idx) else {
             return false;
         };
-        game.runner.runner_type != "steam" && omikuji_core::steam::shortcuts::available()
+        game.runner.runner_type != "steam" && omikuji_core::store::steam::shortcuts::available()
     }
 }

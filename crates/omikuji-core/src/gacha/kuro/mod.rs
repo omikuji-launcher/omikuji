@@ -4,7 +4,7 @@ mod patcher;
 pub mod source;
 pub mod update;
 
-use crate::gachas::manifest::GachaManifest;
+use crate::gacha::manifest::GachaManifest;
 use anyhow::{Result, anyhow};
 
 pub fn index_url_from_manifest(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
@@ -42,15 +42,15 @@ pub fn parse_app_id(app_id: &str) -> Result<(String, String)> {
 const PUBLISHER_SLUG: &str = "kurogame";
 
 pub fn installed_version(game_slug: &str, edition: &str) -> Option<String> {
-    crate::gachas::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition)
+    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition)
 }
 
 pub fn set_installed_version(game_slug: &str, edition: &str, version: &str) {
-    crate::gachas::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition, version);
+    crate::gacha::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition, version);
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {
-    use crate::gachas::state;
+    use crate::gacha::state;
     if let Some(v) = state::read_install_dotversion(install_path) {
         return Some(v);
     }
@@ -109,7 +109,7 @@ fn read_package_version_json(install_path: &std::path::Path) -> Option<String> {
     }
 }
 
-// no-op today: kuro writes directly into install_dir so theres no scratch to clean , kept for shape-consistency with hoyo/endfield
+// no-op today: kuro writes directly into install_dir so theres no scratch to clean , kept for shape-consistency with hoyo/gryphline
 pub fn cleanup_kuro_state(
     _app_id: &str,
     _install_path: &std::path::Path,
