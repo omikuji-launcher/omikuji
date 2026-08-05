@@ -134,6 +134,7 @@ impl qobject::DownloadModel {
         let req = DownloadRequest {
             source: "epic".to_string(),
             app_id: app_id.to_string(),
+            game_id: String::new(),
             display_name: display_name.to_string(),
             banner_url: if banner.is_empty() {
                 None
@@ -362,20 +363,16 @@ impl qobject::DownloadModel {
         QString::from(&serde_json::Value::Object(map).to_string())
     }
 
-    fn active_for_app_id(&self, app_id: &QString) -> QString {
-        let needle = app_id.to_string();
+    fn active_for_game_id(&self, game_id: &QString) -> QString {
+        let needle = game_id.to_string();
         if needle.is_empty() {
             return QString::from("");
         }
-        let prefix = format!("{}:", needle);
 
-        let hit = self.entries.iter().find(|e| {
-            let active = e.status.is_active();
-            if !active {
-                return false;
-            }
-            e.app_id == needle || e.app_id.starts_with(&prefix)
-        });
+        let hit = self
+            .entries
+            .iter()
+            .find(|e| e.status.is_active() && e.game_id == needle);
 
         let Some(e) = hit else {
             return QString::from("");

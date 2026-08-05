@@ -132,6 +132,7 @@ pub fn build_install_request(
     Ok(DownloadRequest {
         source,
         app_id,
+        game_id: String::new(),
         display_name,
         banner_url: if banner_url.is_empty() {
             None
@@ -164,6 +165,7 @@ pub fn build_update_request(
     Ok(DownloadRequest {
         source,
         app_id,
+        game_id: String::new(),
         display_name,
         banner_url: if banner_url.is_empty() {
             None

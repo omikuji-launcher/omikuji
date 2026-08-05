@@ -4,6 +4,7 @@
 // schema_version gates forward-compat; unknown versions are logged and skipped rather than parsed as best-effort.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -42,6 +43,8 @@ pub struct GachaManifest {
     pub runner_preference: Vec<String>,
     #[serde(default)]
     pub telemetry_block: Vec<String>,
+    #[serde(default)]
+    pub env: HashMap<String, String>,
 
     #[serde(default)]
     pub letter_fallback: String,
@@ -166,6 +169,7 @@ mod tests {
             anti_cheat: String::new(),
             runner_preference: vec![],
             telemetry_block: vec![],
+            env: HashMap::new(),
             letter_fallback: "T".into(),
             uses_temp_dir: true,
             strategy_config: serde_json::Value::Null,

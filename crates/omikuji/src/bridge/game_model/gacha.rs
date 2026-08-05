@@ -183,17 +183,18 @@ impl super::qobject::GameModel {
         };
         let app_id = omikuji_core::gachas::strategies::build_app_id(&manifest, &eid, &[]);
 
+        let exe = std::path::Path::new(&install_s).join(&edition.exe_name);
+
         if self
             .library
             .game
             .iter()
-            .any(|g| g.source.kind == "gacha" && g.source.app_id == app_id)
+            .any(|g| g.source.kind == "gacha" && g.metadata.exe == exe)
         {
-            tracing::info!("already in library: {}", app_id);
+            tracing::info!("already in library: {}", exe.display());
             return QString::default();
         }
 
-        let exe = std::path::Path::new(&install_s).join(&edition.exe_name);
         let category = if manifest.category.is_empty() {
             "Gacha".to_string()
         } else {
@@ -220,7 +221,10 @@ impl super::qobject::GameModel {
                 prefix: prefix_s,
                 ..WineConfig::default()
             },
-            launch: LaunchConfig::default(),
+            launch: LaunchConfig {
+                env: manifest.env.clone(),
+                ..LaunchConfig::default()
+            },
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };

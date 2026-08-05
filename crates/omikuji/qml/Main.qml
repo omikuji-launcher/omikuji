@@ -407,11 +407,11 @@ ApplicationWindow {
 
     property var selectedDownloadActivity: null
     function refreshSelectedDownloadActivity() {
-        if (!selectedGame || !selectedGame.sourceAppId) {
+        if (!selectedGame || !selectedGame.gameId) {
             selectedDownloadActivity = null
             return
         }
-        let raw = downloadModel.active_for_app_id(selectedGame.sourceAppId)
+        let raw = downloadModel.active_for_game_id(selectedGame.gameId)
         if (!raw || raw.length === 0) {
             selectedDownloadActivity = null
             return
@@ -419,7 +419,7 @@ ApplicationWindow {
         try {
             selectedDownloadActivity = JSON.parse(raw)
         } catch (e) {
-            console.warn("active_for_app_id returned bad json:", raw)
+            console.warn("active_for_game_id returned bad json:", raw)
             selectedDownloadActivity = null
         }
     }
@@ -428,9 +428,9 @@ ApplicationWindow {
     function tryPlay(idx, forceSkipUpdateCheck = false) {
         if (idx < 0 || idx >= gameModel.count) return false
         let game = gameModel.get_game(idx)
-        let appId = game ? (game["sourceAppId"] || "") : ""
-        if (appId.length > 0) {
-            let raw = downloadModel.active_for_app_id(appId)
+        let gid = game ? (game["gameId"] || "") : ""
+        if (gid.length > 0) {
+            let raw = downloadModel.active_for_game_id(gid)
             if (raw && raw.length > 0) {
                 currentView = "downloads"
                 return false

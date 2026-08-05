@@ -80,6 +80,7 @@ pub enum DownloadKind {
 pub struct DownloadRequest {
     pub source: String,
     pub app_id: String,
+    pub game_id: String,
     pub display_name: String,
     pub banner_url: Option<String>,
     pub install_path: PathBuf,
@@ -96,6 +97,8 @@ pub struct DownloadEntry {
     pub id: String,
     pub source: String,
     pub app_id: String,
+    #[serde(default)]
+    pub game_id: String,
     pub display_name: String,
     pub banner_url: Option<String>,
     pub install_path: PathBuf,
@@ -294,6 +297,7 @@ impl DownloadManager {
             id: id.clone(),
             source: req.source,
             app_id: req.app_id,
+            game_id: req.game_id,
             display_name: req.display_name,
             banner_url: req.banner_url,
             install_path: expand_path(req.install_path),

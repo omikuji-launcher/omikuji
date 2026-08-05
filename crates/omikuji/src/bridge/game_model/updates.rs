@@ -91,6 +91,7 @@ impl super::qobject::GameModel {
         struct ScanCandidate {
             source: String,
             app_id: String,
+            game_id: String,
             display_name: String,
             banner_url: Option<String>,
             install_path: std::path::PathBuf,
@@ -125,6 +126,7 @@ impl super::qobject::GameModel {
                 ScanCandidate {
                     source: g.source.kind.clone(),
                     app_id: g.source.app_id.clone(),
+                    game_id: g.metadata.id.clone(),
                     display_name: g.metadata.name.clone(),
                     banner_url,
                     install_path,
@@ -175,6 +177,7 @@ impl super::qobject::GameModel {
                 let req = omikuji_core::downloads::DownloadRequest {
                     source: candidate.source.clone(),
                     app_id: candidate.app_id,
+                    game_id: candidate.game_id,
                     display_name: format!("{} · update", candidate.display_name),
                     banner_url: candidate.banner_url,
                     install_path: candidate.install_path,
@@ -360,6 +363,7 @@ fn build_download_request(
     omikuji_core::downloads::DownloadRequest {
         source,
         app_id: game.source.app_id.clone(),
+        game_id: game.metadata.id.clone(),
         display_name: format!("{} · {}", game.metadata.name, label),
         banner_url,
         install_path,

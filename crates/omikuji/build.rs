@@ -262,7 +262,7 @@ fn main() {
         .custom_invokable_raw("fn drain_events(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw("fn epic_state_json(self: &DownloadModel) -> QString;")
         .custom_invokable_raw("fn gog_state_json(self: &DownloadModel) -> QString;")
-        .custom_invokable_raw("fn active_for_app_id(self: &DownloadModel, app_id: &QString) -> QString;")
+        .custom_invokable_raw("fn active_for_game_id(self: &DownloadModel, game_id: &QString) -> QString;")
         .custom_invokable("speedHistoryJson", "fn speed_history_json(self: &DownloadModel) -> QString;")
         .row_ops()
         .write_into(&out_dir);

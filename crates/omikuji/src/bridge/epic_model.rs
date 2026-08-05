@@ -374,6 +374,7 @@ impl qobject::EpicModel {
         let req = DownloadRequest {
             source: "epic".to_string(),
             app_id: game.app_name.clone(),
+            game_id: String::new(),
             display_name: game.title.clone(),
             banner_url,
             install_path: PathBuf::from(install_path.to_string()),
