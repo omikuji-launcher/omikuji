@@ -214,8 +214,7 @@ pub fn create_shortcut(game: &Game) -> Result<PathBuf> {
 
     let (exe, options) = launch_spec(game);
     let quoted_exe = format!("\"{}\"", exe);
-    let appid =
-        crc32fast::hash(format!("{}{}", quoted_exe, game.metadata.name).as_bytes()) | 0x8000_0000;
+    let appid = shortcut_appid(game);
 
     let start_dir = dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("/"))
@@ -258,7 +257,11 @@ pub fn create_shortcut(game: &Game) -> Result<PathBuf> {
 }
 
 pub fn remove_shortcut(game: &Game) -> Result<()> {
+    crate::desktop::remove_steam_icon(&game.metadata.id);
+
     let config = user_config_dir().context("no steam user data found")?;
+    remove_artwork(&config, shortcut_appid(game));
+
     let path = config.join("shortcuts.vdf");
     let mut entries = read_entries(&path)?;
     let before = entries.len();
@@ -267,6 +270,26 @@ pub fn remove_shortcut(game: &Game) -> Result<()> {
         return Ok(());
     }
     write_entries(&path, &entries)
+}
+
+fn shortcut_appid(game: &Game) -> u32 {
+    let (exe, _) = launch_spec(game);
+    crc32fast::hash(format!("\"{}\"{}", exe, game.metadata.name).as_bytes()) | 0x8000_0000
+}
+
+fn artwork_paths(grid: &Path, appid: u32) -> [PathBuf; 4] {
+    [
+        grid.join(format!("{}.jpg", appid)),
+        grid.join(format!("{}_hero.jpg", appid)),
+        grid.join(format!("{}p.jpg", appid)),
+        grid.join(format!("{}_icon.png", appid)),
+    ]
+}
+
+fn remove_artwork(config: &Path, appid: u32) {
+    for target in artwork_paths(&config.join("grid"), appid) {
+        let _ = fs::remove_file(target);
+    }
 }
 
 fn set_artwork(config: &Path, appid: u32, game: &Game) {
@@ -280,12 +303,8 @@ fn set_artwork(config: &Path, appid: u32, game: &Game) {
     let cover = media_path(&game.metadata.id, &MediaType::Coverart);
     let icon = media_path(&game.metadata.id, &MediaType::Icon);
 
-    let assets = [
-        (&banner, grid.join(format!("{}.jpg", appid))),
-        (&banner, grid.join(format!("{}_hero.jpg", appid))),
-        (&cover, grid.join(format!("{}p.jpg", appid))),
-        (&icon, grid.join(format!("{}_icon.png", appid))),
-    ];
+    let sources = [&banner, &banner, &cover, &icon];
+    let assets = sources.into_iter().zip(artwork_paths(&grid, appid));
 
     for (source, target) in assets {
         if source.exists()

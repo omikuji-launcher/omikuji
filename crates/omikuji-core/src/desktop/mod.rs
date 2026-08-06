@@ -102,6 +102,11 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
     Ok(())
 }
 
+pub fn remove_steam_icon(game_id: &str) {
+    let appid = crate::store::steam::synthetic_appid(game_id);
+    let _ = fs::remove_file(icons_dir().join(format!("steam_icon_{}.png", appid)));
+}
+
 pub fn browse_files(path: &Path) -> Result<()> {
     let path_str = path.to_string_lossy();
     let url = if path_str.starts_with("file://") {

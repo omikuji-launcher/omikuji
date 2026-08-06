@@ -1295,6 +1295,7 @@ impl qobject::GameModel {
         self.as_mut().rust_mut().get_mut().library.game.remove(idx);
 
         media::remove_cached_media(&game_id);
+        omikuji_core::desktop::remove_steam_icon(&game_id);
 
         let count = self.library.game.len() as i32;
         self.as_mut().set_count(count);
