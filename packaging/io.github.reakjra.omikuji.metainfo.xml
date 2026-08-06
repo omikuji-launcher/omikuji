@@ -22,6 +22,16 @@
     </p>
   </description>
   <releases>
+    <release version="0.8.3" date="2026-08-06">
+      <description>
+        <ul>
+          <li>Discord RPC toggle off by default</li>
+          <li>UI refinements</li>
+          <li>Gacha manifests envs and runner overhaul</li>
+          <li>Removed Jadeite component </li>
+        </ul>
+      </description>
+    </release>
     <release version="0.8.2" date="2026-07-27">
       <description>
         <ul>

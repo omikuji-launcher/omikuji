@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.8.2
+Version:        0.8.3
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,12 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Thu Aug 06 2026 reakjra <reakjra@proton.me> - 0.8.3-1
+- Discord RPC toggle off by default
+- UI refinements
+- Gacha manifests envs and runner overhaul
+- Removed Jadeite component 
+
 * Mon Jul 27 2026 reakjra <reakjra@proton.me> - 0.8.2-1
 - Added resize animation for dialogs
 - Added on demand dialog automatic resize
