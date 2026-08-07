@@ -250,3 +250,5 @@ Heavy debt to the prior art:
 - [AAG](https://github.com/an-anime-team/): gacha launcher reference. HoYo Sophon, CDN methods all from them <3. 
 
 Bundled icon set: [Material Symbols](https://github.com/google/material-design-icons) (Apache-2.0).
+
+> old icon at [old_icon.png](packaging/old_icon.png). Ill get her back when i can get an artist to make a decent replacement :p
