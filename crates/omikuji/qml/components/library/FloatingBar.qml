@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import "../controls"
 import "../primitives"
@@ -38,6 +37,12 @@ Item {
         return qsTr("%1 · %2%").arg(kindWord).arg(pct)
     }
 
+    function playtimeLabel() {
+        let h = displayedGame ? displayedGame.playtime : 0
+        return h >= 1 ? Math.floor(h) + "h " + Math.round((h % 1) * 60) + "m"
+                      : Math.round(h * 60) + "m"
+    }
+
     property var displayedGame: null
     property bool displayedIsRunning: false
     property var displayedActivity: null
@@ -47,6 +52,59 @@ Item {
     property bool _barHidden: true
     // prevents the 150ms button crossfade from playing visibly through the 200ms bar fade-in
     property bool _suppressButtonAnim: false
+
+    readonly property string buttonState: displayedIsRunning ? "stop"
+                                        : displayedHasActivity ? "activity"
+                                        : "play"
+
+    component Dot: Rectangle {
+        width: 4; height: 4; radius: 2
+        color: theme.dot
+        anchors.verticalCenter: parent.verticalCenter
+    }
+
+    component Stat: Row {
+        id: stat
+
+        property string icon: ""
+        property string label: ""
+        property color tint: theme.textMuted
+
+        spacing: 6
+        anchors.verticalCenter: parent.verticalCenter
+
+        SvgIcon {
+            name: stat.icon
+            size: 14
+            color: stat.tint
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        Text {
+            text: stat.label
+            color: stat.tint
+            font.pixelSize: theme.type.caption.size
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+
+    component ButtonSlot: Item {
+        id: slot
+
+        property string forState: ""
+
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: 100
+        height: 40
+        opacity: root.buttonState === slot.forState ? 1 : 0
+        visible: opacity > 0.001
+
+        Behavior on opacity {
+            enabled: !root._suppressButtonAnim
+            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        }
+    }
 
     onSelectedGameChanged: {
         if (!selectedGame || !selectedGame.name) {
@@ -155,63 +213,23 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Rectangle {
-                        width: 4; height: 4; radius: 2
-                        color: theme.dot
-                        anchors.verticalCenter: parent.verticalCenter
+                    Dot {}
+
+                    Stat {
+                        icon: "schedule"
+                        label: root.playtimeLabel()
+                        tint: theme.textMuted
                     }
 
-                    Row {
-                        spacing: 6
-                        anchors.verticalCenter: parent.verticalCenter
+                    Dot {}
 
-                        SvgIcon {
-                            name: "schedule"
-                            size: 14
-                            color: theme.textMuted
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            property real hours: root.displayedGame ? root.displayedGame.playtime : 0
-                            text: hours >= 1 ? Math.floor(hours) + "h " + Math.round((hours % 1) * 60) + "m"
-                                             : Math.round(hours * 60) + "m"
-                            color: theme.textMuted
-                            font.pixelSize: theme.type.caption.size
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                    Stat {
+                        icon: "calendar_month"
+                        label: root.displayedGame ? root.displayedGame.lastPlayed : ""
+                        tint: theme.textSubtle
                     }
 
-                    Rectangle {
-                        width: 4; height: 4; radius: 2
-                        color: theme.dot
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Row {
-                        spacing: 6
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        SvgIcon {
-                            name: "calendar_month"
-                            size: 14
-                            color: theme.textSubtle
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: root.displayedGame ? root.displayedGame.lastPlayed : ""
-                            color: theme.textSubtle
-                            font.pixelSize: theme.type.caption.size
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    Rectangle {
-                        width: 4; height: 4; radius: 2
-                        color: theme.dot
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                    Dot {}
 
                     Text {
                         text: root.displayedGame ? root.displayedGame.runner : ""
@@ -249,7 +267,7 @@ Item {
             }
 
             Item {
-                width: root.displayedHasActivity ? 150 : 100
+                width: root.buttonState === "activity" ? 150 : 100
                 height: 40
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -257,19 +275,8 @@ Item {
                     NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
                 }
 
-                Item {
-                    id: stopSlot
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
-                    height: 40
-                    opacity: root.displayedIsRunning ? 1 : 0
-                    visible: opacity > 0.001
-
-                    Behavior on opacity {
-                        enabled: !root._suppressButtonAnim
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
+                ButtonSlot {
+                    forState: "stop"
 
                     M3Button {
                         anchors.fill: parent
@@ -280,77 +287,62 @@ Item {
                     }
                 }
 
-                Squircle {
-                    id: activityBtn
-                    anchors.fill: parent
-                    radius: theme.radius.lg
-                    fillColor: theme.alpha(theme.text, 0.08)
-                    opacity: (!root.displayedIsRunning && root.displayedHasActivity) ? 1 : 0
-                    visible: opacity > 0
+                ButtonSlot {
+                    forState: "activity"
+                    width: parent.width
 
-                    Behavior on opacity {
-                        enabled: !root._suppressButtonAnim
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
-
-                    // no width Behavior, it raced the opacity fade and painted outside the rounded bounds (XDDDDDDDDDDDDDDZ))IS)D(ISDJ(SJD))
-                    clip: true
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 1
-                        radius: 11
-                        width: {
-                            if (!root.displayedHasActivity) return 0
-                            let pct = (root.displayedActivity.progress || 0) / 100
-                            return Math.max(0, Math.min((parent.width - 2) * pct, parent.width - 2))
-                        }
-                        color: theme.alpha(theme.accent, 0.15)
-                    }
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        SvgIcon {
-                            anchors.verticalCenter: parent.verticalCenter
-                            name: "schedule"
-                            size: 14
-                            color: theme.accent
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.activityLabel()
-                            color: theme.text
-                            font.pixelSize: theme.type.micro.size
-                            font.weight: Font.DemiBold
-                        }
-                    }
-
-                    MouseArea {
-                        id: activityMouse
+                    Squircle {
                         anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.downloadActivityClicked()
+                        radius: theme.radius.lg
+                        fillColor: theme.alpha(theme.text, 0.08)
+
+                        // no width Behavior, it raced the opacity fade and painted outside the rounded bounds (XDDDDDDDDDDDDDDZ))IS)D(ISDJ(SJD))
+                        clip: true
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 1
+                            radius: 11
+                            width: {
+                                if (!root.displayedHasActivity) return 0
+                                let pct = (root.displayedActivity.progress || 0) / 100
+                                return Math.max(0, Math.min((parent.width - 2) * pct, parent.width - 2))
+                            }
+                            color: theme.alpha(theme.accent, 0.15)
+                        }
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+
+                            SvgIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                name: "schedule"
+                                size: 14
+                                color: theme.accent
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: root.activityLabel()
+                                color: theme.text
+                                font.pixelSize: theme.type.micro.size
+                                font.weight: Font.DemiBold
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.downloadActivityClicked()
+                        }
                     }
                 }
 
-                Item {
-                    id: playSlot
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 100
-                    height: 40
-                    opacity: (!root.displayedIsRunning && !root.displayedHasActivity) ? 1 : 0
-                    visible: opacity > 0.001
-
-                    Behavior on opacity {
-                        enabled: !root._suppressButtonAnim
-                        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-                    }
+                ButtonSlot {
+                    forState: "play"
 
                     M3Button {
                         anchors.fill: parent

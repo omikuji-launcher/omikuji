@@ -346,10 +346,8 @@ fn main() {
         "qml/components/library/GameCard.qml",
         "qml/components/library/GameContextMenu.qml",
         "qml/components/library/GameGrid.qml",
-        "qml/components/library/GameIcon.qml",
         // navigation
         "qml/components/navigation/NavTabs.qml",
-        "qml/components/navigation/Sidebar.qml",
         "qml/components/navigation/SubNavRail.qml",
         "qml/components/navigation/TopBar.qml",
         // pages
@@ -402,12 +400,10 @@ fn main() {
         "qml/components/controls/M3Switch.qml",
         "qml/components/controls/M3TextField.qml",
         "qml/components/controls/OutputLog.qml",
-        "qml/components/controls/PlayButton.qml",
         "qml/components/controls/ResizeGrips.qml",
         "qml/components/controls/ThemedLogHighlighter.qml",
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",
-        "qml/components/cards/StatusBadge.qml",
         "qml/components/cards/StoreCardAction.qml",
         "qml/components/primitives/Sparkline.qml",
         "qml/components/primitives/Squircle.qml",
