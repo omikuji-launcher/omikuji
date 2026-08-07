@@ -1,8 +1,35 @@
 use crate::launch::{EnvPurpose, WineVariant, build_env, resolve_wine_exe};
 use crate::library::Game;
 use anyhow::{Result, anyhow};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::sync::Mutex;
+
+lazy_static::lazy_static! {
+    static ref STARTING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
+}
+
+fn starting() -> std::sync::MutexGuard<'static, HashSet<String>> {
+    STARTING.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+pub struct StartGuard {
+    key: String,
+}
+
+impl Drop for StartGuard {
+    fn drop(&mut self) {
+        starting().remove(&self.key);
+    }
+}
+
+pub fn try_start(game_id: &str, tool: &str) -> Option<StartGuard> {
+    let key = format!("{}:{}", game_id, tool);
+    starting()
+        .insert(key.clone())
+        .then(move || StartGuard { key })
+}
 
 #[derive(Debug, Clone)]
 pub enum WineTool {

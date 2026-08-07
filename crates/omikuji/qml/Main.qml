@@ -271,7 +271,7 @@ ApplicationWindow {
 
         onGame_stopped: (gameId) => {
             if (root.selectedGame && root.selectedGame.gameId === gameId) {
-                root.isSelectedGameRunning = false
+                root.refreshSelectedRunState()
             }
             // !root.visible guard: don't clobber a manual re-show mid-session
             if (uiSettings.minimizeOnLaunch && !root.visible) {
@@ -353,10 +353,14 @@ ApplicationWindow {
     property int selectedGameIndex: -1
     // set before switching to settings view; the Loader-mounted page binds to this
     property int settingsGameIndex: -1
-    property bool hasSelection: selectedGameIndex >= 0 && selectedGameIndex < gameModel.count
+    function selectionValid() {
+        return selectedGameIndex >= 0 && selectedGameIndex < gameModel.count
+    }
+    property bool hasSelection: selectionValid()
     property var selectedGame: null
     property string selectedGameId: ""
     property bool isSelectedGameRunning: false
+    property bool isSelectedLaunching: false
 
     property string currentView: "library"
     property string activeModal: ""
@@ -374,15 +378,16 @@ ApplicationWindow {
         topBar.defocusSearch()
     }
 
+    function refreshSelectedRunState() {
+        let valid = selectionValid()
+        isSelectedGameRunning = valid && gameModel.is_running(selectedGameIndex)
+        isSelectedLaunching = valid && gameModel.is_launching(selectedGameIndex)
+    }
+
     onSelectedGameIndexChanged: {
-        if (selectedGameIndex >= 0 && selectedGameIndex < gameModel.count) {
-            let game = gameModel.get_game(selectedGameIndex)
-            selectedGameId = game ? game["gameId"] : ""
-            isSelectedGameRunning = gameModel.is_running(selectedGameIndex)
-        } else {
-            selectedGameId = ""
-            isSelectedGameRunning = false
-        }
+        let game = selectionValid() ? gameModel.get_game(selectedGameIndex) : null
+        selectedGameId = (game && game["gameId"]) ? game["gameId"] : ""
+        refreshSelectedRunState()
         updateSelection()
     }
 
@@ -449,7 +454,7 @@ ApplicationWindow {
             ? gameModel.launch_game_force(idx)
             : gameModel.launch_game(idx)
         if (launched) {
-            isSelectedGameRunning = true
+            isSelectedLaunching = true
             if (uiSettings.minimizeOnLaunch) {
                 steamStorePanel.keepAlive = false
                 epicStorePanel.keepAlive = false
@@ -465,12 +470,20 @@ ApplicationWindow {
     }
 
     Timer {
+        interval: 60
+        repeat: true
+        running: root.isSelectedLaunching
+        onTriggered: root.refreshSelectedRunState()
+    }
+
+    Timer {
         id: libPollTimer
         interval: 500
         repeat: true
         running: true
         onTriggered: {
             gameModel.check_exited_games()
+            root.refreshSelectedRunState()
             gameModel.drain_notifications()
             gameModel.drain_update_notifications()
             gameModel.drain_errors()
@@ -482,11 +495,6 @@ ApplicationWindow {
 
     Connections {
         target: gameModel
-        function onGame_stopped(gameId) {
-            if (root.selectedGame && gameId === root.selectedGame.gameId) {
-                root.isSelectedGameRunning = false
-            }
-        }
         function onNotification(level, title, message) {
             toastManager.show(level, title, message)
         }
@@ -759,6 +767,7 @@ property real cardZoom: uiSettings.cardZoom
                 selectedGame: root.selectedGame
                 hasSelection: root.hasSelection
                 isRunning: root.isSelectedGameRunning
+                isLaunching: root.isSelectedLaunching
                 downloadActivity: root.selectedDownloadActivity
                 onSettingsClicked: {
                     root.settingsGameIndex = root.selectedGameIndex

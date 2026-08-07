@@ -213,6 +213,9 @@ pub mod qobject {
         fn is_running(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
+        fn is_launching(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
         fn logs_dir(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -1524,6 +1527,14 @@ impl qobject::GameModel {
             return false;
         };
         omikuji_core::process::is_game_running(&game.metadata.id)
+    }
+
+    fn is_launching(&self, index: i32) -> bool {
+        let idx = index as usize;
+        let Some(game) = self.library.game.get(idx) else {
+            return false;
+        };
+        omikuji_core::process::is_launching(&game.metadata.id)
     }
 
     fn logs_dir(&self) -> QString {

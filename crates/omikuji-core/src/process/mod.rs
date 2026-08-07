@@ -327,13 +327,31 @@ lazy_static::lazy_static! {
     static ref MANAGER: ProcessManager = ProcessManager::new();
 }
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 lazy_static::lazy_static! {
     static ref EXITED_GAMES: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
+    static ref LAUNCHING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
+}
+
+pub fn mark_launching(game_id: &str) {
+    if let Ok(mut set) = LAUNCHING.lock() {
+        set.insert(game_id.to_string());
+    }
+}
+
+pub fn clear_launching(game_id: &str) {
+    if let Ok(mut set) = LAUNCHING.lock() {
+        set.remove(game_id);
+    }
+}
+
+pub fn is_launching(game_id: &str) -> bool {
+    LAUNCHING.lock().is_ok_and(|s| s.contains(game_id))
 }
 
 pub fn notify_game_exited(game_id: &str) {
+    clear_launching(game_id);
     if let Ok(mut queue) = EXITED_GAMES.lock() {
         queue.push_back(game_id.to_string());
         while queue.len() > 10 {

@@ -10,6 +10,8 @@ Item {
     property var selectedGame: null
     property bool hasSelection: false
     property bool isRunning: false
+    property bool isLaunching: false
+    property int launchShowDelay: 120
 
     // non-null when theres an active download, launching mid-patch reads files the patcher is rewriting
     property var downloadActivity: null
@@ -45,15 +47,18 @@ Item {
 
     property var displayedGame: null
     property bool displayedIsRunning: false
+    property bool displayedIsLaunching: false
     property var displayedActivity: null
     readonly property bool displayedHasActivity:
         displayedActivity !== null && displayedActivity !== undefined
 
+    property bool _launchVisible: false
     property bool _barHidden: true
     // prevents the 150ms button crossfade from playing visibly through the 200ms bar fade-in
     property bool _suppressButtonAnim: false
 
-    readonly property string buttonState: displayedIsRunning ? "stop"
+    readonly property string buttonState: displayedIsLaunching ? "launching"
+                                        : displayedIsRunning ? "stop"
                                         : displayedHasActivity ? "activity"
                                         : "play"
 
@@ -116,6 +121,7 @@ Item {
             _suppressButtonAnim = true
             displayedGame = selectedGame
             displayedIsRunning = isRunning
+            _adoptLaunchState()
             displayedActivity = downloadActivity
             barContent.opacity = 1
             _barHidden = false
@@ -128,14 +134,44 @@ Item {
     }
 
     // Qt.callLater lets bindings settle, deselect can fire isRunning false before selectedGame null
+    function _canSync() {
+        return hasSelection && !crossfadeTimer.running
+    }
     function _syncIsRunning() {
-        if (hasSelection) displayedIsRunning = isRunning
+        if (_canSync()) displayedIsRunning = isRunning
+    }
+    function _syncIsLaunching() {
+        if (_canSync()) displayedIsLaunching = _launchVisible
+    }
+    function _adoptLaunchState() {
+        launchShowTimer.stop()
+        _launchVisible = isLaunching
+        displayedIsLaunching = _launchVisible
     }
     function _syncActivity() {
-        if (hasSelection) displayedActivity = downloadActivity
+        if (_canSync()) displayedActivity = downloadActivity
     }
     onIsRunningChanged: Qt.callLater(_syncIsRunning)
     onDownloadActivityChanged: Qt.callLater(_syncActivity)
+
+    onIsLaunchingChanged: {
+        if (isLaunching) {
+            launchShowTimer.restart()
+            return
+        }
+        launchShowTimer.stop()
+        _launchVisible = false
+        Qt.callLater(_syncIsLaunching)
+    }
+
+    Timer {
+        id: launchShowTimer
+        interval: root.launchShowDelay
+        onTriggered: {
+            root._launchVisible = true
+            root._syncIsLaunching()
+        }
+    }
 
     Timer {
         id: crossfadeTimer
@@ -143,6 +179,7 @@ Item {
         onTriggered: {
             root.displayedGame = root.selectedGame
             root.displayedIsRunning = root.isRunning
+            root._adoptLaunchState()
             root.displayedActivity = root.downloadActivity
             barContent.opacity = 1
         }
@@ -273,6 +310,17 @@ Item {
 
                 Behavior on width {
                     NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
+
+                ButtonSlot {
+                    forState: "launching"
+
+                    M3Button {
+                        anchors.fill: parent
+                        variant: "filled"
+                        enabled: false
+                        text: qsTr("Starting")
+                    }
                 }
 
                 ButtonSlot {

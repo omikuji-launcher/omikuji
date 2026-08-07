@@ -143,8 +143,13 @@ impl super::qobject::GameModel {
     }
 
     fn try_spawn_launch(&self, game: &Game) -> bool {
-        if omikuji_core::process::is_game_running(&game.metadata.id) {
-            tracing::warn!("game '{}' is already running", game.metadata.name);
+        if omikuji_core::process::is_game_running(&game.metadata.id)
+            || omikuji_core::process::is_launching(&game.metadata.id)
+        {
+            tracing::warn!(
+                "game '{}' is already running or launching",
+                game.metadata.name
+            );
             return false;
         }
 
@@ -154,6 +159,8 @@ impl super::qobject::GameModel {
                 "Launching through Steam... any errors will show in Steam itself",
             );
         }
+
+        omikuji_core::process::mark_launching(&game.metadata.id);
 
         if game.launch.pre_launch_script.is_empty() {
             match omikuji_core::launch::build_launch(game) {
@@ -206,18 +213,33 @@ impl super::qobject::GameModel {
         let display_name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
         let tool_label = tool_name.clone();
+
+        let Some(guard) = omikuji_core::wine_tools::try_start(&id, &tool_name) else {
+            omikuji_core::notifications::warning(
+                &display_name,
+                format!("{} is already starting", tool_label),
+            );
+            return;
+        };
+
         // prefix-init and umu-run startup can be slow, detach so the ui doesnt block
-        std::thread::spawn(move || match omikuji_core::wine_tools::run(&game, t) {
-            Ok(_child) => {
-                omikuji_core::notifications::info(&display_name, format!("Opened {}", tool_label));
-            }
-            Err(e) => {
-                omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
-                    game_id: game_id_owned,
-                    title: format!("{} failed", tool_label),
-                    message: format!("{}", e),
-                    action: omikuji_core::process::ErrorAction::OpenGameSettings,
-                });
+        std::thread::spawn(move || {
+            let _guard = guard;
+            match omikuji_core::wine_tools::run(&game, t) {
+                Ok(_child) => {
+                    omikuji_core::notifications::info(
+                        &display_name,
+                        format!("Opened {}", tool_label),
+                    );
+                }
+                Err(e) => {
+                    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                        game_id: game_id_owned,
+                        title: format!("{} failed", tool_label),
+                        message: format!("{}", e),
+                        action: omikuji_core::process::ErrorAction::OpenGameSettings,
+                    });
+                }
             }
         });
     }
@@ -454,6 +476,7 @@ fn spawn_launch_thread(config: omikuji_core::launch::LaunchConfig) {
         rt.block_on(async {
             match omikuji_core::process::launch_game(&config).await {
                 Ok(proc_id) => {
+                    omikuji_core::process::clear_launching(&config.game_id);
                     tracing::info!(
                         "game '{}' launched, process id: {:?}",
                         config.game_name,
