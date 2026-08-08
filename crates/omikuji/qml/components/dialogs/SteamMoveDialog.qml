@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -48,13 +51,13 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         Text {
             width: parent.width
             text: qsTr("Moves %1 from omikuji's runners folder into the selected Steam installations.").arg(root.version)
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -72,31 +75,31 @@ DialogCard {
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     width: parent.width
-                    spacing: theme.space.md
+                    spacing: Theme.space.md
 
                     SvgIcon {
                         anchors.verticalCenter: parent.verticalCenter
                         name: rootRow.selected ? "check_box" : "check_box_outline_blank"
                         size: 20
-                        color: rootRow.selected ? theme.accent : theme.alpha(theme.text, 0.55)
+                        color: rootRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
                     }
 
                     Column {
-                        width: parent.width - 20 - theme.space.md
+                        width: parent.width - 20 - Theme.space.md
                         spacing: 1
 
                         Text {
                             width: parent.width
                             text: rootRow.modelData[0]
-                            color: theme.textSubtle
-                            font.pixelSize: theme.type.caption.size
+                            color: Theme.textSubtle
+                            font.pixelSize: Theme.type.caption.size
                         }
 
                         Text {
                             width: parent.width
                             text: rootRow.modelData[1]
-                            color: theme.text
-                            font.pixelSize: theme.type.body.size
+                            color: Theme.text
+                            font.pixelSize: Theme.type.body.size
                             font.family: "monospace"
                             elide: Text.ElideMiddle
                         }
@@ -119,16 +122,16 @@ DialogCard {
             visible: root.roots.length === 0
             width: parent.width
             text: qsTr("No Steam installation found.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
         }
 
         Text {
             visible: root.roots.length > 0
             width: parent.width
             text: qsTr("Steam lists new compatibility tools after a restart.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -136,14 +139,14 @@ DialogCard {
             visible: root.errorText !== ""
             width: parent.width
             text: root.errorText
-            color: theme.error
-            font.pixelSize: theme.type.caption.size
+            color: Theme.error
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

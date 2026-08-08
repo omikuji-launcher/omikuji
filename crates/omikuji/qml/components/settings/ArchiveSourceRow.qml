@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 import "../lib/RunnerGrouping.js" as RG
 import "../controls"
@@ -22,8 +23,8 @@ Item {
 
     Squircle {
         anchors.fill: parent
-        radius: theme.radius.md
-        fillColor: theme.cardBg
+        radius: Theme.radius.md
+        fillColor: Theme.cardBg
     }
 
     Item {
@@ -49,23 +50,23 @@ Item {
                     spacing: 8
                     Text {
                         text: root.sourceName
-                        color: theme.text
-                        font.pixelSize: theme.type.body.size
+                        color: Theme.text
+                        font.pixelSize: Theme.type.body.size
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Rectangle {
                         height: 16
                         width: kindLabel.width + 12
-                        radius: theme.radius.sm
-                        color: theme.alpha(theme.accent, 0.13)
+                        radius: Theme.radius.sm
+                        color: Theme.alpha(Theme.accent, 0.13)
                         anchors.verticalCenter: parent.verticalCenter
                         Text {
                             id: kindLabel
                             anchors.centerIn: parent
                             text: root.sourceKind
-                            color: theme.accent
-                            font.pixelSize: theme.type.micro.size
+                            color: Theme.accent
+                            font.pixelSize: Theme.type.micro.size
                             font.weight: Font.Medium
                             font.capitalization: Font.AllUppercase
                             font.letterSpacing: 0.6
@@ -79,8 +80,8 @@ Item {
                         : root.installedCount === 1
                             ? qsTr("1 version installed")
                             : qsTr("%1 versions installed").arg(root.installedCount)
-                    color: root.installedCount > 0 ? theme.success : theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: root.installedCount > 0 ? Theme.success : Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                 }
             }
         }
@@ -104,7 +105,7 @@ Item {
         anchors.rightMargin: 14
         anchors.top: topRow.bottom
         height: 1
-        color: theme.separator
+        color: Theme.separator
     }
 
     Item {
@@ -121,8 +122,8 @@ Item {
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
             text: qsTr("Auto install on prefix")
-            color: theme.text
-            font.pixelSize: theme.type.label.size
+            color: Theme.text
+            font.pixelSize: Theme.type.label.size
         }
 
         M3Dropdown {
@@ -149,7 +150,7 @@ Item {
 
             TextMetrics {
                 id: labelMetrics
-                font.pixelSize: theme.type.body.size
+                font.pixelSize: Theme.type.body.size
                 text: root.activeVersion === "" ? qsTr("Disabled") : root.activeVersion
             }
         }

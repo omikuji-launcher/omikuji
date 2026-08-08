@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: grips
@@ -6,7 +9,7 @@ Item {
     property string sizeKey: ""
     property real minWidth: 320
     property real minHeight: 220
-    property real frameMargin: theme.space.xxl * 2
+    property real frameMargin: Theme.space.xxl * 2
     // user size lives as a fraction of the available frame so it scales with the window
     property real fracW: 0
     property real fracH: 0
@@ -28,7 +31,7 @@ Item {
     property real snapOut: 0.96
     property bool hugging: false
     property real hugT: hugging ? 1 : 0
-    Behavior on hugT { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+    Behavior on hugT { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
 
     property Item frame: parent ? parent.parent : null
 

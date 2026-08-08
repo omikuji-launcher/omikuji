@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Text {
     id: root
@@ -10,8 +11,8 @@ Text {
 
     visible: active
     text: active ? resolver(source) : ""
-    color: theme.accent
-    font.pixelSize: theme.type.micro.size
+    color: Theme.accent
+    font.pixelSize: Theme.type.micro.size
     font.family: "monospace"
     elide: Text.ElideMiddle
 }

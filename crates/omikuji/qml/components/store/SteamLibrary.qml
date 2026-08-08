@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import "../cards"
 
 
@@ -29,18 +31,18 @@ Item {
     // z:10 so it sits above the CardGrid's empty Flow during load
     Text {
         anchors.centerIn: parent
-        text: loading ? qsTr("Loading Steam games...") : qsTr("No Steam games found")
-        color: theme.textFaint
-        font.pixelSize: theme.type.label.size
-        visible: loading || steamGames.length === 0
+        text: root.loading ? qsTr("Loading Steam games...") : qsTr("No Steam games found")
+        color: Theme.textFaint
+        font.pixelSize: Theme.type.label.size
+        visible: root.loading || root.steamGames.length === 0
         z: 10
     }
 
     CardGrid {
         id: cardGrid
         anchors.fill: parent
-        visible: !loading && steamGames.length > 0
-        model: steamGames
+        visible: !root.loading && root.steamGames.length > 0
+        model: root.steamGames
         cardZoom: root.cardZoom
         cardSpacing: root.cardSpacing
         cardFlow: root.cardFlow
@@ -59,14 +61,14 @@ Item {
             title: modelData.name
             imageSource: "https://cdn.akamai.steamstatic.com/steam/apps/" + modelData.appid + "/library_600x900.jpg"
             imageFallback: {
-                if (!gameModel) return ""
-                let local = gameModel.steam_local_library_image(String(modelData.appid))
+                if (!root.gameModel) return ""
+                let local = root.gameModel.steam_local_library_image(String(modelData.appid))
                 return local ? "file://" + local : ""
             }
             leftIconName: "steam"
             leftIconSize: 20
             selected: modelData.imported
-            selectedBgTint: theme.alpha(theme.accent, 0.05)
+            selectedBgTint: Theme.alpha(Theme.accent, 0.05)
             clickable: false
             cardVisible: root.searchText === ""
                 || (modelData.name || "").toLowerCase().includes(root.searchText.toLowerCase())
@@ -76,13 +78,13 @@ Item {
                     icon: steamCard.modelData.imported ? "bookmark_check" : "add"
                     primary: !steamCard.modelData.imported
                     onClicked: {
-                        if (!gameModel) return
-                        let success = gameModel.steam_import_game(
+                        if (!root.gameModel) return
+                        let success = root.gameModel.steam_import_game(
                             steamCard.modelData.appid, steamCard.modelData.name)
                         if (success) {
                             steamCard.modelData.imported = true
                             root.gameImported()
-                            gameModel.steam_sync_playtime()
+                            root.gameModel.steam_sync_playtime()
                             loadSteamGames()
                         }
                     }

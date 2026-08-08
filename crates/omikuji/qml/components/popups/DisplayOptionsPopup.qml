@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import "../controls"
 
@@ -86,8 +87,8 @@ Popup {
 
                 Text {
                     text: qsTr("Sort by")
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                     font.weight: Font.Medium
                 }
 
@@ -111,8 +112,8 @@ Popup {
 
                 Text {
                     text: qsTr("Card style")
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                     font.weight: Font.Medium
                 }
 

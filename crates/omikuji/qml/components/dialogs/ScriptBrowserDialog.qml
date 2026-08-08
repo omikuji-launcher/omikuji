@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import "../controls"
@@ -117,48 +120,52 @@ DialogCard {
         Text {
             id: errorLabel
             anchors.top: searchField.bottom
-            anchors.topMargin: theme.space.xs
+            anchors.topMargin: Theme.space.xs
             anchors.left: parent.left
             anchors.right: parent.right
             visible: root.errorText !== ""
             text: root.errorText
-            color: theme.error
-            font.pixelSize: theme.type.caption.size
+            color: Theme.error
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
         ListView {
             anchors.top: root.errorText !== "" ? errorLabel.bottom : searchField.bottom
-            anchors.topMargin: theme.space.md
+            anchors.topMargin: Theme.space.md
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             clip: true
+            boundsBehavior: Flickable.StopAtBounds
             model: root.filtered
-            spacing: theme.space.xs
+            spacing: Theme.space.xs
             ScrollBar.vertical: ThinScrollBar {}
 
             delegate: Rectangle {
+                id: scriptCard
+                required property var modelData
+
                 width: ListView.view.width
                 height: 56
-                radius: theme.radius.md
-                color: rowArea.containsMouse ? theme.alpha(theme.text, 0.08) : "transparent"
+                radius: Theme.radius.md
+                color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.08) : "transparent"
 
                 Rectangle {
                     id: iconBox
                     width: 36
                     height: 36
-                    radius: theme.radius.sm
-                    color: iconImg.visible ? "transparent" : theme.alpha(theme.accent, 0.15)
+                    radius: Theme.radius.sm
+                    color: iconImg.visible ? "transparent" : Theme.alpha(Theme.accent, 0.15)
                     anchors.left: parent.left
-                    anchors.leftMargin: theme.space.sm
+                    anchors.leftMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
                         id: iconImg
                         anchors.fill: parent
-                        visible: modelData.iconSource !== "" && status === Image.Ready
-                        source: modelData.iconSource
+                        visible: scriptCard.modelData.iconSource !== "" && status === Image.Ready
+                        source: scriptCard.modelData.iconSource
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: false
@@ -177,51 +184,51 @@ DialogCard {
                     Text {
                         anchors.centerIn: parent
                         visible: !iconImg.visible
-                        text: modelData.name.charAt(0).toUpperCase()
-                        color: theme.accent
-                        font.pixelSize: theme.type.title.size
+                        text: scriptCard.modelData.name.charAt(0).toUpperCase()
+                        color: Theme.accent
+                        font.pixelSize: Theme.type.title.size
                         font.weight: Font.DemiBold
                     }
                 }
 
                 Column {
                     anchors.left: iconBox.right
-                    anchors.leftMargin: theme.space.md
+                    anchors.leftMargin: Theme.space.md
                     anchors.right: meta.left
-                    anchors.rightMargin: theme.space.md
+                    anchors.rightMargin: Theme.space.md
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
                     Row {
-                        spacing: theme.space.xs
+                        spacing: Theme.space.xs
                         Text {
-                            text: modelData.name
-                            color: theme.text
-                            font.pixelSize: theme.type.body.size
+                            text: scriptCard.modelData.name
+                            color: Theme.text
+                            font.pixelSize: Theme.type.body.size
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
                         SvgIcon {
-                            visible: modelData.hasShell === true
+                            visible: scriptCard.modelData.hasShell === true
                             name: "warning"
                             size: 14
-                            color: theme.warning
+                            color: Theme.warning
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         SvgIcon {
-                            visible: modelData.remote === true
+                            visible: scriptCard.modelData.remote === true
                             name: "download"
                             size: 14
-                            color: theme.textMuted
+                            color: Theme.textMuted
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                     Text {
                         width: parent.width
-                        text: modelData.description
-                        visible: modelData.description !== ""
-                        color: theme.textMuted
-                        font.pixelSize: theme.type.caption.size
+                        text: scriptCard.modelData.description
+                        visible: scriptCard.modelData.description !== ""
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.type.caption.size
                         elide: Text.ElideRight
                     }
                 }
@@ -229,21 +236,21 @@ DialogCard {
                 Column {
                     id: meta
                     anchors.right: deleteBtn.left
-                    anchors.rightMargin: theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
                     Text {
                         anchors.right: parent.right
-                        text: modelData.author
-                        color: theme.textMuted
-                        font.pixelSize: theme.type.caption.size
+                        text: scriptCard.modelData.author
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.type.caption.size
                     }
                     Text {
                         anchors.right: parent.right
-                        text: modelData.modified
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.micro.size
+                        text: scriptCard.modelData.modified
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.micro.size
                     }
                 }
 
@@ -252,13 +259,13 @@ DialogCard {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if (modelData.remote) {
+                        if (scriptCard.modelData.remote) {
                             if (root.installingRemote) return
                             root.errorText = ""
                             root.installingRemote = true
-                            root.scriptsBridge.installRemote(JSON.stringify(modelData.raw))
+                            root.scriptsBridge.installRemote(JSON.stringify(scriptCard.modelData.raw))
                         } else {
-                            root.scriptChosen(modelData.toml)
+                            root.scriptChosen(scriptCard.modelData.toml)
                             root.close()
                         }
                     }
@@ -271,13 +278,13 @@ DialogCard {
                     danger: true
                     z: 2
                     anchors.right: parent.right
-                    anchors.rightMargin: theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: !modelData.remote
+                    visible: !scriptCard.modelData.remote
                     opacity: rowArea.containsMouse || hovered ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: theme.dur.fast } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
                     onClicked: {
-                        if (root.scriptsBridge.removeScript(modelData.dir))
+                        if (root.scriptsBridge.removeScript(scriptCard.modelData.dir))
                             root.entries = JSON.parse(root.scriptsBridge.listJson())
                         else
                             root.errorText = qsTr("Couldn't remove the script.")
@@ -293,8 +300,8 @@ DialogCard {
                 ? qsTr("No scripts installed yet.\nSearch for community scripts, or use a local file.")
                 : qsTr("No scripts match your search.")
             horizontalAlignment: Text.AlignHCenter
-            color: theme.textMuted
-            font.pixelSize: theme.type.label.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.label.size
         }
     }
 

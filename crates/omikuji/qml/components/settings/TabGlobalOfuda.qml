@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 
 import "."
 import "../controls"
@@ -38,8 +41,8 @@ Item {
     }
 
     Connections {
-        target: ofudaBridge
-        enabled: ofudaBridge !== null
+        target: root.ofudaBridge
+        enabled: root.ofudaBridge !== null
         function onChanged() { root.refresh() }
     }
 
@@ -52,20 +55,20 @@ Item {
         property string detail: ""
 
         width: parent.width
-        height: rowText.height + theme.space.lg + theme.space.xs
+        height: rowText.height + Theme.space.lg + Theme.space.xs
 
         Squircle {
             anchors.fill: parent
-            radius: theme.radius.md
-            fillColor: theme.cardBg
+            radius: Theme.radius.md
+            fillColor: Theme.cardBg
         }
 
         Column {
             id: rowText
             anchors.left: parent.left
-            anchors.leftMargin: theme.space.lg
+            anchors.leftMargin: Theme.space.lg
             anchors.right: manageBtn.left
-            anchors.rightMargin: theme.space.md
+            anchors.rightMargin: Theme.space.md
             anchors.verticalCenter: parent.verticalCenter
             spacing: 6
 
@@ -76,29 +79,29 @@ Item {
                 Text {
                     id: nameText
                     text: row.prefix.name || ""
-                    color: theme.text
-                    font.pixelSize: theme.type.subtitle.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.subtitle.size
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
-                    width: Math.min(implicitWidth, parent.width - (detailText.visible ? detailText.implicitWidth + theme.space.sm : 0))
+                    width: Math.min(implicitWidth, parent.width - (detailText.visible ? detailText.implicitWidth + Theme.space.sm : 0))
                 }
                 Text {
                     id: detailText
                     visible: row.detail !== ""
                     anchors.left: nameText.right
-                    anchors.leftMargin: theme.space.sm
+                    anchors.leftMargin: Theme.space.sm
                     anchors.baseline: nameText.baseline
                     text: "· " + row.detail
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                 }
             }
 
             Text {
                 width: parent.width
                 text: row.prefix.path || ""
-                color: theme.accent
-                font.pixelSize: theme.type.caption.size
+                color: Theme.accent
+                font.pixelSize: Theme.type.caption.size
                 font.family: "monospace"
                 elide: Text.ElideMiddle
             }
@@ -107,7 +110,7 @@ Item {
         M3Button {
             id: manageBtn
             anchors.right: parent.right
-            anchors.rightMargin: theme.space.md
+            anchors.rightMargin: Theme.space.md
             anchors.verticalCenter: parent.verticalCenter
             text: qsTr("Manage")
             variant: "tonal"
@@ -118,7 +121,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: "Ofuda"
@@ -131,8 +134,8 @@ Item {
 
             Text {
                 text: qsTr("Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
@@ -159,8 +162,8 @@ Item {
                 Text {
                     visible: root.prefixes.length === 0
                     text: qsTr("No prefixes yet.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
@@ -177,8 +180,8 @@ Item {
 
             Text {
                 text: qsTr("Prefixes of Steam games in the library.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
@@ -201,8 +204,8 @@ Item {
                 Text {
                     visible: root.steamPrefixes.length === 0
                     text: qsTr("No Steam game in the library has a prefix yet. Steam creates one on first launch.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import "../controls"
@@ -22,8 +25,8 @@ Item {
 
     readonly property bool _leftActive: panelsShown && leftPanel !== null
     readonly property bool _rightActive: panelsShown && rightPanel !== null
-    readonly property real _panelGap: theme.space.lg
-    readonly property real _sideSpace: (width - cardWrap.width) / 2 - _panelGap - theme.space.lg
+    readonly property real _panelGap: Theme.space.lg
+    readonly property real _sideSpace: (width - cardWrap.width) / 2 - _panelGap - Theme.space.lg
     readonly property real _leftW: _leftActive && _sideSpace >= 140 ? Math.min(leftPanelWidth, _sideSpace) : 0
     readonly property real _rightW: _rightActive && _sideSpace >= 140 ? Math.min(rightPanelWidth, _sideSpace) : 0
     property bool scrollable: true
@@ -63,31 +66,31 @@ Item {
         property real panelWidth: 300
 
         width: panelWidth
-        height: Math.min(panelLoader.implicitHeight + theme.space.lg * 2, cardWrap.height)
+        height: Math.min(panelLoader.implicitHeight + Theme.space.lg * 2, cardWrap.height)
         opacity: root.panelsShown && panelLoader.sourceComponent !== null && width > 0 ? 1 : 0
         visible: opacity > 0.01
 
-        Behavior on opacity { NumberAnimation { duration: theme.dur.fast; easing.type: theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
 
         RectangularGlow {
             anchors.fill: panelSurf
             glowRadius: 26
             spread: 0.06
             color: Qt.rgba(0, 0, 0, 0.45)
-            cornerRadius: theme.radius.xl + 26
+            cornerRadius: Theme.radius.xl + 26
         }
 
         Squircle {
             id: panelSurf
             anchors.fill: parent
-            radius: theme.radius.xl
-            fillColor: theme.surface
+            radius: Theme.radius.xl
+            fillColor: Theme.surface
         }
 
         Flickable {
             id: panelFlick
             anchors.fill: parent
-            anchors.margins: theme.space.lg
+            anchors.margins: Theme.space.lg
             contentWidth: width
             contentHeight: panelLoader.implicitHeight
             clip: true
@@ -97,7 +100,7 @@ Item {
                 anchors.top: panelFlick.top
                 anchors.bottom: panelFlick.bottom
                 anchors.right: parent.right
-                anchors.rightMargin: theme.space.xs
+                anchors.rightMargin: Theme.space.xs
             }
 
             Loader {
@@ -112,7 +115,7 @@ Item {
         color: Qt.rgba(0, 0, 0, 0.55)
         opacity: root.shown ? 1 : 0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: theme.dur.med } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
 
         MouseArea {
             anchors.fill: parent
@@ -133,8 +136,8 @@ Item {
         width: resizer.widthFor(root.maxWidth)
         height: resizer.heightFor(root.fillHeight ? root.preferredHeight : naturalHeight)
 
-        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
-        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
 
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.96
@@ -145,25 +148,25 @@ Item {
             actionsLoader.active ? actionsLoader.implicitHeight : 0,
             footerLeftLoader.active ? footerLeftLoader.implicitHeight : 0)
         readonly property real naturalHeight: header.height + bodyLoader.implicitHeight
-            + theme.space.lg * 2 + (footerActive ? footerHeight + theme.space.xl : 0)
+            + Theme.space.lg * 2 + (footerActive ? footerHeight + Theme.space.xl : 0)
 
-        Behavior on opacity { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
-        Behavior on scale { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.emphasized; easing.overshoot: theme.ease.overshoot } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
 
         RectangularGlow {
             anchors.fill: card
             glowRadius: 26
             spread: 0.06
             color: Qt.rgba(0, 0, 0, 0.45)
-            cornerRadius: theme.radius.xl + 26
+            cornerRadius: Theme.radius.xl + 26
             opacity: 1 - resizer.hugT
         }
 
         Squircle {
             id: card
             anchors.fill: parent
-            radius: theme.radius.xl * (1 - resizer.hugT)
-            fillColor: theme.surface
+            radius: Theme.radius.xl * (1 - resizer.hugT)
+            fillColor: Theme.surface
         }
 
         MouseArea {
@@ -194,10 +197,10 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: theme.space.lg
-            anchors.leftMargin: theme.space.xl
-            anchors.rightMargin: theme.space.xl
-            height: titleText.text !== "" ? titleText.implicitHeight + theme.space.md : 0
+            anchors.topMargin: Theme.space.lg
+            anchors.leftMargin: Theme.space.xl
+            anchors.rightMargin: Theme.space.xl
+            height: titleText.text !== "" ? titleText.implicitHeight + Theme.space.md : 0
 
             Text {
                 id: titleText
@@ -205,9 +208,9 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 text: root.title
-                color: theme.text
-                font.pixelSize: theme.type.title.size
-                font.weight: theme.type.title.weight
+                color: Theme.text
+                font.pixelSize: Theme.type.title.size
+                font.weight: Theme.type.title.weight
                 wrapMode: Text.Wrap
                 visible: text !== ""
             }
@@ -220,9 +223,9 @@ Item {
             anchors.right: parent.right
             anchors.bottom: actionsLoader.active ? actionsLoader.top
                 : (footerLeftLoader.active ? footerLeftLoader.top : parent.bottom)
-            anchors.leftMargin: theme.space.xl
-            anchors.rightMargin: theme.space.xl
-            anchors.bottomMargin: cardWrap.footerActive ? (root.fillHeight ? theme.space.md : theme.space.xl) : theme.space.lg
+            anchors.leftMargin: Theme.space.xl
+            anchors.rightMargin: Theme.space.xl
+            anchors.bottomMargin: cardWrap.footerActive ? (root.fillHeight ? Theme.space.md : Theme.space.xl) : Theme.space.lg
             contentWidth: width
             contentHeight: root.fillHeight ? height : bodyLoader.implicitHeight
             clip: true
@@ -233,7 +236,7 @@ Item {
                 anchors.top: bodyFlick.top
                 anchors.bottom: bodyFlick.bottom
                 anchors.right: parent.right
-                anchors.rightMargin: theme.space.xs
+                anchors.rightMargin: Theme.space.xs
             }
 
             MouseArea {
@@ -256,8 +259,8 @@ Item {
             id: footerLeftLoader
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            anchors.bottomMargin: theme.space.lg
-            anchors.leftMargin: theme.space.xl
+            anchors.bottomMargin: Theme.space.lg
+            anchors.leftMargin: Theme.space.xl
             active: root.footerLeft !== null && cardWrap.visible
             sourceComponent: root.footerLeft
         }
@@ -266,8 +269,8 @@ Item {
             id: actionsLoader
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            anchors.bottomMargin: theme.space.lg
-            anchors.rightMargin: theme.space.xl
+            anchors.bottomMargin: Theme.space.lg
+            anchors.rightMargin: Theme.space.xl
             active: root.actions !== null && cardWrap.visible
             sourceComponent: root.actions
         }

@@ -1,8 +1,7 @@
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
-import ".."
 import "../controls"
 import "../primitives"
 
@@ -84,10 +83,10 @@ Item {
         anchors.centerIn: parent
         width: Math.min(parent.width - 120, 520)
         height: contentCol.implicitHeight + 44
-        radius: theme.radius.xl
-        color: theme.surface
+        radius: Theme.radius.xl
+        color: Theme.surface
         border.width: 1
-        border.color: theme.alpha(theme.text, 0.08)
+        border.color: Theme.alpha(Theme.text, 0.08)
 
         MouseArea {
             anchors.fill: parent
@@ -114,7 +113,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Settings")
-                color: theme.text
+                color: Theme.text
                 font.pixelSize: 18
                 font.weight: Font.DemiBold
             }
@@ -125,12 +124,12 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: theme.radius.md
+                    radius: Theme.radius.md
                     color: root.focusedRow === 0
-                        ? theme.alpha(theme.accent, 0.08)
+                        ? Theme.alpha(Theme.accent, 0.08)
                         : "transparent"
                     border.width: root.focusedRow === 0 ? 2 : 0
-                    border.color: theme.accent
+                    border.color: Theme.accent
                     Behavior on border.width { NumberAnimation { duration: 120 } }
                     Behavior on color { ColorAnimation { duration: 120 } }
                 }
@@ -144,13 +143,13 @@ Item {
                     SvgIcon {
                         name: "imagesmode"
                         size: 22
-                        color: theme.icon
+                        color: Theme.icon
                         Layout.alignment: Qt.AlignVCenter
                     }
 
                     Text {
                         text: qsTr("Background")
-                        color: theme.text
+                        color: Theme.text
                         font.pixelSize: 14
                         font.weight: Font.Medium
                         Layout.preferredWidth: 110

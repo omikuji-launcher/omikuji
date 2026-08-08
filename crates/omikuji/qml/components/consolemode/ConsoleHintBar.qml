@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import ".."
+import omikuji 1.0
 
 Row {
     id: bar
@@ -45,16 +47,16 @@ Row {
                 Rectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    color: theme.surface
+                    color: Theme.surface
                     border.width: 1
-                    border.color: theme.alpha(theme.text, 0.15)
+                    border.color: Theme.alpha(Theme.text, 0.15)
                     antialiasing: true
                 }
 
                 Text {
                     anchors.fill: parent
                     text: hint.modelData.glyph
-                    color: theme.text
+                    color: Theme.text
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 14 * bar._scale
@@ -65,7 +67,7 @@ Row {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: hint.modelData.label
-                color: theme.textMuted
+                color: Theme.textMuted
                 font.pixelSize: 14 * bar._scale
                 font.weight: Font.Medium
             }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import Qt5Compat.GraphicalEffects
 import "../controls"
 import "../primitives"
@@ -64,7 +67,7 @@ Item {
 
     component Dot: Rectangle {
         width: 4; height: 4; radius: 2
-        color: theme.dot
+        color: Theme.dot
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -73,7 +76,7 @@ Item {
 
         property string icon: ""
         property string label: ""
-        property color tint: theme.textMuted
+        property color tint: Theme.textMuted
 
         spacing: 6
         anchors.verticalCenter: parent.verticalCenter
@@ -88,7 +91,7 @@ Item {
         Text {
             text: stat.label
             color: stat.tint
-            font.pixelSize: theme.type.caption.size
+            font.pixelSize: Theme.type.caption.size
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -194,7 +197,7 @@ Item {
         glowRadius: 20
         spread: 0.06
         color: Qt.rgba(0, 0, 0, 0.45)
-        cornerRadius: theme.radius.lg + 20
+        cornerRadius: Theme.radius.lg + 20
         opacity: bar.opacity
         visible: bar.visible
     }
@@ -206,8 +209,8 @@ Item {
         anchors.bottomMargin: 14
         width: parent.width - 32
         height: 56
-        radius: theme.radius.lg
-        fillColor: theme.barBg
+        radius: Theme.radius.lg
+        fillColor: Theme.barBg
         opacity: root.hasSelection ? 1 : 0
         visible: opacity > 0
 
@@ -241,8 +244,8 @@ Item {
 
                     Text {
                         text: root.displayedGame ? root.displayedGame.name : ""
-                        color: theme.text
-                        font.pixelSize: theme.type.body.size
+                        color: Theme.text
+                        font.pixelSize: Theme.type.body.size
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
                         // bar.width not leftWrap.width, leftWrap is momentarily 0 during init while rightCluster resolves
@@ -255,7 +258,7 @@ Item {
                     Stat {
                         icon: "schedule"
                         label: root.playtimeLabel()
-                        tint: theme.textMuted
+                        tint: Theme.textMuted
                     }
 
                     Dot {}
@@ -263,15 +266,15 @@ Item {
                     Stat {
                         icon: "calendar_month"
                         label: root.displayedGame ? root.displayedGame.lastPlayed : ""
-                        tint: theme.textSubtle
+                        tint: Theme.textSubtle
                     }
 
                     Dot {}
 
                     Text {
                         text: root.displayedGame ? root.displayedGame.runner : ""
-                        color: theme.textFaint
-                        font.pixelSize: theme.type.caption.size
+                        color: Theme.textFaint
+                        font.pixelSize: Theme.type.caption.size
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -341,8 +344,8 @@ Item {
 
                     Squircle {
                         anchors.fill: parent
-                        radius: theme.radius.lg
-                        fillColor: theme.alpha(theme.text, 0.08)
+                        radius: Theme.radius.lg
+                        fillColor: Theme.alpha(Theme.text, 0.08)
 
                         // no width Behavior, it raced the opacity fade and painted outside the rounded bounds (XDDDDDDDDDDDDDDZ))IS)D(ISDJ(SJD))
                         clip: true
@@ -357,7 +360,7 @@ Item {
                                 let pct = (root.displayedActivity.progress || 0) / 100
                                 return Math.max(0, Math.min((parent.width - 2) * pct, parent.width - 2))
                             }
-                            color: theme.alpha(theme.accent, 0.15)
+                            color: Theme.alpha(Theme.accent, 0.15)
                         }
 
                         Row {
@@ -368,14 +371,14 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 name: "schedule"
                                 size: 14
-                                color: theme.accent
+                                color: Theme.accent
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: root.activityLabel()
-                                color: theme.text
-                                font.pixelSize: theme.type.micro.size
+                                color: Theme.text
+                                font.pixelSize: Theme.type.micro.size
                                 font.weight: Font.DemiBold
                             }
                         }

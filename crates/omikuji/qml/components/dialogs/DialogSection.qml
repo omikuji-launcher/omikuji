@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -7,7 +8,7 @@ Item {
     property alias contentSpacing: inner.spacing
     default property alias content: inner.children
 
-    implicitHeight: header.height + (header.visible ? theme.space.sm : 0) + inner.height
+    implicitHeight: header.height + (header.visible ? Theme.space.sm : 0) + inner.height
 
     Item {
         id: header
@@ -20,8 +21,8 @@ Item {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: root.label
-            color: theme.textMuted
-            font.pixelSize: theme.type.micro.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.micro.size
             font.weight: Font.DemiBold
             font.capitalization: Font.AllUppercase
             font.letterSpacing: 0.6
@@ -29,20 +30,20 @@ Item {
 
         Rectangle {
             anchors.left: labelText.right
-            anchors.leftMargin: theme.space.md
+            anchors.leftMargin: Theme.space.md
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             height: 1
-            color: theme.separator
+            color: Theme.separator
         }
     }
 
     Column {
         id: inner
         anchors.top: header.bottom
-        anchors.topMargin: header.visible ? theme.space.sm : 0
+        anchors.topMargin: header.visible ? Theme.space.sm : 0
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
     }
 }

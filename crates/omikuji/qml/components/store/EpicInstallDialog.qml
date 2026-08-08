@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import "../lib/RunnerGrouping.js" as RG
@@ -196,24 +199,24 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: theme.space.md
+            spacing: Theme.space.md
 
             SvgIcon {
                 name: "shield_moon"
                 size: 20
-                color: theme.textMuted
+                color: Theme.textMuted
                 Layout.alignment: Qt.AlignVCenter
             }
 
             Text {
                 Layout.fillWidth: true
                 text: root.gameData ? qsTr("Install %1").arg(root.gameData.title) : qsTr("Install")
-                color: theme.text
-                font.pixelSize: theme.type.headline.size
+                color: Theme.text
+                font.pixelSize: Theme.type.headline.size
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -222,9 +225,9 @@ DialogCard {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 96
-            radius: theme.radius.md
-            color: theme.alpha(theme.text, 0.04)
-            visible: bannerImg.source != ""
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.text, 0.04)
+            visible: bannerImg.source !== ""
 
             Image {
                 id: bannerImg
@@ -240,7 +243,7 @@ DialogCard {
                     maskSource: Rectangle {
                         width: bannerImg.width
                         height: bannerImg.height
-                        radius: theme.radius.md
+                        radius: Theme.radius.md
                     }
                 }
             }
@@ -290,9 +293,9 @@ DialogCard {
                     return parts.join(" · ")
                 }
                 color: (root.existingInstallBytes > 0 || root.hasResumeState)
-                    ? theme.accent
-                    : (root.hasEnoughSpace() ? theme.textFaint : "#e06060")
-                font.pixelSize: theme.type.micro.size
+                    ? Theme.accent
+                    : (root.hasEnoughSpace() ? Theme.textFaint : "#e06060")
+                font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -301,8 +304,8 @@ DialogCard {
 
             Text {
                 text: qsTr("Epic Games allows only one install. To reinstall elsewhere, delete the game files first.")
-                color: theme.accent
-                font.pixelSize: theme.type.micro.size
+                color: Theme.accent
+                font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -312,7 +315,7 @@ DialogCard {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: theme.space.md
+            spacing: Theme.space.md
 
             M3FileField {
                 Layout.fillWidth: true
@@ -357,7 +360,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

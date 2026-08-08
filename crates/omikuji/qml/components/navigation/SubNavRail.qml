@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 Item {
@@ -10,23 +13,23 @@ Item {
     signal itemClicked(int index)
 
     readonly property int itemHeight: 46
-    readonly property int gap: theme.space.xs
+    readonly property int gap: Theme.space.xs
 
     implicitWidth: 200
     implicitHeight: items.length * itemHeight + Math.max(0, items.length - 1) * gap
 
     Squircle {
-        readonly property int inset: theme.space.xs
+        readonly property int inset: Theme.space.xs
         x: inset
         width: parent.width - inset * 2
         height: root.itemHeight - inset * 2
-        radius: theme.radius.md
-        fillColor: theme.alpha(theme.accent, 0.16)
+        radius: Theme.radius.md
+        fillColor: Theme.alpha(Theme.accent, 0.16)
         y: root.currentIndex * (root.itemHeight + root.gap) + inset
         visible: root.currentIndex >= 0 && root.currentIndex < root.items.length
 
         Behavior on y {
-            NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.emphasized; easing.overshoot: theme.ease.overshoot }
+            NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot }
         }
     }
 
@@ -48,38 +51,38 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.margins: theme.space.xs
-                    radius: theme.radius.md
-                    color: hov.containsMouse && !rowItem.selected ? theme.stateHover : theme.alpha(theme.text, 0)
-                    Behavior on color { ColorAnimation { duration: theme.dur.fast } }
+                    anchors.margins: Theme.space.xs
+                    radius: Theme.radius.md
+                    color: hov.containsMouse && !rowItem.selected ? Theme.stateHover : Theme.alpha(Theme.text, 0)
+                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                 }
 
                 Row {
                     anchors.left: parent.left
-                    anchors.leftMargin: theme.space.md
+                    anchors.leftMargin: Theme.space.md
                     anchors.right: parent.right
-                    anchors.rightMargin: theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: theme.space.sm + 2
+                    spacing: Theme.space.sm + 2
 
                     SvgIcon {
                         anchors.verticalCenter: parent.verticalCenter
                         name: rowItem.modelData.icon || ""
                         size: 20
-                        color: rowItem.selected ? theme.accent : theme.icon
+                        color: rowItem.selected ? Theme.accent : Theme.icon
                         visible: (rowItem.modelData.icon || "") !== ""
-                        Behavior on color { ColorAnimation { duration: theme.dur.fast } }
+                        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - (rowItem.modelData.icon ? 30 : 0)
                         text: rowItem.modelData.label || ""
-                        color: rowItem.selected ? theme.text : theme.textMuted
-                        font.pixelSize: theme.type.label.size
+                        color: rowItem.selected ? Theme.text : Theme.textMuted
+                        font.pixelSize: Theme.type.label.size
                         font.weight: rowItem.selected ? Font.DemiBold : Font.Medium
                         elide: Text.ElideRight
-                        Behavior on color { ColorAnimation { duration: theme.dur.fast } }
+                        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                     }
                 }
 

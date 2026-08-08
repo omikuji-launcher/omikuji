@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -68,13 +71,13 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         Text {
             Layout.fillWidth: true
             text: qsTr("Sections you tick will be written to every game's TOML, overwriting their current values for those fields. Untouched sections stay as they are per-game.")
-            color: theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.Wrap
             lineHeight: 1.35
         }
@@ -82,8 +85,8 @@ DialogCard {
         Text {
             Layout.fillWidth: true
             text: qsTr("Nothing to apply - set some fields in the Defaults tab first.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.label.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.label.size
             wrapMode: Text.Wrap
             visible: root.availableSections.length === 0
         }
@@ -106,6 +109,7 @@ DialogCard {
                     model: root.availableSections
 
                     Item {
+                        id: sectionRow
                         required property var modelData
 
                         width: parent.width
@@ -115,9 +119,9 @@ DialogCard {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: theme.radius.sm
+                            radius: Theme.radius.sm
                             color: rowHover.containsMouse
-                                ? theme.alpha(theme.text, 0.06)
+                                ? Theme.alpha(Theme.text, 0.06)
                                 : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -126,19 +130,19 @@ DialogCard {
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: theme.space.md
+                            spacing: Theme.space.md
 
                             SvgIcon {
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: selected ? "check_box" : "check_box_outline_blank"
+                                name: sectionRow.selected ? "check_box" : "check_box_outline_blank"
                                 size: 20
-                                color: selected ? theme.accent : theme.alpha(theme.text, 0.55)
+                                color: sectionRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
                             }
 
                             Text {
-                                text: root.sectionLabels[modelData] || modelData
-                                color: theme.text
-                                font.pixelSize: theme.type.body.size
+                                text: root.sectionLabels[sectionRow.modelData] || sectionRow.modelData
+                                color: Theme.text
+                                font.pixelSize: Theme.type.body.size
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
@@ -148,7 +152,7 @@ DialogCard {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root._toggle(modelData)
+                            onClicked: root._toggle(sectionRow.modelData)
                         }
                     }
                 }
@@ -164,9 +168,9 @@ DialogCard {
 
             Rectangle {
                 anchors.fill: parent
-                radius: theme.radius.sm
+                radius: Theme.radius.sm
                 color: replaceHover.containsMouse
-                    ? theme.alpha(theme.text, 0.06)
+                    ? Theme.alpha(Theme.text, 0.06)
                     : "transparent"
                 Behavior on color { ColorAnimation { duration: 100 } }
             }
@@ -177,13 +181,13 @@ DialogCard {
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.md
+                spacing: Theme.space.md
 
                 SvgIcon {
                     anchors.verticalCenter: parent.verticalCenter
                     name: root.replaceMaps ? "check_box" : "check_box_outline_blank"
                     size: 20
-                    color: root.replaceMaps ? theme.accent : theme.alpha(theme.text, 0.55)
+                    color: root.replaceMaps ? Theme.accent : Theme.alpha(Theme.text, 0.55)
                 }
 
                 Column {
@@ -191,15 +195,15 @@ DialogCard {
                     spacing: 1
                     Text {
                         text: qsTr("Replace env / DLL tables")
-                        color: theme.text
-                        font.pixelSize: theme.type.label.size
+                        color: Theme.text
+                        font.pixelSize: Theme.type.label.size
                     }
                     Text {
                         text: root.replaceMaps
                             ? qsTr("wipes the game's keys, then writes the global ones")
                             : qsTr("merges global keys into the game (game keys win on conflict)")
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.micro.size
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.micro.size
                     }
                 }
             }
@@ -219,13 +223,13 @@ DialogCard {
         height: 36
         verticalAlignment: Text.AlignVCenter
         text: root.gameModel ? qsTr("Affects %n game(s)", "", root.gameModel.count) : ""
-        color: theme.textSubtle
-        font.pixelSize: theme.type.caption.size
+        color: Theme.textSubtle
+        font.pixelSize: Theme.type.caption.size
         visible: text.length > 0
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import Qt5Compat.GraphicalEffects
 import "../primitives"
 
@@ -6,7 +9,7 @@ Item {
     id: root
 
     property string source: ""
-    property real cornerRadius: theme.radius.md
+    property real cornerRadius: Theme.radius.md
     property string fallbackFrom: ""
     property real fallbackTextSize: 30
 
@@ -39,14 +42,14 @@ Item {
         anchors.fill: parent
         radius: root.cornerRadius
         smoothing: 0.75
-        fillColor: theme.alpha(theme.text, 0.05)
+        fillColor: Theme.alpha(Theme.text, 0.05)
         visible: !root.ready
     }
 
     Text {
         anchors.centerIn: parent
         text: root.fallbackFrom ? root.fallbackFrom.charAt(0) : "?"
-        color: theme.textFaint
+        color: Theme.textFaint
         font.pixelSize: root.fallbackTextSize
         font.weight: Font.Bold
         visible: !root.ready

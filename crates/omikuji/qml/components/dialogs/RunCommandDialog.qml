@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -46,37 +49,37 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         Squircle {
             width: parent.width
-            height: contextColumn.implicitHeight + theme.space.md
-            radius: theme.radius.sm
-            fillColor: theme.alpha(theme.text, 0.06)
+            height: contextColumn.implicitHeight + Theme.space.md
+            radius: Theme.radius.sm
+            fillColor: Theme.alpha(Theme.text, 0.06)
 
             Column {
                 id: contextColumn
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: theme.space.md
-                anchors.rightMargin: theme.space.md
+                anchors.leftMargin: Theme.space.md
+                anchors.rightMargin: Theme.space.md
                 spacing: 2
 
                 Text {
                     width: parent.width
                     visible: root.contextTitle !== ""
                     text: root.contextTitle
-                    color: theme.text
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
                     font.weight: Font.Medium
                     elide: Text.ElideRight
                 }
                 Text {
                     width: parent.width
                     text: root.contextText
-                    color: theme.accent
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.accent
+                    font.pixelSize: Theme.type.caption.size
                     font.family: "monospace"
                     wrapMode: Text.WrapAnywhere
                 }
@@ -85,7 +88,7 @@ DialogCard {
 
         Row {
             width: parent.width
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
 
             M3TextField {
                 width: parent.width - runButton.width - parent.spacing

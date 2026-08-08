@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -29,30 +30,30 @@ Item {
 
     Squircle {
         anchors.fill: parent
-        radius: theme.radius.lg
+        radius: Theme.radius.lg
         smoothing: 0.75
-        fillColor: row.isDone ? theme.alpha(theme.text, 0.03) : theme.cardBg
+        fillColor: row.isDone ? Theme.alpha(Theme.text, 0.03) : Theme.cardBg
     }
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: theme.space.sm
-        anchors.rightMargin: theme.space.sm
-        spacing: theme.space.md
+        anchors.leftMargin: Theme.space.sm
+        anchors.rightMargin: Theme.space.sm
+        spacing: Theme.space.md
 
         BannerThumb {
             Layout.preferredWidth: 76
             Layout.preferredHeight: 42
             source: row.banner
-            cornerRadius: theme.radius.sm
+            cornerRadius: Theme.radius.sm
             fallbackFrom: row.displayName
             fallbackTextSize: 18
         }
 
         Text {
             text: row.displayName
-            color: theme.text
-            font.pixelSize: theme.type.body.size
+            color: Theme.text
+            font.pixelSize: Theme.type.body.size
             font.weight: Font.Medium
             elide: Text.ElideRight
             Layout.maximumWidth: parent.width * 0.45
@@ -66,8 +67,8 @@ Item {
         Text {
             Layout.fillWidth: true
             text: row.metaLine()
-            color: row.isFailed ? theme.error : theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: row.isFailed ? Theme.error : Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
             elide: Text.ElideRight
         }
 

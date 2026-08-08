@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import QtQuick.Layouts
 
 import "."
@@ -42,7 +44,7 @@ Item {
     Component.onCompleted: syncComponentStatuses()
 
     Connections {
-        target: componentsBridge
+        target: root.componentsBridge
         function onComponentStarted(name) { root.syncComponentStatuses() }
         function onComponentProgress(name, phase, percent) {
             let s = root.componentStatuses[name] || {}
@@ -57,14 +59,14 @@ Item {
     }
 
     component SectionHeader: CapsLabel {
-        color: theme.textMuted
+        color: Theme.textMuted
         size: 11
     }
 
     Item {
         anchors.fill: parent
         anchors.margins: 24
-        visible: (!downloadModel || downloadModel.count === 0) && !componentsVisible
+        visible: (!root.downloadModel || root.downloadModel.count === 0) && !root.componentsVisible
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -74,20 +76,20 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 name: "download"
                 size: 48
-                color: theme.textFaint
+                color: Theme.textFaint
             }
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("No active downloads")
-                color: theme.textMuted
-                font.pixelSize: theme.type.title.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.title.size
                 font.weight: Font.Medium
             }
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("Install a game from one of the connected stores to see it here.")
-                color: theme.textFaint
-                font.pixelSize: theme.type.label.size
+                color: Theme.textFaint
+                font.pixelSize: Theme.type.label.size
             }
         }
     }
@@ -100,7 +102,7 @@ Item {
         contentHeight: listCol.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
         flickDeceleration: 3000
-        visible: (downloadModel && downloadModel.count > 0) || root.componentsVisible
+        visible: (root.downloadModel && root.downloadModel.count > 0) || root.componentsVisible
 
         ColumnLayout {
             id: listCol
@@ -129,9 +131,9 @@ Item {
             }
 
             SectionHeader {
-                text: downloadModel && downloadModel.runningCount > 0 ? qsTr("Now downloading") : qsTr("Paused")
-                visible: downloadModel && downloadModel.heroId !== ""
-                Layout.topMargin: root.componentsVisible ? theme.space.md : 0
+                text: root.downloadModel && root.downloadModel.runningCount > 0 ? qsTr("Now downloading") : qsTr("Paused")
+                visible: root.downloadModel && root.downloadModel.heroId !== ""
+                Layout.topMargin: root.componentsVisible ? Theme.space.md : 0
             }
 
             Repeater {
@@ -147,9 +149,9 @@ Item {
             }
 
             SectionHeader {
-                text: qsTr("Up next") + "  ·  " + (downloadModel ? downloadModel.queuedCount : 0)
-                visible: downloadModel && downloadModel.queuedCount > 0
-                Layout.topMargin: theme.space.md
+                text: qsTr("Up next") + "  ·  " + (root.downloadModel ? root.downloadModel.queuedCount : 0)
+                visible: root.downloadModel && root.downloadModel.queuedCount > 0
+                Layout.topMargin: Theme.space.md
             }
 
             Repeater {
@@ -165,10 +167,10 @@ Item {
             }
 
             SectionHeader {
-                text: qsTr("Failed") + "  ·  " + (downloadModel ? downloadModel.failedCount : 0)
-                color: theme.error
-                visible: downloadModel && downloadModel.failedCount > 0
-                Layout.topMargin: theme.space.md
+                text: qsTr("Failed") + "  ·  " + (root.downloadModel ? root.downloadModel.failedCount : 0)
+                color: Theme.error
+                visible: root.downloadModel && root.downloadModel.failedCount > 0
+                Layout.topMargin: Theme.space.md
             }
 
             Repeater {
@@ -182,9 +184,9 @@ Item {
             }
 
             SectionHeader {
-                text: qsTr("Completed") + "  ·  " + (downloadModel ? downloadModel.completedCount : 0)
-                visible: downloadModel && downloadModel.completedCount > 0
-                Layout.topMargin: theme.space.md
+                text: qsTr("Completed") + "  ·  " + (root.downloadModel ? root.downloadModel.completedCount : 0)
+                visible: root.downloadModel && root.downloadModel.completedCount > 0
+                Layout.topMargin: Theme.space.md
             }
 
             Repeater {

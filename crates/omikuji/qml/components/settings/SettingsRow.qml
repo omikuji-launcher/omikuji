@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 
 Item {
@@ -20,20 +21,20 @@ Item {
         id: labelCol
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        width: Math.max(root.labelWidth, contentSlot.x - theme.space.xl)
+        width: Math.max(root.labelWidth, contentSlot.x - Theme.space.xl)
         spacing: 2
 
         Text {
             id: labelText
             text: root.label
-            color: theme.text
-            font.pixelSize: theme.type.subtitle.size
+            color: Theme.text
+            font.pixelSize: Theme.type.subtitle.size
         }
 
         Text {
             text: root.description
-            color: theme.textSubtle
-            font.pixelSize: theme.type.label.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.label.size
             width: parent.width
             wrapMode: Text.WordWrap
             visible: root.description !== ""

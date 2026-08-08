@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
@@ -15,7 +18,6 @@ Window {
     property string gameId: ""
     property string gameName: ""
     property var gameModel: null
-    property var theme: null
     property var uiSettings: null
     property bool autoScroll: true
     property bool justSaved: false
@@ -29,7 +31,7 @@ Window {
     minimumWidth: 420
     minimumHeight: 280
     title: qsTr("omikuji · %1 logs").arg(gameName || gameId)
-    color: theme ? theme.bg : "#0a0a0a"
+    color: Theme.bg
 
     function refresh() {
         if (!gameModel) return
@@ -41,11 +43,11 @@ Window {
     }
 
     Connections {
-        target: gameModel
+        target: logWindow.gameModel
         function onGameLogAppended(id) {
             if (id !== logWindow.gameId) return
             let wasAtBottom = scroll.contentItem ? scroll.contentItem.atYEnd : true
-            let fresh = gameModel.game_log(gameId)
+            let fresh = logWindow.gameModel.game_log(logWindow.gameId)
             if (fresh.startsWith(logWindow.rawLog)) {
                 if (fresh.length > logWindow.rawLog.length)
                     textArea.insert(textArea.length, fresh.substring(logWindow.rawLog.length))
@@ -113,7 +115,7 @@ Window {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
-            color: logWindow.theme.bgAlt
+            color: Theme.bgAlt
 
             RowLayout {
                 anchors.fill: parent
@@ -124,8 +126,8 @@ Window {
                 Text {
                     Layout.fillWidth: true
                     text: logWindow.gameName
-                    color: logWindow.theme.text
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
@@ -136,9 +138,9 @@ Window {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: theme.radius.xs
+                        radius: Theme.radius.xs
                         color: followArea.containsMouse
-                            ? Qt.rgba(logWindow.theme.text.r, logWindow.theme.text.g, logWindow.theme.text.b, 0.08)
+                            ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08)
                             : "transparent"
                         Behavior on color { ColorAnimation { duration: 100 } }
                     }
@@ -152,14 +154,14 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                             name: logWindow.autoScroll ? "check_box" : "check_box_outline_blank"
                             size: 18
-                            color: logWindow.autoScroll ? logWindow.theme.accent : logWindow.theme.textMuted
+                            color: logWindow.autoScroll ? Theme.accent : Theme.textMuted
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("Follow")
-                            color: logWindow.theme.text
-                            font.pixelSize: theme.type.caption.size
+                            color: Theme.text
+                            font.pixelSize: Theme.type.caption.size
                         }
                     }
 
@@ -179,8 +181,8 @@ Window {
                     variant: "text"
                     text: qsTr("Clear")
                     onClicked: {
-                        if (gameModel) {
-                            gameModel.clear_game_log(logWindow.gameId)
+                        if (logWindow.gameModel) {
+                            logWindow.gameModel.clear_game_log(logWindow.gameId)
                             logWindow.refresh()
                         }
                     }
@@ -207,8 +209,8 @@ Window {
                     success: logWindow.justSaved
                     text: logWindow.justSaved ? qsTr("Saved ✓") : qsTr("Save")
                     onClicked: {
-                        if (!gameModel) return
-                        let path = gameModel.save_game_log(logWindow.gameId)
+                        if (!logWindow.gameModel) return
+                        let path = logWindow.gameModel.save_game_log(logWindow.gameId)
                         if (path && path.length > 0) {
                             logWindow.justSaved = true
                             savedRevertTimer.restart()
@@ -228,7 +230,7 @@ Window {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
-            color: logWindow.theme.surfaceBorder
+            color: Theme.surfaceBorder
         }
 
         ScrollView {
@@ -242,14 +244,14 @@ Window {
                 readOnly: true
                 wrapMode: TextArea.Wrap
                 selectByMouse: true
-                color: logWindow.theme.text
+                color: Theme.text
                 font.family: "monospace"
-                font.pixelSize: theme.type.body.size
+                font.pixelSize: Theme.type.body.size
                 leftPadding: 14
                 rightPadding: 14
                 topPadding: 10
                 bottomPadding: 10
-                background: Rectangle { color: logWindow.theme.bg }
+                background: Rectangle { color: Theme.bg }
                 text: ""
             }
         }
@@ -267,14 +269,14 @@ Window {
         opacity: logWindow.searchExpanded ? 0 : 1
         scale: logWindow.searchExpanded ? 0.85 : 1
 
-        Behavior on opacity { NumberAnimation { duration: logWindow.theme.dur.xfast } }
-        Behavior on scale { NumberAnimation { duration: logWindow.theme.dur.fast; easing.type: logWindow.theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xfast } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
 
         SvgIcon {
             anchors.centerIn: parent
             name: "search"
             size: 18
-            color: logWindow.theme.text
+            color: Theme.text
         }
 
         MouseArea {
@@ -291,14 +293,14 @@ Window {
         anchors.margins: 20
         width: searchRow.implicitWidth + 32
         height: 40
-        radius: logWindow.theme.radius.lg
+        radius: Theme.radius.lg
         transformOrigin: Item.Right
         visible: opacity > 0
         opacity: logWindow.searchExpanded ? 1 : 0
         scale: logWindow.searchExpanded ? 1 : 0.9
 
-        Behavior on opacity { NumberAnimation { duration: logWindow.theme.dur.fast } }
-        Behavior on scale { NumberAnimation { duration: logWindow.theme.dur.fast; easing.type: logWindow.theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
 
         property var matchPositions: []
         property int matchCount: 0
@@ -344,26 +346,26 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 name: "search"
                 size: 16
-                color: logWindow.theme.textMuted
+                color: Theme.textMuted
             }
 
             TextInput {
                 id: searchInput
                 anchors.verticalCenter: parent.verticalCenter
                 width: 160
-                color: logWindow.theme.text
-                font.pixelSize: theme.type.body.size
+                color: Theme.text
+                font.pixelSize: Theme.type.body.size
                 clip: true
-                selectionColor: logWindow.theme.accent
-                selectedTextColor: logWindow.theme.accentText
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.accentText
                 selectByMouse: true
 
                 Text {
                     anchors.fill: parent
                     verticalAlignment: Text.AlignVCenter
                     text: qsTr("Search...")
-                    color: logWindow.theme.textSubtle
-                    font.pixelSize: theme.type.body.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.body.size
                     visible: !searchInput.text && !searchInput.activeFocus
                 }
 
@@ -375,8 +377,8 @@ Window {
                 width: 50
                 horizontalAlignment: Text.AlignHCenter
                 text: floatingBar.matchCount > 0 ? (floatingBar.currentMatchIndex + 1) + "/" + floatingBar.matchCount : "0/0"
-                color: logWindow.theme.textSubtle
-                font.pixelSize: theme.type.label.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.label.size
             }
 
             Row {
@@ -401,7 +403,7 @@ Window {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 1
                 height: 20
-                color: logWindow.theme.surfaceBorder
+                color: Theme.surfaceBorder
             }
 
             IconButton {

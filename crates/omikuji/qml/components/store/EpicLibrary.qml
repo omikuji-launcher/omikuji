@@ -1,5 +1,6 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 import omikuji 1.0
@@ -43,7 +44,7 @@ Item {
         visible: root.isLoggedIn
         enabled: visible
 
-        model: epicModel
+        model: root.epicModel
         cardZoom: root.cardZoom
         cardSpacing: root.cardSpacing
         cardFlow: root.cardFlow
@@ -54,9 +55,9 @@ Item {
                 spacing: 8
 
                 Text {
-                    text: qsTr("Logged in as: %1").arg(epicModel ? epicModel.displayName : "")
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    text: qsTr("Logged in as: %1").arg(root.epicModel ? root.epicModel.displayName : "")
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                 }
 
                 Item { Layout.fillWidth: true }
@@ -64,13 +65,13 @@ Item {
                 IconButton {
                     icon: "sync"
                     size: 32
-                    onClicked: epicModel.refresh()
+                    onClicked: root.epicModel.refresh()
                 }
 
                 IconButton {
                     icon: "logout"
                     size: 32
-                    onClicked: epicModel.logout()
+                    onClicked: root.epicModel.logout()
                 }
             }
         }
@@ -129,7 +130,7 @@ Item {
                         anchors.margins: 4
                         height: 24
                         radius: 10
-                        color: theme.alpha(theme.accent, 0.9)
+                        color: Theme.alpha(Theme.accent, 0.9)
                         visible: epicCard.isDownloading
 
                         Text {
@@ -140,8 +141,8 @@ Item {
                                 if (dl.status === "Downloading") return dl.progress.toFixed(0) + "%"
                                 return dl.status
                             }
-                            color: theme.accentOn
-                            font.pixelSize: theme.type.micro.size
+                            color: Theme.accentOn
+                            font.pixelSize: Theme.type.micro.size
                             font.weight: Font.Bold
                         }
                     }
@@ -177,29 +178,29 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 name: "shield_moon"
                 size: 48
-                color: theme.textFaint
+                color: Theme.textFaint
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("No games in this store")
-                color: theme.textMuted
-                font.pixelSize: theme.type.title.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.title.size
                 font.weight: Font.Medium
             }
         }
     }
 
     StoreLoginOverlay {
-        visible: epicModel && !epicModel.isLoggedIn
+        visible: root.epicModel && !root.epicModel.isLoggedIn
         iconName: "shield_moon"
         title: qsTr("Login to Epic Games")
         description: qsTr("To sync your Epic library, you need to provide an authorization code from Epic's website.")
         loginUrl: "https://legendary.gl/epiclogin"
         toolName: "Legendary"
-        toolReady: epicModel && epicModel.toolReady
-        toolInstalling: epicModel && epicModel.toolInstalling
-        onLoginRequested: (code) => epicModel.login(code)
-        onInstallToolRequested: epicModel.install_tools()
+        toolReady: root.epicModel && root.epicModel.toolReady
+        toolInstalling: root.epicModel && root.epicModel.toolInstalling
+        onLoginRequested: (code) => root.epicModel.login(code)
+        onInstallToolRequested: root.epicModel.install_tools()
     }
 }

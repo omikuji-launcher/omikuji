@@ -1,9 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Layouts
+import omikuji 1.0
 
 import "."
 import "../controls"
-import "../primitives"
 
 Item {
     id: root
@@ -28,25 +29,25 @@ Item {
 
             M3TextField {
                 label: qsTr("Name")
-                text: config["meta.name"] || ""
+                text: root.config["meta.name"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("meta.name", t)
+                onTextEdited: (t) => root.updateField("meta.name", t)
             }
 
             M3TextField {
                 label: qsTr("Sort Name")
                 placeholder: qsTr("optional, for custom sort order")
-                text: config["meta.sort_name"] || ""
+                text: root.config["meta.sort_name"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("meta.sort_name", t)
+                onTextEdited: (t) => root.updateField("meta.sort_name", t)
             }
 
             M3TextField {
                 label: qsTr("Slug")
                 placeholder: qsTr("for API lookups (auto-derived from name)")
-                text: config["meta.slug"] || ""
+                text: root.config["meta.slug"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("meta.slug", t)
+                onTextEdited: (t) => root.updateField("meta.slug", t)
             }
 
             M3Dropdown {
@@ -59,21 +60,21 @@ Item {
                     { label: "Flatpak", value: "flatpak" }
                 ]
                 currentIndex: {
-                    let t = config["runner.type"] || "wine"
+                    let t = root.config["runner.type"] || "wine"
                     for (let i = 0; i < options.length; i++) {
                         if (options[i].value === t) return i
                     }
                     return 0
                 }
-                onSelected: (val) => updateField("runner.type", val)
+                onSelected: (val) => root.updateField("runner.type", val)
             }
 
             Text {
                 width: parent.width
-                visible: gameModel ? gameModel.is_flatpak() : false
+                visible: root.gameModel ? root.gameModel.is_flatpak() : false
                 text: qsTr("It seems you're using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.")
-                color: theme.warning
-                font.pixelSize: theme.type.micro.size
+                color: Theme.warning
+                font.pixelSize: Theme.type.micro.size
                 font.weight: Font.Medium
                 wrapMode: Text.WordWrap
             }
@@ -87,31 +88,31 @@ Item {
             M3FileField {
                 label: qsTr("Banner Override")
                 placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: config["meta.banner"] || ""
+                text: root.config["meta.banner"] || ""
                 width: parent.width
                 gameModel: root.gameModel
                 expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => updateField("meta.banner", t)
+                onTextEdited: (t) => root.updateField("meta.banner", t)
             }
 
             M3FileField {
                 label: qsTr("Cover Art Override")
                 placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: config["meta.coverart"] || ""
+                text: root.config["meta.coverart"] || ""
                 width: parent.width
                 gameModel: root.gameModel
                 expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => updateField("meta.coverart", t)
+                onTextEdited: (t) => root.updateField("meta.coverart", t)
             }
 
             M3FileField {
                 label: qsTr("Icon Override")
                 placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: config["meta.icon"] || ""
+                text: root.config["meta.icon"] || ""
                 width: parent.width
                 gameModel: root.gameModel
                 expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => updateField("meta.icon", t)
+                onTextEdited: (t) => root.updateField("meta.icon", t)
             }
 
             M3Button {
@@ -125,9 +126,9 @@ Item {
             M3TextField {
                 label: qsTr("Color")
                 placeholder: "#1a1a2e"
-                text: config["meta.color"] || ""
+                text: root.config["meta.color"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("meta.color", t)
+                onTextEdited: (t) => root.updateField("meta.color", t)
             }
         }
     }

@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 Item {
@@ -21,9 +22,9 @@ Item {
         radius: width / 2
         visible: root.primary
         color: hoverArea.containsPress
-            ? theme.alpha(theme.accent, 0.3)
+            ? Theme.alpha(Theme.accent, 0.3)
             : (hoverArea.containsMouse && !root._suppressHover)
-                ? theme.alpha(theme.accent, 0.2)
+                ? Theme.alpha(Theme.accent, 0.2)
                 : "transparent"
         Behavior on color { ColorAnimation { duration: 100 } }
     }
@@ -32,7 +33,7 @@ Item {
         anchors.centerIn: parent
         name: root.icon
         size: root.iconSize
-        color: theme.accent
+        color: Theme.accent
     }
 
     MouseArea {

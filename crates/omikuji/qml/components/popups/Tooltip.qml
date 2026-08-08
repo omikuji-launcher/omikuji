@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 
 Popup {
@@ -47,12 +48,12 @@ Popup {
         id: sizer
         visible: false
         text: root.text
-        font.pixelSize: theme.type.caption.size
+        font.pixelSize: Theme.type.caption.size
         font.hintingPreference: Font.PreferNoHinting
     }
 
     background: Rectangle {
-        color: theme.tooltipBg
+        color: Theme.tooltipBg
         radius: 7
     }
 
@@ -61,8 +62,8 @@ Popup {
     contentItem: Text {
         id: label
         text: root.text
-        color: theme.tooltipText
-        font.pixelSize: theme.type.caption.size
+        color: Theme.tooltipText
+        font.pixelSize: Theme.type.caption.size
         font.hintingPreference: Font.PreferNoHinting
         leftPadding: root.padH
         rightPadding: root.padH

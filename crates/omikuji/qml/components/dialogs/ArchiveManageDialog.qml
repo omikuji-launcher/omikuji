@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import "../controls"
 import "../primitives"
@@ -88,8 +91,8 @@ DialogCard {
     }
 
     Connections {
-        target: archiveManager
-        enabled: root.shown && archiveManager !== null
+        target: root.archiveManager
+        enabled: root.shown && root.archiveManager !== null
 
         function onVersionsReady(cat, name, json) {
             if (cat !== root.category || name !== root.sourceName) return
@@ -136,8 +139,8 @@ DialogCard {
                     spacing: 10
                     Text {
                         text: root.sourceName
-                        color: theme.text
-                        font.pixelSize: theme.type.headline.size
+                        color: Theme.text
+                        font.pixelSize: Theme.type.headline.size
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
@@ -145,14 +148,14 @@ DialogCard {
                         height: 18
                         width: kindLabel.width + 14
                         radius: 9
-                        color: theme.alpha(theme.accent, 0.15)
+                        color: Theme.alpha(Theme.accent, 0.15)
                         anchors.verticalCenter: parent.verticalCenter
                         Text {
                             id: kindLabel
                             anchors.centerIn: parent
                             text: root.sourceKind
-                            color: theme.accent
-                            font.pixelSize: theme.type.micro.size
+                            color: Theme.accent
+                            font.pixelSize: Theme.type.micro.size
                             font.weight: Font.Medium
                             font.capitalization: Font.AllUppercase
                             font.letterSpacing: 0.6
@@ -165,8 +168,8 @@ DialogCard {
                         : root.versions.length > 0 ? qsTr("%1 versions available").arg(root.versions.length)
                         : root.errorMessage !== "" ? root.errorMessage
                         : qsTr("No versions loaded yet")
-                    color: root.errorMessage !== "" ? theme.error : theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: root.errorMessage !== "" ? Theme.error : Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                 }
             }
         }
@@ -177,7 +180,7 @@ DialogCard {
             anchors.left: parent.left
             anchors.right: parent.right
             height: 1
-            color: theme.separator
+            color: Theme.separator
         }
 
         ListView {
@@ -187,6 +190,7 @@ DialogCard {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             clip: true
+            boundsBehavior: Flickable.StopAtBounds
             model: root.versions
             spacing: 0
 
@@ -198,8 +202,8 @@ DialogCard {
                 text: root.fetching ? qsTr("Loading…")
                     : root.errorMessage !== "" ? qsTr("Couldn't load versions.")
                     : qsTr("No versions available.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.label.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.label.size
             }
 
             delegate: Item {
@@ -228,15 +232,15 @@ DialogCard {
 
                 Rectangle {
                     anchors.fill: parent
-                    anchors.leftMargin: theme.space.sm
-                    anchors.rightMargin: theme.space.sm
+                    anchors.leftMargin: Theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
                     anchors.topMargin: 3
                     anchors.bottomMargin: 3
-                    radius: theme.radius.sm
+                    radius: Theme.radius.sm
                     color: rowMouse.containsMouse
-                        ? theme.alpha(theme.text, 0.05)
+                        ? Theme.alpha(Theme.text, 0.05)
                         : "transparent"
-                    Behavior on color { ColorAnimation { duration: theme.dur.fast } }
+                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                 }
 
                 MouseArea {
@@ -256,9 +260,9 @@ DialogCard {
 
                     Text {
                         width: parent.width
-                        text: tag
-                        color: theme.text
-                        font.pixelSize: theme.type.label.size
+                        text: versionRow.tag
+                        color: Theme.text
+                        font.pixelSize: Theme.type.label.size
                         font.weight: Font.Medium
                         font.family: "monospace"
                         elide: Text.ElideRight
@@ -268,12 +272,12 @@ DialogCard {
                         width: parent.width
                         text: {
                             var parts = []
-                            if (assetSize > 0) parts.push((assetSize / (1024 * 1024)).toFixed(1) + " MB")
-                            if (publishedAt.length >= 10) parts.push(publishedAt.substring(0, 10))
+                            if (versionRow.assetSize > 0) parts.push((versionRow.assetSize / (1024 * 1024)).toFixed(1) + " MB")
+                            if (versionRow.publishedAt.length >= 10) parts.push(versionRow.publishedAt.substring(0, 10))
                             return parts.join("  ·  ")
                         }
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.caption.size
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.caption.size
                         font.family: "monospace"
                         elide: Text.ElideRight
                     }
@@ -287,27 +291,27 @@ DialogCard {
                     spacing: 14
 
                     IconButton {
-                        visible: installed && root.category === "runners"
+                        visible: versionRow.installed && root.category === "runners"
                         anchors.verticalCenter: parent.verticalCenter
                         icon: "steam"
                         size: 28
                         rounded: true
-                        onClicked: root.moveToSteamRequested(root.sourceName, assetStems[assetIndex])
+                        onClicked: root.moveToSteamRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex])
                     }
 
                     M3Dropdown {
-                        visible: assets.length > 1
+                        visible: versionRow.assets.length > 1
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.min(versionRow.width - 380, assetMetrics.width + 56)
                         fieldHeight: 30
-                        options: assetLabels.map((l, i) => ({ label: l, value: i }))
-                        currentIndex: assetIndex
-                        onSelected: (v) => assetIndex = v
+                        options: versionRow.assetLabels.map((l, i) => ({ label: l, value: i }))
+                        currentIndex: versionRow.assetIndex
+                        onSelected: (v) => versionRow.assetIndex = v
 
                         TextMetrics {
                             id: assetMetrics
-                            font.pixelSize: theme.type.body.size
-                            text: assetLabels[assetIndex] || ""
+                            font.pixelSize: Theme.type.body.size
+                            text: versionRow.assetLabels[versionRow.assetIndex] || ""
                         }
                     }
 
@@ -318,17 +322,17 @@ DialogCard {
 
                         M3Button {
                             anchors.centerIn: parent
-                            visible: !installed && !busy
+                            visible: !versionRow.installed && !versionRow.busy
                             text: qsTr("Install")
                             variant: "filled"
                             onClicked: {
-                                var payload = JSON.parse(JSON.stringify(modelData))
-                                if (chosenAsset) {
-                                    payload.asset_name = chosenAsset.name
-                                    payload.asset_url = chosenAsset.url
-                                    payload.asset_size = chosenAsset.size
+                                var payload = JSON.parse(JSON.stringify(versionRow.modelData))
+                                if (versionRow.chosenAsset) {
+                                    payload.asset_name = versionRow.chosenAsset.name
+                                    payload.asset_url = versionRow.chosenAsset.url
+                                    payload.asset_size = versionRow.chosenAsset.size
                                 }
-                                archiveManager.installVersion(
+                                root.archiveManager.installVersion(
                                     root.category,
                                     root.sourceName,
                                     JSON.stringify(payload)
@@ -338,7 +342,7 @@ DialogCard {
 
                         Row {
                             anchors.centerIn: parent
-                            visible: installed && !busy
+                            visible: versionRow.installed && !versionRow.busy
                             spacing: 8
 
                             M3Button {
@@ -356,19 +360,19 @@ DialogCard {
                                 rounded: true
                                 danger: true
                                 onClicked: {
-                                    archiveManager.deleteVersion(root.category, root.sourceName, assetStems[assetIndex])
+                                    root.archiveManager.deleteVersion(root.category, root.sourceName, versionRow.assetStems[versionRow.assetIndex])
                                     root.refreshInstalled()
-                                    root.versionDeleted(root.category, root.sourceName, assetStems[assetIndex])
+                                    root.versionDeleted(root.category, root.sourceName, versionRow.assetStems[versionRow.assetIndex])
                                 }
                             }
                         }
 
                         Text {
                             anchors.centerIn: parent
-                            visible: busy
+                            visible: versionRow.busy
                             text: qsTr("Working…")
-                            color: theme.textMuted
-                            font.pixelSize: theme.type.caption.size
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.type.caption.size
                         }
                     }
                 }
@@ -378,8 +382,8 @@ DialogCard {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 1
-                    color: theme.separator
-                    visible: index < (list.count - 1)
+                    color: Theme.separator
+                    visible: versionRow.index < (list.count - 1)
                 }
             }
         }

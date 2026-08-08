@@ -1,13 +1,14 @@
 import QtQuick
+import omikuji 1.0
 import Qt5Compat.GraphicalEffects
 
 Rectangle {
     id: surface
 
-    color: theme.active.window.hslLightness > 0.5
-        ? Qt.darker(theme.popup, 1.06)
-        : Qt.lighter(theme.popup, 1.3)
-    radius: theme.radius.md
+    color: Theme.active.window.hslLightness > 0.5
+        ? Qt.darker(Theme.popup, 1.06)
+        : Qt.lighter(Theme.popup, 1.3)
+    radius: Theme.radius.md
 
     RectangularGlow {
         z: -1

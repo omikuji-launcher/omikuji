@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -13,9 +14,9 @@ Item {
         id: track
         anchors.fill: parent
         radius: height / 2
-        color: root.checked ? theme.accent : "transparent"
+        color: root.checked ? Theme.accent : "transparent"
         border.width: 2
-        border.color: root.checked ? theme.accent : theme.alpha(theme.text, 0.25)
+        border.color: root.checked ? Theme.accent : Theme.alpha(Theme.text, 0.25)
 
         Behavior on color {
             ColorAnimation { duration: 150 }
@@ -39,7 +40,7 @@ Item {
         width: mouseArea.pressed ? 22 : (root.checked ? onSize : offSize)
         height: width
         radius: width / 2
-        color: root.checked ? theme.accentText : theme.alpha(theme.text, 0.45)
+        color: root.checked ? Theme.accentText : Theme.alpha(Theme.text, 0.45)
 
         Behavior on anchors.horizontalCenterOffset {
             NumberAnimation { duration: 200; easing.type: Easing.OutCubic }

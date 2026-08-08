@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
-import QtQuick.Layouts
 
 import "."
 import "../controls"
@@ -26,7 +28,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: "omikuji"
@@ -38,13 +40,13 @@ Item {
 
                 Text {
                     text: qsTr("A Qt/QML based wine apps launcher for Linux.")
-                    color: theme.text
-                    font.pixelSize: theme.type.subtitle.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.subtitle.size
                 }
                 Text {
                     text: qsTr("Version %1").arg(root.appVersion)
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                     font.family: "monospace"
                 }
             }
@@ -56,8 +58,8 @@ Item {
 
             Text {
                 text: qsTr("GPL-3.0-or-later. omikuji is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 lineHeight: 1.4
@@ -80,20 +82,21 @@ Item {
                     ]
 
                     Row {
+                        id: linkRow
                         required property var modelData
                         width: parent.width
                         spacing: 12
                         Text {
-                            text: modelData.label
-                            color: theme.textMuted
-                            font.pixelSize: theme.type.label.size
+                            text: linkRow.modelData.label
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.type.label.size
                             width: 80
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: "<a href='" + modelData.url + "' style='color:" + theme.accent + "'>" + modelData.url + "</a>"
-                            color: theme.accent
-                            font.pixelSize: theme.type.label.size
+                            text: "<a href='" + linkRow.modelData.url + "' style='color:" + Theme.accent + "'>" + linkRow.modelData.url + "</a>"
+                            color: Theme.accent
+                            font.pixelSize: Theme.type.label.size
                             font.family: "monospace"
                             textFormat: Text.RichText
                             onLinkActivated: (link) => Qt.openUrlExternally(link)
@@ -119,9 +122,9 @@ Item {
                     readOnly: true
                     wrapMode: TextArea.Wrap
                     selectByMouse: true
-                    color: theme.text
+                    color: Theme.text
                     font.family: "monospace"
-                    font.pixelSize: theme.type.label.size
+                    font.pixelSize: Theme.type.label.size
                     leftPadding: 12
                     rightPadding: 12
                     topPadding: 10

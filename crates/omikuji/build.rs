@@ -1,4 +1,4 @@
-use cxx_qt_build::{CxxQtBuilder, QmlModule};
+use cxx_qt_build::{CxxQtBuilder, QmlFile, QmlModule};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -294,7 +294,6 @@ fn main() {
         "qml/ConsoleMode.qml",
         "qml/RunExe.qml",
         // root
-        "qml/components/Theme.qml",
         "qml/components/consolemode/ConsoleCard.qml",
         "qml/components/consolemode/ConsoleCardRow.qml",
         "qml/components/consolemode/ConsoleHintBar.qml",
@@ -412,7 +411,8 @@ fn main() {
         "qml/components/popups/ToastManager.qml",
         "qml/components/popups/Tooltip.qml",
         "qml/components/primitives/WavyProgressBar.qml",
-    ]))
+    ])
+    .qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true)))
     .qrc_resources(&qrc_paths)
     .files(staged_bridges)
     .file(ui_settings_bridge)

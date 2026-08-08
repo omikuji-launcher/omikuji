@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Dialogs
 
 import "."
@@ -41,15 +44,15 @@ Item {
     }
 
     function _effective(token) {
-        if (!uiSettings || uiSettings.followSystemColors) return theme[token]
-        return _hasOverride(token) ? overrides[token] : theme[token]
+        if (!uiSettings || uiSettings.followSystemColors) return Theme[token]
+        return _hasOverride(token) ? overrides[token] : Theme[token]
     }
 
     onUiSettingsChanged: _refresh()
     Component.onCompleted: _refresh()
 
     Connections {
-        target: uiSettings
+        target: root.uiSettings
         function onThemeChanged() { root._refresh() }
     }
 
@@ -57,8 +60,8 @@ Item {
         id: pickerDialog
         property string targetToken: ""
         onAccepted: {
-            if (uiSettings && targetToken !== "") {
-                uiSettings.setColorOverride(targetToken, selectedColor.toString())
+            if (root.uiSettings && targetToken !== "") {
+                root.uiSettings.setColorOverride(targetToken, selectedColor.toString())
             }
         }
     }
@@ -66,7 +69,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: qsTr("Colors")
@@ -77,19 +80,20 @@ Item {
                 description: qsTr("Use the desktop palette. Disable to apply per-token overrides below.")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
-                    checked: uiSettings ? uiSettings.followSystemColors : true
-                    onToggled: (value) => uiSettings.applyFollowSystemColors(value)
+                    checked: root.uiSettings ? root.uiSettings.followSystemColors : true
+                    onToggled: (value) => root.uiSettings.applyFollowSystemColors(value)
                 }
             }
 
             Repeater {
                 model: root.tokens
                 delegate: SettingsRow {
+                    id: tokenRow
                     required property var modelData
                     width: content.width
                     label: modelData.label
                     labelWidth: root.rowLabelWidth
-                    opacity: (uiSettings && !uiSettings.followSystemColors) ? 1.0 : 0.4
+                    opacity: (root.uiSettings && !root.uiSettings.followSystemColors) ? 1.0 : 0.4
 
                     Row {
                         spacing: 10
@@ -99,15 +103,15 @@ Item {
                             icon: "close"
                             size: 24
                             danger: true
-                            visible: root._hasOverride(modelData.key) && uiSettings && !uiSettings.followSystemColors
-                            onClicked: uiSettings.setColorOverride(modelData.key, "")
+                            visible: root._hasOverride(tokenRow.modelData.key) && root.uiSettings && !root.uiSettings.followSystemColors
+                            onClicked: root.uiSettings.setColorOverride(tokenRow.modelData.key, "")
                         }
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: root._hasOverride(modelData.key) ? root.overrides[modelData.key] : qsTr("system")
-                            color: root._hasOverride(modelData.key) ? theme.text : theme.textSubtle
-                            font.pixelSize: theme.type.label.size
+                            text: root._hasOverride(tokenRow.modelData.key) ? root.overrides[tokenRow.modelData.key] : qsTr("system")
+                            color: root._hasOverride(tokenRow.modelData.key) ? Theme.text : Theme.textSubtle
+                            font.pixelSize: Theme.type.label.size
                         }
 
                         Rectangle {
@@ -115,17 +119,17 @@ Item {
                             width: 28
                             height: 28
                             radius: 11
-                            color: root._effective(modelData.key)
+                            color: root._effective(tokenRow.modelData.key)
                             border.width: 1
-                            border.color: theme.surfaceBorder
+                            border.color: Theme.surfaceBorder
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                enabled: uiSettings && !uiSettings.followSystemColors
+                                enabled: root.uiSettings && !root.uiSettings.followSystemColors
                                 onClicked: {
-                                    pickerDialog.targetToken = modelData.key
-                                    pickerDialog.selectedColor = root._effective(modelData.key)
+                                    pickerDialog.targetToken = tokenRow.modelData.key
+                                    pickerDialog.selectedColor = root._effective(tokenRow.modelData.key)
                                     pickerDialog.open()
                                 }
                             }
@@ -144,8 +148,8 @@ Item {
                 description: qsTr("Use the desktop default font. Disable to pick a family below.")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
-                    checked: uiSettings ? uiSettings.followSystemFont : true
-                    onToggled: (value) => uiSettings.applyFollowSystemFont(value)
+                    checked: root.uiSettings ? root.uiSettings.followSystemFont : true
+                    onToggled: (value) => root.uiSettings.applyFollowSystemFont(value)
                 }
             }
 
@@ -153,7 +157,7 @@ Item {
                 label: qsTr("Font family")
                 description: qsTr("Applied app-wide. Requires restart.")
                 labelWidth: root.rowLabelWidth
-                opacity: (uiSettings && !uiSettings.followSystemFont) ? 1.0 : 0.4
+                opacity: (root.uiSettings && !root.uiSettings.followSystemFont) ? 1.0 : 0.4
 
                 M3Dropdown {
                     width: 260
@@ -165,15 +169,15 @@ Item {
                         return arr
                     }
                     currentIndex: {
-                        if (!uiSettings) return 0
-                        let v = uiSettings.fontFamily
+                        if (!root.uiSettings) return 0
+                        let v = root.uiSettings.fontFamily
                         if (!v) return 0
                         for (let i = 0; i < root.fonts.length; i++) {
                             if (root.fonts[i] === v) return i + 1
                         }
                         return 0
                     }
-                    onSelected: (value) => uiSettings.applyFontFamily(value)
+                    onSelected: (value) => root.uiSettings.applyFontFamily(value)
                 }
             }
 

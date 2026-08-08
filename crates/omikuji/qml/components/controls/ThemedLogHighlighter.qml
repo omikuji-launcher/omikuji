@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import omikuji 1.0
 
@@ -7,18 +9,18 @@ LogHighlighter {
     property var settings: null
 
     active: settings ? settings.highlightLogs : true
-    errorColor: theme.error
-    warnColor: theme.warning
-    fixmeColor: theme.accent
-    traceColor: theme.textSubtle
+    errorColor: Theme.error
+    warnColor: Theme.warning
+    fixmeColor: Theme.accent
+    traceColor: Theme.textSubtle
 
-    readonly property string themePulse: [theme.accent, theme.error, theme.warning, theme.success, theme.text, theme.textMuted, theme.textSubtle].join("")
+    readonly property string themePulse: [Theme.accent, Theme.error, Theme.warning, Theme.success, Theme.text, Theme.textMuted, Theme.textSubtle].join("")
 
     function pushRules() {
         if (!settings) return
         let rules = []
         try { rules = JSON.parse(settings.logRulesJson()) } catch (e) {}
-        const resolved = rules.map(r => ({ pattern: r.pattern, color: theme.resolveColor(r.color) }))
+        const resolved = rules.map(r => ({ pattern: r.pattern, color: Theme.resolveColor(r.color) }))
         setRules(JSON.stringify(resolved))
     }
 

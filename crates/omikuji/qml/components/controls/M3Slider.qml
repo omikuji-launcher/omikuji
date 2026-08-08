@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -40,16 +41,16 @@ Item {
             visible: root.label !== ""
             anchors.left: parent.left
             text: root.label
-            color: theme.textMuted
-            font.pixelSize: theme.type.label.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.label.size
             font.weight: Font.Medium
         }
         Text {
             visible: root.showValue
             anchors.right: parent.right
             text: root.valueText
-            color: theme.text
-            font.pixelSize: theme.type.label.size
+            color: Theme.text
+            font.pixelSize: Theme.type.label.size
         }
     }
 
@@ -65,14 +66,14 @@ Item {
             : 0
         readonly property real currentHandleWidth: dragArea.pressed ? root.handlePressedWidth : root.handleRestWidth
         readonly property real handleX: slider.normalizedValue * (slider.width - currentHandleWidth)
-        readonly property color trackBg: theme.alpha(theme.text, 0.16)
+        readonly property color trackBg: Theme.alpha(Theme.text, 0.16)
 
         Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             x: 0
             width: Math.max(0, slider.handleX - root.gap)
             height: root.trackThickness
-            color: theme.accent
+            color: Theme.accent
             topLeftRadius: root.outerRadius
             bottomLeftRadius: root.outerRadius
             topRightRadius: root.innerRadius
@@ -99,7 +100,7 @@ Item {
                 width: root.stopDotSize
                 height: root.stopDotSize
                 radius: width / 2
-                color: theme.alpha(theme.text, 0.45)
+                color: Theme.alpha(Theme.text, 0.45)
             }
         }
 
@@ -109,7 +110,7 @@ Item {
             width: slider.currentHandleWidth
             height: parent.height
             radius: width / 2
-            color: theme.accent
+            color: Theme.accent
 
             Behavior on width {
                 NumberAnimation { duration: 100; easing.type: Easing.OutCubic }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 Item {
@@ -40,10 +43,10 @@ Item {
             anchors.centerIn: parent
             width: 20
             height: 20
-            radius: theme.radius.xs
+            radius: Theme.radius.xs
             color: stepArea.containsPress
-                ? theme.alpha(theme.text, 0.14)
-                : (stepArea.containsMouse ? theme.alpha(theme.text, 0.08) : "transparent")
+                ? Theme.alpha(Theme.text, 0.14)
+                : (stepArea.containsMouse ? Theme.alpha(Theme.text, 0.08) : "transparent")
 
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -52,7 +55,7 @@ Item {
             anchors.centerIn: parent
             name: btn.icon
             size: 14
-            color: stepArea.containsMouse ? theme.text : theme.textMuted
+            color: stepArea.containsMouse ? Theme.text : Theme.textMuted
         }
 
         MouseArea {
@@ -87,8 +90,8 @@ Item {
                 id: valueInput
                 anchors.fill: parent
                 text: root._displayText
-                color: theme.text
-                font.pixelSize: theme.type.body.size
+                color: Theme.text
+                font.pixelSize: Theme.type.body.size
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 selectByMouse: true

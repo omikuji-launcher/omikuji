@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import "../popups"
 import "../primitives"
 
@@ -15,7 +17,7 @@ Item {
     }
     property string label: ""
     property string labelSuffix: ""
-    property color labelSuffixColor: theme.textMuted
+    property color labelSuffixColor: Theme.textMuted
     property real fieldHeight: 44
 
     signal selected(var value)
@@ -65,8 +67,8 @@ Item {
 
         Text {
             text: root.label
-            color: popup.visible ? theme.accent : theme.textMuted
-            font.pixelSize: theme.type.label.size
+            color: popup.visible ? Theme.accent : Theme.textMuted
+            font.pixelSize: Theme.type.label.size
             font.weight: Font.Medium
 
             Behavior on color { ColorAnimation { duration: 100 } }
@@ -76,7 +78,7 @@ Item {
             visible: root.labelSuffix !== ""
             text: "· " + root.labelSuffix
             color: root.labelSuffixColor
-            font.pixelSize: theme.type.label.size
+            font.pixelSize: Theme.type.label.size
         }
     }
 
@@ -102,9 +104,9 @@ Item {
             }
             color: {
                 var opt = root.options[root.currentIndex]
-                return (opt && opt.tint) ? opt.tint : theme.text
+                return (opt && opt.tint) ? opt.tint : Theme.text
             }
-            font.pixelSize: theme.type.body.size
+            font.pixelSize: Theme.type.body.size
         }
 
         SvgIcon {
@@ -114,7 +116,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             name: "chevron_left"
             size: 20
-            color: theme.textMuted
+            color: Theme.textMuted
             rotation: popup.visible ? -90 : 0
 
             Behavior on rotation {
@@ -177,7 +179,7 @@ Item {
             return Math.round(Math.min(wanted, Math.max(80, maxAvail)))
         }
         z: 50
-        radius: theme.radius.sm
+        radius: Theme.radius.sm
 
         function open() {
             if (!popup.parent) return
@@ -214,7 +216,7 @@ Item {
             name: "chevron_left"
             size: 18
             rotation: -90
-            color: theme.textMuted
+            color: Theme.textMuted
             z: 1
             opacity: {
                 if (!popup.visible) return 0
@@ -249,12 +251,12 @@ Item {
                         readonly property bool isHeader: modelData && modelData.header === true
                         readonly property color tint: (modelData && modelData.tint)
                             ? modelData.tint
-                            : (index === root.currentIndex ? theme.accent : theme.text)
+                            : (index === root.currentIndex ? Theme.accent : Theme.text)
                         width: col.width
                         height: isHeader ? (index === 0 ? 22 : 28) : 40
-                        radius: theme.radius.xs
+                        radius: Theme.radius.xs
                         color: !isHeader && optionMouse.containsMouse
-                            ? theme.alpha(tint, index === root.currentIndex ? 0.18 : 0.14)
+                            ? Theme.alpha(tint, index === root.currentIndex ? 0.18 : 0.14)
                             : "transparent"
 
                         // group caption, non-interactive
@@ -264,9 +266,9 @@ Item {
                             anchors.leftMargin: 12
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: 4
-                            text: modelData.label
-                            color: theme.textMuted
-                            font.pixelSize: theme.type.body.size
+                            text: optionRow.modelData.label
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.type.body.size
                             font.weight: Font.Medium
                         }
 
@@ -285,8 +287,8 @@ Item {
                             property real pan: 0
                             property bool manualPan: false
                             readonly property color bg: !optionRow.isHeader && optionMouse.containsMouse
-                                ? theme.mix(popup.color, optionRow.tint,
-                                            index === root.currentIndex ? 0.18 : 0.14)
+                                ? Theme.mix(popup.color, optionRow.tint,
+                                            optionRow.index === root.currentIndex ? 0.18 : 0.14)
                                 : popup.color
 
                             function panBy(delta) {
@@ -301,10 +303,10 @@ Item {
                             Text {
                                 id: optionText
                                 x: -Math.round(labelClip.pan)
-                                text: modelData.label
+                                text: optionRow.modelData.label
                                 color: optionRow.tint
-                                font.pixelSize: theme.type.body.size
-                                font.weight: index === root.currentIndex ? Font.Medium : Font.Normal
+                                font.pixelSize: Theme.type.body.size
+                                font.weight: optionRow.index === root.currentIndex ? Font.Medium : Font.Normal
                             }
 
                             SequentialAnimation {
@@ -336,7 +338,7 @@ Item {
                                 gradient: Gradient {
                                     orientation: Gradient.Horizontal
                                     GradientStop { position: 0.0; color: labelClip.bg }
-                                    GradientStop { position: 1.0; color: theme.alpha(labelClip.bg, 0) }
+                                    GradientStop { position: 1.0; color: Theme.alpha(labelClip.bg, 0) }
                                 }
                                 Behavior on opacity { NumberAnimation { duration: 120 } }
                             }
@@ -349,7 +351,7 @@ Item {
                                 opacity: labelClip.overflow > 0 && labelClip.pan < labelClip.overflow - 1 ? 1 : 0
                                 gradient: Gradient {
                                     orientation: Gradient.Horizontal
-                                    GradientStop { position: 0.0; color: theme.alpha(labelClip.bg, 0) }
+                                    GradientStop { position: 0.0; color: Theme.alpha(labelClip.bg, 0) }
                                     GradientStop { position: 1.0; color: labelClip.bg }
                                 }
                                 Behavior on opacity { NumberAnimation { duration: 120 } }
@@ -364,8 +366,8 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (optionRow.isHeader) return
-                                root.currentIndex = index
-                                root.selected(root.options[index].value)
+                                root.currentIndex = optionRow.index
+                                root.selected(root.options[optionRow.index].value)
                                 popup.close()
                             }
                             onContainsMouseChanged: if (!containsMouse) labelClip.reset()

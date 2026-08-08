@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Rectangle {
     id: panel
@@ -16,8 +17,8 @@ Rectangle {
     signal idleUnloaded()
 
     anchors.fill: parent
-    color: theme.surface
-    radius: theme.radius.md
+    color: Theme.surface
+    radius: Theme.radius.md
     visible: opacity > 0
     opacity: panelActive ? 1 : 0
 

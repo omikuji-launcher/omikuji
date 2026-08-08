@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import Qt5Compat.GraphicalEffects
-import ".."
 
 Item {
     id: card
@@ -9,7 +11,7 @@ Item {
     property string title: ""
     property url bannerSource: ""
     property url coverartSource: ""
-    property color tint: theme.accent
+    property color tint: Theme.accent
     property real uiScale: 1.0
 
     signal focusRequested()
@@ -66,7 +68,7 @@ Item {
         Text {
             anchors.centerIn: parent
             text: card.title.length > 0 ? card.title.charAt(0) : "?"
-            color: theme.textFaint
+            color: Theme.textFaint
             font.pixelSize: 64 * card.uiScale
             font.weight: Font.Bold
             visible: !coverartImg.visible && !bannerImg.visible

@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -19,8 +20,8 @@ Item {
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         text: root.label
-        color: root.enabled ? theme.text : theme.textSubtle
-        font.pixelSize: theme.type.subtitle.size
+        color: root.enabled ? Theme.text : Theme.textSubtle
+        font.pixelSize: Theme.type.subtitle.size
         elide: Text.ElideRight
     }
 

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 
@@ -30,7 +33,7 @@ DialogCard {
 
     function renderMessage(raw) {
         if (!raw) return ""
-        let accent = theme.accent
+        let accent = Theme.accent
         let hex = Qt.colorEqual(accent, "transparent")
             ? "#888"
             : "#" + Math.round(accent.r * 255).toString(16).padStart(2, "0")
@@ -49,21 +52,21 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
 
             Rectangle {
                 width: 36; height: 36; radius: 18
-                color: theme.alpha(theme.error, 0.18)
+                color: Theme.alpha(Theme.error, 0.18)
                 Text {
                     anchors.fill: parent
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     text: "!"
-                    color: theme.error
+                    color: Theme.error
                     font.pixelSize: 20
                     font.weight: Font.Bold
                 }
@@ -75,16 +78,16 @@ DialogCard {
                 Text {
                     Layout.fillWidth: true
                     text: root.headTitle
-                    color: theme.text
-                    font.pixelSize: theme.type.title.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.title.size
                     font.weight: Font.DemiBold
                     wrapMode: Text.Wrap
                 }
                 Text {
                     Layout.fillWidth: true
                     text: root.displayName
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
                 }
@@ -93,27 +96,27 @@ DialogCard {
 
         Rectangle {
             Layout.fillWidth: true
-            radius: theme.radius.md
-            color: theme.alpha(theme.text, 0.04)
-            implicitHeight: messageText.implicitHeight + theme.space.lg
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.text, 0.04)
+            implicitHeight: messageText.implicitHeight + Theme.space.lg
 
             Text {
                 id: messageText
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: theme.space.md
+                anchors.margins: Theme.space.md
                 text: root.renderMessage(root.message)
                 textFormat: Text.RichText
-                color: theme.text
-                font.pixelSize: theme.type.label.size
+                color: Theme.text
+                font.pixelSize: Theme.type.label.size
                 wrapMode: Text.Wrap
             }
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

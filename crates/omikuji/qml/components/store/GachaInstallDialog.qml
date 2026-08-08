@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../lib/RunnerGrouping.js" as RG
 import "../lib/ArchiveAssets.js" as AA
@@ -32,7 +35,7 @@ DialogCard {
     readonly property bool advisedSelected:
         hasAdvised && runnerOptions.length > 0
         && runnerOptions[runnerIndex] && runnerOptions[runnerIndex].isAdvisedEntry === true
-    readonly property color advisedTint: advisedInstalled ? theme.success : theme.warning
+    readonly property color advisedTint: advisedInstalled ? Theme.success : Theme.warning
 
     property int runnersVersion: 0
     onRunnersVersionChanged: if (root.shown) loadRunners()
@@ -388,24 +391,24 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: theme.space.md
+            spacing: Theme.space.md
 
             SvgIcon {
                 name: "local_activity"
                 size: 20
-                color: theme.textMuted
+                color: Theme.textMuted
                 Layout.alignment: Qt.AlignVCenter
             }
 
             Text {
                 Layout.fillWidth: true
                 text: root.displayName ? qsTr("Install %1").arg(root.displayName) : qsTr("Install")
-                color: theme.text
-                font.pixelSize: theme.type.headline.size
+                color: Theme.text
+                font.pixelSize: Theme.type.headline.size
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -418,12 +421,13 @@ DialogCard {
 
             RowLayout {
                 width: parent.width
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 Repeater {
                     model: root.editions
 
                     Item {
+                        id: editionRow
                         required property var modelData
                         required property int index
 
@@ -432,24 +436,24 @@ DialogCard {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: theme.radius.pill
-                            color: index === root.editionIndex
-                                ? theme.alpha(theme.accent, 0.15)
+                            radius: Theme.radius.pill
+                            color: editionRow.index === root.editionIndex
+                                ? Theme.alpha(Theme.accent, 0.15)
                                 : edBtnHover.containsMouse
-                                    ? theme.alpha(theme.text, 0.06)
+                                    ? Theme.alpha(Theme.text, 0.06)
                                     : "transparent"
-                            border.width: index === root.editionIndex ? 1 : 0
-                            border.color: theme.alpha(theme.accent, 0.3)
+                            border.width: editionRow.index === root.editionIndex ? 1 : 0
+                            border.color: Theme.alpha(Theme.accent, 0.3)
 
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
 
                         Text {
                             anchors.centerIn: parent
-                            text: modelData.label
-                            color: index === root.editionIndex ? theme.accent : theme.text
-                            font.pixelSize: theme.type.label.size
-                            font.weight: index === root.editionIndex ? Font.DemiBold : Font.Normal
+                            text: editionRow.modelData.label
+                            color: editionRow.index === root.editionIndex ? Theme.accent : Theme.text
+                            font.pixelSize: Theme.type.label.size
+                            font.weight: editionRow.index === root.editionIndex ? Font.DemiBold : Font.Normal
                         }
 
                         MouseArea {
@@ -457,7 +461,7 @@ DialogCard {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.editionIndex = index
+                            onClicked: root.editionIndex = editionRow.index
                         }
                     }
                 }
@@ -472,32 +476,33 @@ DialogCard {
             GridLayout {
                 width: parent.width
                 columns: 2
-                columnSpacing: theme.space.md
-                rowSpacing: theme.space.sm
+                columnSpacing: Theme.space.md
+                rowSpacing: Theme.space.sm
 
                 Repeater {
                     model: root.voiceLocales
 
                     RowLayout {
+                        id: localeRow
                         required property var modelData
                         required property int index
 
                         Layout.fillWidth: true
-                        spacing: theme.space.sm
+                        spacing: Theme.space.sm
 
                         M3Switch {
-                            checked: root.voiceChecks[index] === true
+                            checked: root.voiceChecks[localeRow.index] === true
                             onToggled: {
                                 let copy = root.voiceChecks.slice()
-                                copy[index] = !copy[index]
+                                copy[localeRow.index] = !copy[localeRow.index]
                                 root.voiceChecks = copy
                             }
                         }
 
                         Text {
-                            text: modelData.label
-                            color: theme.text
-                            font.pixelSize: theme.type.label.size
+                            text: localeRow.modelData.label
+                            color: Theme.text
+                            font.pixelSize: Theme.type.label.size
                             Layout.fillWidth: true
                         }
                     }
@@ -544,12 +549,12 @@ DialogCard {
                     return parts.join(" · ")
                 }
                 color: root.existingInstall
-                    ? theme.accent
+                    ? Theme.accent
                     : (root.installBytes >= 0 && root.installFreeBytes >= 0
                         && root.installFreeBytes < root.installBytes
                         && !root.existingInstall
-                        ? "#e06060" : theme.textFaint)
-                font.pixelSize: theme.type.micro.size
+                        ? "#e06060" : Theme.textFaint)
+                font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -588,11 +593,11 @@ DialogCard {
                     return parts.join(" · ")
                 }
                 color: root.existingTempSegments > 0
-                    ? theme.accent
+                    ? Theme.accent
                     : (root.downloadBytes >= 0 && root.tempFreeBytes >= 0
                         && root.tempFreeBytes < root.downloadBytes
-                        ? "#e06060" : theme.textFaint)
-                font.pixelSize: theme.type.micro.size
+                        ? "#e06060" : Theme.textFaint)
+                font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
@@ -602,7 +607,7 @@ DialogCard {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: theme.space.md
+            spacing: Theme.space.md
 
             M3FileField {
                 Layout.fillWidth: true
@@ -647,15 +652,15 @@ DialogCard {
             ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.runnerInstalling || root.runnerError !== ""
-                spacing: theme.space.xs
+                spacing: Theme.space.xs
 
                 Text {
                     Layout.fillWidth: true
                     text: root.runnerError !== ""
                         ? root.runnerError
                         : qsTr("Installing the runner... %1").arg(root.runnerPhase)
-                    color: root.runnerError !== "" ? theme.error : theme.textMuted
-                    font.pixelSize: theme.type.caption.size
+                    color: root.runnerError !== "" ? Theme.error : Theme.textMuted
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
 
@@ -663,15 +668,15 @@ DialogCard {
                     Layout.fillWidth: true
                     visible: root.runnerInstalling
                     value: root.runnerPercent / 100
-                    fillColor: theme.accent
-                    trackColor: theme.alpha(theme.text, 0.16)
+                    fillColor: Theme.accent
+                    trackColor: Theme.alpha(Theme.text, 0.16)
                 }
             }
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

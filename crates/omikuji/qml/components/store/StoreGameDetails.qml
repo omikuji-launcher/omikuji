@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../downloads"
 
@@ -17,7 +18,7 @@ ColumnLayout {
         return false
     }
 
-    spacing: theme.space.md
+    spacing: Theme.space.md
 
     CapsLabel {
         text: root.kind === "about" ? qsTr("About") : qsTr("System requirements")
@@ -27,8 +28,8 @@ ColumnLayout {
         visible: root.kind === "about"
         Layout.fillWidth: true
         text: root.description
-        color: theme.textMuted
-        font.pixelSize: theme.type.label.size
+        color: Theme.textMuted
+        font.pixelSize: Theme.type.label.size
         wrapMode: Text.WordWrap
         textFormat: Text.PlainText
     }
@@ -38,8 +39,8 @@ ColumnLayout {
         Layout.fillWidth: true
         flow: GridLayout.TopToBottom
         rows: root.reqs.length + 1
-        columnSpacing: theme.space.lg
-        rowSpacing: theme.space.sm
+        columnSpacing: Theme.space.lg
+        rowSpacing: Theme.space.sm
 
         Item { Layout.preferredWidth: 1; Layout.preferredHeight: 1 }
 
@@ -50,16 +51,16 @@ ColumnLayout {
                 required property var modelData
                 Layout.alignment: Qt.AlignTop
                 text: modelData.title
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
             }
         }
 
         Text {
             Layout.alignment: Qt.AlignTop
             text: qsTr("Minimum")
-            color: theme.text
-            font.pixelSize: theme.type.caption.size
+            color: Theme.text
+            font.pixelSize: Theme.type.caption.size
             font.weight: Font.Medium
         }
 
@@ -72,8 +73,8 @@ ColumnLayout {
                 Layout.preferredWidth: 10
                 Layout.alignment: Qt.AlignTop
                 text: modelData.minimum
-                color: theme.textMuted
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap
             }
         }
@@ -82,8 +83,8 @@ ColumnLayout {
             visible: root.hasRec
             Layout.alignment: Qt.AlignTop
             text: qsTr("Recommended")
-            color: theme.text
-            font.pixelSize: theme.type.caption.size
+            color: Theme.text
+            font.pixelSize: Theme.type.caption.size
             font.weight: Font.Medium
         }
 
@@ -96,8 +97,8 @@ ColumnLayout {
                 Layout.preferredWidth: 10
                 Layout.alignment: Qt.AlignTop
                 text: modelData.recommended
-                color: theme.textMuted
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap
             }
         }

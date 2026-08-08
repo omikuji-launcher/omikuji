@@ -1,11 +1,14 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
 
     property string text: ""
     property bool running: false
-    property color textColor: theme.textMuted
+    property color textColor: Theme.textMuted
 
     implicitWidth: label.implicitWidth + dotsRow.implicitWidth
     implicitHeight: Math.max(label.implicitHeight, dotsRow.implicitHeight)
@@ -18,7 +21,7 @@ Item {
             id: label
             text: root.text
             color: root.textColor
-            font.pixelSize: theme.type.title.size
+            font.pixelSize: Theme.type.title.size
             font.weight: Font.Medium
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -33,6 +36,7 @@ Item {
                 model: 3
 
                 Text {
+                    id: dot
                     required property int index
                     text: "."
                     color: root.textColor
@@ -45,10 +49,10 @@ Item {
                     SequentialAnimation on y {
                         loops: Animation.Infinite
                         running: root.running
-                        PauseAnimation { duration: index * 150 }
+                        PauseAnimation { duration: dot.index * 150 }
                         NumberAnimation { from: 0; to: -4; duration: 220; easing.type: Easing.OutQuad }
                         NumberAnimation { from: -4; to: 0; duration: 220; easing.type: Easing.InQuad }
-                        PauseAnimation { duration: 600 - index * 150 }
+                        PauseAnimation { duration: 600 - dot.index * 150 }
                     }
                 }
             }

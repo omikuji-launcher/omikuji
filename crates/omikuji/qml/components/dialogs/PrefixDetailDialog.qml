@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -50,29 +53,29 @@ DialogCard {
     onCloseRequested: close()
 
     body: Column {
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
         width: parent.width
 
         Column {
             width: parent.width
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
 
             Squircle {
                 width: parent.width
-                height: pathText.implicitHeight + theme.space.md
-                radius: theme.radius.sm
-                fillColor: theme.alpha(theme.text, 0.06)
+                height: pathText.implicitHeight + Theme.space.md
+                radius: Theme.radius.sm
+                fillColor: Theme.alpha(Theme.text, 0.06)
 
                 Text {
                     id: pathText
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: theme.space.md
-                    anchors.rightMargin: theme.space.md
+                    anchors.leftMargin: Theme.space.md
+                    anchors.rightMargin: Theme.space.md
                     text: root.prefix.path || ""
-                    color: theme.accent
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.accent
+                    font.pixelSize: Theme.type.caption.size
                     font.family: "monospace"
                     wrapMode: Text.WrapAnywhere
                 }
@@ -82,8 +85,8 @@ DialogCard {
                 width: parent.width
                 visible: root.isSteam
                 text: qsTr("This is a Steam prefix. Steam owns its files, omikuji only runs tools inside it.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap
             }
         }
@@ -96,11 +99,12 @@ DialogCard {
             Repeater {
                 model: root.games
                 delegate: Text {
+                    id: gameRow
                     required property var modelData
                     width: parent.width
                     text: modelData
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                     elide: Text.ElideRight
                 }
             }
@@ -109,8 +113,8 @@ DialogCard {
                 width: parent.width
                 visible: root.games.length === 0
                 text: qsTr("Orphan prefix, no game uses it.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap
             }
         }
@@ -122,43 +126,44 @@ DialogCard {
             Grid {
                 width: parent.width
                 columns: 2
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 Repeater {
                     model: root.tools
 
                     delegate: Item {
+                        id: toolCell
                         required property var modelData
-                        width: (parent.width - theme.space.sm) / 2
+                        width: (parent.width - Theme.space.sm) / 2
                         height: 46
 
                         Squircle {
                             anchors.fill: parent
-                            radius: theme.radius.md
-                            fillColor: theme.alpha(theme.text, toolMouse.containsMouse ? 0.14 : 0.06)
+                            radius: Theme.radius.md
+                            fillColor: Theme.alpha(Theme.text, toolMouse.containsMouse ? 0.14 : 0.06)
                         }
 
                         Row {
                             anchors.left: parent.left
-                            anchors.leftMargin: theme.space.md
+                            anchors.leftMargin: Theme.space.md
                             anchors.right: parent.right
-                            anchors.rightMargin: theme.space.sm
+                            anchors.rightMargin: Theme.space.sm
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: theme.space.md
+                            spacing: Theme.space.md
 
                             SvgIcon {
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: modelData.icon
+                                name: toolCell.modelData.icon
                                 size: 18
-                                color: theme.icon
+                                color: Theme.icon
                             }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.label
-                                color: theme.text
-                                font.pixelSize: theme.type.label.size
+                                text: toolCell.modelData.label
+                                color: Theme.text
+                                font.pixelSize: Theme.type.label.size
                                 elide: Text.ElideRight
-                                width: Math.min(implicitWidth, parent.width - 18 - theme.space.md)
+                                width: Math.min(implicitWidth, parent.width - 18 - Theme.space.md)
                             }
                         }
 
@@ -167,7 +172,7 @@ DialogCard {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.invokeTool(modelData.act)
+                            onClicked: root.invokeTool(toolCell.modelData.act)
                         }
                     }
                 }

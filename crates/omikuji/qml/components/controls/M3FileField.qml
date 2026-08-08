@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 Item {
@@ -29,8 +30,8 @@ Item {
     Text {
         id: labelText
         text: root.label
-        color: inputArea.activeFocus ? theme.accent : theme.textMuted
-        font.pixelSize: theme.type.body.size
+        color: inputArea.activeFocus ? Theme.accent : Theme.textMuted
+        font.pixelSize: Theme.type.body.size
         font.weight: Font.Medium
         visible: root.label !== ""
 
@@ -63,13 +64,13 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: 12
                 verticalAlignment: TextInput.AlignVCenter
-                color: root.readOnly ? theme.textMuted : theme.text
-                font.pixelSize: theme.type.body.size
+                color: root.readOnly ? Theme.textMuted : Theme.text
+                font.pixelSize: Theme.type.body.size
                 clip: true
                 readOnly: root.readOnly
                 selectByMouse: !root.readOnly
-                selectionColor: theme.accent
-                selectedTextColor: theme.accentText
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.accentText
 
                 onTextEdited: root.textEdited(text)
                 onAccepted: root.accepted(text)
@@ -87,8 +88,8 @@ Item {
                     parent.width - 12 - x
                 ))
                 text: root.trailingHint
-                color: theme.alpha(theme.text, 0.4)
-                font.pixelSize: theme.type.body.size
+                color: Theme.alpha(Theme.text, 0.4)
+                font.pixelSize: Theme.type.body.size
                 elide: Text.ElideRight
                 visible: root.trailingHint !== "" && inputArea.text !== ""
             }
@@ -98,8 +99,8 @@ Item {
                 anchors.leftMargin: 12
                 verticalAlignment: Text.AlignVCenter
                 text: root.placeholder
-                color: theme.textSubtle
-                font.pixelSize: theme.type.body.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.body.size
                 visible: inputArea.text === "" && !inputArea.activeFocus
             }
         }
@@ -113,12 +114,12 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 radius: parent.radius
-                color: folderMouse.containsPress ? theme.statePressed
-                      : folderMouse.containsMouse ? theme.stateHover
+                color: folderMouse.containsPress ? Theme.statePressed
+                      : folderMouse.containsMouse ? Theme.stateHover
                       : "transparent"
 
                 Behavior on color {
-                    ColorAnimation { duration: theme.dur.fast }
+                    ColorAnimation { duration: Theme.dur.fast }
                 }
             }
 
@@ -126,7 +127,7 @@ Item {
                 anchors.centerIn: parent
                 name: "folder"
                 size: 20
-                color: folderMouse.containsMouse ? theme.iconHover : theme.icon
+                color: folderMouse.containsMouse ? Theme.iconHover : Theme.icon
 
                 Behavior on color {
                     ColorAnimation { duration: 100 }

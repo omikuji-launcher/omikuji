@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 
 Item {
@@ -22,8 +23,8 @@ Item {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: root.label
-            color: theme.textMuted
-            font.pixelSize: theme.type.micro.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.micro.size
             font.weight: Font.DemiBold
             font.capitalization: Font.AllUppercase
             font.letterSpacing: 0.6
@@ -36,7 +37,7 @@ Item {
             anchors.rightMargin: actionLoader.active ? 12 : 0
             anchors.verticalCenter: parent.verticalCenter
             height: 1
-            color: theme.separator
+            color: Theme.separator
         }
 
         Loader {

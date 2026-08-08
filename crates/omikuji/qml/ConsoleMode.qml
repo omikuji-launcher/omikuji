@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window
 
 import omikuji 1.0
-import "components"
 import "components/consolemode"
 
 ApplicationWindow {
@@ -12,7 +11,7 @@ ApplicationWindow {
     visibility: Window.FullScreen
     visible: true
     title: "Omikuji"
-    color: theme.surface
+    color: Theme.surface
 
     flags: Qt.Window
 
@@ -54,19 +53,10 @@ ApplicationWindow {
         }
     }
 
-    Theme {
-        id: theme
-        mutedIcons: uiSettings.mutedIcons
-        filledIcons: uiSettings.filledIcons
-        followSystemColors: uiSettings.followSystemColors
-        followSystemFont: uiSettings.followSystemFont
-        fontFamily: uiSettings.fontFamily
-    }
-
     Connections {
         target: uiSettings
         function onThemeChanged() {
-            theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(uiSettings.overridesJson())
         }
     }
 
@@ -87,7 +77,12 @@ ApplicationWindow {
         id: uiSettings
         Component.onCompleted: {
             initWatcher()
-            theme.overrides = JSON.parse(overridesJson())
+            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
+            Theme.overrides = JSON.parse(overridesJson())
         }
     }
 
@@ -204,8 +199,8 @@ ApplicationWindow {
 
         property real time: 0
         property size resolution: Qt.size(width, height)
-        property color accentColor: theme.accent
-        property color baseColor: theme.surface
+        property color accentColor: Theme.accent
+        property color baseColor: Theme.surface
 
         fragmentShader: visible
             ? "qrc:/qt/qml/omikuji/qml/components/consolemode/shaders/" + root.consoleBackground + ".frag.qsb"
@@ -227,7 +222,7 @@ ApplicationWindow {
 
         Rectangle {
             anchors.fill: parent
-            color: theme.surface
+            color: Theme.surface
         }
 
         Image {

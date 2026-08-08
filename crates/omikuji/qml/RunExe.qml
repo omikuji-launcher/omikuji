@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window
 
 import omikuji 1.0
-import "components"
 import "components/lib/RunnerGrouping.js" as RG
 import "components/controls"
 
@@ -16,7 +15,7 @@ ApplicationWindow {
     minimumHeight: 260
     visible: true
     title: qsTr("Run with Omikuji")
-    color: theme.surface
+    color: Theme.surface
 
     flags: Qt.Window
 
@@ -34,33 +33,29 @@ ApplicationWindow {
     UiSettingsBridge {
         id: uiSettings
         Component.onCompleted: {
-            theme.overrides = JSON.parse(overridesJson())
-            theme.fontSizes = JSON.parse(fontSizesJson())
-            theme.radiusOverrides = JSON.parse(radiusOverridesJson())
+            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
+            Theme.fillFields = Qt.binding(() => uiSettings.fillFields)
+            Theme.radiusScale = Qt.binding(() => uiSettings.radiusScale)
+            Theme.overrides = JSON.parse(overridesJson())
+            Theme.fontSizes = JSON.parse(fontSizesJson())
+            Theme.radiusOverrides = JSON.parse(radiusOverridesJson())
         }
-    }
-
-    Theme {
-        id: theme
-        mutedIcons: uiSettings.mutedIcons
-        filledIcons: uiSettings.filledIcons
-        followSystemColors: uiSettings.followSystemColors
-        followSystemFont: uiSettings.followSystemFont
-        fontFamily: uiSettings.fontFamily
-        fillFields: uiSettings.fillFields
-        radiusScale: uiSettings.radiusScale
     }
 
     Connections {
         target: uiSettings
         function onThemeChanged() {
-            theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(uiSettings.overridesJson())
         }
         function onFontSizesChanged() {
-            theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+            Theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
         }
         function onRadiusOverridesChanged() {
-            theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
+            Theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
         }
     }
 
@@ -75,7 +70,7 @@ ApplicationWindow {
 
     Item {
         anchors.fill: parent
-        anchors.margins: theme.space.xl
+        anchors.margins: Theme.space.xl
 
         Text {
             id: titleText
@@ -83,18 +78,18 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             text: root.exeName || qsTr("Run with Omikuji")
-            color: theme.text
-            font.pixelSize: theme.type.title.size
-            font.weight: theme.type.title.weight
+            color: Theme.text
+            font.pixelSize: Theme.type.title.size
+            font.weight: Theme.type.title.weight
             elide: Text.ElideRight
         }
 
         Column {
             anchors.top: titleText.bottom
-            anchors.topMargin: theme.space.lg
+            anchors.topMargin: Theme.space.lg
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: theme.space.lg
+            spacing: Theme.space.lg
 
             M3Dropdown {
                 label: qsTr("Runner")
@@ -126,7 +121,7 @@ ApplicationWindow {
         Row {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            spacing: theme.space.md
+            spacing: Theme.space.md
 
             M3Button {
                 text: qsTr("Close")

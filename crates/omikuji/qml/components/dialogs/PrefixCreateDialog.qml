@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 
 import "../lib/RunnerGrouping.js" as RG
 import "../controls"
@@ -31,8 +33,8 @@ DialogCard {
     onCloseRequested: if (!busy) close()
 
     Connections {
-        target: ofudaBridge
-        enabled: ofudaBridge !== null
+        target: root.ofudaBridge
+        enabled: root.ofudaBridge !== null
         function onCreateOutput(line) {
             root.outputText += (root.outputText.length ? "\n" : "") + line
         }
@@ -44,11 +46,11 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         Column {
             width: parent.width
-            spacing: theme.space.md
+            spacing: Theme.space.md
             enabled: !root.busy
 
             M3TextField {
@@ -85,14 +87,14 @@ DialogCard {
 
         Column {
             width: parent.width
-            spacing: theme.space.xs
+            spacing: Theme.space.xs
             visible: root.busy || root.outputText.length > 0
 
             Text {
                 visible: root.busy
                 text: qsTr("Setting up your Ofuda…")
-                color: theme.accent
-                font.pixelSize: theme.type.caption.size
+                color: Theme.accent
+                font.pixelSize: Theme.type.caption.size
             }
 
             OutputLog {
@@ -106,14 +108,14 @@ DialogCard {
             visible: root.errorText !== ""
             width: parent.width
             text: root.errorText
-            color: theme.error
-            font.pixelSize: theme.type.caption.size
+            color: Theme.error
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

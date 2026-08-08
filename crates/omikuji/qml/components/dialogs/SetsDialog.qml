@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -170,11 +173,11 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
             visible: root.editingIndex < 0
 
             Text {
@@ -182,16 +185,16 @@ DialogCard {
                 text: root.manageOnly
                     ? qsTr("Create and edit reusable sets. Apply them per-game from a game's settings.")
                     : qsTr("Check + Add to copy a set's entries into this game. Sync applies a set live at launch, atop this game's values.")
-                color: theme.textMuted
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.Wrap
             }
 
             Text {
                 Layout.fillWidth: true
                 text: qsTr("No sets yet. Create one to reuse values across games.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.Wrap
                 visible: root.sets.length === 0
             }
@@ -212,8 +215,8 @@ DialogCard {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: theme.radius.sm
-                        color: rowHover.containsMouse ? theme.alpha(theme.text, 0.06) : "transparent"
+                        radius: Theme.radius.sm
+                        color: rowHover.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
                         Behavior on color { ColorAnimation { duration: 100 } }
                     }
 
@@ -229,27 +232,27 @@ DialogCard {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         anchors.rightMargin: 6
-                        spacing: theme.space.md
+                        spacing: Theme.space.md
 
                         SvgIcon {
                             visible: !root.manageOnly
                             name: setRow.selected ? "check_box" : "check_box_outline_blank"
                             size: 20
-                            color: setRow.selected ? theme.accent : theme.alpha(theme.text, 0.55)
+                            color: setRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
                         }
 
                         Text {
                             Layout.fillWidth: true
                             text: setRow.modelData.name
-                            color: theme.text
-                            font.pixelSize: theme.type.body.size
+                            color: Theme.text
+                            font.pixelSize: Theme.type.body.size
                             elide: Text.ElideRight
                         }
 
                         Text {
                             text: qsTr("%1 vars").arg(setRow.modelData.vars ? setRow.modelData.vars.length : 0)
-                            color: theme.textSubtle
-                            font.pixelSize: theme.type.caption.size
+                            color: Theme.textSubtle
+                            font.pixelSize: Theme.type.caption.size
                         }
 
                         M3Button {
@@ -271,7 +274,7 @@ DialogCard {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: theme.space.lg
+            spacing: Theme.space.lg
             visible: root.editingIndex >= 0
 
             M3TextField {
@@ -288,8 +291,8 @@ DialogCard {
                 Text {
                     width: parent.width
                     text: qsTr("No variables yet.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                     visible: editVars.count === 0
                 }
 
@@ -297,33 +300,34 @@ DialogCard {
                     model: editVars
 
                     delegate: RowLayout {
+                        id: varRow
                         required property int index
                         required property string key
                         required property string value
 
                         width: parent.width
-                        spacing: theme.space.sm
+                        spacing: Theme.space.sm
 
                         M3TextField {
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1
                             placeholder: root.keyPlaceholder
-                            text: key
-                            onTextEdited: (t) => editVars.setProperty(index, "key", t)
+                            text: varRow.key
+                            onTextEdited: (t) => editVars.setProperty(varRow.index, "key", t)
                         }
 
                         M3TextField {
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1
                             placeholder: root.valuePlaceholder
-                            text: value
-                            onTextEdited: (t) => editVars.setProperty(index, "value", t)
+                            text: varRow.value
+                            onTextEdited: (t) => editVars.setProperty(varRow.index, "value", t)
                         }
 
                         IconButton {
                             icon: "close"
                             danger: true
-                            onClicked: editVars.remove(index)
+                            onClicked: editVars.remove(varRow.index)
                         }
                     }
                 }
@@ -339,7 +343,7 @@ DialogCard {
     }
 
     footerLeft: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             visible: root.editingIndex < 0
@@ -360,7 +364,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             visible: root.editingIndex >= 0

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -16,29 +19,29 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         Text {
             width: parent.width
             text: qsTr("Custom ${variable} tokens, usable in launch fields, prefix, install paths, scripts and image overrides. Values may reference the built-ins below.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.label.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.label.size
             wrapMode: Text.WordWrap
         }
 
         Squircle {
             width: parent.width
-            height: builtinsText.implicitHeight + theme.space.md
-            radius: theme.radius.sm
-            fillColor: theme.alpha(theme.text, 0.06)
+            height: builtinsText.implicitHeight + Theme.space.md
+            radius: Theme.radius.sm
+            fillColor: Theme.alpha(Theme.text, 0.06)
 
             Text {
                 id: builtinsText
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: theme.space.md
-                anchors.rightMargin: theme.space.md
+                anchors.leftMargin: Theme.space.md
+                anchors.rightMargin: Theme.space.md
                 text: "${exe}              " + qsTr("game executable") + "\n"
                 + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
                 + "${game_prefix}      " + qsTr("the game's resolved prefix") + "\n"
@@ -55,8 +58,8 @@ DialogCard {
                 + "${layers_path}      " + qsTr("layers root") + "\n"
                 + "${logs_path}        " + qsTr("logs root") + "\n"
                     + "${runtime_path}     " + qsTr("runtime root")
-                color: theme.textMuted
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
                 font.family: "monospace"
             }
         }

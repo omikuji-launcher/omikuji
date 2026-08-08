@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import "../popups"
@@ -13,7 +16,7 @@ Item {
     property color placeholderTint: "#1a1a2e"
     property string letter: ""
     property int letterFontSize: 48
-    property color letterColor: theme.textFaint
+    property color letterColor: Theme.textFaint
     property real imageOpacity: 1.0
     property string cardStyle: "normal"
 
@@ -30,11 +33,11 @@ Item {
 
     property string leftIconName: ""
     property int leftIconSize: 20
-    property color leftIconColor: theme.icon
+    property color leftIconColor: Theme.icon
 
     property bool selected: false
     property real selectedBorderWidth: 2
-    property color selectedBorderColor: theme.accent
+    property color selectedBorderColor: Theme.accent
     property color selectedBgTint: "transparent"
 
     property bool cardVisible: true
@@ -91,10 +94,10 @@ Item {
     Rectangle {
         id: frame
         anchors.fill: parent
-        radius: theme.radius.lg
+        radius: Theme.radius.lg
         color: root.selected && root.selectedBgTint.a > 0
             ? root.selectedBgTint
-            : theme.cardBg
+            : Theme.cardBg
         scale: root.reordering ? 1.0
             : cardHover.containsPress ? 0.96
             : (cardHover.containsMouse ? 1.02 : 1.0)
@@ -112,7 +115,7 @@ Item {
             Rectangle {
                 anchors.fill: parent
                 color: root.placeholderTint
-                radius: theme.radius.md
+                radius: Theme.radius.md
                 visible: !bannerImg.visible
             }
 
@@ -133,7 +136,7 @@ Item {
                     sourceSize.width: 360
                     sourceSize.height: 480
                     onStatusChanged: {
-                        if (status === Image.Error && root.imageFallback != "" && source != root.imageFallback) {
+                        if (status === Image.Error && root.imageFallback !== "" && source !== root.imageFallback) {
                             source = root.imageFallback
                         }
                     }
@@ -156,7 +159,7 @@ Item {
                             height: root.frameless
                                 ? parent.height + radius
                                 : root.imageFit && bannerImg.visible ? bannerImg.paintedHeight : parent.height
-                            radius: root.frameless ? theme.radius.lg : theme.radius.md
+                            radius: root.frameless ? Theme.radius.lg : Theme.radius.md
                         }
                     }
                 }
@@ -213,8 +216,8 @@ Item {
                 width: parent.width - nameRow.reserve * 2
                 horizontalAlignment: Text.AlignHCenter
                 text: root.title
-                color: theme.text
-                font.pixelSize: theme.type.label.size
+                color: Theme.text
+                font.pixelSize: Theme.type.label.size
                 font.weight: Font.Medium
                 elide: Text.ElideRight
                 maximumLineCount: 1
@@ -235,11 +238,11 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: theme.radius.lg
+            radius: Theme.radius.lg
             color: "transparent"
             border.width: root.selected ? root.selectedBorderWidth : 1
             border.color: root.selected ? root.selectedBorderColor
-                : cardHover.containsMouse ? theme.cardBorderHover : theme.cardBorder
+                : cardHover.containsMouse ? Theme.cardBorderHover : Theme.cardBorder
 
             Behavior on border.color { ColorAnimation { duration: 150 } }
             Behavior on border.width { NumberAnimation { duration: 100 } }

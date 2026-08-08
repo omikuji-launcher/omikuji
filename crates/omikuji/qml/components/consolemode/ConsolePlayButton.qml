@@ -1,5 +1,5 @@
 import QtQuick
-import ".."
+import omikuji 1.0
 
 Item {
     id: btn
@@ -10,8 +10,8 @@ Item {
     signal playClicked()
     signal stopClicked()
 
-    readonly property color bgColor: isRunning ? theme.error : theme.accent
-    readonly property color textColor: isRunning ? "#ffffff" : theme.accentOn
+    readonly property color bgColor: isRunning ? Theme.error : Theme.accent
+    readonly property color textColor: isRunning ? "#ffffff" : Theme.accentOn
 
     implicitWidth: Math.max(180 * uiScale, label.implicitWidth + 56 * uiScale)
     implicitHeight: 60 * uiScale

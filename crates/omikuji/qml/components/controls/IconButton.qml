@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 
@@ -24,10 +27,10 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: rounded ? size / 2 : 8
-        color: hoverArea.containsPress ? (btn.danger ? theme.alpha(theme.error, 0.28) : theme.statePressed)
-              : hoverArea.containsMouse ? (btn.danger ? theme.alpha(theme.error, 0.18) : theme.stateHover)
-              : theme.alpha(theme.text, 0)
+        radius: btn.rounded ? btn.size / 2 : 8
+        color: hoverArea.containsPress ? (btn.danger ? Theme.alpha(Theme.error, 0.28) : Theme.statePressed)
+              : hoverArea.containsMouse ? (btn.danger ? Theme.alpha(Theme.error, 0.18) : Theme.stateHover)
+              : Theme.alpha(Theme.text, 0)
         scale: hoverArea.containsPress ? 0.9 : 1.0
 
         Behavior on color {
@@ -41,7 +44,7 @@ Item {
             anchors.centerIn: parent
             name: btn.icon
             size: Math.round(btn.size * 0.55)
-            color: hoverArea.containsMouse ? (btn.danger ? theme.error : theme.iconHover) : theme.icon
+            color: hoverArea.containsMouse ? (btn.danger ? Theme.error : Theme.iconHover) : Theme.icon
 
             Behavior on color {
                 ColorAnimation { duration: 100 }

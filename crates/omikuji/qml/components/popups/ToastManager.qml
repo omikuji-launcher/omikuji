@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 import "../controls"
 
@@ -94,10 +97,10 @@ Item {
 
             readonly property color levelColor: {
                 switch (level) {
-                    case "success": return theme.success
-                    case "warning": return theme.warning
-                    case "error":   return theme.error
-                    default:        return theme.accent
+                    case "success": return Theme.success
+                    case "warning": return Theme.warning
+                    case "error":   return Theme.error
+                    default:        return Theme.accent
                 }
             }
             readonly property string levelIcon: {
@@ -111,7 +114,7 @@ Item {
 
             width: root.toastWidth
             height: toastCol.implicitHeight + 24
-            radius: theme.radius.lg
+            radius: Theme.radius.lg
 
             SvgIcon {
                 anchors.left: parent.left
@@ -135,8 +138,8 @@ Item {
                 Text {
                     width: parent.width
                     text: toast.title
-                    color: theme.text
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                     visible: text.length > 0
@@ -145,8 +148,8 @@ Item {
                 Text {
                     width: parent.width
                     text: toast.message
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap
                     visible: text.length > 0
                 }

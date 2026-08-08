@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -65,7 +68,7 @@ DialogCard {
     onCloseRequested: root.close()
 
     Connections {
-        target: uiSettings
+        target: root.uiSettings
         function onCategoriesChanged() {
             if (root.shown) root._loadCategories()
         }
@@ -73,13 +76,13 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         Text {
             Layout.fillWidth: true
             text: root.gameName
-            color: theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
             elide: Text.ElideRight
             visible: text.length > 0
         }
@@ -87,8 +90,8 @@ DialogCard {
         Text {
             Layout.fillWidth: true
             text: qsTr("No tag categories yet. Create one to start tagging.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.Wrap
             visible: root.tagCategories.length === 0
         }
@@ -111,6 +114,7 @@ DialogCard {
                     model: root.tagCategories
 
                     Item {
+                        id: tagRow
                         required property var modelData
 
                         width: parent.width
@@ -120,9 +124,9 @@ DialogCard {
 
                         Rectangle {
                             anchors.fill: parent
-                            radius: theme.radius.sm
+                            radius: Theme.radius.sm
                             color: rowHover.containsMouse
-                                ? theme.alpha(theme.text, 0.06)
+                                ? Theme.alpha(Theme.text, 0.06)
                                 : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -131,26 +135,26 @@ DialogCard {
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: theme.space.md
+                            spacing: Theme.space.md
 
                             SvgIcon {
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: selected ? "check_box" : "check_box_outline_blank"
+                                name: tagRow.selected ? "check_box" : "check_box_outline_blank"
                                 size: 20
-                                color: selected ? theme.accent : theme.alpha(theme.text, 0.55)
+                                color: tagRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
                             }
 
                             SvgIcon {
-                                name: modelData.icon
+                                name: tagRow.modelData.icon
                                 size: 18
-                                color: theme.icon
+                                color: Theme.icon
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
                             Text {
-                                text: modelData.name
-                                color: theme.text
-                                font.pixelSize: theme.type.body.size
+                                text: tagRow.modelData.name
+                                color: Theme.text
+                                font.pixelSize: Theme.type.body.size
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
@@ -160,7 +164,7 @@ DialogCard {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root._toggleTag(modelData.value)
+                            onClicked: root._toggleTag(tagRow.modelData.value)
                         }
                     }
                 }
@@ -177,7 +181,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

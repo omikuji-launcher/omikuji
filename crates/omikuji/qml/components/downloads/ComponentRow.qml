@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -12,8 +15,8 @@ Rectangle {
 
     signal retryRequested()
 
-    radius: theme.radius.md
-    color: theme.alpha(theme.text, 0.05)
+    radius: Theme.radius.md
+    color: Theme.alpha(Theme.text, 0.05)
     implicitHeight: 56
 
     readonly property string status: entry.status || "missing"
@@ -38,10 +41,10 @@ Rectangle {
             name: row.isDone ? "check_circle"
                 : row.isFailed ? "close"
                 : "download"
-            color: row.isDone ? theme.accent
-                : row.isFailed ? (theme.error || "#e06060")
-                : row.isActive ? theme.accent
-                : theme.textMuted
+            color: row.isDone ? Theme.accent
+                : row.isFailed ? (Theme.error || "#e06060")
+                : row.isActive ? Theme.accent
+                : Theme.textMuted
         }
 
         ColumnLayout {
@@ -50,8 +53,8 @@ Rectangle {
 
             Text {
                 text: row.name
-                color: theme.text
-                font.pixelSize: theme.type.body.size
+                color: Theme.text
+                font.pixelSize: Theme.type.body.size
                 font.weight: Font.Medium
             }
 
@@ -62,8 +65,8 @@ Rectangle {
                     : row.isActive ? (capitalize(row.status)
                           + (row.status === "downloading" ? " · " + Math.round(row.percent) + "%" : "…"))
                     : qsTr("Pending")
-                color: row.isFailed ? (theme.error || "#e06060") : theme.textMuted
-                font.pixelSize: theme.type.caption.size
+                color: row.isFailed ? (Theme.error || "#e06060") : Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
                 elide: Text.ElideRight
             }
 
@@ -71,7 +74,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 2
                 radius: 1
-                color: theme.alpha(theme.text, 0.12)
+                color: Theme.alpha(Theme.text, 0.12)
                 visible: row.isActive
                 Rectangle {
                     anchors.left: parent.left
@@ -79,7 +82,7 @@ Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width * Math.max(0, Math.min(1, row.percent / 100))
                     radius: parent.radius
-                    color: theme.accent
+                    color: Theme.accent
                     Behavior on width { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
                 }
             }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 
 Rectangle {
@@ -10,8 +13,8 @@ Rectangle {
     property alias fontSize: area.font.pixelSize
     property bool follow: true
 
-    color: theme.bgAlt
-    radius: theme.radius.sm
+    color: Theme.bgAlt
+    radius: Theme.radius.sm
     clip: true
 
     ThemedLogHighlighter {
@@ -30,15 +33,16 @@ Rectangle {
     ScrollView {
         anchors.fill: parent
         anchors.margins: 8
+        Component.onCompleted: contentItem.boundsBehavior = Flickable.StopAtBounds
 
         TextArea {
             id: area
             readOnly: true
             wrapMode: TextArea.Wrap
             selectByMouse: true
-            color: theme.textMuted
+            color: Theme.textMuted
             font.family: "monospace"
-            font.pixelSize: theme.type.caption.size
+            font.pixelSize: Theme.type.caption.size
             background: Rectangle { color: "transparent" }
             onTextChanged: if (root.follow) cursorPosition = length
         }

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import QtQuick.Window
 import "../primitives"
@@ -82,7 +85,7 @@ Popup {
     function openAbove(anchorItem) {
         if (!anchorItem) { open(); return }
         let win = anchorItem.Window.window
-        let z = theme.uiScale
+        let z = Theme.uiScale
         let w = _computedWidth() * z
         let h = _computedHeight() * z
         let a = anchorItem.mapToItem(null, anchorItem.width / 2, 0)
@@ -101,7 +104,7 @@ Popup {
         if (!anchorItem) { open(); return }
         if (!parent) { open(); return }
         let win = anchorItem.Window.window
-        let z = theme.uiScale
+        let z = Theme.uiScale
         let w = _computedWidth() * z
         let h = _computedHeight() * z
 
@@ -122,7 +125,7 @@ Popup {
     function openAtCursor(winX, winY) {
         let anchorItem = parent || null
         let win = anchorItem ? anchorItem.Window.window : null
-        let z = theme.uiScale
+        let z = Theme.uiScale
         let w = _computedWidth() * z
         let h = _computedHeight() * z
         let nx = winX + 4
@@ -138,7 +141,7 @@ Popup {
     function openBeside(anchorItem, side) {
         if (!anchorItem || !parent) { open(); return }
         let win = anchorItem.Window.window
-        let z = theme.uiScale
+        let z = Theme.uiScale
         let h = _computedHeight() * z
         let dx = side === -1 ? -_computedWidth() - padding + 4 : anchorItem.width + padding - 4
         let a = anchorItem.mapToItem(null, dx, -padding)
@@ -189,7 +192,7 @@ Popup {
         let w = sub._computedWidth()
         let win = _submenuAnchor.Window.window
         let absRight = _submenuAnchor.mapToItem(null, _submenuAnchor.width + padding - 4, 0).x
-        _submenuSide = (win && absRight + w * theme.uiScale > win.width - 4) ? -1 : 1
+        _submenuSide = (win && absRight + w * Theme.uiScale > win.width - 4) ? -1 : 1
         sub.openBeside(_submenuAnchor, _submenuSide)
     }
 
@@ -246,6 +249,7 @@ Popup {
             model: root.items
 
             delegate: Loader {
+                id: itemLoader
                 required property var modelData
                 required property int index
 
@@ -256,14 +260,14 @@ Popup {
                     Rectangle {
                         width: root.itemWidth
                         height: 32
-                        radius: theme.radius.sm
+                        radius: Theme.radius.sm
                         // danger items tint red, normal items use ~2x the old 0.08 alpha so light-mode hovers are actually visible
                         color: hoverArea.containsMouse
-                            ? (modelData.danger
-                                ? theme.alpha(theme.error, 0.18)
-                                : modelData.accent
-                                    ? theme.alpha(theme.accent, 0.18)
-                                    : theme.alpha(theme.text, 0.14))
+                            ? (itemLoader.modelData.danger
+                                ? Theme.alpha(Theme.error, 0.18)
+                                : itemLoader.modelData.accent
+                                    ? Theme.alpha(Theme.accent, 0.18)
+                                    : Theme.alpha(Theme.text, 0.14))
                             : "transparent"
 
                         Behavior on color {
@@ -275,26 +279,26 @@ Popup {
                             anchors.left: parent.left
                             anchors.leftMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
-                            text: (modelData.shiftText && root._shiftDown && hoverArea.containsMouse)
-                                ? modelData.shiftText
-                                : modelData.text
-                            color: modelData.danger
-                                ? theme.error
-                                : modelData.accent
-                                    ? theme.accent
-                                    : theme.text
-                            font.pixelSize: theme.type.label.size
+                            text: (itemLoader.modelData.shiftText && root._shiftDown && hoverArea.containsMouse)
+                                ? itemLoader.modelData.shiftText
+                                : itemLoader.modelData.text
+                            color: itemLoader.modelData.danger
+                                ? Theme.error
+                                : itemLoader.modelData.accent
+                                    ? Theme.accent
+                                    : Theme.text
+                            font.pixelSize: Theme.type.label.size
                         }
 
                         SvgIcon {
-                            visible: !!modelData.submenu
+                            visible: !!itemLoader.modelData.submenu
                             anchors.right: parent.right
                             anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             name: "chevron_left"
                             size: 16
-                            color: theme.textMuted
-                            rotation: root._submenuIndex === index && root._submenuSide === -1 ? 0 : 180
+                            color: Theme.textMuted
+                            rotation: root._submenuIndex === itemLoader.index && root._submenuSide === -1 ? 0 : 180
 
                             Behavior on rotation {
                                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
@@ -307,18 +311,18 @@ Popup {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onEntered: {
-                                if (modelData.submenu) root._scheduleSubmenu(index, parent)
+                                if (itemLoader.modelData.submenu) root._scheduleSubmenu(itemLoader.index, parent)
                                 else root._closeSubmenu()
                             }
                             onPositionChanged: (mouse) => root._shiftDown = (mouse.modifiers & Qt.ShiftModifier) !== 0
                             onClicked: (mouse) => {
-                                if (modelData.submenu) {
-                                    root._openSubmenuNow(index, parent)
+                                if (itemLoader.modelData.submenu) {
+                                    root._openSubmenuNow(itemLoader.index, parent)
                                 } else {
-                                    let useShift = modelData.shiftAction && (mouse.modifiers & Qt.ShiftModifier)
+                                    let useShift = itemLoader.modelData.shiftAction && (mouse.modifiers & Qt.ShiftModifier)
                                     root.itemClicked(useShift
-                                        ? modelData.shiftAction
-                                        : (modelData.action || modelData.text.toLowerCase().replace(/ /g, "_")))
+                                        ? itemLoader.modelData.shiftAction
+                                        : (itemLoader.modelData.action || itemLoader.modelData.text.toLowerCase().replace(/ /g, "_")))
                                     root.close()
                                 }
                             }
@@ -337,7 +341,7 @@ Popup {
                             anchors.centerIn: parent
                             width: parent.width - 24
                             height: 1
-                            color: theme.divider
+                            color: Theme.divider
                         }
                     }
                 }

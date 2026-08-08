@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../cards"
 
 
@@ -41,7 +44,7 @@ Item {
     onVisibleChanged: if (visible) { refreshManifests(); refreshPosters() }
 
     Connections {
-        target: gameModel
+        target: root.gameModel
         function onGachaManifestsReady(fetched) {
             if (fetched > 0) { refreshManifests(); refreshPosters() }
         }
@@ -132,7 +135,7 @@ Item {
                         anchors.margins: 4
                         height: 24
                         radius: 10
-                        color: theme.alpha(theme.accent, 0.9)
+                        color: Theme.alpha(Theme.accent, 0.9)
                         visible: gachaCard.isDownloading
 
                         Text {
@@ -143,8 +146,8 @@ Item {
                                 if (dl.status === "Downloading") return dl.progress.toFixed(0) + "%"
                                 return dl.status
                             }
-                            color: theme.accentOn
-                            font.pixelSize: theme.type.micro.size
+                            color: Theme.accentOn
+                            font.pixelSize: Theme.type.micro.size
                             font.weight: Font.Bold
                         }
                     }

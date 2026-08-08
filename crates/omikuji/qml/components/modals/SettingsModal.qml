@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import "../navigation"
@@ -37,7 +38,7 @@ Item {
         color: Qt.rgba(0, 0, 0, 0.55)
         opacity: root.shown ? 1 : 0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: theme.dur.med } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
 
         MouseArea {
             anchors.fill: parent
@@ -62,25 +63,25 @@ Item {
         scale: root.shown ? 1 : 0.97
         visible: opacity > 0.01
 
-        Behavior on opacity { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
-        Behavior on scale { NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.emphasized; easing.overshoot: theme.ease.overshoot } }
-        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
-        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: theme.dur.med; easing.type: theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
 
         RectangularGlow {
             anchors.fill: card
             glowRadius: 30
             spread: 0.08
             color: Qt.rgba(0, 0, 0, 0.5)
-            cornerRadius: theme.radius.xxl + 30
+            cornerRadius: Theme.radius.xxl + 30
             opacity: 1 - resizer.hugT
         }
 
         Squircle {
             id: card
             anchors.fill: parent
-            radius: theme.radius.xxl * (1 - resizer.hugT)
-            fillColor: theme.bg
+            radius: Theme.radius.xxl * (1 - resizer.hugT)
+            fillColor: Theme.bg
         }
 
         MouseArea {
@@ -99,37 +100,37 @@ Item {
 
             Row {
                 anchors.left: parent.left
-                anchors.leftMargin: theme.space.xl
+                anchors.leftMargin: Theme.space.xl
                 anchors.right: actions.left
-                anchors.rightMargin: theme.space.md
+                anchors.rightMargin: Theme.space.md
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.md
+                spacing: Theme.space.md
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.pageItem ? root.pageItem.modalTitle : ""
-                    color: theme.text
-                    font.pixelSize: theme.type.display.size
-                    font.weight: theme.type.display.weight
+                    color: Theme.text
+                    font.pixelSize: Theme.type.display.size
+                    font.weight: Theme.type.display.weight
                     elide: Text.ElideRight
                 }
 
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: theme.space.sm
+                    spacing: Theme.space.sm
                     visible: subtitleText.text !== ""
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         width: 4; height: 4; radius: 2
-                        color: theme.dot
+                        color: Theme.dot
                     }
                     Text {
                         id: subtitleText
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.pageItem && root.pageItem.modalSubtitle ? root.pageItem.modalSubtitle : ""
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.caption.size
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.caption.size
                     }
                 }
             }
@@ -137,9 +138,9 @@ Item {
             Row {
                 id: actions
                 anchors.right: parent.right
-                anchors.rightMargin: theme.space.lg
+                anchors.rightMargin: Theme.space.lg
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 M3Button {
                     anchors.verticalCenter: parent.verticalCenter
@@ -171,8 +172,8 @@ Item {
             anchors.top: header.bottom
             anchors.left: parent.left
             anchors.bottom: parent.bottom
-            anchors.leftMargin: theme.space.lg
-            anchors.bottomMargin: theme.space.lg
+            anchors.leftMargin: Theme.space.lg
+            anchors.bottomMargin: Theme.space.lg
             width: 184
             items: root.pageItem ? root.pageItem.tabs : []
             currentIndex: root.pageItem ? root.pageItem.currentTabIndex : 0
@@ -187,23 +188,23 @@ Item {
             anchors.left: rail.right
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.leftMargin: theme.space.sm
+            anchors.leftMargin: Theme.space.sm
 
             Rectangle {
                 anchors.fill: parent
-                color: theme.surface
-                topLeftRadius: theme.radius.lg
-                bottomRightRadius: theme.radius.xxl * (1 - resizer.hugT)
+                color: Theme.surface
+                topLeftRadius: Theme.radius.lg
+                bottomRightRadius: Theme.radius.xxl * (1 - resizer.hugT)
             }
 
             Flickable {
                 id: contentFlick
                 anchors.fill: parent
-                anchors.leftMargin: theme.space.lg
-                anchors.topMargin: theme.space.md
-                anchors.bottomMargin: theme.space.md
+                anchors.leftMargin: Theme.space.lg
+                anchors.topMargin: Theme.space.md
+                anchors.bottomMargin: Theme.space.md
                 contentWidth: width
-                contentHeight: pageLoader.item ? pageLoader.item.implicitHeight + theme.space.lg : height
+                contentHeight: pageLoader.item ? pageLoader.item.implicitHeight + Theme.space.lg : height
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: ThinScrollBar {}
@@ -231,7 +232,7 @@ Item {
             sizeKey: root.sizeKey
             minWidth: 720
             minHeight: 480
-            frameMargin: theme.space.lg * 2
+            frameMargin: Theme.space.lg * 2
         }
     }
 }

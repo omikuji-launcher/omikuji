@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import "../controls"
 import "../popups"
@@ -41,7 +42,7 @@ Item {
     // opaque fill becuase witout it lower-z dropdown popups bleed through the empty bar areas
     Rectangle {
         anchors.fill: parent
-        color: theme.navBg
+        color: Theme.navBg
     }
 
     Text {
@@ -51,8 +52,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(implicitWidth, root.width * 0.5)
         text: root.currentTabLabel
-        color: theme.text
-        font.pixelSize: theme.type.display.size
+        color: Theme.text
+        font.pixelSize: Theme.type.display.size
         font.weight: Font.DemiBold
         elide: Text.ElideRight
         visible: root.showTitle
@@ -64,7 +65,7 @@ Item {
         x: (root.width - root.leftInset) / 2 - width / 2
         width: Math.min(360, parent.width * 0.4)
         height: 34
-        radius: theme.radius.pill
+        radius: Theme.radius.pill
         focused: searchInput.activeFocus
         visible: root.showSearch
 
@@ -77,26 +78,26 @@ Item {
             SvgIcon {
                 name: "search"
                 size: 16
-                color: theme.textSubtle
+                color: Theme.textSubtle
                 anchors.verticalCenter: parent.verticalCenter
             }
 
             TextInput {
                 id: searchInput
                 width: searchBar.width - 44
-                color: theme.text
-                font.pixelSize: theme.type.body.size
+                color: Theme.text
+                font.pixelSize: Theme.type.body.size
                 clip: true
                 anchors.verticalCenter: parent.verticalCenter
-                selectionColor: theme.accent
-                selectedTextColor: theme.accentText
+                selectionColor: Theme.accent
+                selectedTextColor: Theme.accentText
 
                 Text {
                     anchors.fill: parent
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("Search games...")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.body.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.body.size
                     visible: !searchInput.text && !searchInput.activeFocus
                 }
             }

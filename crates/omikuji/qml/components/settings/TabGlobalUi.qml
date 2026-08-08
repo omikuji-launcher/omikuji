@@ -1,5 +1,5 @@
 import QtQuick
-import QtQuick.Layouts
+import omikuji 1.0
 
 import "."
 import "../controls"
@@ -89,7 +89,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: qsTr("Language")
@@ -473,13 +473,13 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 name: "drag_indicator"
                                 size: 20
-                                color: dragArea.held || dragArea.containsMouse ? theme.iconHover : theme.icon
+                                color: dragArea.held || dragArea.containsMouse ? Theme.iconHover : Theme.icon
                             }
 
                             SvgIcon {
                                 name: wrapper.icon
                                 size: 20
-                                color: theme.icon
+                                color: Theme.icon
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
@@ -489,8 +489,8 @@ Item {
 
                                 Text {
                                     text: wrapper.name
-                                    color: theme.text
-                                    font.pixelSize: theme.type.subtitle.size
+                                    color: Theme.text
+                                    font.pixelSize: Theme.type.subtitle.size
                                 }
                                 Text {
                                     text: {
@@ -503,8 +503,8 @@ Item {
                                         if (k === "all")       return qsTr("all games")
                                         return k
                                     }
-                                    color: theme.textSubtle
-                                    font.pixelSize: theme.type.caption.size
+                                    color: Theme.textSubtle
+                                    font.pixelSize: Theme.type.caption.size
                                 }
                             }
                         }
@@ -585,9 +585,9 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: theme.radius.sm
+                    radius: Theme.radius.sm
                     color: addHover.containsMouse
-                        ? theme.alpha(theme.text, 0.06)
+                        ? Theme.alpha(Theme.text, 0.06)
                         : "transparent"
                     Behavior on color { ColorAnimation { duration: 100 } }
                 }
@@ -601,13 +601,13 @@ Item {
                     SvgIcon {
                         name: "add"
                         size: 18
-                        color: theme.accent
+                        color: Theme.accent
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         text: qsTr("Add category")
-                        color: theme.accent
-                        font.pixelSize: theme.type.body.size
+                        color: Theme.accent
+                        font.pixelSize: Theme.type.body.size
                         font.weight: Font.Medium
                         anchors.verticalCenter: parent.verticalCenter
                     }

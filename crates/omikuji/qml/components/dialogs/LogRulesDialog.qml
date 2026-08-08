@@ -1,7 +1,9 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
-import "../primitives"
 
 DialogCard {
     sizeKey: "log_rules"
@@ -33,7 +35,7 @@ DialogCard {
     }
 
     function swatchColor(value) {
-        const resolved = theme.resolveColor(value)
+        const resolved = Theme.resolveColor(value)
         return /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(resolved) ? resolved : "transparent"
     }
 
@@ -41,47 +43,52 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         Text {
             width: parent.width
             wrapMode: Text.Wrap
             text: qsTr("Lines matching a pattern (regex) get its color. Rules run before the built-in error/fixme/warning matching. You can use theme tokens such as 'accent', 'error', or hex values like '#7aa2f7'.")
-            color: theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
         }
 
         Repeater {
             model: rulesModel
 
             RowLayout {
+                id: ruleRow
+                required property int index
+                required property string pattern
+                required property string colorValue
+
                 width: parent.width
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 M3TextField {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 3
                     placeholder: qsTr("pattern")
-                    text: pattern
-                    onTextEdited: (t) => rulesModel.setProperty(index, "pattern", t)
+                    text: ruleRow.pattern
+                    onTextEdited: (t) => rulesModel.setProperty(ruleRow.index, "pattern", t)
                 }
 
                 M3TextField {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 2
                     placeholder: qsTr("color")
-                    text: colorValue
-                    onTextEdited: (t) => rulesModel.setProperty(index, "colorValue", t)
+                    text: ruleRow.colorValue
+                    onTextEdited: (t) => rulesModel.setProperty(ruleRow.index, "colorValue", t)
                 }
 
                 Rectangle {
                     Layout.alignment: Qt.AlignVCenter
                     width: 22
                     height: 22
-                    radius: theme.radius.xs
-                    color: root.swatchColor(colorValue)
+                    radius: Theme.radius.xs
+                    color: root.swatchColor(ruleRow.colorValue)
                     border.width: 1
-                    border.color: theme.outline
+                    border.color: Theme.outline
                 }
 
                 IconButton {
@@ -89,7 +96,7 @@ DialogCard {
                     icon: "close"
                     size: 24
                     danger: true
-                    onClicked: rulesModel.remove(index)
+                    onClicked: rulesModel.remove(ruleRow.index)
                 }
             }
         }
@@ -97,8 +104,8 @@ DialogCard {
         Text {
             visible: rulesModel.count === 0
             text: qsTr("No custom rules yet.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.body.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.body.size
         }
     }
 
@@ -110,7 +117,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             variant: "text"

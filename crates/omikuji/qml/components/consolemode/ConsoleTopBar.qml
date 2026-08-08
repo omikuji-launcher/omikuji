@@ -1,6 +1,8 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import Qt5Compat.GraphicalEffects
-import ".."
 import "../primitives"
 
 Row {
@@ -64,11 +66,11 @@ Row {
         width: bar.searchExpanded ? 320 * bar._scale : 0
         height: 40 * bar._scale
         radius: 12 * bar._scale
-        color: theme.surface
+        color: Theme.surface
         border.width: searchField.activeFocus ? Math.max(2, 2 * bar._scale) : 1
         border.color: searchField.activeFocus
-            ? theme.accent
-            : theme.alpha(theme.text, 0.15)
+            ? Theme.accent
+            : Theme.alpha(Theme.text, 0.15)
         clip: true
         visible: width > 1
         opacity: bar.searchExpanded ? 1 : 0
@@ -84,9 +86,9 @@ Row {
             anchors.leftMargin: 16 * bar._scale
             anchors.rightMargin: 16 * bar._scale
             verticalAlignment: TextInput.AlignVCenter
-            color: theme.text
-            selectionColor: theme.accent
-            selectedTextColor: theme.accentOn
+            color: Theme.text
+            selectionColor: Theme.accent
+            selectedTextColor: Theme.accentOn
             font.pixelSize: 16 * bar._scale
             font.weight: Font.Medium
             clip: true
@@ -109,7 +111,7 @@ Row {
             anchors.rightMargin: 16 * bar._scale
             verticalAlignment: Text.AlignVCenter
             text: qsTr("Search")
-            color: theme.textMuted
+            color: Theme.textMuted
             font.pixelSize: 16 * bar._scale
             font.weight: Font.Medium
             visible: searchField.text.length === 0 && !searchField.activeFocus
@@ -125,10 +127,10 @@ Row {
 
         Rectangle {
             anchors.fill: parent
-            color: theme.surface
+            color: Theme.surface
             radius: 12 * bar._scale
             border.width: searchIconWrap.gamepadFocused ? 2 : 0
-            border.color: theme.accent
+            border.color: Theme.accent
 
             Behavior on border.width { NumberAnimation { duration: 140 } }
         }
@@ -138,8 +140,8 @@ Row {
             name: "search"
             size: 22 * bar._scale
             color: searchIconWrap.gamepadFocused || searchMouse.containsMouse || bar.searchExpanded
-                ? theme.iconHover
-                : theme.icon
+                ? Theme.iconHover
+                : Theme.icon
         }
 
         scale: searchIconWrap.gamepadFocused ? 1.12 : (searchMouse.containsPress ? 0.94 : (searchMouse.containsMouse ? 1.05 : 1.0))
@@ -158,7 +160,7 @@ Row {
         id: clock
         anchors.verticalCenter: parent.verticalCenter
         text: Qt.formatTime(_now, "HH:mm")
-        color: theme.text
+        color: Theme.text
         font.pixelSize: 18 * bar._scale
         font.weight: Font.Medium
 
@@ -182,10 +184,10 @@ Row {
         Rectangle {
             id: appBg
             anchors.fill: parent
-            color: theme.surface
+            color: Theme.surface
             radius: 12 * bar._scale
             border.width: appIcon.gamepadFocused ? 2 : 0
-            border.color: theme.accent
+            border.color: Theme.accent
 
             Behavior on border.width { NumberAnimation { duration: 140 } }
 

@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -24,8 +27,8 @@ DialogCard {
 
     function defaultFor(key) {
         return key === "pill"
-            ? theme.radiusDefaults[key]
-            : Math.round(theme.radiusDefaults[key] * theme.radiusScale)
+            ? Theme.radiusDefaults[key]
+            : Math.round(Theme.radiusDefaults[key] * Theme.radiusScale)
     }
 
     function applyRadius(key, px) {
@@ -38,7 +41,7 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         Repeater {
             model: root.roles
@@ -46,7 +49,7 @@ DialogCard {
             Item {
                 id: row
                 required property var modelData
-                readonly property int roleRadius: theme.radius[modelData.key]
+                readonly property int roleRadius: Theme.radius[modelData.key]
                 width: parent.width
                 height: 36
 
@@ -59,16 +62,16 @@ DialogCard {
                     width: 48
                     height: 30
                     radius: row.roleRadius
-                    fillColor: theme.alpha(theme.accent, 0.25)
+                    fillColor: Theme.alpha(Theme.accent, 0.25)
                 }
 
                 Text {
                     anchors.left: swatch.right
-                    anchors.leftMargin: theme.space.md
+                    anchors.leftMargin: Theme.space.md
                     anchors.verticalCenter: parent.verticalCenter
                     text: row.modelData.name
-                    color: theme.text
-                    font.pixelSize: theme.type.body.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.body.size
                 }
 
                 M3SpinBox {
@@ -87,7 +90,7 @@ DialogCard {
     footerLeft: M3Button {
         text: qsTr("Reset all")
         variant: "tonal"
-        onClicked: uiSettings.applyRadiusOverridesJson("{}")
+        onClicked: root.uiSettings.applyRadiusOverridesJson("{}")
     }
 
     actions: M3Button {

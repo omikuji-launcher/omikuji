@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import "../controls"
 import "../primitives"
 
@@ -23,20 +24,20 @@ Item {
     Column {
         anchors.centerIn: parent
         width: 400
-        spacing: theme.space.xl
+        spacing: Theme.space.xl
 
         SvgIcon {
             anchors.horizontalCenter: parent.horizontalCenter
             name: root.iconName
             size: 64
-            color: theme.text
+            color: Theme.text
         }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.title
-            color: theme.text
-            font.pixelSize: theme.type.display.size
+            color: Theme.text
+            font.pixelSize: Theme.type.display.size
             font.weight: Font.Bold
         }
 
@@ -44,8 +45,8 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             width: parent.width
             text: root.description
-            color: theme.textMuted
-            font.pixelSize: theme.type.body.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.body.size
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
         }
@@ -53,10 +54,10 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Open Login Page")
-            color: linkMouseArea.containsMouse ? Qt.lighter(theme.accent, 1.1) : theme.accent
-            font.pixelSize: theme.type.body.size
+            color: linkMouseArea.containsMouse ? Qt.lighter(Theme.accent, 1.1) : Theme.accent
+            font.pixelSize: Theme.type.body.size
             font.weight: Font.DemiBold
-            Behavior on color { ColorAnimation { duration: theme.dur.xfast } }
+            Behavior on color { ColorAnimation { duration: Theme.dur.xfast } }
 
             MouseArea {
                 id: linkMouseArea
@@ -89,7 +90,7 @@ Item {
         Column {
             visible: !root.toolReady
             width: parent.width
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -97,8 +98,8 @@ Item {
                 text: root.toolInstalling
                     ? qsTr("Installing %1...").arg(root.toolName)
                     : qsTr("No %1 found. Install it to log in.").arg(root.toolName)
-                color: theme.textMuted
-                font.pixelSize: theme.type.label.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.label.size
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
             }

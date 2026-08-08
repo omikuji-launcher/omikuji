@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -25,8 +26,8 @@ Item {
     Text {
         id: labelText
         text: root.label
-        color: input.activeFocus ? theme.accent : theme.textMuted
-        font.pixelSize: theme.type.body.size
+        color: input.activeFocus ? Theme.accent : Theme.textMuted
+        font.pixelSize: Theme.type.body.size
         font.weight: Font.Medium
         visible: root.label !== ""
 
@@ -50,12 +51,12 @@ Item {
             anchors.leftMargin: 12
             anchors.rightMargin: 12
             verticalAlignment: TextInput.AlignVCenter
-            color: theme.text
-            font.pixelSize: theme.type.body.size
+            color: Theme.text
+            font.pixelSize: Theme.type.body.size
             clip: true
             readOnly: root.readOnly
-            selectionColor: theme.accent
-            selectedTextColor: theme.accentText
+            selectionColor: Theme.accent
+            selectedTextColor: Theme.accentText
             selectByMouse: true
 
             onTextEdited: root.textEdited(input.text)
@@ -65,8 +66,8 @@ Item {
                 anchors.fill: parent
                 verticalAlignment: Text.AlignVCenter
                 text: root.placeholder
-                color: theme.textSubtle
-                font.pixelSize: theme.type.body.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.body.size
                 visible: !input.text && !input.activeFocus
             }
         }

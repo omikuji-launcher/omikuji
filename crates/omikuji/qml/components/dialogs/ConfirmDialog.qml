@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 
 DialogCard {
@@ -26,13 +29,13 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         Text {
             width: parent.width
             text: root.detail
-            color: theme.accent
-            font.pixelSize: theme.type.caption.size
+            color: Theme.accent
+            font.pixelSize: Theme.type.caption.size
             font.family: "monospace"
             wrapMode: Text.WrapAnywhere
             visible: text.length > 0
@@ -40,15 +43,15 @@ DialogCard {
         Text {
             width: parent.width
             text: root.message
-            color: theme.textMuted
-            font.pixelSize: theme.type.body.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.body.size
             wrapMode: Text.Wrap
             visible: text.length > 0
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: root.cancelText

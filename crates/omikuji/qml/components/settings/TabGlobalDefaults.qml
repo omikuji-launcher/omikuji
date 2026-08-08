@@ -1,10 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Layouts
+import omikuji 1.0
 
 import "."
 import "../lib/RunnerGrouping.js" as RG
 import "../controls"
-import "../primitives"
 
 Item {
     id: root
@@ -49,7 +50,7 @@ Item {
     }
 
     Connections {
-        target: defaults
+        target: root.defaults
         function onChanged() { root.refresh() }
     }
 
@@ -59,7 +60,7 @@ Item {
         icon: "sync"
         opacity: active ? 1 : 0
         enabled: active
-        Behavior on opacity { NumberAnimation { duration: theme.dur.fast } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
         onClicked: root.reset(fieldKey)
     }
 
@@ -93,7 +94,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         Item {
             width: parent.width

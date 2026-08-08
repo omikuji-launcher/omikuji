@@ -1,6 +1,6 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
-import ".."
 import "../lib/RunnerGrouping.js" as RG
 
 Item {
@@ -213,7 +213,7 @@ Item {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 2
                         text: catItem.modelData.name || qsTr("Library")
-                        color: catItem.isSelected ? theme.text : theme.textMuted
+                        color: catItem.isSelected ? Theme.text : Theme.textMuted
                         font.pixelSize: catItem.isSelected ? 38 * row.uiScale : 22 * row.uiScale
                         font.weight: catItem.isSelected ? Font.Bold : Font.Medium
 
@@ -274,7 +274,7 @@ Item {
             title: modelData.name || ""
             bannerSource: modelData.banner || ""
             coverartSource: modelData.coverart || ""
-            tint: modelData.color && modelData.color.length > 0 ? modelData.color : theme.accent
+            tint: modelData.color && modelData.color.length > 0 ? modelData.color : Theme.accent
             focused: ListView.isCurrentItem
             uiScale: row.uiScale
 
@@ -303,7 +303,7 @@ Item {
 
         Text {
             text: listView.currentItem ? listView.currentItem.title : ""
-            color: theme.accent
+            color: Theme.accent
             font.pixelSize: 34 * row.uiScale
             font.weight: Font.Bold
         }
@@ -316,7 +316,7 @@ Item {
                     const h = listView.currentItem ? listView.currentItem.playtimeHours : ""
                     return h !== "" ? qsTr("%1 hrs").arg(h) : ""
                 }
-                color: theme.text
+                color: Theme.text
                 font.pixelSize: 16 * row.uiScale
                 font.weight: Font.Medium
                 visible: text.length > 0
@@ -327,7 +327,7 @@ Item {
                     const d = listView.currentItem ? listView.currentItem.lastPlayedDate : ""
                     return d !== "" ? qsTr("Last played %1").arg(d) : qsTr("Never played")
                 }
-                color: theme.textMuted
+                color: Theme.textMuted
                 font.pixelSize: 16 * row.uiScale
                 font.weight: Font.Medium
             }

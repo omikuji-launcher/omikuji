@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import "../primitives"
 
@@ -50,6 +53,7 @@ DialogCard {
                     model: popup.icons
 
                     Item {
+                        id: iconCell
                         required property string modelData
 
                         width: 46
@@ -58,21 +62,21 @@ DialogCard {
                         Rectangle {
                             anchors.fill: parent
                             radius: 10
-                            color: popup.selected === modelData
-                                ? theme.alpha(theme.accent, 0.18)
+                            color: popup.selected === iconCell.modelData
+                                ? Theme.alpha(Theme.accent, 0.18)
                                 : tapArea.containsMouse
-                                    ? theme.alpha(theme.text, 0.08)
+                                    ? Theme.alpha(Theme.text, 0.08)
                                     : "transparent"
-                            border.width: popup.selected === modelData ? 1 : 0
-                            border.color: theme.accent
+                            border.width: popup.selected === iconCell.modelData ? 1 : 0
+                            border.color: Theme.accent
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
 
                         SvgIcon {
                             anchors.centerIn: parent
-                            name: modelData
+                            name: iconCell.modelData
                             size: 22
-                            color: popup.selected === modelData ? theme.accent : theme.icon
+                            color: popup.selected === iconCell.modelData ? Theme.accent : Theme.icon
                         }
 
                         MouseArea {
@@ -81,7 +85,7 @@ DialogCard {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                popup.picked(modelData)
+                                popup.picked(iconCell.modelData)
                                 popup.hide()
                             }
                         }

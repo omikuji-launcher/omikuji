@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import "../controls"
 
 
@@ -29,8 +31,8 @@ DialogCard {
     }
 
     Connections {
-        target: bridge
-        enabled: bridge !== null
+        target: root.bridge
+        enabled: root.bridge !== null
         function onOutput(line) {
             root.outputText += (root.outputText.length ? "\n" : "") + line
         }
@@ -60,15 +62,15 @@ DialogCard {
                     : root.busy
                         ? qsTr("Moving things around, hold on...")
                         : qsTr("This version reorganizes the data folder: runners and graphics layers now live under components/, GOG data moves into runtime/, and sources move to components.toml. Folders you relocated in settings stay where they are.")
-            color: root.errorText !== "" ? theme.error : theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: root.errorText !== "" ? Theme.error : Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
         OutputLog {
             visible: root.expanded
             anchors.top: migrationHeader.bottom
-            anchors.topMargin: theme.space.sm
+            anchors.topMargin: Theme.space.sm
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -77,7 +79,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             visible: !root.busy && !root.done

@@ -1,12 +1,13 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
 
     property var samples: []
     property var samples2: []
-    property color line: theme.accent
-    property color line2: theme.alpha(theme.text, 0.45)
+    property color line: Theme.accent
+    property color line2: Theme.alpha(Theme.text, 0.45)
 
     onSamplesChanged: cv.requestPaint()
     onSamples2Changed: cv.requestPaint()

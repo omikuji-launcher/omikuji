@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../primitives"
 
 
@@ -67,7 +70,7 @@ Item {
     Component.onCompleted: _loadCategories()
 
     Connections {
-        target: uiSettings
+        target: root.uiSettings
         function onCategoriesChanged() { root._loadCategories() }
     }
 
@@ -86,9 +89,9 @@ Item {
             anchors.centerIn: parent
             width: parent.width - 20
             height: 36
-            radius: theme.radius.pill
+            radius: Theme.radius.pill
             color: navItemMouse.containsMouse && !navItem.selected
-                ? theme.alpha(theme.text, 0.06)
+                ? Theme.alpha(Theme.text, 0.06)
                 : "transparent"
             visible: !navItem.selected
 
@@ -117,7 +120,7 @@ Item {
                     anchors.fill: parent
                     name: navItem.icon
                     size: 18
-                    color: navItem.selected ? theme.accent : theme.icon
+                    color: navItem.selected ? Theme.accent : Theme.icon
 
                     Behavior on color {
                         ColorAnimation { duration: 100 }
@@ -128,9 +131,9 @@ Item {
                     width: 8
                     height: 8
                     radius: 4
-                    color: theme.accent
+                    color: Theme.accent
                     border.width: 2
-                    border.color: theme.navBg
+                    border.color: Theme.navBg
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.rightMargin: -2
@@ -146,8 +149,8 @@ Item {
 
             Text {
                 text: navItem.label
-                color: theme.text
-                font.pixelSize: theme.type.label.size
+                color: Theme.text
+                font.pixelSize: Theme.type.label.size
                 font.weight: navItem.selected ? Font.DemiBold : Font.Normal
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: root.iconOnly ? 0 : 1
@@ -170,7 +173,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: theme.navBg
+        color: Theme.navBg
     }
 
     Text {
@@ -186,8 +189,8 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: 20
         text: root.headerLabel
-        color: theme.text
-        font.pixelSize: theme.type.display.size
+        color: Theme.text
+        font.pixelSize: Theme.type.display.size
         font.weight: Font.DemiBold
         elide: Text.ElideRight
         opacity: root.iconOnly ? 0 : 1
@@ -206,8 +209,8 @@ Item {
         x: 10
         width: root.width - 20
         height: 36
-        radius: theme.radius.pill
-        color: theme.alpha(theme.accent, 0.15)
+        radius: Theme.radius.pill
+        color: Theme.alpha(Theme.accent, 0.15)
         z: 0
 
         property real baseY: {
@@ -258,8 +261,8 @@ Item {
                 anchors.left: parent.left
                 anchors.leftMargin: 20
                 text: qsTr("Library")
-                color: theme.textMuted
-                font.pixelSize: theme.type.micro.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.micro.size
                 font.weight: Font.Medium
                 visible: root.tabs.length > 0 && !root.iconOnly
                 height: visible ? implicitHeight : 0
@@ -300,8 +303,8 @@ Item {
                 anchors.left: parent.left
                 anchors.leftMargin: 20
                 text: qsTr("Stores")
-                color: theme.textMuted
-                font.pixelSize: theme.type.micro.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.micro.size
                 font.weight: Font.Medium
                 visible: (root.showSteam || root.showEpic || root.showGog || root.showGachas) && !root.iconOnly
                 height: visible ? implicitHeight : 0
@@ -391,7 +394,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 2
-            color: theme.accent
+            color: Theme.accent
             opacity: resizer.pressed ? 0.7 : (resizer.containsMouse ? 0.35 : 0)
             Behavior on opacity { NumberAnimation { duration: 120 } }
         }

@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 
 QtObject {
@@ -7,8 +8,8 @@ QtObject {
     required property Popup target
 
     readonly property Scale xform: Scale {
-        xScale: theme.uiScale
-        yScale: theme.uiScale
+        xScale: Theme.uiScale
+        yScale: Theme.uiScale
     }
 
     readonly property Connections conn: Connections {

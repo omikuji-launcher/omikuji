@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Layouts
+import omikuji 1.0
 
 import "."
 import "../controls"
@@ -42,8 +44,8 @@ Item {
     }
 
     Connections {
-        target: componentsBridge
-        enabled: componentsBridge !== null
+        target: root.componentsBridge
+        enabled: root.componentsBridge !== null
         function onComponentStarted(name)                 { root.refreshRuntime() }
         function onComponentProgress(name, phase, percent){ root.refreshRuntime() }
         function onComponentCompleted(name, version)      { root.refreshRuntime() }
@@ -53,7 +55,7 @@ Item {
     Timer {
         interval: 500
         repeat: true
-        running: componentsBridge && componentsBridge.inProgress
+        running: root.componentsBridge && root.componentsBridge.inProgress
         onTriggered: root.refreshRuntime()
     }
 
@@ -108,8 +110,8 @@ Item {
     onArchiveManagerChanged: loadSources()
 
     Connections {
-        target: archiveManager
-        enabled: archiveManager !== null
+        target: root.archiveManager
+        enabled: root.archiveManager !== null
         function onInstallCompleted(category, source, tag, dir) { root.refreshInstalledCounts() }
         function onInstallFailed(category, source, tag, err)   { root.refreshInstalledCounts() }
         function onSourcesChanged() { root.loadSources() }
@@ -119,7 +121,7 @@ Item {
     Timer {
         interval: 2000
         repeat: true
-        running: archiveManager !== null
+        running: root.archiveManager !== null
         onTriggered: root.refreshInstalledCounts()
     }
 
@@ -128,7 +130,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: qsTr("Translation Layers")
@@ -147,6 +149,7 @@ Item {
                     model: root.dllPacks
 
                     delegate: ArchiveSourceRow {
+                        id: dllRow
                         required property int index
                         required property var modelData
                         width: parent.width
@@ -158,7 +161,7 @@ Item {
                         activeVersion: root.activeVersions[modelData.name] || ""
                         onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
                         onAutoInjectChanged: (tag) => {
-                            archiveManager.setDllPackActiveVersion(sourceName, tag)
+                            root.archiveManager.setDllPackActiveVersion(sourceName, tag)
                             root.refreshInstalledCounts()
                         }
                     }
@@ -167,8 +170,8 @@ Item {
                 Text {
                     visible: root.dllPacks.length === 0
                     text: qsTr("No translation layers configured yet.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
@@ -192,6 +195,7 @@ Item {
                     model: root.runners
 
                     delegate: ArchiveSourceRow {
+                        id: runnerRow
                         required property int index
                         required property var modelData
                         width: parent.width
@@ -205,8 +209,8 @@ Item {
                 Text {
                     visible: root.runners.length === 0
                     text: qsTr("No runners configured yet.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.caption.size
                     width: parent.width
                     wrapMode: Text.WordWrap
                 }
@@ -219,8 +223,8 @@ Item {
 
             Text {
                 text: qsTr("External tools omikuji downloads on first run. Reinstall if a version is stale or corrupted.")
-                color: theme.textSubtle
-                font.pixelSize: theme.type.caption.size
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.caption.size
                 width: parent.width
                 wrapMode: Text.WordWrap
                 bottomPadding: 8
@@ -234,6 +238,7 @@ Item {
                     model: ["umu-run", "hpatchz", "legendary", "gogdl", "egl-dummy"]
 
                     delegate: Item {
+                        id: runtimeRow
                         required property string modelData
                         readonly property var meta: root.runtimeMeta[modelData] || ({ label: modelData, desc: "" })
                         readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", percent: 0, error: "" })
@@ -247,8 +252,8 @@ Item {
 
                         Squircle {
                             anchors.fill: parent
-                            radius: theme.radius.md
-                            fillColor: theme.cardBg
+                            radius: Theme.radius.md
+                            fillColor: Theme.cardBg
                         }
 
                         Row {
@@ -264,10 +269,10 @@ Item {
                                 height: 10
                                 radius: 5
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: status.status === "completed" ? theme.success
-                                    : status.status === "failed" ? theme.error
-                                    : busy ? theme.accent
-                                    : theme.textFaint
+                                color: runtimeRow.status.status === "completed" ? Theme.success
+                                    : runtimeRow.status.status === "failed" ? Theme.error
+                                    : runtimeRow.busy ? Theme.accent
+                                    : Theme.textFaint
                             }
 
                             Column {
@@ -278,35 +283,35 @@ Item {
                                 Row {
                                     spacing: 10
                                     Text {
-                                        text: meta.label
-                                        color: theme.text
-                                        font.pixelSize: theme.type.body.size
+                                        text: runtimeRow.meta.label
+                                        color: Theme.text
+                                        font.pixelSize: Theme.type.body.size
                                         font.weight: Font.DemiBold
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
-                                        visible: status.version && status.version.length > 0
-                                        text: status.version
-                                        color: theme.textMuted
-                                        font.pixelSize: theme.type.caption.size
+                                        visible: runtimeRow.status.version && runtimeRow.status.version.length > 0
+                                        text: runtimeRow.status.version
+                                        color: Theme.textMuted
+                                        font.pixelSize: Theme.type.caption.size
                                         font.family: "monospace"
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
-                                        visible: busy
-                                        text: status.status === "downloading"
-                                            ? qsTr("downloading %1%").arg(Math.round(status.percent))
-                                            : status.status
-                                        color: theme.accent
-                                        font.pixelSize: theme.type.caption.size
+                                        visible: runtimeRow.busy
+                                        text: runtimeRow.status.status === "downloading"
+                                            ? qsTr("downloading %1%").arg(Math.round(runtimeRow.status.percent))
+                                            : runtimeRow.status.status
+                                        color: Theme.accent
+                                        font.pixelSize: Theme.type.caption.size
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
 
                                 Text {
-                                    text: status.status === "failed" && status.error ? status.error : meta.desc
-                                    color: status.status === "failed" ? theme.error : theme.textSubtle
-                                    font.pixelSize: theme.type.caption.size
+                                    text: runtimeRow.status.status === "failed" && runtimeRow.status.error ? runtimeRow.status.error : runtimeRow.meta.desc
+                                    color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
+                                    font.pixelSize: Theme.type.caption.size
                                     elide: Text.ElideRight
                                     width: parent.width
                                 }
@@ -319,16 +324,16 @@ Item {
                             anchors.rightMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
 
-                            readonly property bool busyState: busy || (componentsBridge && componentsBridge.inProgress)
+                            readonly property bool busyState: runtimeRow.busy || (root.componentsBridge && root.componentsBridge.inProgress)
 
                             text: busyState ? qsTr("Working…")
-                                : status.status === "completed" ? qsTr("Reinstall")
-                                : status.status === "failed" ? qsTr("Retry")
+                                : runtimeRow.status.status === "completed" ? qsTr("Reinstall")
+                                : runtimeRow.status.status === "failed" ? qsTr("Retry")
                                 : qsTr("Install")
-                            variant: (busyState || status.status === "completed") ? "tonal" : "filled"
-                            danger: status.status === "failed" && !busyState
+                            variant: (busyState || runtimeRow.status.status === "completed") ? "tonal" : "filled"
+                            danger: runtimeRow.status.status === "failed" && !busyState
                             enabled: !busyState
-                            onClicked: componentsBridge.reinstallComponent(modelData)
+                            onClicked: root.componentsBridge.reinstallComponent(runtimeRow.modelData)
                         }
                     }
                 }

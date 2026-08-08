@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Effects
 
 Item {
@@ -9,7 +12,7 @@ Item {
     property int size: 20
     property bool _fillMissing: false
 
-    readonly property int _res: Math.max(1, Math.round(size * theme.uiScale))
+    readonly property int _res: Math.max(1, Math.round(size * Theme.uiScale))
 
     onNameChanged: _fillMissing = false
 
@@ -20,9 +23,9 @@ Item {
         id: img
         anchors.fill: parent
         source: {
-            if (!name) return ""
-            let fill = theme.filledIcons && !icon._fillMissing && !name.endsWith("_fill")
-            return "qrc:/qt/qml/omikuji/qml/icons/" + name + (fill ? "_fill" : "") + ".svg"
+            if (!icon.name) return ""
+            let fill = Theme.filledIcons && !icon._fillMissing && !icon.name.endsWith("_fill")
+            return "qrc:/qt/qml/omikuji/qml/icons/" + icon.name + (fill ? "_fill" : "") + ".svg"
         }
         sourceSize: Qt.size(icon._res, icon._res)
         layer.enabled: true
@@ -35,6 +38,6 @@ Item {
             colorizationColor: Qt.rgba(icon.color.r, icon.color.g, icon.color.b, 1)
             opacity: icon.color.a
         }
-        onStatusChanged: if (status === Image.Error && theme.filledIcons && !icon._fillMissing) Qt.callLater(function() { icon._fillMissing = true })
+        onStatusChanged: if (status === Image.Error && Theme.filledIcons && !icon._fillMissing) Qt.callLater(function() { icon._fillMissing = true })
     }
 }

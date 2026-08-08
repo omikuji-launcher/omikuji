@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../primitives"
@@ -85,7 +88,7 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         M3TextField {
             id: nameField
@@ -101,28 +104,28 @@ DialogCard {
 
             Text {
                 text: qsTr("Icon")
-                color: theme.textMuted
-                font.pixelSize: theme.type.body.size
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.body.size
                 font.weight: Font.Medium
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                spacing: theme.space.md
+                spacing: Theme.space.md
 
                 Rectangle {
                     Layout.preferredWidth: 48
                     Layout.preferredHeight: 48
                     radius: 10
-                    color: theme.alpha(theme.text, 0.06)
+                    color: Theme.alpha(Theme.text, 0.06)
                     border.width: 1
-                    border.color: theme.alpha(theme.text, 0.12)
+                    border.color: Theme.alpha(Theme.text, 0.12)
 
                     SvgIcon {
                         anchors.centerIn: parent
                         name: root.formIcon
                         size: 22
-                        color: theme.icon
+                        color: Theme.icon
                     }
                 }
 
@@ -167,7 +170,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

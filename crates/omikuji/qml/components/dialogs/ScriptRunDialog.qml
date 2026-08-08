@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Controls
 import "../controls"
 import "../primitives"
@@ -119,43 +122,43 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         Text {
             width: parent.width
             visible: (root.detail.description || "") !== ""
             text: root.detail.description || ""
-            color: theme.textMuted
-            font.pixelSize: theme.type.label.size
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.label.size
             wrapMode: Text.WordWrap
         }
 
         Rectangle {
             width: parent.width
             visible: (root.detail.note || "") !== ""
-            radius: theme.radius.md
-            color: theme.alpha(theme.accent, 0.10)
-            height: noteRow.implicitHeight + theme.space.md * 2
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.accent, 0.10)
+            height: noteRow.implicitHeight + Theme.space.md * 2
 
             Row {
                 id: noteRow
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.margins: theme.space.md
+                anchors.margins: Theme.space.md
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 SvgIcon {
                     name: "info"
                     size: 18
-                    color: theme.accent
+                    color: Theme.accent
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {
-                    width: parent.width - 18 - theme.space.sm
+                    width: parent.width - 18 - Theme.space.sm
                     text: root.detail.note || ""
-                    color: theme.text
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -164,29 +167,29 @@ DialogCard {
         Rectangle {
             width: parent.width
             visible: root.detail.hasShell === true
-            radius: theme.radius.md
-            color: theme.alpha(theme.error, 0.12)
-            height: shellRow.implicitHeight + theme.space.md * 2
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.error, 0.12)
+            height: shellRow.implicitHeight + Theme.space.md * 2
 
             Row {
                 id: shellRow
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.margins: theme.space.md
+                anchors.margins: Theme.space.md
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 SvgIcon {
                     name: "warning"
                     size: 18
-                    color: theme.error
+                    color: Theme.error
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {
-                    width: parent.width - 18 - theme.space.sm
+                    width: parent.width - 18 - Theme.space.sm
                     text: qsTr("This script runs arbitrary shell commands. Review the source below before installing.")
-                    color: theme.error
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.error
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -194,7 +197,7 @@ DialogCard {
 
         Column {
             width: parent.width
-            spacing: theme.space.md
+            spacing: Theme.space.md
             enabled: !root.busy && !root.succeeded
 
             Repeater {
@@ -257,7 +260,7 @@ DialogCard {
         Component {
             id: prefixListComp
             Column {
-                spacing: theme.space.xs
+                spacing: Theme.space.xs
                 M3Dropdown {
                     width: parent.width
                     label: input.label
@@ -269,8 +272,8 @@ DialogCard {
                 Text {
                     visible: root.prefixOptions.length === 0
                     text: qsTr("No prefixes yet - create one in Settings > Ofuda first.")
-                    color: theme.warning
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.warning
+                    font.pixelSize: Theme.type.caption.size
                 }
             }
         }
@@ -301,7 +304,7 @@ DialogCard {
 
         Column {
             width: parent.width
-            spacing: theme.space.xs
+            spacing: Theme.space.xs
 
             M3Button {
                 small: true
@@ -325,8 +328,9 @@ DialogCard {
                 Flickable {
                     id: srcFlick
                     anchors.fill: parent
-                    anchors.margins: theme.space.sm
+                    anchors.margins: Theme.space.sm
                     clip: true
+                    boundsBehavior: Flickable.StopAtBounds
                     contentWidth: Math.max(width, srcText.implicitWidth)
                     contentHeight: srcText.implicitHeight
 
@@ -335,9 +339,9 @@ DialogCard {
                         text: root.detail.toml || ""
                         readOnly: true
                         selectByMouse: true
-                        color: theme.text
+                        color: Theme.text
                         font.family: "monospace"
-                        font.pixelSize: theme.type.caption.size
+                        font.pixelSize: Theme.type.caption.size
                     }
 
                     ScrollBar.vertical: ThinScrollBar {}
@@ -348,14 +352,14 @@ DialogCard {
 
         Column {
             width: parent.width
-            spacing: theme.space.xs
+            spacing: Theme.space.xs
             visible: root.busy || root.outputText.length > 0
 
             Text {
                 visible: root.busy
                 text: qsTr("Installing…")
-                color: theme.accent
-                font.pixelSize: theme.type.caption.size
+                color: Theme.accent
+                font.pixelSize: Theme.type.caption.size
             }
             OutputLog {
                 width: parent.width
@@ -367,31 +371,31 @@ DialogCard {
         Rectangle {
             width: parent.width
             visible: root.succeeded
-            radius: theme.radius.md
-            color: theme.alpha(theme.success, 0.12)
-            height: doneRow.implicitHeight + theme.space.md * 2
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.success, 0.12)
+            height: doneRow.implicitHeight + Theme.space.md * 2
 
             Row {
                 id: doneRow
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.margins: theme.space.md
+                anchors.margins: Theme.space.md
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.space.sm
+                spacing: Theme.space.sm
 
                 SvgIcon {
                     name: "check_circle"
                     size: 18
-                    color: theme.success
+                    color: Theme.success
                     anchors.verticalCenter: parent.verticalCenter
                 }
                 Text {
-                    width: parent.width - 18 - theme.space.sm
+                    width: parent.width - 18 - Theme.space.sm
                     text: root.detail.isUtility === true
                         ? qsTr("Script finished.")
                         : qsTr("%1 was added to your library.").arg(root.detail.gameName || root.detail.name || qsTr("The game"))
-                    color: theme.success
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.success
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap
                 }
             }
@@ -401,8 +405,8 @@ DialogCard {
             width: parent.width
             visible: root.errorText !== ""
             text: root.errorText
-            color: theme.error
-            font.pixelSize: theme.type.caption.size
+            color: Theme.error
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -417,7 +421,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Close")

@@ -1,10 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQml
 import QtQuick.Controls
-import QtQuick.Layouts
 
 import omikuji 1.0
-import "components"
 import "components/categories"
 import "components/controls"
 import "components/dialogs"
@@ -28,32 +28,20 @@ ApplicationWindow {
     minimumHeight: 500
     visible: true
     title: "Omikuji"
-    color: theme.navBg
+    color: Theme.navBg
 
     flags: Qt.Window
-
-    Theme {
-        id: theme
-        mutedIcons: uiSettings.mutedIcons
-        filledIcons: uiSettings.filledIcons
-        followSystemColors: uiSettings.followSystemColors
-        followSystemFont: uiSettings.followSystemFont
-        fontFamily: uiSettings.fontFamily
-        fillFields: uiSettings.fillFields
-        radiusScale: uiSettings.radiusScale
-        uiScale: root.uiScale
-    }
 
     Connections {
         target: uiSettings
         function onThemeChanged() {
-            theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(uiSettings.overridesJson())
         }
         function onFontSizesChanged() {
-            theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+            Theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
         }
         function onRadiusOverridesChanged() {
-            theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
+            Theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
         }
         function onCardSortChanged() {
             gameModel.applySortMode(uiSettings.cardSort)
@@ -64,9 +52,17 @@ ApplicationWindow {
         id: uiSettings
         Component.onCompleted: {
             initWatcher()
-            theme.overrides = JSON.parse(overridesJson())
-            theme.fontSizes = JSON.parse(fontSizesJson())
-            theme.radiusOverrides = JSON.parse(radiusOverridesJson())
+            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
+            Theme.fillFields = Qt.binding(() => uiSettings.fillFields)
+            Theme.radiusScale = Qt.binding(() => uiSettings.radiusScale)
+            Theme.uiScale = Qt.binding(() => root.uiScale)
+            Theme.overrides = JSON.parse(overridesJson())
+            Theme.fontSizes = JSON.parse(fontSizesJson())
+            Theme.radiusOverrides = JSON.parse(radiusOverridesJson())
         }
         onShowTrayIconChanged: {
             trayBridge.setEnabled(showTrayIcon)
@@ -255,7 +251,6 @@ ApplicationWindow {
 
     // qualified refs so delegate Components don't self-reference their own null proprty
     readonly property var gameModelRef: gameModel
-    readonly property var themeRef: theme
     readonly property var epicModelRef: epicModel
     readonly property var gogModelRef: gogModel
     readonly property var uiSettingsRef: uiSettings
@@ -316,7 +311,7 @@ ApplicationWindow {
     LibraryWatcher {
         id: libWatcher
         onChanged: {
-            gameModel.refresh(selectedGameIndex)
+            gameModel.refresh(root.selectedGameIndex)
             resyncSelectedIndex()
             updateSelection()
         }
@@ -652,7 +647,7 @@ property real cardZoom: uiSettings.cardZoom
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 2
-            color: theme.accent
+            color: Theme.accent
             opacity: navExpander.pressed ? 0.7 : (navExpander.containsMouse ? 0.35 : 0)
             Behavior on opacity { NumberAnimation { duration: 120 } }
         }
@@ -708,8 +703,8 @@ property real cardZoom: uiSettings.cardZoom
             id: contentPanel
             property bool isDropdownHost: true
             anchors.fill: parent
-            color: theme.surface
-            radius: theme.radius.md
+            color: Theme.surface
+            radius: Theme.radius.md
             visible: opacity > 0
             opacity: root.currentView === "library" ? 1 : 0
 
@@ -896,8 +891,8 @@ property real cardZoom: uiSettings.cardZoom
             id: downloadsPanel
             property bool isDropdownHost: true
             anchors.fill: parent
-            color: theme.surface
-            radius: theme.radius.md
+            color: Theme.surface
+            radius: Theme.radius.md
             visible: opacity > 0
             opacity: root.currentView === "downloads" ? 1 : 0
 
@@ -1129,7 +1124,6 @@ property real cardZoom: uiSettings.cardZoom
             gameId: modelData.gameId
             gameName: modelData.gameName
             gameModel: root.gameModelRef
-            theme: root.themeRef
             uiSettings: root.uiSettingsRef
             onWindowClosed: root.closeGameLogs(gameId)
         }

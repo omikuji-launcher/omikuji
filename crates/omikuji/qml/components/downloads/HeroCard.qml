@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../popups"
@@ -70,17 +71,17 @@ Item {
         CapsLabel { text: parent.label }
         Text {
             text: parent.value
-            color: theme.text
-            font.pixelSize: theme.type.subtitle.size
+            color: Theme.text
+            font.pixelSize: Theme.type.subtitle.size
             font.weight: Font.DemiBold
         }
     }
 
     Squircle {
         anchors.fill: parent
-        radius: theme.radius.xl
+        radius: Theme.radius.xl
         smoothing: 0.75
-        fillColor: theme.cardBg
+        fillColor: Theme.cardBg
     }
 
     Item {
@@ -91,20 +92,20 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: theme.space.lg
-            anchors.bottomMargin: theme.space.md
-            spacing: theme.space.md
+            anchors.margins: Theme.space.lg
+            anchors.bottomMargin: Theme.space.md
+            spacing: Theme.space.md
 
             RowLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: theme.space.lg
+                spacing: Theme.space.lg
 
                 BannerThumb {
                     Layout.preferredWidth: 218
                     Layout.fillHeight: true
                     source: hero.banner
-                    cornerRadius: theme.radius.md
+                    cornerRadius: Theme.radius.md
                     fallbackFrom: hero.displayName
                     fallbackTextSize: 34
                 }
@@ -116,12 +117,12 @@ Item {
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: theme.space.sm
+                        spacing: Theme.space.sm
 
                         Text {
                             text: hero.displayName
-                            color: theme.text
-                            font.pixelSize: theme.type.headline.size
+                            color: Theme.text
+                            font.pixelSize: Theme.type.headline.size
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                             Layout.maximumWidth: parent.width * 0.7
@@ -158,14 +159,14 @@ Item {
 
                     Text {
                         text: hero.status
-                        color: hero.isUninterruptible ? theme.warning : theme.textMuted
-                        font.pixelSize: theme.type.label.size
+                        color: hero.isUninterruptible ? Theme.warning : Theme.textMuted
+                        font.pixelSize: Theme.type.label.size
                     }
 
                     Item { Layout.fillHeight: true }
 
                     RowLayout {
-                        spacing: theme.space.xxl
+                        spacing: Theme.space.xxl
 
                         StatCell {
                             label: qsTr("Progress")
@@ -195,14 +196,14 @@ Item {
 
                     Squircle {
                         anchors.fill: parent
-                        radius: theme.radius.md
+                        radius: Theme.radius.md
                         smoothing: 0.75
-                        fillColor: theme.alpha(theme.text, 0.04)
+                        fillColor: Theme.alpha(Theme.text, 0.04)
                     }
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: theme.space.md
+                        anchors.margins: Theme.space.md
                         spacing: 4
 
                         RowLayout {
@@ -212,8 +213,8 @@ Item {
                                 spacing: 0
                                 Text {
                                     text: hero.isPaused ? "—" : Format.formatSpeed(hero.netBps)
-                                    color: theme.text
-                                    font.pixelSize: theme.type.subtitle.size
+                                    color: Theme.text
+                                    font.pixelSize: Theme.type.subtitle.size
                                     font.weight: Font.DemiBold
                                 }
                                 CapsLabel { text: qsTr("Net"); size: 9 }
@@ -226,8 +227,8 @@ Item {
                                 Text {
                                     Layout.alignment: Qt.AlignRight
                                     text: hero.isPaused ? "—" : Format.formatSpeed(hero.diskBps)
-                                    color: theme.textMuted
-                                    font.pixelSize: theme.type.subtitle.size
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.type.subtitle.size
                                     font.weight: Font.DemiBold
                                 }
                                 CapsLabel {
@@ -250,13 +251,13 @@ Item {
 
             WavyProgressBar {
                 Layout.fillWidth: true
-                Layout.topMargin: theme.space.xs
+                Layout.topMargin: Theme.space.xs
                 value: Math.max(0, Math.min(1, hero.progress / 100.0))
                 wavy: !hero.isPaused
                 animate: hero.pageVisible && !hero.isPaused
-                fillColor: hero.isPaused ? theme.alpha(theme.text, 0.3) : theme.accent
+                fillColor: hero.isPaused ? Theme.alpha(Theme.text, 0.3) : Theme.accent
                 handleColor: fillColor
-                trackColor: theme.alpha(theme.text, 0.18)
+                trackColor: Theme.alpha(Theme.text, 0.18)
             }
         }
     }

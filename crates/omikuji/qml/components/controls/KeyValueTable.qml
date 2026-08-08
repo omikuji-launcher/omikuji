@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../primitives"
 
@@ -98,8 +101,8 @@ Item {
 
                 Text {
                     text: "="
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.body.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.body.size
                     Layout.alignment: Qt.AlignTop
                     Layout.topMargin: 14
                 }
@@ -132,10 +135,10 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 40
-            radius: theme.radius.sm
-            color: addArea.containsMouse ? theme.stateHover : theme.alpha(theme.text, 0)
+            radius: Theme.radius.sm
+            color: addArea.containsMouse ? Theme.stateHover : Theme.alpha(Theme.text, 0)
             border.width: 1
-            border.color: theme.surfaceBorder
+            border.color: Theme.surfaceBorder
 
             Behavior on color {
                 ColorAnimation { duration: 100 }
@@ -148,7 +151,7 @@ Item {
                 SvgIcon {
                     name: "add"
                     size: 16
-                    color: addArea.containsMouse ? theme.text : theme.textMuted
+                    color: addArea.containsMouse ? Theme.text : Theme.textMuted
                     anchors.verticalCenter: parent.verticalCenter
 
                     Behavior on color {
@@ -158,8 +161,8 @@ Item {
 
                 Text {
                     text: root.addLabel
-                    color: addArea.containsMouse ? theme.text : theme.textMuted
-                    font.pixelSize: theme.type.label.size
+                    color: addArea.containsMouse ? Theme.text : Theme.textMuted
+                    font.pixelSize: Theme.type.label.size
                     anchors.verticalCenter: parent.verticalCenter
 
                     Behavior on color {

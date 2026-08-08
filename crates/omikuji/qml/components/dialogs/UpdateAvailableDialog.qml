@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 import "../controls"
 import "../lib/Format.js" as Format
@@ -41,19 +44,19 @@ DialogCard {
 
     body: ColumnLayout {
         width: parent.width
-        spacing: theme.space.lg
+        spacing: Theme.space.lg
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: theme.space.sm
+            spacing: Theme.space.sm
 
             Rectangle {
                 width: 36; height: 36; radius: 18
-                color: theme.alpha(theme.accent, 0.15)
+                color: Theme.alpha(Theme.accent, 0.15)
                 Text {
                     anchors.centerIn: parent
                     text: "↻"
-                    color: theme.accent
+                    color: Theme.accent
                     font.pixelSize: 20
                     font.weight: Font.Bold
                 }
@@ -65,16 +68,16 @@ DialogCard {
                 Text {
                     Layout.fillWidth: true
                     text: qsTr("Update available")
-                    color: theme.text
-                    font.pixelSize: theme.type.title.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.title.size
                     font.weight: Font.DemiBold
                     wrapMode: Text.Wrap
                 }
                 Text {
                     Layout.fillWidth: true
                     text: root.displayName
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.Wrap
                     elide: Text.ElideRight
                 }
@@ -83,24 +86,24 @@ DialogCard {
 
         Rectangle {
             Layout.fillWidth: true
-            radius: theme.radius.md
-            color: theme.alpha(theme.text, 0.04)
-            implicitHeight: versionCol.implicitHeight + theme.space.lg
+            radius: Theme.radius.md
+            color: Theme.alpha(Theme.text, 0.04)
+            implicitHeight: versionCol.implicitHeight + Theme.space.lg
 
             ColumnLayout {
                 id: versionCol
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: theme.space.md
-                spacing: theme.space.sm
+                anchors.margins: Theme.space.md
+                spacing: Theme.space.sm
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: theme.space.sm
-                    Text { text: root.fromVersion || "?"; color: theme.textMuted; font.pixelSize: theme.type.body.size; font.family: "monospace" }
-                    Text { text: "→"; color: theme.textMuted; font.pixelSize: theme.type.body.size }
-                    Text { text: root.toVersion || "?"; color: theme.accent; font.pixelSize: theme.type.body.size; font.family: "monospace"; font.weight: Font.DemiBold }
+                    spacing: Theme.space.sm
+                    Text { text: root.fromVersion || "?"; color: Theme.textMuted; font.pixelSize: Theme.type.body.size; font.family: "monospace" }
+                    Text { text: "→"; color: Theme.textMuted; font.pixelSize: Theme.type.body.size }
+                    Text { text: root.toVersion || "?"; color: Theme.accent; font.pixelSize: Theme.type.body.size; font.family: "monospace"; font.weight: Font.DemiBold }
                     Item { Layout.fillWidth: true }
                 }
 
@@ -118,8 +121,8 @@ DialogCard {
                         }
                         return qsTr("Your install is too old for a delta patch. Reinstall %1 to update?").arg(name)
                     }
-                    color: theme.textMuted
-                    font.pixelSize: theme.type.caption.size
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.Wrap
                 }
             }
@@ -127,7 +130,7 @@ DialogCard {
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

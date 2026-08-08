@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import ".."
+import omikuji 1.0
 
 Item {
     id: osk
@@ -84,10 +86,10 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.darker(theme.surface, 1.45)
+        color: Qt.darker(Theme.surface, 1.45)
         radius: 14 * osk.uiScale
         border.width: 1
-        border.color: theme.alpha(theme.text, 0.08)
+        border.color: Theme.alpha(Theme.text, 0.08)
     }
 
     Column {
@@ -118,8 +120,8 @@ Item {
                             anchors.fill: parent
                             radius: 7 * osk.uiScale
                             color: keyCell.isFocused
-                                ? theme.accent
-                                : (keyMouse.containsMouse ? Qt.darker(theme.surface, 1.15) : Qt.darker(theme.surface, 1.25))
+                                ? Theme.accent
+                                : (keyMouse.containsMouse ? Qt.darker(Theme.surface, 1.15) : Qt.darker(Theme.surface, 1.25))
                             scale: keyMouse.containsPress ? 0.94 : 1.0
                             Behavior on color { ColorAnimation { duration: 120 } }
                             Behavior on scale { NumberAnimation { duration: 100 } }
@@ -128,7 +130,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: keyCell.ch
-                            color: keyCell.isFocused ? theme.accentOn : theme.text
+                            color: keyCell.isFocused ? Theme.accentOn : Theme.text
                             font.pixelSize: 17 * osk.uiScale
                             font.weight: Font.Medium
                         }
@@ -162,8 +164,8 @@ Item {
                     anchors.fill: parent
                     radius: 7 * osk.uiScale
                     color: bsBtn.isFocused
-                        ? theme.accent
-                        : (bsMouse.containsMouse ? Qt.darker(theme.surface, 1.15) : Qt.darker(theme.surface, 1.25))
+                        ? Theme.accent
+                        : (bsMouse.containsMouse ? Qt.darker(Theme.surface, 1.15) : Qt.darker(Theme.surface, 1.25))
                     scale: bsMouse.containsPress ? 0.96 : 1.0
                     Behavior on color { ColorAnimation { duration: 120 } }
                     Behavior on scale { NumberAnimation { duration: 100 } }
@@ -172,7 +174,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: qsTr("Backspace")
-                    color: bsBtn.isFocused ? theme.accentOn : theme.text
+                    color: bsBtn.isFocused ? Theme.accentOn : Theme.text
                     font.pixelSize: 14 * osk.uiScale
                     font.weight: Font.Medium
                 }
@@ -200,8 +202,8 @@ Item {
                     anchors.fill: parent
                     radius: 7 * osk.uiScale
                     color: spaceBtn.isFocused
-                        ? theme.accent
-                        : (spaceMouse.containsMouse ? Qt.darker(theme.surface, 1.15) : Qt.darker(theme.surface, 1.25))
+                        ? Theme.accent
+                        : (spaceMouse.containsMouse ? Qt.darker(Theme.surface, 1.15) : Qt.darker(Theme.surface, 1.25))
                     scale: spaceMouse.containsPress ? 0.96 : 1.0
                     Behavior on color { ColorAnimation { duration: 120 } }
                     Behavior on scale { NumberAnimation { duration: 100 } }
@@ -210,7 +212,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: qsTr("Space")
-                    color: spaceBtn.isFocused ? theme.accentOn : theme.text
+                    color: spaceBtn.isFocused ? Theme.accentOn : Theme.text
                     font.pixelSize: 14 * osk.uiScale
                     font.weight: Font.Medium
                 }
@@ -238,8 +240,8 @@ Item {
                     anchors.fill: parent
                     radius: 7 * osk.uiScale
                     color: enterBtn.isFocused
-                        ? theme.accent
-                        : (enterMouse.containsMouse ? Qt.darker(theme.surface, 1.15) : Qt.darker(theme.surface, 1.25))
+                        ? Theme.accent
+                        : (enterMouse.containsMouse ? Qt.darker(Theme.surface, 1.15) : Qt.darker(Theme.surface, 1.25))
                     scale: enterMouse.containsPress ? 0.96 : 1.0
                     Behavior on color { ColorAnimation { duration: 120 } }
                     Behavior on scale { NumberAnimation { duration: 100 } }
@@ -248,7 +250,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: qsTr("Enter")
-                    color: enterBtn.isFocused ? theme.accentOn : theme.text
+                    color: enterBtn.isFocused ? Theme.accentOn : Theme.text
                     font.pixelSize: 14 * osk.uiScale
                     font.weight: Font.Medium
                 }

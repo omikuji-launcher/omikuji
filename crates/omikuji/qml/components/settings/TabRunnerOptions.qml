@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 
 import "."
@@ -43,38 +46,38 @@ Item {
 
                 M3FileField {
                     label: qsTr("Path")
-                    text: config["meta.exe"] || ""
+                    text: root.config["meta.exe"] || ""
                     width: parent.width
                     gameModel: root.gameModel
                     expandHint: false
-                    onTextEdited: (t) => updateField("meta.exe", t)
+                    onTextEdited: (t) => root.updateField("meta.exe", t)
                 }
 
                 M3FileField {
                     label: qsTr("Working Directory")
                     placeholder: qsTr("empty = executable's parent directory")
-                    text: config["launch.working_dir"] || ""
+                    text: root.config["launch.working_dir"] || ""
                     selectFolder: true
                     width: parent.width
                     gameModel: root.gameModel
-                    onTextEdited: (t) => updateField("launch.working_dir", t)
+                    onTextEdited: (t) => root.updateField("launch.working_dir", t)
                 }
 
                 M3TextField {
                     label: qsTr("Arguments")
                     placeholder: '--skip-intro --windowed --name "John Doe"'
-                    text: config["launch.args"] || ""
+                    text: root.config["launch.args"] || ""
                     width: parent.width
                     gameModel: root.gameModel
-                    onTextEdited: (t) => updateField("launch.args", t)
+                    onTextEdited: (t) => root.updateField("launch.args", t)
                 }
 
                 M3TextField {
                     label: qsTr("Command Prefix")
                     placeholder: qsTr("prepended to command (e.g. custom wrapper)")
-                    text: config["launch.command_prefix"] || ""
+                    text: root.config["launch.command_prefix"] || ""
                     width: parent.width
-                    onTextEdited: (t) => updateField("launch.command_prefix", t)
+                    onTextEdited: (t) => root.updateField("launch.command_prefix", t)
                 }
             }
 
@@ -89,28 +92,28 @@ Item {
                     options: {
                         // touch runnersVersion so QML re-evaluates the binding after install/delete
                         void root.runnersVersion
-                        if (!gameModel) return [{ label: qsTr("Loading..."), value: "" }]
-                        return RG.groupRunners(JSON.parse(gameModel.list_runners()))
+                        if (!root.gameModel) return [{ label: qsTr("Loading..."), value: "" }]
+                        return RG.groupRunners(JSON.parse(root.gameModel.list_runners()))
                     }
                     currentIndex: {
                         void root.runnersVersion
-                        let v = config["wine.version"] || ""
+                        let v = root.config["wine.version"] || ""
                         let idx = RG.indexOfValue(options, v)
                         if (idx >= 0) return idx
                         let first = RG.firstNonHeader(options)
                         return first >= 0 ? first : 0
                     }
-                    onSelected: (val) => updateField("wine.version", val)
+                    onSelected: (val) => root.updateField("wine.version", val)
                 }
 
                 M3FileField {
                     label: qsTr("Prefix")
-                    placeholder: config["wine.prefix.resolved"] || qsTr("empty = auto-create per game")
-                    text: config["wine.prefix"] || ""
+                    placeholder: root.config["wine.prefix.resolved"] || qsTr("empty = auto-create per game")
+                    text: root.config["wine.prefix"] || ""
                     selectFolder: true
                     width: parent.width
                     gameModel: root.gameModel
-                    onTextEdited: (t) => updateField("wine.prefix", t)
+                    onTextEdited: (t) => root.updateField("wine.prefix", t)
                 }
 
                 M3Dropdown {
@@ -120,8 +123,8 @@ Item {
                         { label: qsTr("64-bit (win64)"), value: "win64" },
                         { label: qsTr("32-bit (win32)"), value: "win32" }
                     ]
-                    currentIndex: config["wine.prefix_arch"] === "win32" ? 1 : 0
-                    onSelected: (val) => updateField("wine.prefix_arch", val)
+                    currentIndex: root.config["wine.prefix_arch"] === "win32" ? 1 : 0
+                    onSelected: (val) => root.updateField("wine.prefix_arch", val)
                 }
             }
 
@@ -137,26 +140,26 @@ Item {
 
                     LabeledSwitch {
                         label: qsTr("Esync")
-                        checked: config["wine.esync"] === true
-                        onToggled: (val) => updateField("wine.esync", val)
+                        checked: root.config["wine.esync"] === true
+                        onToggled: (val) => root.updateField("wine.esync", val)
                     }
 
                     LabeledSwitch {                        label: qsTr("Fsync")
-                        checked: config["wine.fsync"] === true
-                        onToggled: (val) => updateField("wine.fsync", val)
+                        checked: root.config["wine.fsync"] === true
+                        onToggled: (val) => root.updateField("wine.fsync", val)
                     }
 
                     LabeledSwitch {
                         label: qsTr("NTSync")
                         enabled: root.isProtonWine
-                        checked: config["wine.ntsync"] === true
-                        onToggled: (val) => updateField("wine.ntsync", val)
+                        checked: root.config["wine.ntsync"] === true
+                        onToggled: (val) => root.updateField("wine.ntsync", val)
                     }
 
                     Text {
                         text: qsTr("NTSync is only applied when the selected Wine version is Proton.")
-                        color: theme.textSubtle
-                        font.pixelSize: theme.type.label.size
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.label.size
                         visible: !root.isProtonWine
                         Layout.columnSpan: 2
                         wrapMode: Text.WordWrap
@@ -176,24 +179,24 @@ Item {
 
                     LabeledSwitch {
                         label: "DXVK"
-                        checked: config["wine.dxvk"] === true
-                        onToggled: (val) => updateField("wine.dxvk", val)
+                        checked: root.config["wine.dxvk"] === true
+                        onToggled: (val) => root.updateField("wine.dxvk", val)
                     }
 
                     LabeledSwitch {                        label: "VKD3D"
-                        checked: config["wine.vkd3d"] === true
-                        onToggled: (val) => updateField("wine.vkd3d", val)
+                        checked: root.config["wine.vkd3d"] === true
+                        onToggled: (val) => root.updateField("wine.vkd3d", val)
                     }
 
                     LabeledSwitch {
                         label: qsTr("D3D Extras")
-                        checked: config["wine.d3d_extras"] === true
-                        onToggled: (val) => updateField("wine.d3d_extras", val)
+                        checked: root.config["wine.d3d_extras"] === true
+                        onToggled: (val) => root.updateField("wine.d3d_extras", val)
                     }
 
                     LabeledSwitch {                        label: "DXVK-NVAPI"
-                        checked: config["wine.dxvk_nvapi"] === true
-                        onToggled: (val) => updateField("wine.dxvk_nvapi", val)
+                        checked: root.config["wine.dxvk_nvapi"] === true
+                        onToggled: (val) => root.updateField("wine.dxvk_nvapi", val)
                     }
                 }
             }
@@ -210,19 +213,19 @@ Item {
 
                     LabeledSwitch {
                         label: "BattlEye"
-                        checked: config["wine.battleye"] === true
-                        onToggled: (val) => updateField("wine.battleye", val)
+                        checked: root.config["wine.battleye"] === true
+                        onToggled: (val) => root.updateField("wine.battleye", val)
                     }
 
                     LabeledSwitch {                        label: "EasyAntiCheat"
-                        checked: config["wine.easyanticheat"] === true
-                        onToggled: (val) => updateField("wine.easyanticheat", val)
+                        checked: root.config["wine.easyanticheat"] === true
+                        onToggled: (val) => root.updateField("wine.easyanticheat", val)
                     }
 
                     LabeledSwitch {
                         label: "FSR"
-                        checked: config["wine.fsr"] === true
-                        onToggled: (val) => updateField("wine.fsr", val)
+                        checked: root.config["wine.fsr"] === true
+                        onToggled: (val) => root.updateField("wine.fsr", val)
                     }
                 }
             }
@@ -234,8 +237,8 @@ Item {
 
                 LabeledSwitch {
                     label: qsTr("DPI Scaling")
-                    checked: config["wine.dpi_scaling"] === true
-                    onToggled: (val) => updateField("wine.dpi_scaling", val)
+                    checked: root.config["wine.dpi_scaling"] === true
+                    onToggled: (val) => root.updateField("wine.dpi_scaling", val)
                 }
 
                 M3Slider {
@@ -243,10 +246,10 @@ Item {
                     from: 72
                     to: 288
                     stepSize: 12
-                    value: config["wine.dpi"] || 96
+                    value: root.config["wine.dpi"] || 96
                     width: parent.width
-                    visible: config["wine.dpi_scaling"] === true
-                    onMoved: (val) => updateField("wine.dpi", Math.round(val))
+                    visible: root.config["wine.dpi_scaling"] === true
+                    onMoved: (val) => root.updateField("wine.dpi", Math.round(val))
                 }
             }
 
@@ -264,12 +267,12 @@ Item {
                         { label: "ALSA", value: "alsa" }
                     ]
                     currentIndex: {
-                        let d = config["wine.audio_driver"] || ""
+                        let d = root.config["wine.audio_driver"] || ""
                         if (d === "pulse") return 1
                         if (d === "alsa") return 2
                         return 0
                     }
-                    onSelected: (val) => updateField("wine.audio_driver", val)
+                    onSelected: (val) => root.updateField("wine.audio_driver", val)
                 }
 
                 M3Dropdown {
@@ -281,12 +284,12 @@ Item {
                         { label: "Wayland", value: "wayland" }
                     ]
                     currentIndex: {
-                        let d = config["wine.graphics_driver"] || ""
+                        let d = root.config["wine.graphics_driver"] || ""
                         if (d === "x11") return 1
                         if (d === "wayland") return 2
                         return 0
                     }
-                    onSelected: (val) => updateField("wine.graphics_driver", val)
+                    onSelected: (val) => root.updateField("wine.graphics_driver", val)
                 }
             }
 
@@ -297,17 +300,17 @@ Item {
 
                 KeyValueTable {
                     width: parent.width
-                    json: config["wine.dll_overrides"] || "{}"
+                    json: root.config["wine.dll_overrides"] || "{}"
                     keyPlaceholder: "dll_name"
                     valuePlaceholder: "n,b"
                     addLabel: qsTr("Add override")
-                    onChanged: (j) => updateField("wine.dll_overrides", j)
+                    onChanged: (j) => root.updateField("wine.dll_overrides", j)
                 }
 
                 M3Button {
                     text: {
                         let n = 0
-                        try { n = JSON.parse(config["wine.dll_override_sets"] || "[]").length } catch (e) {}
+                        try { n = JSON.parse(root.config["wine.dll_override_sets"] || "[]").length } catch (e) {}
                         return n > 0 ? qsTr("Sets · %1 synced").arg(n) : qsTr("Sets")
                     }
                     variant: "tonal"
@@ -322,42 +325,42 @@ Item {
             label: qsTr("Native")
             icon: "terminal"
             width: parent.width
-            visible: runnerType === "native"
+            visible: root.runnerType === "native"
 
             M3FileField {
                 label: qsTr("Executable")
-                text: config["meta.exe"] || ""
+                text: root.config["meta.exe"] || ""
                 width: parent.width
                 gameModel: root.gameModel
                 expandHint: false
-                onTextEdited: (t) => updateField("meta.exe", t)
+                onTextEdited: (t) => root.updateField("meta.exe", t)
             }
 
             M3FileField {
                 label: qsTr("Working Directory")
                 placeholder: qsTr("empty = executable's parent directory")
-                text: config["launch.working_dir"] || ""
+                text: root.config["launch.working_dir"] || ""
                 selectFolder: true
                 width: parent.width
                 gameModel: root.gameModel
-                onTextEdited: (t) => updateField("launch.working_dir", t)
+                onTextEdited: (t) => root.updateField("launch.working_dir", t)
             }
 
             M3TextField {
                 label: qsTr("Arguments")
                 placeholder: '--skip-intro --windowed'
-                text: config["launch.args"] || ""
+                text: root.config["launch.args"] || ""
                 width: parent.width
                 gameModel: root.gameModel
-                onTextEdited: (t) => updateField("launch.args", t)
+                onTextEdited: (t) => root.updateField("launch.args", t)
             }
 
             M3TextField {
                 label: qsTr("Command Prefix")
                 placeholder: qsTr("prepended to command (e.g. custom wrapper)")
-                text: config["launch.command_prefix"] || ""
+                text: root.config["launch.command_prefix"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("launch.command_prefix", t)
+                onTextEdited: (t) => root.updateField("launch.command_prefix", t)
             }
         }
 
@@ -365,22 +368,22 @@ Item {
             label: "Steam"
             icon: "steam"
             width: parent.width
-            visible: runnerType === "steam"
+            visible: root.runnerType === "steam"
 
             M3TextField {
                 label: qsTr("Application ID")
                 placeholder: "e.g. 235320"
-                text: config["source.app_id"] || ""
+                text: root.config["source.app_id"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("source.app_id", t)
+                onTextEdited: (t) => root.updateField("source.app_id", t)
             }
 
             M3TextField {
                 label: qsTr("Arguments")
                 placeholder: '--skip-intro --windowed'
-                text: config["launch.args"] || ""
+                text: root.config["launch.args"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("launch.args", t)
+                onTextEdited: (t) => root.updateField("launch.args", t)
             }
         }
 
@@ -388,22 +391,22 @@ Item {
             label: "Flatpak"
             icon: "sports_esports"
             width: parent.width
-            visible: runnerType === "flatpak"
+            visible: root.runnerType === "flatpak"
 
             M3TextField {
                 label: qsTr("Application ID")
                 placeholder: "e.g. com.valvesoftware.Steam"
-                text: config["source.app_id"] || ""
+                text: root.config["source.app_id"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("source.app_id", t)
+                onTextEdited: (t) => root.updateField("source.app_id", t)
             }
 
             M3TextField {
                 label: qsTr("Arguments")
                 placeholder: qsTr("passed to the application")
-                text: config["launch.args"] || ""
+                text: root.config["launch.args"] || ""
                 width: parent.width
-                onTextEdited: (t) => updateField("launch.args", t)
+                onTextEdited: (t) => root.updateField("launch.args", t)
             }
         }
     }

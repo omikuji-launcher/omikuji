@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 import QtQuick.Layouts
 
 import "."
@@ -14,7 +15,7 @@ Item {
     Column {
         id: content
         width: parent.width
-        spacing: theme.space.xxl
+        spacing: Theme.space.xxl
 
         SettingsSection {
             label: qsTr("Environment Sets")
@@ -27,8 +28,8 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: qsTr("Create and edit reusable env sets, applied or copied per-game.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.label.size
                     wrapMode: Text.WordWrap
                 }
 
@@ -51,8 +52,8 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: qsTr("Create and edit reusable DLL override sets, applied or copied per-game.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.label.size
                     wrapMode: Text.WordWrap
                 }
 
@@ -75,8 +76,8 @@ Item {
                 Text {
                     Layout.fillWidth: true
                     text: qsTr("Custom ${variable} tokens, usable in launch fields, prefix, install paths, scripts and image overrides.")
-                    color: theme.textSubtle
-                    font.pixelSize: theme.type.label.size
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.label.size
                     wrapMode: Text.WordWrap
                 }
 

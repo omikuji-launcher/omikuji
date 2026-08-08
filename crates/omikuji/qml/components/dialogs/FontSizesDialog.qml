@@ -1,4 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import omikuji 1.0
 import "../controls"
 
 DialogCard {
@@ -25,14 +28,14 @@ DialogCard {
     function applySize(key, px) {
         let m = {}
         try { m = JSON.parse(uiSettings.fontSizesJson()) } catch (e) {}
-        if (px === theme.fontDefaults[key]) delete m[key]
+        if (px === Theme.fontDefaults[key]) delete m[key]
         else m[key] = px
         uiSettings.applyFontSizesJson(JSON.stringify(m))
     }
 
     body: Column {
         width: parent.width
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         Repeater {
             model: root.roles
@@ -40,7 +43,7 @@ DialogCard {
             Item {
                 id: row
                 required property var modelData
-                readonly property var roleType: theme.type[modelData.key]
+                readonly property var roleType: Theme.type[modelData.key]
                 width: parent.width
                 height: Math.max(36, roleLabel.implicitHeight)
 
@@ -51,7 +54,7 @@ DialogCard {
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
                     text: row.modelData.name
-                    color: theme.text
+                    color: Theme.text
                     font.pixelSize: row.roleType.size
                     font.weight: row.roleType.weight
                 }
@@ -72,7 +75,7 @@ DialogCard {
     footerLeft: M3Button {
         text: qsTr("Reset all")
         variant: "tonal"
-        onClicked: uiSettings.applyFontSizesJson("{}")
+        onClicked: root.uiSettings.applyFontSizesJson("{}")
     }
 
     actions: M3Button {

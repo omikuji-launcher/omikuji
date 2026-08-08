@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import "../controls"
 
 
@@ -63,7 +65,7 @@ DialogCard {
 
     body: Column {
         width: parent.width
-        spacing: theme.space.md
+        spacing: Theme.space.md
 
         M3TextField {
             label: qsTr("Name")
@@ -101,8 +103,8 @@ DialogCard {
             visible: root.urlValue.trim() !== "" && root.normalizedUrl() !== root.urlValue.trim()
             width: parent.width
             text: root.normalizedUrl()
-            color: theme.textSubtle
-            font.pixelSize: theme.type.micro.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.micro.size
             font.family: "monospace"
             elide: Text.ElideRight
         }
@@ -110,8 +112,8 @@ DialogCard {
         Text {
             width: parent.width
             text: qsTr("GitHub and Codeberg repo links are converted to their releases API automatically.")
-            color: theme.textSubtle
-            font.pixelSize: theme.type.caption.size
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
@@ -119,14 +121,14 @@ DialogCard {
             visible: root.errorText !== ""
             width: parent.width
             text: root.errorText
-            color: theme.error
-            font.pixelSize: theme.type.caption.size
+            color: Theme.error
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
 
         M3Button {
             text: qsTr("Cancel")

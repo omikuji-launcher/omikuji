@@ -1,5 +1,7 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
+import omikuji 1.0
 import "../controls"
 
 
@@ -37,8 +39,8 @@ DialogCard {
     onCloseRequested: { root.cancelled = true; close() }
 
     Connections {
-        target: gameModel
-        enabled: gameModel !== null
+        target: root.gameModel
+        enabled: root.gameModel !== null
         function onPrepareOutput(line) {
             root.outputText += (root.outputText.length ? "\n" : "") + line
         }
@@ -65,14 +67,14 @@ DialogCard {
             text: root.errorText !== ""
                 ? root.errorText
                 : qsTr("First launch for this game, setting up the wine prefix. It'll start once this finishes.")
-            color: root.errorText !== "" ? theme.error : theme.textMuted
-            font.pixelSize: theme.type.caption.size
+            color: root.errorText !== "" ? Theme.error : Theme.textMuted
+            font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
 
         OutputLog {
             anchors.top: prepHeader.bottom
-            anchors.topMargin: theme.space.sm
+            anchors.topMargin: Theme.space.sm
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
