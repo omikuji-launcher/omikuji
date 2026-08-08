@@ -288,8 +288,11 @@ fn main() {
         &out_dir,
     );
 
+    let hot_reload = std::env::var("OMIKUJI_QML_HOTRELOAD").is_ok_and(|v| !v.is_empty());
+    println!("cargo:rerun-if-env-changed=OMIKUJI_QML_HOTRELOAD");
+
     // holy fucking shit this is wild actually
-    let builder = CxxQtBuilder::new_qml_module(QmlModule::new("omikuji").qml_files([
+    let qml_files = [
         "qml/Main.qml",
         "qml/ConsoleMode.qml",
         "qml/RunExe.qml",
@@ -411,8 +414,15 @@ fn main() {
         "qml/components/popups/ToastManager.qml",
         "qml/components/popups/Tooltip.qml",
         "qml/components/primitives/WavyProgressBar.qml",
-    ])
-    .qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true)))
+    ];
+
+    let mut qml_module = QmlModule::new("omikuji");
+    if !hot_reload {
+        qml_module = qml_module.qml_files(qml_files);
+    }
+    qml_module = qml_module.qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true));
+
+    let builder = CxxQtBuilder::new_qml_module(qml_module)
     .qrc_resources(&qrc_paths)
     .files(staged_bridges)
     .file(ui_settings_bridge)
@@ -432,6 +442,9 @@ fn main() {
     let builder = builder.qt_module("Quick");
     println!("cargo:rustc-link-lib=Qt6Quick");
 
+    let builder = builder.qt_module("Qml");
+    println!("cargo:rustc-link-lib=Qt6Qml");
+
     let builder = unsafe {
         builder.cc_builder(|cc| {
             cc.flag_if_supported("-Wno-sfinae-incomplete");
@@ -439,12 +452,14 @@ fn main() {
             cc.file("src/app_font.cpp");
             cc.file("src/tray_native.cpp");
             cc.file("src/i18n.cpp");
+            cc.file("src/hot_reload.cpp");
         })
     };
     println!("cargo:rerun-if-changed=src/app_icon.cpp");
     println!("cargo:rerun-if-changed=src/app_font.cpp");
     println!("cargo:rerun-if-changed=src/tray_native.cpp");
     println!("cargo:rerun-if-changed=src/i18n.cpp");
+    println!("cargo:rerun-if-changed=src/hot_reload.cpp");
 
     builder.build();
 }
