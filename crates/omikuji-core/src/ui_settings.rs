@@ -62,6 +62,8 @@ pub struct CategoryEntry {
     pub kind: String,
     #[serde(default)]
     pub value: String,
+    #[serde(default)]
+    pub auto_name: Option<bool>,
 }
 
 fn default_true() -> bool {
@@ -76,6 +78,7 @@ fn default_categories() -> Vec<CategoryEntry> {
             icon: "sports_esports".into(),
             kind: "all".into(),
             value: String::new(),
+            auto_name: Some(true),
         },
         CategoryEntry {
             enabled: true,
@@ -83,6 +86,7 @@ fn default_categories() -> Vec<CategoryEntry> {
             icon: "star".into(),
             kind: "favourite".into(),
             value: String::new(),
+            auto_name: Some(true),
         },
         CategoryEntry {
             enabled: true,
@@ -90,6 +94,7 @@ fn default_categories() -> Vec<CategoryEntry> {
             icon: "schedule".into(),
             kind: "recent".into(),
             value: String::new(),
+            auto_name: Some(true),
         },
         CategoryEntry {
             enabled: true,
@@ -97,6 +102,7 @@ fn default_categories() -> Vec<CategoryEntry> {
             icon: "wine_bar".into(),
             kind: "runner".into(),
             value: "wine".into(),
+            auto_name: Some(true),
         },
         CategoryEntry {
             enabled: true,
@@ -104,6 +110,7 @@ fn default_categories() -> Vec<CategoryEntry> {
             icon: "terminal".into(),
             kind: "runner".into(),
             value: "native".into(),
+            auto_name: Some(true),
         },
     ]
 }
@@ -320,15 +327,41 @@ impl UiSettings {
         }
 
         match std::fs::read_to_string(&path) {
-            Ok(body) => toml::from_str::<UiSettings>(&body).unwrap_or_else(|e| {
-                tracing::warn!("couldn't parse {}: {} - using defaults", path.display(), e);
-                Self::default()
-            }),
+            Ok(body) => match toml::from_str::<UiSettings>(&body) {
+                Ok(mut settings) => {
+                    if settings.migrate_category_auto_names() {
+                        let _ = settings.save();
+                    }
+                    settings
+                }
+                Err(e) => {
+                    tracing::warn!("couldn't parse {}: {} - using defaults", path.display(), e);
+                    Self::default()
+                }
+            },
             Err(e) => {
                 tracing::warn!("couldn't read {}: {} - using defaults", path.display(), e);
                 Self::default()
             }
         }
+    }
+
+    // TODO: remove after a 1 or 2 releases ig
+    fn migrate_category_auto_names(&mut self) -> bool {
+        let defaults = default_categories();
+        let mut changed = false;
+        for cat in self.categories.iter_mut() {
+            if cat.auto_name.is_some() {
+                continue;
+            }
+            cat.auto_name = Some(
+                defaults
+                    .iter()
+                    .any(|d| d.kind == cat.kind && d.value == cat.value && d.name == cat.name),
+            );
+            changed = true;
+        }
+        changed
     }
 
     pub fn set_console_mode_active(active: bool) {

@@ -421,6 +421,8 @@ fn main() {
         qml_module = qml_module.qml_files(qml_files);
     }
     qml_module = qml_module.qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true));
+    qml_module =
+        qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
 
     let builder = CxxQtBuilder::new_qml_module(qml_module)
     .qrc_resources(&qrc_paths)

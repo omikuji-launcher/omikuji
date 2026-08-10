@@ -61,7 +61,7 @@ Item {
         for (let i = 0; i < parsed.length; i++) {
             let c = parsed[i]
             if (c.enabled === false) continue
-            next.push({ label: c.name, icon: c.icon, kind: c.kind, value: c.value || "" })
+            next.push({ label: CategoryLabels.label(c), icon: c.icon, kind: c.kind, value: c.value || "" })
         }
         root.tabs = next
     }

@@ -53,7 +53,8 @@ Item {
                 name: c.name || "",
                 icon: c.icon || "",
                 kind: c.kind || "tag",
-                value: c.value || ""
+                value: c.value || "",
+                auto_name: c.auto_name === true
             })
         }
     }
@@ -63,7 +64,7 @@ Item {
         let arr = []
         for (let i = 0; i < categoriesModel.count; i++) {
             let e = categoriesModel.get(i)
-            arr.push({ enabled: e.enabled, name: e.name, icon: e.icon, kind: e.kind, value: e.value })
+            arr.push({ enabled: e.enabled, name: e.name, icon: e.icon, kind: e.kind, value: e.value, auto_name: e.auto_name === true })
         }
         root._selfApplying = true
         uiSettings.applyCategoriesJson(JSON.stringify(arr))
@@ -488,7 +489,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 Text {
-                                    text: wrapper.name
+                                    text: CategoryLabels.label(wrapper)
                                     color: Theme.text
                                     font.pixelSize: Theme.type.subtitle.size
                                 }
@@ -520,7 +521,7 @@ Item {
                                 size: 32
                                 onClicked: root.categoryEditRequested(wrapper.index, {
                                     enabled: wrapper.model.enabled, name: wrapper.name, icon: wrapper.icon,
-                                    kind: wrapper.kind, value: wrapper.value
+                                    kind: wrapper.kind, value: wrapper.value, auto_name: wrapper.model.auto_name
                                 })
                             }
                             IconButton {

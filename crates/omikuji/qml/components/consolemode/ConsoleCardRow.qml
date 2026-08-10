@@ -212,7 +212,7 @@ Item {
                         id: label
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 2
-                        text: catItem.modelData.name || qsTr("Library")
+                        text: CategoryLabels.label(catItem.modelData) || qsTr("Library")
                         color: catItem.isSelected ? Theme.text : Theme.textMuted
                         font.pixelSize: catItem.isSelected ? 38 * row.uiScale : 22 * row.uiScale
                         font.weight: catItem.isSelected ? Font.Bold : Font.Medium

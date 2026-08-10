@@ -13,6 +13,8 @@ DialogCard {
     signal closed()
 
     property int _editingIndex: -1
+    property string _origName: ""
+    property bool _origAutoName: false
 
     property string formName: ""
     property string formIcon: "star"
@@ -53,6 +55,8 @@ DialogCard {
 
     function showAdd() {
         _editingIndex = -1
+        _origName = ""
+        _origAutoName = false
         formName = ""
         formIcon = "star"
         formKind = "tag"
@@ -62,6 +66,8 @@ DialogCard {
 
     function showEdit(index, entry) {
         _editingIndex = index
+        _origName = entry.name || ""
+        _origAutoName = entry.auto_name || false
         formName = entry.name || ""
         formIcon = entry.icon || "star"
         formKind = entry.kind || "tag"
@@ -80,7 +86,8 @@ DialogCard {
             name: formName.trim(),
             icon: formIcon,
             kind: formKind,
-            value: v
+            value: v,
+            auto_name: root._origAutoName && formName.trim() === root._origName
         }
     }
 
