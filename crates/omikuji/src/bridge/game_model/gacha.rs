@@ -243,35 +243,43 @@ impl super::qobject::GameModel {
         }
 
         let install_path_buf = std::path::PathBuf::from(&install_s);
-        if let Some(version) = omikuji_core::gacha::strategies::read_install_version(
-            &manifest,
+        if omikuji_core::gacha::state::read_installed_version(
+            &manifest.publisher_slug,
+            &manifest.game_slug,
             &edition.id,
-            &install_path_buf,
-        ) {
-            omikuji_core::gacha::state::write_installed_version(
-                &manifest.publisher_slug,
-                &manifest.game_slug,
+        )
+        .is_none()
+        {
+            if let Some(version) = omikuji_core::gacha::strategies::read_install_version(
+                &manifest,
                 &edition.id,
-                &version,
-            );
-            let dotversion = install_path_buf.join(".version");
-            if !dotversion.exists() {
-                let _ = std::fs::write(&dotversion, &version);
+                &install_path_buf,
+            ) {
+                omikuji_core::gacha::state::write_installed_version(
+                    &manifest.publisher_slug,
+                    &manifest.game_slug,
+                    &edition.id,
+                    &version,
+                );
+                let dotversion = install_path_buf.join(".version");
+                if !dotversion.exists() {
+                    let _ = std::fs::write(&dotversion, &version);
+                }
+                tracing::info!(
+                    "detected version {} for {}/{} {}",
+                    version,
+                    manifest.publisher_slug,
+                    manifest.game_slug,
+                    edition.id
+                );
+            } else {
+                tracing::warn!(
+                    "couldn't detect version on disk for {}/{} {}, update check skipped until next install",
+                    manifest.publisher_slug,
+                    manifest.game_slug,
+                    edition.id
+                );
             }
-            tracing::info!(
-                "detected version {} for {}/{} {}",
-                version,
-                manifest.publisher_slug,
-                manifest.game_slug,
-                edition.id
-            );
-        } else {
-            tracing::warn!(
-                "couldn't detect version on disk for {}/{} {}, update check skipped until next install",
-                manifest.publisher_slug,
-                manifest.game_slug,
-                edition.id
-            );
         }
 
         let id_for_media = game.metadata.id.clone();
