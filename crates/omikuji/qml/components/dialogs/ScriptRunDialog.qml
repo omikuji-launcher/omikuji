@@ -204,6 +204,7 @@ DialogCard {
                 model: root.detail.inputs || []
                 delegate: Loader {
                     width: parent.width
+                    required property var modelData
                     property var input: modelData
                     sourceComponent: {
                         switch (modelData.kind) {
@@ -216,6 +217,7 @@ DialogCard {
                         default: return textComp
                         }
                     }
+                     onLoaded: item.input = input
                 }
             }
         }
@@ -223,6 +225,7 @@ DialogCard {
         Component {
             id: textComp
             M3TextField {
+                property var input
                 label: input.label
                 text: root.values[input.id] || ""
                 onTextEdited: (t) => root.setValue(input.id, t)
@@ -231,6 +234,7 @@ DialogCard {
         Component {
             id: fileComp
             M3FileField {
+                property var input
                 label: input.label
                 gameModel: root.gameModel
                 selectFolder: input.kind === "directory"
@@ -242,6 +246,7 @@ DialogCard {
         Component {
             id: choiceComp
             M3Dropdown {
+                property var input
                 label: input.label
                 options: input.options.map(o => ({ label: o, value: o }))
                 currentIndex: Math.max(0, input.options.indexOf(root.values[input.id]))
@@ -252,6 +257,7 @@ DialogCard {
         Component {
             id: boolComp
             LabeledSwitch {
+                property var input
                 label: input.label
                 checked: root.values[input.id] === "true"
                 onToggled: (v) => root.setValue(input.id, v ? "true" : "false")
@@ -262,6 +268,7 @@ DialogCard {
             Column {
                 spacing: Theme.space.xs
                 M3Dropdown {
+                    property var input
                     width: parent.width
                     label: input.label
                     options: root.prefixOptions
@@ -280,6 +287,7 @@ DialogCard {
         Component {
             id: runnerComp
             M3Dropdown {
+                property var input
                 label: input.label
                 options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
                 currentIndex: {
@@ -293,6 +301,7 @@ DialogCard {
         Component {
             id: prefixPathComp
             M3FileField {
+                property var input
                 label: input.label
                 selectFolder: true
                 gameModel: root.gameModel
