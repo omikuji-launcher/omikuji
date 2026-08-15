@@ -29,6 +29,19 @@ Item {
         return gameModel.runner_is_proton(String(version || ""))
     }
 
+    component DllVersionPicker: M3Dropdown {
+        required property string kind
+        required property string fieldKey
+        required property var gameModel
+        required property var config
+        required property var apply
+        width: parent.width
+        readonly property var _versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
+        options: [{ label: qsTr("Default (global)"), value: "" }].concat(_versions.map(v => ({ label: v, value: v })))
+        currentIndex: Math.max(0, options.findIndex(o => o.value === (config[fieldKey] || "")))
+        onSelected: (v) => apply(fieldKey, v)
+    }
+
     Column {
         id: content
         width: parent.width
@@ -198,6 +211,45 @@ Item {
                         checked: root.config["wine.dxvk_nvapi"] === true
                         onToggled: (val) => root.updateField("wine.dxvk_nvapi", val)
                     }
+                }
+
+                DllVersionPicker {
+                    kind: "dxvk"
+                    fieldKey: "wine.dxvk_version"
+                    label: qsTr("DXVK version")
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.dxvk"] === true
+                }
+
+                DllVersionPicker {
+                    kind: "vkd3d"
+                    fieldKey: "wine.vkd3d_version"
+                    label: qsTr("VKD3D version")
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.vkd3d"] === true
+                }
+
+                DllVersionPicker {
+                    kind: "dxvk_nvapi"
+                    fieldKey: "wine.dxvk_nvapi_version"
+                    label: qsTr("DXVK-NVAPI version")
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.dxvk_nvapi"] === true
+                }
+
+                Text {
+                    width: parent.width
+                    visible: root.isProtonWine && (root.config["wine.dxvk"] === true || root.config["wine.vkd3d"] === true || root.config["wine.dxvk_nvapi"] === true)
+                    text: qsTr("These may not work with Proton. Tsk.")
+                    color: Theme.warning
+                    font.pixelSize: Theme.type.caption.size
+                    wrapMode: Text.WordWrap
                 }
             }
 

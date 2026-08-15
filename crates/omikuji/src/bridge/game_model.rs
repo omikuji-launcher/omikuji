@@ -251,6 +251,9 @@ pub mod qobject {
         fn runner_is_proton(self: &GameModel, version: &QString) -> bool;
 
         #[qinvokable]
+        fn dll_versions_for_kind(self: &GameModel, kind: &QString) -> QString;
+
+        #[qinvokable]
         fn list_gpus(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -1668,6 +1671,14 @@ impl qobject::GameModel {
             omikuji_core::launch::WineVariant::from_version(&version.to_string()),
             omikuji_core::launch::WineVariant::Proton
         )
+    }
+
+    fn dll_versions_for_kind(&self, kind: &QString) -> QString {
+        let versions = omikuji_core::dll_packs::installed_versions_for_kind(&kind.to_string());
+        match serde_json::to_string(&versions) {
+            Ok(json) => QString::from(&json),
+            Err(_) => QString::from("[]"),
+        }
     }
 
     fn list_gpus(&self) -> QString {

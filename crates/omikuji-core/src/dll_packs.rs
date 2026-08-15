@@ -1,15 +1,8 @@
-// dll pack cache; downloaded dxvk/vkd3d/dxvk-nvapi/d3d-extras archives sit under
-// components/layers/{source.name}/{archive name}/. per-source subfolder prevents tag collisions
-// between sources (e.g. DXVK and DXVK-NVAPI both shipping "v2.4"). per-prefix apply copies dlls
-// into {prefix}/drive_c/windows/system32/ and syswow64/ and tracks applied versions in
-// {prefix}/.omikuji/dll_versions.toml so we skip redndant copies on every launch.
-
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
 use crate::launch::{ProtonVerb, WineVariant};
 use crate::library::Game;
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
@@ -47,10 +40,37 @@ pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
     archive_source::delete_version(source, &source_root(source), tag)
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-struct InjectedVersions {
-    #[serde(default)]
-    dll_packs: HashMap<String, String>,
+fn resolve_pack(
+    cfg: &components_config::ComponentsConfig,
+    kind: &str,
+    pinned: &str,
+) -> Option<(ArchiveSource, String)> {
+    let sources: Vec<ArchiveSource> =
+        cfg.layers.iter().filter(|s| s.kind == kind).cloned().collect();
+    let tag = if !pinned.is_empty() && pinned != "disabled" {
+        pinned.to_string()
+    } else {
+        sources
+            .iter()
+            .map(|s| components_config::active_version(&s.name))
+            .find(|t| !t.is_empty() && t != "disabled")?
+    };
+    let source = sources
+        .into_iter()
+        .find(|s| list_installed(s).iter().any(|v| v == &tag))?;
+    Some((source, tag))
+}
+
+pub fn installed_versions_for_kind(kind: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for source in components_config::get().layers.iter().filter(|s| s.kind == kind) {
+        for v in list_installed(source) {
+            if !out.contains(&v) {
+                out.push(v);
+            }
+        }
+    }
+    out
 }
 
 pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
@@ -78,40 +98,39 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     let syswow64 = prefix.join("drive_c").join("windows").join("syswow64");
     let is_64bit = syswow64.exists();
 
-    let marker_dir = prefix.join(".omikuji");
-    let marker_path = marker_dir.join("dll_versions.toml");
-    let mut applied: InjectedVersions = if marker_path.exists() {
-        std::fs::read_to_string(&marker_path)
-            .ok()
-            .and_then(|b| toml::from_str(&b).ok())
-            .unwrap_or_default()
-    } else {
-        InjectedVersions::default()
-    };
-
     let state = components_config::get();
-    let mut changed = false;
 
-    for (name, tag) in &state.active {
-        // legacy state files used the literal "disabled" string; the ui writes "" which set_active_version turns into a removed key, but be defensive about both
-        if tag.is_empty() || tag == "disabled" {
+    let picks = [
+        (game.wine.dxvk, game.wine.dxvk_version.as_str(), "dxvk"),
+        (game.wine.vkd3d, game.wine.vkd3d_version.as_str(), "vkd3d"),
+        (
+            game.wine.dxvk_nvapi,
+            game.wine.dxvk_nvapi_version.as_str(),
+            "dxvk_nvapi",
+        ),
+    ];
+
+    for (enabled, pinned, kind) in picks {
+        if !enabled {
             continue;
         }
-
-        let root = crate::layers_dir().join(name);
-        let Some(pack_root) = archive_source::installed_dir(name, &root, tag)
-            .or_else(|| root.join(tag).exists().then(|| root.join(tag)))
-        else {
-            tracing::warn!("active pack {}/{} not installed, skipping", name, tag);
+        let Some((source, tag)) = resolve_pack(&state, kind, pinned) else {
+            tracing::warn!(
+                "{} enabled but no installed version to inject for {}",
+                kind,
+                game.metadata.name
+            );
             continue;
         };
 
-        if applied.dll_packs.get(name).map(|v| v.as_str()) == Some(tag.as_str()) {
+        let root = source_root(&source);
+        let Some(pack_root) = archive_source::installed_dir(&source.name, &root, &tag)
+            .or_else(|| root.join(&tag).exists().then(|| root.join(&tag)))
+        else {
+            tracing::warn!("{} {} resolved but its install dir is gone", source.name, tag);
             continue;
-        }
+        };
 
-        // x64 dlls always land in system32. 32-bit dlls go to syswow64 on a 64-bit prefix
-        // or system32 on a 32-bit prefix. some packs ship "x86" instead of "x32" (vkd3d upstream), try both. iguess
         let x64_src = pack_root.join("x64");
         let x32_src = ["x32", "x86"]
             .iter()
@@ -129,23 +148,10 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
             copy_dll_dir(x32, &system32)?;
         }
 
-        tracing::info!("injected {} {} -> {}", name, tag, prefix.display());
-        applied.dll_packs.insert(name.clone(), tag.clone());
-        changed = true;
+        tracing::info!("injected {} {} -> {}", source.name, tag, prefix.display());
     }
 
-    // when dxvk-nvapi is active, locate nvngx.dll and _nvngx.dll from the host nvidia driver
-    // install and copy into system32. the ngx registry key points dlss at that location.
-    // no-op on systems without nvidia drivers. dont own a nvidia gpu so we just hope this works
-    let nvapi_active = state.active.iter().any(|(n, t)| {
-        !t.is_empty()
-            && t != "disabled"
-            && state
-                .layers
-                .iter()
-                .any(|s| s.name == *n && s.kind == "dxvk_nvapi")
-    });
-    if nvapi_active && is_64bit {
+    if game.wine.dxvk_nvapi && is_64bit {
         if let Some(nvidia_wine_dir) = find_nvidia_wine_dir() {
             let mut copied = false;
             for name in ["nvngx.dll", "_nvngx.dll"] {
@@ -174,11 +180,6 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
         }
     }
 
-    if changed {
-        let body = toml::to_string_pretty(&applied)?;
-        crate::fs_util::write_atomic(&marker_path, body)?;
-    }
-
     Ok(())
 }
 
@@ -194,10 +195,20 @@ fn copy_dll_dir(from: &Path, to: &Path) -> Result<()> {
             && let Some(file_name) = path.file_name()
         {
             let dest = to.join(file_name);
+            if same_size(&path, &dest) {
+                continue;
+            }
             std::fs::copy(&path, &dest)?;
         }
     }
     Ok(())
+}
+
+fn same_size(src: &Path, dest: &Path) -> bool {
+    match (std::fs::metadata(src), std::fs::metadata(dest)) {
+        (Ok(a), Ok(b)) => a.len() == b.len(),
+        _ => false,
+    }
 }
 
 // wineboot -u the prefix and wait for it. needed when the prefix dir exists but wine has
