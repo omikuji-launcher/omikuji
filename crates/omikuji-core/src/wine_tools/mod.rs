@@ -1,4 +1,4 @@
-use crate::launch::{EnvPurpose, WineVariant, build_env, resolve_wine_exe};
+use crate::launch::{EnvPurpose, ProtonVerb, WineVariant, build_env, resolve_wine_exe};
 use crate::library::Game;
 use anyhow::{Result, anyhow};
 use std::collections::HashSet;
@@ -192,9 +192,13 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     cmd.env_clear();
     cmd.envs(&env);
 
-    // proton tools (except the kill verb) need waitforexitandrun so umu-run waits for the tool to close before obliterating the prefix down
     if variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver) {
-        cmd.env("PROTON_VERB", "waitforexitandrun");
+        let verb = if crate::process::is_game_running(&g.metadata.id) {
+            ProtonVerb::Run
+        } else {
+            ProtonVerb::WaitForExitAndRun
+        };
+        cmd.env("PROTON_VERB", verb.as_str());
     }
 
     tracing::debug!("{:?} :: {} {}", tool, program.display(), args.join(" "));

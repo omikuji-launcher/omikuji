@@ -196,7 +196,10 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
     cmd.env_clear();
     cmd.envs(&env);
     if variant == crate::launch::WineVariant::Proton {
-        cmd.env("PROTON_VERB", "waitforexitandrun");
+        cmd.env(
+            "PROTON_VERB",
+            crate::launch::ProtonVerb::WaitForExitAndRun.as_str(),
+        );
     }
     cmd.stdin(std::process::Stdio::null());
     cmd.stdout(std::process::Stdio::null());

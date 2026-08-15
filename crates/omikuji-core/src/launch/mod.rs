@@ -83,6 +83,21 @@ impl WineVariant {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProtonVerb {
+    Run,
+    WaitForExitAndRun,
+}
+
+impl ProtonVerb {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Run => "run",
+            Self::WaitForExitAndRun => "waitforexitandrun",
+        }
+    }
+}
+
 pub fn prepare_launch(game: &Game) -> Result<LaunchConfig> {
     let config = assemble_launch(game)?;
     reject_slop_env(&config)?;
@@ -539,7 +554,10 @@ pub fn build_env(
             "PROTONPATH".to_string(),
             proton_path.to_string_lossy().to_string(),
         );
-        env.insert("PROTON_VERB".to_string(), "run".to_string());
+        env.insert(
+            "PROTON_VERB".to_string(),
+            ProtonVerb::Run.as_str().to_string(),
+        );
         env.insert(
             "GAMEID".to_string(),
             format!(
@@ -653,7 +671,7 @@ pub fn prepare_epic_prefix(
     cmd.env_clear();
     cmd.envs(env);
     if WineVariant::from_version(&game.wine.version) == WineVariant::Proton {
-        cmd.env("PROTON_VERB", "waitforexitandrun");
+        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
     }
     cmd.args([
         "reg",

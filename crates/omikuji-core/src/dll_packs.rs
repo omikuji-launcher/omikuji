@@ -6,7 +6,7 @@
 
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
-use crate::launch::WineVariant;
+use crate::launch::{ProtonVerb, WineVariant};
 use crate::library::Game;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -216,7 +216,7 @@ fn ensure_prefix_bootstrapped(
     cmd.envs(env);
     if variant == WineVariant::Proton {
         // umu-run synchronous verb, waits for the wineboot child to exit before tearing down
-        cmd.env("PROTON_VERB", "waitforexitandrun");
+        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
     }
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::null());
@@ -267,7 +267,7 @@ fn set_ngx_registry(
     cmd.env_clear();
     cmd.envs(env);
     if variant == WineVariant::Proton {
-        cmd.env("PROTON_VERB", "waitforexitandrun");
+        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
     }
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::null());
