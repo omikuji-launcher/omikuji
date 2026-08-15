@@ -61,6 +61,11 @@ pub fn default_runners() -> Vec<ArchiveSource> {
             "proton",
             "https://api.github.com/repos/CachyOS/proton-cachyos/releases",
         ),
+        src(
+            "Wine-Spritz",
+            "wine",
+            "https://api.github.com/repos/NelloKudo/spritz-wine/releases",
+        ),
     ]
 }
 
