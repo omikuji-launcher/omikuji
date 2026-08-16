@@ -147,35 +147,10 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Rectangle {
+        NoteChip {
             width: parent.width
             visible: (root.detail.note || "") !== ""
-            radius: Theme.radius.md
-            color: Theme.alpha(Theme.accent, 0.10)
-            height: noteRow.implicitHeight + Theme.space.md * 2
-
-            Row {
-                id: noteRow
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: Theme.space.md
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: Theme.space.sm
-
-                SvgIcon {
-                    name: "info"
-                    size: 18
-                    color: Theme.accent
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Text {
-                    width: parent.width - 18 - Theme.space.sm
-                    text: root.detail.note || ""
-                    color: Theme.text
-                    font.pixelSize: Theme.type.caption.size
-                    wrapMode: Text.WordWrap
-                }
-            }
+            text: root.detail.note || ""
         }
 
         Rectangle {

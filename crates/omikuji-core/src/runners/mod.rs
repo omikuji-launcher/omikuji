@@ -164,6 +164,16 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
         .find(|p| p.is_dir())
 }
 
+pub fn runner_dir(version: &str) -> Option<PathBuf> {
+    if version.is_empty() || version == "system" {
+        return None;
+    }
+    match version.strip_prefix("steam:") {
+        Some(rest) => crate::store::steam::local::find_proton_install(rest),
+        None => installed_runner_dir(version),
+    }
+}
+
 fn iter_local_runner_dirs() -> Vec<PathBuf> {
     let mut dirs = vec![];
     if let Ok(entries) = std::fs::read_dir(runners_dir()) {

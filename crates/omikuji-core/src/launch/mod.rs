@@ -69,15 +69,12 @@ impl WineVariant {
         if version.is_empty() || version == "system" {
             return WineVariant::System;
         }
-        let name = version.strip_prefix("steam:");
-        let dir = match name {
-            Some(rest) => crate::store::steam::local::find_proton_install(rest),
-            None => crate::runners::installed_runner_dir(version),
-        };
-        match dir {
+        match crate::runners::runner_dir(version) {
             Some(dir) if crate::runners::is_proton_dir(&dir) => WineVariant::Proton,
             Some(_) => WineVariant::WineGE,
-            None if looks_like_proton(name.unwrap_or(version)) => WineVariant::Proton,
+            None if looks_like_proton(version.strip_prefix("steam:").unwrap_or(version)) => {
+                WineVariant::Proton
+            }
             None => WineVariant::WineGE,
         }
     }

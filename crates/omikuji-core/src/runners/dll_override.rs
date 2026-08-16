@@ -1,7 +1,8 @@
 use crate::dll_packs;
+use crate::library::Game;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 const SIDECAR: &str = ".omikuji-dll-override.json";
@@ -123,6 +124,46 @@ pub fn active(runner_dir: &Path) -> BTreeMap<String, String> {
             (k.pack_kind().to_string(), tag)
         })
         .collect()
+}
+
+fn sync_from_game(runner_dir: &Path, game: &Game) -> Result<()> {
+    let sup = supported(runner_dir);
+    let current = active(runner_dir);
+    for k in DllKind::ALL {
+        let key = k.pack_kind();
+        if !sup.get(key).copied().unwrap_or(false) {
+            continue;
+        }
+        let now = current.get(key).cloned().unwrap_or_default();
+        match dll_packs::resolved_layer(game, key) {
+            Some(tag) if tag != now => apply(runner_dir, k, &tag)?,
+            None if !now.is_empty() => restore(runner_dir, k)?,
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+pub fn apply_for_launch(runner_dir: &Path, game: &Game, env: &HashMap<String, String>) -> Result<()> {
+    sync_from_game(runner_dir, game)?;
+    let Some(prefix) = env.get("WINEPREFIX").map(PathBuf::from) else {
+        return Ok(());
+    };
+    let system32 = prefix.join("drive_c/windows/system32");
+    if !system32.is_dir() {
+        return Ok(());
+    }
+    let syswow64 = prefix.join("drive_c/windows/syswow64");
+    for k in DllKind::ALL {
+        let Some((src64, src32)) = arch_targets(runner_dir, k) else {
+            continue;
+        };
+        dll_packs::copy_dll_dir(&src64, &system32)?;
+        if let (Some(src32), true) = (src32, syswow64.is_dir()) {
+            dll_packs::copy_dll_dir(&src32, &syswow64)?;
+        }
+    }
+    Ok(())
 }
 
 fn is_dll(p: &Path) -> bool {

@@ -243,13 +243,10 @@ Item {
                     visible: root.config["wine.dxvk_nvapi"] === true
                 }
 
-                Text {
+                NoteChip {
                     width: parent.width
                     visible: root.isProtonWine && (root.config["wine.dxvk"] === true || root.config["wine.vkd3d"] === true || root.config["wine.dxvk_nvapi"] === true)
-                    text: qsTr("These may not work with Proton. Tsk.")
-                    color: Theme.warning
-                    font.pixelSize: Theme.type.caption.size
-                    wrapMode: Text.WordWrap
+                    text: qsTr("With Proton, this swaps the runner's built-in .dll files too. When they're off, it restores the runner's defaults on the next launch. Mind that nothing reverts them on its own.")
                 }
             }
 

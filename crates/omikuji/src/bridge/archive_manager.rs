@@ -214,23 +214,6 @@ pub mod qobject {
         fn delete_runner_at(self: &ArchiveManagerBridge, path: QString) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "runnerDllOptions"]
-        fn runner_dll_options(self: &ArchiveManagerBridge) -> QString;
-
-        #[qinvokable]
-        #[cxx_name = "runnerDllStatus"]
-        fn runner_dll_status(self: &ArchiveManagerBridge, runner_dir: QString) -> QString;
-
-        #[qinvokable]
-        #[cxx_name = "setRunnerDllOverride"]
-        fn set_runner_dll_override(
-            self: &ArchiveManagerBridge,
-            runner_dir: QString,
-            kind: QString,
-            tag: QString,
-        ) -> QString;
-
-        #[qinvokable]
         #[cxx_name = "drainEvents"]
         fn drain_events(self: Pin<&mut ArchiveManagerBridge>);
     }
@@ -603,44 +586,6 @@ impl qobject::ArchiveManagerBridge {
     fn delete_runner_at(&self, path: QString) -> QString {
         let dir = std::path::PathBuf::from(path.to_string());
         match runners::delete_found_runner(&dir) {
-            Ok(_) => QString::from(""),
-            Err(e) => QString::from(&format!("{:#}", e)),
-        }
-    }
-
-    fn runner_dll_options(&self) -> QString {
-        let mut map = serde_json::Map::new();
-        for kind in ["dxvk", "vkd3d", "dxvk_nvapi"] {
-            map.insert(
-                kind.to_string(),
-                serde_json::json!(dll_packs::installed_versions_for_kind(kind)),
-            );
-        }
-        QString::from(&serde_json::Value::Object(map).to_string())
-    }
-
-    fn runner_dll_status(&self, runner_dir: QString) -> QString {
-        let dir = std::path::PathBuf::from(runner_dir.to_string());
-        let payload = serde_json::json!({
-            "supported": runners::dll_override::supported(&dir),
-            "active": runners::dll_override::active(&dir),
-        });
-        QString::from(&payload.to_string())
-    }
-
-    fn set_runner_dll_override(&self, runner_dir: QString, kind: QString, tag: QString) -> QString {
-        let dir = std::path::PathBuf::from(runner_dir.to_string());
-        let kind_s = kind.to_string();
-        let Some(k) = runners::dll_override::DllKind::from_pack_kind(&kind_s) else {
-            return QString::from(&format!("unknown dll kind: {}", kind_s));
-        };
-        let tag_s = tag.to_string();
-        let res = if tag_s.is_empty() || tag_s == "Default" {
-            runners::dll_override::restore(&dir, k)
-        } else {
-            runners::dll_override::apply(&dir, k, &tag_s)
-        };
-        match res {
             Ok(_) => QString::from(""),
             Err(e) => QString::from(&format!("{:#}", e)),
         }

@@ -70,6 +70,15 @@ impl ProcessManager {
             tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
         }
 
+        if game.runner.runner_type != "steam"
+            && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
+            && !crate::store::steam::local::is_steam_installed_proton(&runner_dir)
+            && let Err(e) =
+                crate::runners::dll_override::apply_for_launch(&runner_dir, &game, &config.env)
+        {
+            tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
+        }
+
         // download saves before the game opens its save files
         if game.is_epic()
             && game.source.cloud_saves

@@ -69,14 +69,12 @@ Item {
                 onSelected: (val) => root.updateField("runner.type", val)
             }
 
-            Text {
+            NoteChip {
                 width: parent.width
                 visible: root.gameModel ? root.gameModel.is_flatpak() : false
+                icon: "warning"
+                tone: Theme.warning
                 text: qsTr("It seems you're using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.")
-                color: Theme.warning
-                font.pixelSize: Theme.type.micro.size
-                font.weight: Font.Medium
-                wrapMode: Text.WordWrap
             }
         }
 

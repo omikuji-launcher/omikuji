@@ -517,6 +517,12 @@ pub fn proton_display_name(dir: &Path) -> Option<String> {
         .map(str::to_string)
 }
 
+pub fn is_steam_installed_proton(dir: &Path) -> bool {
+    get_steamapps_dirs()
+        .into_iter()
+        .any(|d| dir.starts_with(d.join("common")))
+}
+
 pub fn find_proton_install(name: &str) -> Option<PathBuf> {
     let all = iter_steam_protons();
     if let Some((_, p)) = all.iter().find(|(n, _)| n == name) {

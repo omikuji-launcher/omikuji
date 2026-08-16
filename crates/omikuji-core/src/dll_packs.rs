@@ -61,6 +61,23 @@ fn resolve_pack(
     Some((source, tag))
 }
 
+fn game_layer<'a>(game: &'a Game, kind: &str) -> Option<(bool, &'a str)> {
+    match kind {
+        "dxvk" => Some((game.wine.dxvk, game.wine.dxvk_version.as_str())),
+        "vkd3d" => Some((game.wine.vkd3d, game.wine.vkd3d_version.as_str())),
+        "dxvk_nvapi" => Some((game.wine.dxvk_nvapi, game.wine.dxvk_nvapi_version.as_str())),
+        _ => None,
+    }
+}
+
+pub fn resolved_layer(game: &Game, kind: &str) -> Option<String> {
+    let (enabled, pinned) = game_layer(game, kind)?;
+    if !enabled {
+        return None;
+    }
+    resolve_pack(&components_config::get(), kind, pinned).map(|(_, tag)| tag)
+}
+
 pub fn installed_versions_for_kind(kind: &str) -> Vec<String> {
     let mut out = Vec::new();
     for source in components_config::get().layers.iter().filter(|s| s.kind == kind) {
@@ -118,53 +135,31 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     let syswow64 = prefix.join("drive_c").join("windows").join("syswow64");
     let is_64bit = syswow64.exists();
 
-    let state = components_config::get();
+    if variant != WineVariant::Proton {
+        for kind in ["dxvk", "vkd3d", "dxvk_nvapi"] {
+            let Some(tag) = resolved_layer(game, kind) else {
+                continue;
+            };
+            let Some(pack_root) = pack_dir(kind, &tag) else {
+                tracing::warn!("{} {} resolved but its install dir is gone", kind, tag);
+                continue;
+            };
 
-    let picks = [
-        (game.wine.dxvk, game.wine.dxvk_version.as_str(), "dxvk"),
-        (game.wine.vkd3d, game.wine.vkd3d_version.as_str(), "vkd3d"),
-        (
-            game.wine.dxvk_nvapi,
-            game.wine.dxvk_nvapi_version.as_str(),
-            "dxvk_nvapi",
-        ),
-    ];
+            let (x64_src, x32_src) = pack_arch_dirs(&pack_root);
 
-    for (enabled, pinned, kind) in picks {
-        if !enabled {
-            continue;
-        }
-        let Some((source, tag)) = resolve_pack(&state, kind, pinned) else {
-            tracing::warn!(
-                "{} enabled but no installed version to inject for {}",
-                kind,
-                game.metadata.name
-            );
-            continue;
-        };
-
-        let root = source_root(&source);
-        let Some(pack_root) = archive_source::installed_dir(&source.name, &root, &tag)
-            .or_else(|| root.join(&tag).exists().then(|| root.join(&tag)))
-        else {
-            tracing::warn!("{} {} resolved but its install dir is gone", source.name, tag);
-            continue;
-        };
-
-        let (x64_src, x32_src) = pack_arch_dirs(&pack_root);
-
-        if is_64bit {
-            if x64_src.exists() {
-                copy_dll_dir(&x64_src, &system32)?;
+            if is_64bit {
+                if x64_src.exists() {
+                    copy_dll_dir(&x64_src, &system32)?;
+                }
+                if let Some(ref x32) = x32_src {
+                    copy_dll_dir(x32, &syswow64)?;
+                }
+            } else if let Some(ref x32) = x32_src {
+                copy_dll_dir(x32, &system32)?;
             }
-            if let Some(ref x32) = x32_src {
-                copy_dll_dir(x32, &syswow64)?;
-            }
-        } else if let Some(ref x32) = x32_src {
-            copy_dll_dir(x32, &system32)?;
-        }
 
-        tracing::info!("injected {} {} -> {}", source.name, tag, prefix.display());
+            tracing::info!("injected {} {} -> {}", kind, tag, prefix.display());
+        }
     }
 
     if game.wine.dxvk_nvapi && is_64bit {
@@ -199,7 +194,7 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     Ok(())
 }
 
-fn copy_dll_dir(from: &Path, to: &Path) -> Result<()> {
+pub fn copy_dll_dir(from: &Path, to: &Path) -> Result<()> {
     std::fs::create_dir_all(to)?;
     for entry in std::fs::read_dir(from)? {
         let entry = entry?;

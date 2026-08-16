@@ -28,7 +28,7 @@ DialogCard {
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
     signal removeSourceRequested(string category, string sourceName)
-    signal manageRunnerRequested(string sourceName, string tag, string kind)
+    signal moveToSteamRequested(string sourceName, string tag)
 
     maxWidth: 720
     scrollable: false
@@ -291,12 +291,12 @@ DialogCard {
                     spacing: 14
 
                     IconButton {
-                        visible: versionRow.installed && root.category === "runners"
+                        visible: versionRow.installed && root.category === "runners" && root.sourceKind === "proton"
                         anchors.verticalCenter: parent.verticalCenter
-                        icon: "tune"
+                        icon: "steam"
                         size: 28
                         rounded: true
-                        onClicked: root.manageRunnerRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex], root.sourceKind)
+                        onClicked: root.moveToSteamRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex])
                     }
 
                     M3Dropdown {
@@ -357,7 +357,7 @@ DialogCard {
                                 anchors.verticalCenter: parent.verticalCenter
                                 icon: "close"
                                 size: 28
-                                rounded: true
+                                rounded: false
                                 danger: true
                                 onClicked: {
                                     root.archiveManager.deleteVersion(root.category, root.sourceName, versionRow.assetStems[versionRow.assetIndex])

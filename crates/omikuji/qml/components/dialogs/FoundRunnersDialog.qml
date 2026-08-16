@@ -13,7 +13,6 @@ DialogCard {
     property var archiveManager: null
     property var runners: []
 
-    signal manageRunnerRequested(string name, string kind, string dir, string origin)
     signal deleteRunnerRequested(string name, string dir)
 
     maxWidth: 720
@@ -164,15 +163,6 @@ DialogCard {
                     anchors.rightMargin: 20
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 10
-
-                    IconButton {
-                        visible: rr.modelData.kind === "proton"
-                        anchors.verticalCenter: parent.verticalCenter
-                        icon: "tune"
-                        size: 28
-                        rounded: true
-                        onClicked: root.manageRunnerRequested(rr.modelData.name, rr.modelData.kind, rr.modelData.path, rr.modelData.origin)
-                    }
 
                     IconButton {
                         anchors.verticalCenter: parent.verticalCenter

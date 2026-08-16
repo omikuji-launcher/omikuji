@@ -1076,7 +1076,7 @@ property real cardZoom: uiSettings.cardZoom
             archiveManageDialog.escEnabled = false
             removeSourceConfirm.show({ category: category, source: sourceName })
         }
-        onManageRunnerRequested: (sourceName, tag, kind) => runnerSettingsDialog.show(tag, kind, archiveManager.installedRunnerPath(sourceName, tag), "Omikuji")
+        onMoveToSteamRequested: (sourceName, tag) => steamMoveDialog.show(archiveManager.installedRunnerPath(sourceName, tag), tag)
     }
 
     ArchiveSourceDialog {
@@ -1089,7 +1089,6 @@ property real cardZoom: uiSettings.cardZoom
         id: foundRunnersDialog
         anchors.fill: parent
         archiveManager: archiveManager
-        onManageRunnerRequested: (name, kind, dir, origin) => runnerSettingsDialog.show(name, kind, dir, origin)
         onDeleteRunnerRequested: (name, dir) => {
             const err = archiveManager.deleteRunnerAt(dir)
             if (err !== "") toastManager.show("error", qsTr("Couldn't delete runner"), err)
@@ -1097,13 +1096,6 @@ property real cardZoom: uiSettings.cardZoom
             foundRunnersDialog.refresh()
             root.runnersVersion++
         }
-    }
-
-    RunnerSettingsDialog {
-        id: runnerSettingsDialog
-        anchors.fill: parent
-        archiveManager: archiveManager
-        onMoveToSteamRequested: (dir, name) => steamMoveDialog.show(dir, name)
     }
 
     SteamMoveDialog {
