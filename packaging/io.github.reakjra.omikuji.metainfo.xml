@@ -22,6 +22,23 @@
     </p>
   </description>
   <releases>
+    <release version="0.9.0" date="2026-08-16">
+      <description>
+        <ul>
+          <li>Changed app icon</li>
+          <li>Added guard for duplicate game launches and wine tools spawns</li>
+          <li>Wrapped default library categories with qsTr for translation</li>
+          <li>Base proton_verb on wheter the game is running</li>
+          <li>Per-game layers (dxvk, vkd3d, etc.) versions</li>
+          <li>Add spritz-wine as a default runner seed</li>
+          <li>Add 'when' field for community scripts</li>
+          <li>starting play button state for gog, epic and gachas updates check</li>
+          <li>better import system for gog, epic and gachas</li>
+          <li>changelogs dialog</li>
+          <li>added --talk-name=org.kde.StatusNotifierWatcher for flatpak build</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.8.3" date="2026-08-06">
       <description>
         <ul>

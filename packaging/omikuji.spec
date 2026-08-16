@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.8.3
+Version:        0.9.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,19 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sun Aug 16 2026 reakjra <reakjra@proton.me> - 0.9.0-1
+- Changed app icon
+- Added guard for duplicate game launches and wine tools spawns
+- Wrapped default library categories with qsTr for translation
+- Base proton_verb on wheter the game is running
+- Per-game layers (dxvk, vkd3d, etc.) versions
+- Add spritz-wine as a default runner seed
+- Add 'when' field for community scripts
+- starting play button state for gog, epic and gachas updates check
+- better import system for gog, epic and gachas
+- changelogs dialog
+- added --talk-name=org.kde.StatusNotifierWatcher for flatpak build
+
 * Thu Aug 06 2026 reakjra <reakjra@proton.me> - 0.8.3-1
 - Discord RPC toggle off by default
 - UI refinements
