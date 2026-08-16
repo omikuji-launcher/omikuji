@@ -15,6 +15,7 @@ Item {
     // bubbles to Main.qml which owns teh dialog, full-window dim needs a root-level sibling
     signal manageRequested(string category, string source, string kind)
     signal addSourceRequested(string category)
+    signal manageFoundRunnersRequested()
 
     signal categoryAddRequested()
     signal categoryEditRequested(int index, var entry)
@@ -75,6 +76,9 @@ Item {
                 })
                 item.addSourceRequested.connect((cat) => {
                     root.addSourceRequested(cat)
+                })
+                item.manageFoundRunnersRequested.connect(() => {
+                    root.manageFoundRunnersRequested()
                 })
             }
         }

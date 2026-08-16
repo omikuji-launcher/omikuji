@@ -73,6 +73,26 @@ pub fn installed_versions_for_kind(kind: &str) -> Vec<String> {
     out
 }
 
+pub fn pack_dir(kind: &str, tag: &str) -> Option<PathBuf> {
+    let source = components_config::get()
+        .layers
+        .into_iter()
+        .filter(|s| s.kind == kind)
+        .find(|s| list_installed(s).iter().any(|v| v == tag))?;
+    let root = source_root(&source);
+    archive_source::installed_dir(&source.name, &root, tag)
+        .or_else(|| root.join(tag).exists().then(|| root.join(tag)))
+}
+
+pub fn pack_arch_dirs(pack_root: &Path) -> (PathBuf, Option<PathBuf>) {
+    let x64 = pack_root.join("x64");
+    let x32 = ["x32", "x86"]
+        .iter()
+        .map(|d| pack_root.join(d))
+        .find(|p| p.exists());
+    (x64, x32)
+}
+
 pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     let Some(prefix_str) = env.get("WINEPREFIX") else {
         return Ok(());
@@ -131,11 +151,7 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
             continue;
         };
 
-        let x64_src = pack_root.join("x64");
-        let x32_src = ["x32", "x86"]
-            .iter()
-            .map(|d| pack_root.join(d))
-            .find(|p| p.exists());
+        let (x64_src, x32_src) = pack_arch_dirs(&pack_root);
 
         if is_64bit {
             if x64_src.exists() {

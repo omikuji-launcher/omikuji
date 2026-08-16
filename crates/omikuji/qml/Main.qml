@@ -1076,13 +1076,34 @@ property real cardZoom: uiSettings.cardZoom
             archiveManageDialog.escEnabled = false
             removeSourceConfirm.show({ category: category, source: sourceName })
         }
-        onMoveToSteamRequested: (sourceName, tag) => steamMoveDialog.show(sourceName, tag)
+        onManageRunnerRequested: (sourceName, tag, kind) => runnerSettingsDialog.show(tag, kind, archiveManager.installedRunnerPath(sourceName, tag), "Omikuji")
     }
 
     ArchiveSourceDialog {
         id: archiveSourceDialog
         anchors.fill: parent
         archiveManager: archiveManager
+    }
+
+    FoundRunnersDialog {
+        id: foundRunnersDialog
+        anchors.fill: parent
+        archiveManager: archiveManager
+        onManageRunnerRequested: (name, kind, dir, origin) => runnerSettingsDialog.show(name, kind, dir, origin)
+        onDeleteRunnerRequested: (name, dir) => {
+            const err = archiveManager.deleteRunnerAt(dir)
+            if (err !== "") toastManager.show("error", qsTr("Couldn't delete runner"), err)
+            else toastManager.show("success", qsTr("%1 deleted").arg(name), "")
+            foundRunnersDialog.refresh()
+            root.runnersVersion++
+        }
+    }
+
+    RunnerSettingsDialog {
+        id: runnerSettingsDialog
+        anchors.fill: parent
+        archiveManager: archiveManager
+        onMoveToSteamRequested: (dir, name) => steamMoveDialog.show(dir, name)
     }
 
     SteamMoveDialog {
@@ -1093,11 +1114,12 @@ property real cardZoom: uiSettings.cardZoom
 
     Connections {
         target: archiveManager
-        function onMoveToSteamDone(tag, error) {
+        function onMoveToSteamDone(name, error) {
             if (error && error.length > 0) return
             root.runnersVersion++
             archiveManageDialog.refreshInstalled()
-            toastManager.show("success", qsTr("%1 moved to Steam").arg(tag), qsTr("Restart Steam to see it."))
+            foundRunnersDialog.refresh()
+            toastManager.show("success", qsTr("%1 moved to Steam").arg(name), qsTr("Restart Steam to see it."))
         }
     }
 
@@ -1380,6 +1402,7 @@ property real cardZoom: uiSettings.cardZoom
                     archiveManageDialog.show(category, source, kind)
                 }
                 onAddSourceRequested: (category) => archiveSourceDialog.show(category)
+                onManageFoundRunnersRequested: foundRunnersDialog.show()
                 onManageSetsRequested: (kind) => {
                     if (kind === "vars") templateVarsDialog.open()
                     else (kind === "dll" ? dllSetsDialog : envSetsDialog).openManage()

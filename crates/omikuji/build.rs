@@ -308,6 +308,8 @@ fn main() {
         // dialogs
         "qml/components/dialogs/ArchiveManageDialog.qml",
         "qml/components/dialogs/ArchiveSourceDialog.qml",
+        "qml/components/dialogs/RunnerSettingsDialog.qml",
+        "qml/components/dialogs/FoundRunnersDialog.qml",
         "qml/components/dialogs/CategoryEditDialog.qml",
         "qml/components/dialogs/ConfirmDialog.qml",
         "qml/components/popups/ContextMenu.qml",
@@ -396,6 +398,7 @@ fn main() {
         "qml/components/primitives/LoadingDots.qml",
         "qml/components/controls/M3Button.qml",
         "qml/components/controls/M3Dropdown.qml",
+        "qml/components/controls/RunnerDllOverride.qml",
         "qml/components/controls/M3FileField.qml",
         "qml/components/controls/M3Slider.qml",
         "qml/components/controls/M3SpinBox.qml",

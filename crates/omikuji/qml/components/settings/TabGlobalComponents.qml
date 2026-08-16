@@ -17,6 +17,7 @@ Item {
 
     signal manageRequested(string category, string source, string kind)
     signal addSourceRequested(string category)
+    signal manageFoundRunnersRequested()
 
     readonly property var runtimeMeta: ({
         "umu-run":   { label: "umu-run",    desc: qsTr("Launcher wrapper needed for Proton.") },
@@ -181,10 +182,18 @@ Item {
         SettingsSection {
             label: qsTr("Runners")
             width: parent.width
-            action: M3Button {
-                text: qsTr("Add source")
-                variant: "tonal"
-                onClicked: root.addSourceRequested("runners")
+            action: Row {
+                spacing: Theme.space.sm
+                M3Button {
+                    text: qsTr("Manage found runners")
+                    variant: "tonal"
+                    onClicked: root.manageFoundRunnersRequested()
+                }
+                M3Button {
+                    text: qsTr("Add source")
+                    variant: "tonal"
+                    onClicked: root.addSourceRequested("runners")
+                }
             }
 
             Column {

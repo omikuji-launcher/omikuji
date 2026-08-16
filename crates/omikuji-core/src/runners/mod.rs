@@ -1,9 +1,12 @@
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
 use anyhow::Result;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+pub mod dll_override;
 
 pub fn runners_dir() -> PathBuf {
     crate::runners_dir()
@@ -103,12 +106,15 @@ pub fn is_proton_dir(path: &Path) -> bool {
     path.join("proton").exists()
 }
 
-pub fn move_to_steam(source: &ArchiveSource, name: &str, roots: &[PathBuf]) -> Result<()> {
+pub fn move_to_steam_dir(src: &Path, roots: &[PathBuf]) -> Result<()> {
     use anyhow::bail;
-    let src = source_root(source).join(name);
     if !src.is_dir() {
-        bail!("not installed: {name}");
+        bail!("not a runner directory: {}", src.display());
     }
+    let name = src
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow::anyhow!("bad runner path: {}", src.display()))?;
     if !src.join("compatibilitytool.vdf").exists() {
         bail!("{name} ships no compatibilitytool.vdf, Steam would not list it");
     }
@@ -122,19 +128,27 @@ pub fn move_to_steam(source: &ArchiveSource, name: &str, roots: &[PathBuf]) -> R
         let _ = std::fs::remove_dir_all(dest);
     }
     if let [dest] = targets.as_slice()
-        && std::fs::rename(&src, dest).is_ok()
+        && std::fs::rename(src, dest).is_ok()
     {
         return Ok(());
     }
     for dest in &targets {
-        crate::fs_util::copy_dir_all(&src, dest)?;
+        crate::fs_util::copy_dir_all(src, dest)?;
     }
-    std::fs::remove_dir_all(&src)?;
+    std::fs::remove_dir_all(src)?;
     Ok(())
 }
 
 fn is_runner_dir(path: &Path) -> bool {
     path.join("bin/wine").exists() || path.join("files/bin/wine64").exists() || is_proton_dir(path)
+}
+
+pub fn delete_found_runner(path: &Path) -> Result<()> {
+    if !is_runner_dir(path) {
+        anyhow::bail!("not a runner directory: {}", path.display());
+    }
+    std::fs::remove_dir_all(path)?;
+    Ok(())
 }
 
 pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
@@ -150,20 +164,8 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
         .find(|p| p.is_dir())
 }
 
-pub fn list_installed_runners() -> Vec<(String, String, String)> {
-    let mut runners = vec![];
-
-    let push_runner = |list: &mut Vec<(String, String, String)>, path: &Path| {
-        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            let kind = if is_proton_dir(path) {
-                "proton"
-            } else {
-                "wine"
-            };
-            list.push((name.to_string(), String::new(), kind.to_string()));
-        }
-    };
-
+fn iter_local_runner_dirs() -> Vec<PathBuf> {
+    let mut dirs = vec![];
     if let Ok(entries) = std::fs::read_dir(runners_dir()) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -171,17 +173,65 @@ pub fn list_installed_runners() -> Vec<(String, String, String)> {
                 continue;
             }
             if is_runner_dir(&path) {
-                push_runner(&mut runners, &path);
+                dirs.push(path);
                 continue;
             }
             if let Ok(children) = std::fs::read_dir(&path) {
                 for child in children.flatten() {
                     let child_path = child.path();
                     if child_path.is_dir() && is_runner_dir(&child_path) {
-                        push_runner(&mut runners, &child_path);
+                        dirs.push(child_path);
                     }
                 }
             }
+        }
+    }
+    dirs
+}
+
+fn runner_kind(path: &Path) -> &'static str {
+    if is_proton_dir(path) {
+        "proton"
+    } else {
+        "wine"
+    }
+}
+
+#[derive(Serialize)]
+pub struct FoundRunner {
+    pub name: String,
+    pub kind: String,
+    pub origin: String,
+    pub path: String,
+}
+
+pub fn found_runners() -> Vec<FoundRunner> {
+    let mut out = vec![];
+    let mut push = |path: &Path, origin: &str| {
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            out.push(FoundRunner {
+                name: name.to_string(),
+                kind: runner_kind(path).to_string(),
+                origin: origin.to_string(),
+                path: path.to_string_lossy().into_owned(),
+            });
+        }
+    };
+    for path in iter_local_runner_dirs() {
+        push(&path, "Omikuji");
+    }
+    for (_name, path) in crate::store::steam::local::iter_steam_protons() {
+        push(&path, "Steam");
+    }
+    out
+}
+
+pub fn list_installed_runners() -> Vec<(String, String, String)> {
+    let mut runners = vec![];
+
+    for path in iter_local_runner_dirs() {
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            runners.push((name.to_string(), String::new(), runner_kind(&path).to_string()));
         }
     }
 

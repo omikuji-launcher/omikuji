@@ -9,8 +9,8 @@ DialogCard {
     id: root
 
     property var archiveManager: null
-    property string sourceName: ""
-    property string version: ""
+    property string runnerDir: ""
+    property string runnerName: ""
     property var roots: []
     property var checkedPaths: ({})
     property string errorText: ""
@@ -19,9 +19,9 @@ DialogCard {
     maxWidth: 440
     title: qsTr("Move to Steam")
 
-    function show(src, ver) {
-        sourceName = src
-        version = ver
+    function show(dir, name) {
+        runnerDir = dir
+        runnerName = name
         errorText = ""
         working = false
         try { roots = JSON.parse(archiveManager.listSteamRoots()) } catch (e) { roots = [] }
@@ -41,8 +41,8 @@ DialogCard {
 
     Connections {
         target: root.archiveManager
-        function onMoveToSteamDone(tag, error) {
-            if (tag !== root.version) return
+        function onMoveToSteamDone(name, error) {
+            if (name !== root.runnerName) return
             root.working = false
             if (error && error.length > 0) root.errorText = error
             else root.close()
@@ -55,7 +55,7 @@ DialogCard {
 
         Text {
             width: parent.width
-            text: qsTr("Moves %1 from omikuji's runners folder into the selected Steam installations.").arg(root.version)
+            text: qsTr("Moves %1 from omikuji's runners folder into the selected Steam installations.").arg(root.runnerName)
             color: Theme.textSubtle
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
@@ -161,7 +161,7 @@ DialogCard {
             onClicked: {
                 root.working = true
                 root.errorText = ""
-                root.archiveManager.moveToSteam(root.sourceName, root.version, JSON.stringify(root.selectedPaths()))
+                root.archiveManager.moveToSteamAt(root.runnerDir, JSON.stringify(root.selectedPaths()))
             }
         }
     }

@@ -28,7 +28,7 @@ DialogCard {
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
     signal removeSourceRequested(string category, string sourceName)
-    signal moveToSteamRequested(string sourceName, string tag)
+    signal manageRunnerRequested(string sourceName, string tag, string kind)
 
     maxWidth: 720
     scrollable: false
@@ -293,10 +293,10 @@ DialogCard {
                     IconButton {
                         visible: versionRow.installed && root.category === "runners"
                         anchors.verticalCenter: parent.verticalCenter
-                        icon: "steam"
+                        icon: "tune"
                         size: 28
                         rounded: true
-                        onClicked: root.moveToSteamRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex])
+                        onClicked: root.manageRunnerRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex], root.sourceKind)
                     }
 
                     M3Dropdown {

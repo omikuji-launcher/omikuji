@@ -178,11 +178,10 @@ pub mod qobject {
         fn list_steam_roots(self: &ArchiveManagerBridge) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "moveToSteam"]
-        fn move_to_steam(
+        #[cxx_name = "moveToSteamAt"]
+        fn move_to_steam_at(
             self: Pin<&mut ArchiveManagerBridge>,
-            source: QString,
-            tag: QString,
+            runner_dir: QString,
             roots_json: QString,
         );
 
@@ -197,6 +196,39 @@ pub mod qobject {
             source: QString,
             tag: QString,
         );
+
+        #[qinvokable]
+        #[cxx_name = "foundRunners"]
+        fn found_runners(self: &ArchiveManagerBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "installedRunnerPath"]
+        fn installed_runner_path(
+            self: &ArchiveManagerBridge,
+            source: QString,
+            name: QString,
+        ) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "deleteRunnerAt"]
+        fn delete_runner_at(self: &ArchiveManagerBridge, path: QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "runnerDllOptions"]
+        fn runner_dll_options(self: &ArchiveManagerBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "runnerDllStatus"]
+        fn runner_dll_status(self: &ArchiveManagerBridge, runner_dir: QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "setRunnerDllOverride"]
+        fn set_runner_dll_override(
+            self: &ArchiveManagerBridge,
+            runner_dir: QString,
+            kind: QString,
+            tag: QString,
+        ) -> QString;
 
         #[qinvokable]
         #[cxx_name = "drainEvents"]
@@ -513,31 +545,28 @@ impl qobject::ArchiveManagerBridge {
         QString::from(&serde_json::to_string(&roots).unwrap_or_else(|_| "[]".into()))
     }
 
-    fn move_to_steam(mut self: Pin<&mut Self>, source: QString, tag: QString, roots_json: QString) {
-        let name = source.to_string();
-        let tag_s = tag.to_string();
+    fn move_to_steam_at(mut self: Pin<&mut Self>, runner_dir: QString, roots_json: QString) {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        let name = dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("")
+            .to_string();
         let roots: Vec<std::path::PathBuf> =
             serde_json::from_str::<Vec<String>>(&roots_json.to_string())
                 .unwrap_or_default()
                 .into_iter()
                 .map(std::path::PathBuf::from)
                 .collect();
-        let Some(src) = source_lookup("runners", &name) else {
-            self.as_mut().move_to_steam_done(
-                QString::from(&tag_s),
-                QString::from(&format!("unknown source: {}", name)),
-            );
-            return;
-        };
         let qt_thread = self.as_mut().qt_thread();
         thread::spawn(move || {
-            let err = runners::move_to_steam(&src, &tag_s, &roots)
+            let err = runners::move_to_steam_dir(&dir, &roots)
                 .err()
                 .map(|e| format!("{:#}", e))
                 .unwrap_or_default();
             let _ = qt_thread.queue(move |mut this: Pin<&mut qobject::ArchiveManagerBridge>| {
                 this.as_mut()
-                    .move_to_steam_done(QString::from(&tag_s), QString::from(&err));
+                    .move_to_steam_done(QString::from(&name), QString::from(&err));
             });
         });
     }
@@ -552,6 +581,68 @@ impl qobject::ArchiveManagerBridge {
         let tag_s = tag.to_string();
         if let Err(e) = components_config::set_active_version(&name, &tag_s) {
             tracing::error!("save failed for {}: {}", name, e);
+        }
+    }
+
+    fn found_runners(&self) -> QString {
+        QString::from(&serde_json::to_string(&runners::found_runners()).unwrap_or_else(|_| "[]".into()))
+    }
+
+    fn installed_runner_path(&self, source: QString, name: QString) -> QString {
+        let Some(src) = source_lookup("runners", &source.to_string()) else {
+            return QString::from("");
+        };
+        let path = runners::source_root(&src).join(name.to_string());
+        if path.is_dir() {
+            QString::from(&path.to_string_lossy().into_owned())
+        } else {
+            QString::from("")
+        }
+    }
+
+    fn delete_runner_at(&self, path: QString) -> QString {
+        let dir = std::path::PathBuf::from(path.to_string());
+        match runners::delete_found_runner(&dir) {
+            Ok(_) => QString::from(""),
+            Err(e) => QString::from(&format!("{:#}", e)),
+        }
+    }
+
+    fn runner_dll_options(&self) -> QString {
+        let mut map = serde_json::Map::new();
+        for kind in ["dxvk", "vkd3d", "dxvk_nvapi"] {
+            map.insert(
+                kind.to_string(),
+                serde_json::json!(dll_packs::installed_versions_for_kind(kind)),
+            );
+        }
+        QString::from(&serde_json::Value::Object(map).to_string())
+    }
+
+    fn runner_dll_status(&self, runner_dir: QString) -> QString {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        let payload = serde_json::json!({
+            "supported": runners::dll_override::supported(&dir),
+            "active": runners::dll_override::active(&dir),
+        });
+        QString::from(&payload.to_string())
+    }
+
+    fn set_runner_dll_override(&self, runner_dir: QString, kind: QString, tag: QString) -> QString {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        let kind_s = kind.to_string();
+        let Some(k) = runners::dll_override::DllKind::from_pack_kind(&kind_s) else {
+            return QString::from(&format!("unknown dll kind: {}", kind_s));
+        };
+        let tag_s = tag.to_string();
+        let res = if tag_s.is_empty() || tag_s == "Default" {
+            runners::dll_override::restore(&dir, k)
+        } else {
+            runners::dll_override::apply(&dir, k, &tag_s)
+        };
+        match res {
+            Ok(_) => QString::from(""),
+            Err(e) => QString::from(&format!("{:#}", e)),
         }
     }
 
