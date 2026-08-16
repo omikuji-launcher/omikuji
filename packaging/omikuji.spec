@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.9.0
+Version:        0.9.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,9 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sun Aug 16 2026 reakjra <reakjra@proton.me> - 0.9.1-1
+- stupid ass flatpak image limit sizes
+
 * Sun Aug 16 2026 reakjra <reakjra@proton.me> - 0.9.0-1
 - Changed app icon
 - Added guard for duplicate game launches and wine tools spawns
