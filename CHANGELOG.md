@@ -1,4 +1,4 @@
-## This is a example.
+## This is an example. Add new versions changelog below this.
 Added:
 - added three hundred images of Yangyang.
 - added button to open a massive cake and I won't elaborate on the kind.
