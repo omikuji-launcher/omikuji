@@ -5,74 +5,41 @@ use cxx_qt_lib::QString;
 use omikuji_core::library::Game;
 
 impl super::qobject::GameModel {
-    pub fn launch_game(&self, index: i32) -> bool {
+    pub fn launch_game(mut self: Pin<&mut Self>, index: i32) -> bool {
+        use cxx_qt::Threading;
         let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
+        let Some(game) = self.library.game.get(idx).cloned() else {
             tracing::warn!("launch_game: invalid index {}", index);
             return false;
         };
 
-        // pre-launch update check. network errors are intentionally swallowed so a hiccup doesnt block the user from playing.
-        if game.source.kind == "gacha"
-            && let Some(info) = blocking_check_gacha_update(&game.source.app_id)
+        if omikuji_core::process::is_game_running(&game.metadata.id)
+            || omikuji_core::process::is_launching(&game.metadata.id)
         {
-            omikuji_core::process::notify_update_required(
-                omikuji_core::process::UpdateNotification {
-                    game_id: game.metadata.id.clone(),
-                    app_id: game.source.app_id.clone(),
-                    from_version: info.from_version,
-                    to_version: info.to_version,
-                    download_size: info.download_size,
-                    can_diff: info.can_diff,
-                    delta_supported: info.delta_supported,
-                },
+            tracing::warn!(
+                "game '{}' is already running or launching",
+                game.metadata.name
             );
             return false;
         }
 
-        if game.source.kind == "epic"
-            && omikuji_core::ui_settings::UiSettings::load()
-                .behavior
-                .auto_check_epic_updates_on_launch
-            && let Some(info) =
-                omikuji_core::store::epic::updates::blocking_check_epic_update(&game.source.app_id)
-        {
-            omikuji_core::process::notify_update_required(
-                omikuji_core::process::UpdateNotification {
-                    game_id: game.metadata.id.clone(),
-                    app_id: game.source.app_id.clone(),
-                    from_version: info.from_version,
-                    to_version: info.to_version,
-                    download_size: info.download_size,
-                    can_diff: true,
-                    delta_supported: true,
-                },
-            );
-            return false;
-        }
+        omikuji_core::process::mark_launching(&game.metadata.id);
 
-        if game.source.kind == "gog"
-            && omikuji_core::ui_settings::UiSettings::load()
-                .behavior
-                .auto_check_gog_updates_on_launch
-            && let Some(info) =
-                omikuji_core::store::gog::updates::blocking_check_gog_update(&game.source.app_id)
-        {
-            omikuji_core::process::notify_update_required(
-                omikuji_core::process::UpdateNotification {
-                    game_id: game.metadata.id.clone(),
-                    app_id: game.source.app_id.clone(),
-                    from_version: info.from_version,
-                    to_version: info.to_version,
-                    download_size: info.download_size,
-                    can_diff: true,
-                    delta_supported: true,
-                },
-            );
-            return false;
-        }
-
-        self.try_spawn_launch(game)
+        let qt = self.as_mut().qt_thread();
+        std::thread::spawn(move || {
+            if let Some(info) = pre_launch_update_check(&game) {
+                omikuji_core::process::clear_launching(&game.metadata.id);
+                omikuji_core::process::notify_update_required(info);
+                return;
+            }
+            if do_spawn_launch(&game) {
+                let gid = game.metadata.id.clone();
+                let _ = qt.queue(move |mut obj: Pin<&mut super::qobject::GameModel>| {
+                    obj.as_mut().launch_proceeding(&QString::from(&gid));
+                });
+            }
+        });
+        true
     }
 
     pub fn launch_game_force(&self, index: i32) -> bool {
@@ -153,38 +120,8 @@ impl super::qobject::GameModel {
             return false;
         }
 
-        if game.runner.runner_type == "steam" {
-            omikuji_core::notifications::info(
-                &game.metadata.name,
-                "Launching through Steam... any errors will show in Steam itself",
-            );
-        }
-
         omikuji_core::process::mark_launching(&game.metadata.id);
-
-        if game.launch.pre_launch_script.is_empty() {
-            match omikuji_core::launch::build_launch(game) {
-                Ok(config) => {
-                    spawn_launch_thread(config);
-                    true
-                }
-                Err(e) => {
-                    tracing::error!("failed to build launch config: {}", e);
-                    notify_launch_failed(game.metadata.id.clone(), &e);
-                    false
-                }
-            }
-        } else {
-            let game = game.clone();
-            std::thread::spawn(move || match omikuji_core::launch::prepare_launch(&game) {
-                Ok(config) => spawn_launch_thread(config),
-                Err(e) => {
-                    tracing::error!("failed to build launch config: {}", e);
-                    notify_launch_failed(game.metadata.id.clone(), &e);
-                }
-            });
-            true
-        }
+        do_spawn_launch(game)
     }
 
     pub fn stop_game(&self, game_id: &QString) {
@@ -421,6 +358,77 @@ impl super::qobject::GameModel {
                 .spawn();
         }
         std::process::exit(0);
+    }
+}
+
+fn pre_launch_update_check(game: &Game) -> Option<omikuji_core::process::UpdateNotification> {
+    let notif = |from_version, to_version, download_size, can_diff, delta_supported| {
+        omikuji_core::process::UpdateNotification {
+            game_id: game.metadata.id.clone(),
+            app_id: game.source.app_id.clone(),
+            from_version,
+            to_version,
+            download_size,
+            can_diff,
+            delta_supported,
+        }
+    };
+    let behavior = || omikuji_core::ui_settings::UiSettings::load().behavior;
+    match game.source.kind.as_str() {
+        "gacha" => {
+            let info = blocking_check_gacha_update(&game.source.app_id)?;
+            Some(notif(
+                info.from_version,
+                info.to_version,
+                info.download_size,
+                info.can_diff,
+                info.delta_supported,
+            ))
+        }
+        "epic" if behavior().auto_check_epic_updates_on_launch => {
+            let info =
+                omikuji_core::store::epic::updates::blocking_check_epic_update(&game.source.app_id)?;
+            Some(notif(info.from_version, info.to_version, info.download_size, true, true))
+        }
+        "gog" if behavior().auto_check_gog_updates_on_launch => {
+            let info =
+                omikuji_core::store::gog::updates::blocking_check_gog_update(&game.source.app_id)?;
+            Some(notif(info.from_version, info.to_version, info.download_size, true, true))
+        }
+        _ => None,
+    }
+}
+
+fn do_spawn_launch(game: &Game) -> bool {
+    if game.runner.runner_type == "steam" {
+        omikuji_core::notifications::info(
+            &game.metadata.name,
+            "Launching through Steam... any errors will show in Steam itself",
+        );
+    }
+
+    if game.launch.pre_launch_script.is_empty() {
+        match omikuji_core::launch::build_launch(game) {
+            Ok(config) => {
+                spawn_launch_thread(config);
+                true
+            }
+            Err(e) => {
+                tracing::error!("failed to build launch config: {}", e);
+                notify_launch_failed(game.metadata.id.clone(), &e);
+                false
+            }
+        }
+    } else {
+        let game = game.clone();
+        std::thread::spawn(move || match omikuji_core::launch::prepare_launch(&game) {
+            Ok(config) => spawn_launch_thread(config),
+            Err(e) => {
+                tracing::error!("failed to build launch config: {}", e);
+                notify_launch_failed(game.metadata.id.clone(), &e);
+            }
+        });
+        true
     }
 }
 

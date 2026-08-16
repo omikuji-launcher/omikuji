@@ -46,6 +46,10 @@ pub mod qobject {
         #[qsignal]
         fn game_stopped(self: Pin<&mut GameModel>, game_id: &QString);
 
+        #[qsignal]
+        #[cxx_name = "launchProceeding"]
+        fn launch_proceeding(self: Pin<&mut GameModel>, game_id: &QString);
+
         // payload is json: { "download": "123", "install": "456", "error": "" }
         // sizes are stringified u64 becuase js Number loses precision above 2^53
         #[qsignal]
@@ -180,7 +184,7 @@ pub mod qobject {
         fn library_dir(self: &GameModel) -> QString;
 
         #[qinvokable]
-        fn launch_game(self: &GameModel, index: i32) -> bool;
+        fn launch_game(self: Pin<&mut GameModel>, index: i32) -> bool;
 
         #[qinvokable]
         fn launch_game_force(self: &GameModel, index: i32) -> bool;

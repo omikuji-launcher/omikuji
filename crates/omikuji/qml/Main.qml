@@ -276,6 +276,10 @@ ApplicationWindow {
             }
         }
 
+        onLaunchProceeding: () => {
+            if (uiSettings.minimizeOnLaunch) root.minimizeForLaunch()
+        }
+
         onUpdates_queued: (epicCount, gogCount) => {
             let total = epicCount + gogCount
             if (total <= 0) return
@@ -444,24 +448,26 @@ ApplicationWindow {
         return doLaunch(idx, forceSkipUpdateCheck)
     }
 
+    function minimizeForLaunch() {
+        steamStorePanel.keepAlive = false
+        epicStorePanel.keepAlive = false
+        gogStorePanel.keepAlive = false
+        hoyoStorePanel.keepAlive = false
+        root.visible = false
+        root.releaseResources()
+        gameModel.trim_heap()
+    }
+
     function doLaunch(idx, forceSkipUpdateCheck) {
-        let launched = forceSkipUpdateCheck
-            ? gameModel.launch_game_force(idx)
-            : gameModel.launch_game(idx)
-        if (launched) {
+        if (forceSkipUpdateCheck) {
+            if (!gameModel.launch_game_force(idx)) return false
             isSelectedLaunching = true
-            if (uiSettings.minimizeOnLaunch) {
-                steamStorePanel.keepAlive = false
-                epicStorePanel.keepAlive = false
-                gogStorePanel.keepAlive = false
-                hoyoStorePanel.keepAlive = false
-                root.visible = false
-                root.releaseResources()
-                gameModel.trim_heap()
-            }
+            if (uiSettings.minimizeOnLaunch) minimizeForLaunch()
             return true
         }
-        return false
+        if (!gameModel.launch_game(idx)) return false
+        isSelectedLaunching = true
+        return true
     }
 
     Timer {
