@@ -397,6 +397,13 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
+        fn epic_dir_has_game(
+            self: &GameModel,
+            launch_exe: &QString,
+            install_path: &QString,
+        ) -> bool;
+
+        #[qinvokable]
         fn fetch_epic_install_size(
             self: Pin<&mut GameModel>,
             request_id: &QString,
@@ -447,6 +454,13 @@ pub mod qobject {
             app_name: &QString,
             install_path: &QString,
         ) -> QString;
+
+        #[qinvokable]
+        fn gog_dir_has_game(
+            self: &GameModel,
+            app_id: &QString,
+            install_path: &QString,
+        ) -> bool;
 
         #[qinvokable]
         fn fetch_gog_install_size(

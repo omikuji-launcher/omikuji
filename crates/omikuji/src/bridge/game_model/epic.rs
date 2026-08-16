@@ -41,12 +41,25 @@ impl super::qobject::GameModel {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();
 
-        omikuji_core::install_sizes::spawn_fetch(rid, move || async move {
+        omikuji_core::install_sizes::spawn_fetch_ex(rid, move || async move {
             omikuji_core::store::epic::fetch_install_size(&app_name_str)
                 .await
-                .map(|s| (s.download_bytes, s.install_bytes))
+                .map(|s| (s.download_bytes, s.install_bytes, s.launch_exe))
                 .map_err(|e| e.to_string())
         });
+    }
+
+    pub fn epic_dir_has_game(&self, launch_exe: &QString, install_path: &QString) -> bool {
+        let path = install_path.to_string();
+        if path.trim().is_empty() {
+            return false;
+        }
+        let dir = std::path::Path::new(path.trim());
+        let exe = launch_exe.to_string();
+        if !exe.is_empty() {
+            return dir.join(&exe).exists();
+        }
+        dir.join(".egstore").exists()
     }
 
     pub fn epic_import_after_install(

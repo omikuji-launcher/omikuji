@@ -46,6 +46,7 @@ DialogCard {
 
     property real existingInstallBytes: 0
     property bool hasResumeState: false
+    property bool _directUntracked: false
 
     readonly property bool isImportMode: gameData && gameData.isInstalled === true
     readonly property bool hasUntrackedInstall: !isImportMode && !hasResumeState && existingInstallBytes > 1048576
@@ -59,6 +60,8 @@ DialogCard {
         if (base === "" || safe === "") return ""
         return base + "/" + safe
     }
+
+    readonly property string resolvedInstallPath: _directUntracked ? (installPath || "").trim() : effectiveInstallPath
 
     maxWidth: 480
     panelsShown: detailsExpanded
@@ -80,15 +83,32 @@ DialogCard {
         if (isNaN(freeSpaceBytes)) freeSpaceBytes = -1
     }
 
+    function _existing(app, path) {
+        let out = {}
+        try { out = JSON.parse(gameModel.gog_check_existing_install(app, path) || "{}") || {} }
+        catch (e) { out = {} }
+        return out
+    }
+
     function refreshExistingInstall() {
-        if (!gameModel || !gameData || !gameData.appName || effectiveInstallPath === "") {
-            existingInstallBytes = 0; hasResumeState = false; return
+        if (!gameModel || !gameData || !gameData.appName) {
+            existingInstallBytes = 0; hasResumeState = false; _directUntracked = false; return
         }
-        let raw = gameModel.gog_check_existing_install(gameData.appName, effectiveInstallPath)
-        let p = {}
-        try { p = JSON.parse(raw) || {} } catch (e) { p = {} }
-        existingInstallBytes = parseInt(p.bytes) || 0
-        hasResumeState = p.hasResume === true
+        let rawPath = (installPath || "").trim()
+        if (!isImportMode && rawPath !== "" && gameModel.gog_dir_has_game(gameData.appName, rawPath)) {
+            let d = _existing(gameData.appName, rawPath)
+            existingInstallBytes = parseInt(d.bytes) || 0
+            hasResumeState = d.hasResume === true
+            _directUntracked = true
+            return
+        }
+        if (effectiveInstallPath === "") {
+            existingInstallBytes = 0; hasResumeState = false; _directUntracked = false; return
+        }
+        let n = _existing(gameData.appName, effectiveInstallPath)
+        existingInstallBytes = parseInt(n.bytes) || 0
+        hasResumeState = n.hasResume === true
+        _directUntracked = false
     }
 
     function refreshInstallSize() {
@@ -127,7 +147,7 @@ DialogCard {
         }
     }
 
-    onInstallPathChanged: refreshFreeSpace()
+    onInstallPathChanged: { refreshFreeSpace(); refreshExistingInstall() }
     onEffectiveInstallPathChanged: refreshExistingInstall()
 
     function resetState() {
@@ -143,6 +163,7 @@ DialogCard {
         _sizeRequestId = ""
         existingInstallBytes = 0
         hasResumeState = false
+        _directUntracked = false
         gameDetails = null
         _detailsRequestId = ""
         detailsExpanded = false
@@ -263,7 +284,7 @@ DialogCard {
                 gameModel: root.gameModel
                 text: root.installPath
                 readOnly: root.isImportMode
-                trailingHint: root.isImportMode || !root.gameData || !root.gameData.title
+                trailingHint: root.isImportMode || root._directUntracked || !root.gameData || !root.gameData.title
                     ? ""
                     : "/" + (root.gameData.title || "").replace(/[\\/:*?"<>|]/g, "").trim()
                 onTextEdited: (t) => root.installPath = t
@@ -279,16 +300,18 @@ DialogCard {
                         if (root.hasResumeState) label += " · " + qsTr("resume state")
                         parts.push(label)
                     }
-                    if (root.downloadBytes === -2) {
-                        parts.push(qsTr("Calculating size…"))
-                    } else if (root.sizeError !== "") {
-                        parts.push(qsTr("Size unavailable"))
-                    } else if (root.installBytes === 0 && root.downloadBytes === 0) {
-                        parts.push(qsTr("Size unknown"))
-                    } else if (root.installBytes >= 0) {
-                        parts.push(qsTr("%1 install").arg(Format.formatBytesShort(root.installBytes)))
-                        if (root.downloadBytes > 0) {
-                            parts.push(qsTr("%1 download").arg(Format.formatBytesShort(root.downloadBytes)))
+                    if (!root.isImportMode && !root.hasUntrackedInstall) {
+                        if (root.downloadBytes === -2) {
+                            parts.push(qsTr("Calculating size…"))
+                        } else if (root.sizeError !== "") {
+                            parts.push(qsTr("Size unavailable"))
+                        } else if (root.installBytes === 0 && root.downloadBytes === 0) {
+                            parts.push(qsTr("Size unknown"))
+                        } else if (root.installBytes >= 0) {
+                            parts.push(qsTr("%1 install").arg(Format.formatBytesShort(root.installBytes)))
+                            if (root.downloadBytes > 0) {
+                                parts.push(qsTr("%1 download").arg(Format.formatBytesShort(root.downloadBytes)))
+                            }
                         }
                     }
                     if (root.freeSpaceBytes >= 0) {
@@ -378,7 +401,7 @@ DialogCard {
                     : ""
                 let id = root.gogModel.enqueue_install(
                     root.gameIndex,
-                    root.effectiveInstallPath,
+                    root.resolvedInstallPath,
                     root.prefixPath,
                     runner,
                     root.isImportMode,

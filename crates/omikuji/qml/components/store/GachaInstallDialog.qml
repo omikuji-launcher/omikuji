@@ -68,6 +68,8 @@ DialogCard {
     property int existingTempSegments: 0
     property bool existingInstall: false
     property string existingVersion: ""
+    property string importDir: ""
+    readonly property bool directImport: existingInstall && importDir !== "" && importDir === (installPath || "").trim()
 
     readonly property string displayName: root.manifest ? root.manifest.display_name : ""
     readonly property string installFolderName:
@@ -183,6 +185,7 @@ DialogCard {
         existingTempSegments = 0
         existingInstall = false
         existingVersion = ""
+        importDir = ""
         advised = null
         assetIndex = 0
         runnerInstalling = false
@@ -294,7 +297,7 @@ DialogCard {
         let runner = selectedRunner()
         if (existingInstall) {
             let gid = gameModel.gacha_import_after_install(
-                manifestId, editionId, displayName, effectiveInstallPath, runner, prefixPath
+                manifestId, editionId, displayName, importDir, runner, prefixPath
             )
             imported(gid || "")
             close()
@@ -374,19 +377,37 @@ DialogCard {
         gameModel.fetch_gacha_install_size(id, manifestId, editionId, voicesSelected().join(","))
     }
 
+    function _inspect(path, temp) {
+        let out = {}
+        try { out = JSON.parse(gameModel.gacha_check_existing_install(manifestId, editionId, path, temp) || "{}") || {} }
+        catch (e) { out = {} }
+        return out
+    }
+
     function refreshExisting() {
-        if (!gameModel || !manifest || effectiveInstallPath === "") {
-            existingTempBytes = 0; existingTempSegments = 0; existingInstall = false; existingVersion = ""; return
+        if (!gameModel || !manifest) {
+            existingTempBytes = 0; existingTempSegments = 0; existingInstall = false; existingVersion = ""; importDir = ""; return
         }
-        let raw = gameModel.gacha_check_existing_install(
-            manifestId, editionId, effectiveInstallPath, tempPath.trim()
-        )
-        let p = {}
-        try { p = JSON.parse(raw) || {} } catch (e) { p = {} }
-        existingTempBytes = parseInt(p.bytes) || 0
-        existingTempSegments = parseInt(p.segments) || 0
-        existingInstall = p.has_install === true
-        existingVersion = (p.installed_version && typeof p.installed_version === "string") ? p.installed_version : ""
+        let rawPath = (installPath || "").trim()
+        if (rawPath !== "") {
+            let direct = _inspect(rawPath, "")
+            if (direct.has_install === true) {
+                existingTempBytes = 0; existingTempSegments = 0
+                existingInstall = true
+                existingVersion = (typeof direct.installed_version === "string") ? direct.installed_version : ""
+                importDir = rawPath
+                return
+            }
+        }
+        if (effectiveInstallPath === "") {
+            existingTempBytes = 0; existingTempSegments = 0; existingInstall = false; existingVersion = ""; importDir = ""; return
+        }
+        let nested = _inspect(effectiveInstallPath, tempPath.trim())
+        existingTempBytes = parseInt(nested.bytes) || 0
+        existingTempSegments = parseInt(nested.segments) || 0
+        existingInstall = nested.has_install === true
+        existingVersion = (typeof nested.installed_version === "string") ? nested.installed_version : ""
+        importDir = existingInstall ? effectiveInstallPath : ""
     }
 
     body: ColumnLayout {
@@ -521,7 +542,7 @@ DialogCard {
                 selectFolder: true
                 gameModel: root.gameModel
                 text: root.installPath
-                trailingHint: root.installFolderName ? "/" + root.installFolderName : ""
+                trailingHint: root.directImport || !root.installFolderName ? "" : "/" + root.installFolderName
                 onTextEdited: (t) => root.installPath = t
                 onAccepted: (p) => root.installPath = p
             }
@@ -529,12 +550,14 @@ DialogCard {
             Text {
                 text: {
                     let parts = []
-                    if (root.downloadBytes === -2) {
-                        parts.push(qsTr("Calculating size…"))
-                    } else if (root.sizeError !== "") {
-                        parts.push(qsTr("Size unavailable"))
-                    } else if (root.installBytes >= 0) {
-                        parts.push(qsTr("%1 install").arg(Format.formatBytesShort(root.installBytes)))
+                    if (!root.existingInstall) {
+                        if (root.downloadBytes === -2) {
+                            parts.push(qsTr("Calculating size…"))
+                        } else if (root.sizeError !== "") {
+                            parts.push(qsTr("Size unavailable"))
+                        } else if (root.installBytes >= 0) {
+                            parts.push(qsTr("%1 install").arg(Format.formatBytesShort(root.installBytes)))
+                        }
                     }
                     if (root.installFreeBytes >= 0) {
                         parts.push(qsTr("%1 free").arg(Format.formatBytesShort(root.installFreeBytes)))

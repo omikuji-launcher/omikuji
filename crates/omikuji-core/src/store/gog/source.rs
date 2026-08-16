@@ -261,7 +261,7 @@ fn dir_size_bytes(dir: &std::path::Path) -> u64 {
     walk(dir, 8)
 }
 
-fn dir_has_info_marker(dir: &std::path::Path, app_id: &str) -> bool {
+pub fn dir_has_info_marker(dir: &std::path::Path, app_id: &str) -> bool {
     if dir.join(format!("goggame-{}.info", app_id)).exists() {
         return true;
     }

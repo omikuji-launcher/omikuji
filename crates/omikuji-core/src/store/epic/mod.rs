@@ -250,10 +250,11 @@ pub struct InstalledInfo {
     pub title: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct InstallSize {
     pub download_bytes: u64,
     pub install_bytes: u64,
+    pub launch_exe: String,
 }
 
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
@@ -287,9 +288,16 @@ pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
         anyhow::bail!("legendary info returned no size fields");
     }
 
+    let launch_exe = v
+        .pointer("/manifest/launch_exe")
+        .and_then(|x| x.as_str())
+        .unwrap_or_default()
+        .to_string();
+
     Ok(InstallSize {
         download_bytes,
         install_bytes,
+        launch_exe,
     })
 }
 

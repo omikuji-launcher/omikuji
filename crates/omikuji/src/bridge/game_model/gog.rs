@@ -26,6 +26,18 @@ impl super::qobject::GameModel {
         ))
     }
 
+    pub fn gog_dir_has_game(&self, app_id: &QString, install_path: &QString) -> bool {
+        let aid = app_id.to_string();
+        let path = install_path.to_string();
+        if aid.is_empty() || path.trim().is_empty() {
+            return false;
+        }
+        omikuji_core::store::gog::source::dir_has_info_marker(
+            std::path::Path::new(path.trim()),
+            &aid,
+        )
+    }
+
     pub fn fetch_gog_install_size(self: Pin<&mut Self>, request_id: &QString, app_name: &QString) {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();

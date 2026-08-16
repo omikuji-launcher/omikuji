@@ -143,6 +143,18 @@ impl DownloadSource for LegendarySource {
     async fn import_existing(&self, entry: &DownloadEntry) -> Result<()> {
         let legendary = require_legendary()?;
 
+        // with this, importing a game thats in a different path from legendary's own installed.json one lets us import it properly with the new path ig
+        if crate::store::epic::find_installed_info(&entry.app_id).is_some() {
+            let _ = Command::new(&legendary)
+                .arg("-y")
+                .arg("uninstall")
+                .arg("--keep-files")
+                .arg("--skip-uninstaller")
+                .arg(&entry.app_id)
+                .output()
+                .await;
+        }
+
         let output = Command::new(&legendary)
             .arg("-y")
             .arg("import")

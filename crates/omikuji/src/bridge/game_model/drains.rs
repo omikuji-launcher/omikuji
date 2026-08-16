@@ -58,6 +58,7 @@ impl super::qobject::GameModel {
             let payload = serde_json::json!({
                 "download": r.download_bytes.to_string(),
                 "install": r.install_bytes.to_string(),
+                "launchExe": r.launch_exe,
                 "error": r.error,
             })
             .to_string();
