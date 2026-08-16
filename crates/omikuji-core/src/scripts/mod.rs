@@ -17,8 +17,25 @@ pub struct Script {
     pub inputs: Vec<Input>,
     #[serde(default, rename = "step")]
     pub steps: Vec<Step>,
-    #[serde(default)]
-    pub game: Option<GameSpec>,
+    #[serde(default, rename = "game", deserialize_with = "de_games")]
+    pub games: Vec<GameSpec>,
+}
+
+// accepts both a single [game] table and an array of [[game]] tables.
+fn de_games<'de, D>(d: D) -> std::result::Result<Vec<GameSpec>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum OneOrMany {
+        Many(Vec<GameSpec>),
+        One(Box<GameSpec>),
+    }
+    Ok(match OneOrMany::deserialize(d)? {
+        OneOrMany::Many(v) => v,
+        OneOrMany::One(g) => vec![*g],
+    })
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -61,9 +78,27 @@ pub struct Input {
     pub default: String,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(transparent)]
+pub struct When(pub HashMap<String, String>);
+
+impl When {
+    pub fn matches(&self, selections: &HashMap<String, String>) -> bool {
+        self.0.iter().all(|(k, v)| selections.get(k) == Some(v))
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Step {
+    #[serde(default)]
+    pub when: When,
+    #[serde(flatten)]
+    pub action: StepAction,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "task", rename_all = "snake_case")]
-pub enum Step {
+pub enum StepAction {
     InitPrefix,
     Winetricks {
         verbs: Vec<String>,
@@ -90,13 +125,13 @@ pub enum Step {
 
 impl Step {
     pub fn describe(&self) -> String {
-        match self {
-            Step::InitPrefix => "initializing prefix".into(),
-            Step::Winetricks { verbs } => format!("winetricks {}", verbs.join(" ")),
-            Step::Download { url, .. } => format!("downloading {url}"),
-            Step::Extract { archive, .. } => format!("extracting {archive}"),
-            Step::RunExe { exe, .. } => format!("running {exe}"),
-            Step::Shell { .. } => "running shell step".into(),
+        match &self.action {
+            StepAction::InitPrefix => "initializing prefix".into(),
+            StepAction::Winetricks { verbs } => format!("winetricks {}", verbs.join(" ")),
+            StepAction::Download { url, .. } => format!("downloading {url}"),
+            StepAction::Extract { archive, .. } => format!("extracting {archive}"),
+            StepAction::RunExe { exe, .. } => format!("running {exe}"),
+            StepAction::Shell { .. } => "running shell step".into(),
         }
     }
 }
@@ -113,6 +148,20 @@ pub struct GameSpec {
     pub env: HashMap<String, String>,
     #[serde(default)]
     pub dll_overrides: HashMap<String, String>,
+    #[serde(default)]
+    pub when: When,
+}
+
+fn check_when(when: &When, inputs: &[Input]) -> Result<()> {
+    for (key, val) in &when.0 {
+        let Some(input) = inputs.iter().find(|i| &i.id == key) else {
+            bail!("when references unknown input \"{key}\"");
+        };
+        if input.kind == InputKind::Choice && !input.options.contains(val) {
+            bail!("when value \"{val}\" is not an option of choice \"{key}\"");
+        }
+    }
+    Ok(())
 }
 
 impl Script {
@@ -123,7 +172,9 @@ impl Script {
     }
 
     pub fn has_shell(&self) -> bool {
-        self.steps.iter().any(|s| matches!(s, Step::Shell { .. }))
+        self.steps
+            .iter()
+            .any(|s| matches!(s.action, StepAction::Shell { .. }))
     }
 
     pub fn prefix_input(&self) -> Option<&Input> {
@@ -138,7 +189,7 @@ impl Script {
         if self.script.name.trim().is_empty() {
             bail!("script.name is empty");
         }
-        if let Some(game) = &self.game {
+        for game in &self.games {
             if game.name.trim().is_empty() {
                 bail!("game.name is empty");
             }
@@ -208,13 +259,15 @@ impl Script {
         {
             bail!("more than one runner input");
         }
-        if self.runner_input().is_some()
-            && self
-                .game
-                .as_ref()
-                .is_some_and(|g| !g.wine_version.is_empty())
-        {
+        if self.runner_input().is_some() && self.games.iter().any(|g| !g.wine_version.is_empty()) {
             bail!("declare a runner input or game.wine_version, not both");
+        }
+
+        for step in &self.steps {
+            check_when(&step.when, &self.inputs)?;
+        }
+        for game in &self.games {
+            check_when(&game.when, &self.inputs)?;
         }
 
         let mut known: HashSet<&str> = BUILTIN_VARS.iter().copied().collect();
@@ -232,24 +285,24 @@ impl Script {
     fn template_strings(&self) -> Vec<&str> {
         let mut out: Vec<&str> = Vec::new();
         for step in &self.steps {
-            match step {
-                Step::InitPrefix | Step::Winetricks { .. } => {}
-                Step::Download { url, dest, .. } => {
+            match &step.action {
+                StepAction::InitPrefix | StepAction::Winetricks { .. } => {}
+                StepAction::Download { url, dest, .. } => {
                     out.push(url);
                     out.push(dest);
                 }
-                Step::Extract { archive, dest } => {
+                StepAction::Extract { archive, dest } => {
                     out.push(archive);
                     out.push(dest);
                 }
-                Step::RunExe { exe, dll_overrides } => {
+                StepAction::RunExe { exe, dll_overrides } => {
                     out.push(exe);
                     out.extend(dll_overrides.values().map(String::as_str));
                 }
-                Step::Shell { run } => out.push(run),
+                StepAction::Shell { run } => out.push(run),
             }
         }
-        if let Some(game) = &self.game {
+        for game in &self.games {
             out.push(&game.exe);
             out.extend(game.env.values().map(String::as_str));
             out.extend(game.dll_overrides.values().map(String::as_str));
@@ -464,15 +517,83 @@ d3d11 = "n,b"
         assert_eq!(s.steps.len(), 6);
         assert!(s.has_shell());
         assert_eq!(s.prefix_input().unwrap().id, "prefix");
-        assert_eq!(s.game.as_ref().unwrap().dll_overrides["d3d11"], "n,b");
+        assert_eq!(s.games[0].dll_overrides["d3d11"], "n,b");
         assert!(
-            matches!(&s.steps[4], Step::RunExe { dll_overrides, .. } if dll_overrides["powershell"] == "d")
+            matches!(&s.steps[4].action, StepAction::RunExe { dll_overrides, .. } if dll_overrides["powershell"] == "d")
         );
         assert!(
             Script::parse(SAMPLE.split("[game]").next().unwrap())
                 .unwrap()
-                .game
-                .is_none()
+                .games
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn conditional() {
+        let text = r#"
+[script]
+name = "regions"
+
+[[input]]
+id = "region"
+kind = "choice"
+label = "Region"
+options = ["Global", "CN"]
+
+[[step]]
+task = "download"
+url = "https://x/global.exe"
+dest = "${cache}/g.exe"
+when = { region = "Global" }
+
+[[step]]
+task = "init_prefix"
+
+[[game]]
+name = "Game (Global)"
+exe = "${prefix}/g.exe"
+when = { region = "Global" }
+
+[[game]]
+name = "Game (CN)"
+exe = "${prefix}/cn.exe"
+when = { region = "CN" }
+"#;
+        let s = Script::parse(text).unwrap();
+        assert_eq!(s.games.len(), 2);
+        assert_eq!(s.steps.len(), 2);
+
+        let mut sel = HashMap::new();
+        sel.insert("region".to_string(), "Global".to_string());
+        assert!(s.steps[0].when.matches(&sel));
+        assert!(s.steps[1].when.matches(&sel));
+        assert_eq!(
+            s.games.iter().find(|g| g.when.matches(&sel)).unwrap().name,
+            "Game (Global)"
+        );
+
+        sel.insert("region".to_string(), "CN".to_string());
+        assert!(!s.steps[0].when.matches(&sel));
+        assert_eq!(
+            s.games.iter().find(|g| g.when.matches(&sel)).unwrap().name,
+            "Game (CN)"
+        );
+    }
+
+    #[test]
+    fn single_game_still_parses() {
+        assert_eq!(Script::parse(SAMPLE).unwrap().games.len(), 1);
+    }
+
+    #[test]
+    fn when_rejects_unknown_input() {
+        let text = "[script]\nname = \"x\"\n[[step]]\ntask = \"init_prefix\"\nwhen = { nope = \"1\" }\n";
+        assert!(
+            Script::parse(text)
+                .unwrap_err()
+                .to_string()
+                .contains("unknown input")
         );
     }
 

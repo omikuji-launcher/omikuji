@@ -1,4 +1,4 @@
-use super::{InputKind, Script, Step, interpolate};
+use super::{InputKind, Script, Step, StepAction, interpolate};
 use crate::library::Game;
 use crate::wine_tools::WineTool;
 use anyhow::{Context, Result, bail};
@@ -17,20 +17,9 @@ pub fn execute<F: FnMut(&str)>(
     values: &HashMap<String, String>,
     mut on_line: F,
 ) -> Result<ExecOutcome> {
-    let display_name = script
-        .game
-        .as_ref()
-        .map_or(&script.script.name, |g| &g.name);
-    let slug = crate::media::slugify(display_name);
-    let id = crate::library::generate_id();
-
-    let cache = crate::cache_dir()
-        .join("scripts")
-        .join(format!("{slug}-{id}"));
-    std::fs::create_dir_all(&cache)?;
-
     let tv = crate::template_vars::TemplateVars::global();
     let mut vars: HashMap<String, String> = HashMap::new();
+    let mut sel: HashMap<String, String> = HashMap::new();
     for input in &script.inputs {
         let value = values
             .get(&input.id)
@@ -45,8 +34,20 @@ pub fn execute<F: FnMut(&str)>(
             }
             _ => {}
         }
+        sel.insert(input.id.clone(), value.clone());
         vars.insert(input.id.clone(), tv.expand(&value));
     }
+
+    let chosen = script.games.iter().find(|g| g.when.matches(&sel));
+
+    let display_name = chosen.map_or(script.script.name.as_str(), |g| g.name.as_str());
+    let slug = crate::media::slugify(display_name);
+    let id = crate::library::generate_id();
+
+    let cache = crate::cache_dir()
+        .join("scripts")
+        .join(format!("{slug}-{id}"));
+    std::fs::create_dir_all(&cache)?;
 
     let prefix = match script.prefix_input() {
         Some(input) => {
@@ -71,9 +72,7 @@ pub fn execute<F: FnMut(&str)>(
 
     let wine_version = match script.runner_input() {
         Some(input) => vars.get(&input.id).filter(|v| !v.is_empty()).cloned(),
-        None => script
-            .game
-            .as_ref()
+        None => chosen
             .filter(|g| !g.wine_version.is_empty())
             .map(|g| g.wine_version.clone()),
     };
@@ -85,32 +84,37 @@ pub fn execute<F: FnMut(&str)>(
         wine_version.clone(),
     );
 
-    let total = script.steps.len();
-    for (i, step) in script.steps.iter().enumerate() {
+    let steps: Vec<&Step> = script
+        .steps
+        .iter()
+        .filter(|s| s.when.matches(&sel))
+        .collect();
+    let total = steps.len();
+    for (i, step) in steps.iter().enumerate() {
         on_line(&format!("[{}/{}] {}", i + 1, total, step.describe()));
-        match step {
-            Step::InitPrefix => {
+        match &step.action {
+            StepAction::InitPrefix => {
                 std::fs::create_dir_all(&prefix)?;
                 crate::prefixes::bootstrap_prefix(&tool_game, &mut on_line)?;
             }
-            Step::Winetricks { verbs } => {
+            StepAction::Winetricks { verbs } => {
                 crate::wine_tools::run_streamed(
                     &tool_game,
                     WineTool::WinetricksVerbs(verbs.clone()),
                     &mut on_line,
                 )?;
             }
-            Step::Download { url, dest, sha256 } => {
+            StepAction::Download { url, dest, sha256 } => {
                 let url = interpolate(url, &vars)?;
                 let dest = PathBuf::from(interpolate(dest, &vars)?);
                 download_to(&url, &dest, sha256, &mut on_line)?;
             }
-            Step::Extract { archive, dest } => {
+            StepAction::Extract { archive, dest } => {
                 let archive = PathBuf::from(interpolate(archive, &vars)?);
                 let dest = PathBuf::from(interpolate(dest, &vars)?);
                 extract_archive(&archive, &dest)?;
             }
-            Step::RunExe { exe, dll_overrides } => {
+            StepAction::RunExe { exe, dll_overrides } => {
                 let exe = PathBuf::from(interpolate(exe, &vars)?);
                 if !exe.is_file() {
                     bail!("exe not found: {}", exe.display());
@@ -127,13 +131,13 @@ pub fn execute<F: FnMut(&str)>(
                     on_line(&format!("program exited with {status}, continuing"));
                 }
             }
-            Step::Shell { run } => {
+            StepAction::Shell { run } => {
                 shell(&interpolate(run, &vars)?, &prefix, &cache, &mut on_line)?;
             }
         }
     }
 
-    let outcome = match &script.game {
+    let outcome = match chosen {
         Some(spec) => {
             let exe = PathBuf::from(interpolate(&spec.exe, &vars)?);
             let exe_found = exe.is_file();

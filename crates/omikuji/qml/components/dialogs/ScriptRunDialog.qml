@@ -56,14 +56,28 @@ DialogCard {
         try { d = JSON.parse(scriptsBridge.loadJson(path)) } catch (e) { d = { error: String(e) } }
         detail = d
         if (d.error) errorText = d.error
-        let vals = {}
-        for (let input of (d.inputs || []))
-            vals[input.id] = input.default || (input.kind === "bool" ? "false" : "")
-        values = vals
-        valuesRev++
+
         prefixOptions = ofudaBridge
             ? JSON.parse(ofudaBridge.listJson()).map(p => ({ label: p.name, value: p.path }))
             : []
+        let runners = root.gameModel ? RG.groupRunners(JSON.parse(root.gameModel.list_runners())) : []
+        let ri = RG.firstNonHeader(runners)
+        let firstRunner = ri >= 0 ? runners[ri].value : ""
+
+        // che schifo
+        let vals = {}
+        for (let input of (d.inputs || [])) {
+            let v = input.default || ""
+            if (v === "") {
+                if (input.kind === "bool") v = "false"
+                else if (input.kind === "choice") v = (input.options || [])[0] || ""
+                else if (input.kind === "runner") v = firstRunner
+                else if (input.kind === "prefix" && input.picker !== "path") v = (prefixOptions[0] || {}).value || ""
+            }
+            vals[input.id] = v
+        }
+        values = vals
+        valuesRev++
         open()
     }
 
@@ -226,43 +240,46 @@ DialogCard {
             id: textComp
             M3TextField {
                 property var input
-                label: input.label
-                text: root.values[input.id] || ""
+                label: input?.label || ""
+                text: root.values[input?.id] || ""
                 onTextEdited: (t) => root.setValue(input.id, t)
             }
         }
+
         Component {
             id: fileComp
             M3FileField {
                 property var input
-                label: input.label
+                label: input?.label || ""
                 gameModel: root.gameModel
-                selectFolder: input.kind === "directory"
-                filter: input.filter || ""
-                text: { root.valuesRev; return root.values[input.id] || "" }
+                selectFolder: input?.kind === "directory"
+                filter: input?.filter || ""
+                text: { root.valuesRev; return root.values[input?.id] || "" }
                 onTextEdited: (t) => root.setValue(input.id, t)
             }
         }
+
         Component {
             id: choiceComp
             M3Dropdown {
                 property var input
-                label: input.label
-                options: input.options.map(o => ({ label: o, value: o }))
-                currentIndex: Math.max(0, input.options.indexOf(root.values[input.id]))
+                label: input?.label || ""
+                options: (input?.options || []).map(o => ({ label: o, value: o }))
+                currentIndex: Math.max(0, (input?.options || []).indexOf(root.values[input?.id]))
                 onSelected: (v) => root.setValue(input.id, v)
-                Component.onCompleted: if (!root.values[input.id]) root.setValue(input.id, currentValue)
             }
         }
+
         Component {
             id: boolComp
             LabeledSwitch {
                 property var input
-                label: input.label
-                checked: root.values[input.id] === "true"
+                label: input?.label || ""
+                checked: root.values[input?.id] === "true"
                 onToggled: (v) => root.setValue(input.id, v ? "true" : "false")
             }
         }
+
         Component {
             id: prefixListComp
             Column {
@@ -270,11 +287,11 @@ DialogCard {
                 M3Dropdown {
                     property var input
                     width: parent.width
-                    label: input.label
+                    label: input?.label || ""
                     options: root.prefixOptions
                     enabled: root.prefixOptions.length > 0
                     onSelected: (v) => root.setValue(input.id, v)
-                    Component.onCompleted: if (root.prefixOptions.length > 0 && !root.values[input.id]) root.setValue(input.id, currentValue)
+                    Component.onCompleted: if (input?.id && root.prefixOptions.length > 0 && !root.values[input.id]) root.setValue(input.id, currentValue)
                 }
                 Text {
                     visible: root.prefixOptions.length === 0
@@ -284,29 +301,30 @@ DialogCard {
                 }
             }
         }
+
         Component {
             id: runnerComp
             M3Dropdown {
                 property var input
-                label: input.label
+                label: input?.label || ""
                 options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
                 currentIndex: {
                     let f = RG.firstNonHeader(options)
                     return f >= 0 ? f : 0
                 }
                 onSelected: (v) => root.setValue(input.id, v)
-                Component.onCompleted: if (!root.values[input.id]) root.setValue(input.id, currentValue)
             }
         }
+
         Component {
             id: prefixPathComp
             M3FileField {
                 property var input
-                label: input.label
+                label: input?.label || ""
                 selectFolder: true
                 gameModel: root.gameModel
                 placeholder: qsTr("/path/to/prefix (created if missing)")
-                text: { root.valuesRev; return root.values[input.id] || "" }
+                text: { root.valuesRev; return root.values[input?.id] || "" }
                 onTextEdited: (t) => root.setValue(input.id, t)
             }
         }

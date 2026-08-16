@@ -178,7 +178,7 @@ DialogCard {
                         anchors.verticalCenter: parent.verticalCenter
                         icon: "close"
                         size: 28
-                        rounded: true
+                        rounded: false
                         danger: true
                         onClicked: root.deleteRunnerRequested(rr.modelData.name, rr.modelData.path)
                     }

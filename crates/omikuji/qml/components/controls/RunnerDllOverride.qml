@@ -11,7 +11,6 @@ Column {
     property var options: ({})
 
     signal errorRaised(string message)
-    signal changed()
 
     readonly property var _kinds: [
         { kind: "dxvk", label: "DXVK" },
@@ -95,7 +94,6 @@ Column {
                     if (err && err.length > 0) root.errorRaised(err)
                     root.refresh()
                     dd.currentIndex = kindRow.activeIndex
-                    root.changed()
                 }
             }
         }
