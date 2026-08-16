@@ -234,6 +234,17 @@ ApplicationWindow {
                 )
                 componentsBridge.installEager()
             }
+
+            let raw = gameModel.changelog_pending()
+            let payload = null
+            if (raw && raw.length > 0) {
+                try { payload = JSON.parse(raw) } catch (e) { payload = null }
+            }
+            if (payload && payload.body && payload.body.length > 0) {
+                changelogDialog.show(payload)
+            } else {
+                gameModel.mark_changelog_seen()
+            }
         }
     }
 
@@ -1164,6 +1175,12 @@ property real cardZoom: uiSettings.cardZoom
             let idx = gameModel.index_of_id(gid)
             if (idx >= 0) root.tryPlay(idx, true)
         }
+    }
+
+    ChangelogDialog {
+        id: changelogDialog
+        anchors.fill: parent
+        onDismissed: gameModel.mark_changelog_seen()
     }
 
     ErrorDialog {

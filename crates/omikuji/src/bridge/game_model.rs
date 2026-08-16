@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
+mod changelog;
 mod drains;
 mod epic;
 mod gacha;
@@ -265,6 +266,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn app_version(self: &GameModel) -> QString;
+
+        #[qinvokable]
+        fn changelog_pending(self: &GameModel) -> QString;
+
+        #[qinvokable]
+        fn mark_changelog_seen(self: &GameModel);
 
         #[qinvokable]
         #[cxx_name = "cpuCoreCount"]

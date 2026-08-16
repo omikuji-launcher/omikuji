@@ -30,6 +30,8 @@ pub struct UiSettings {
     pub dialog_sizes: BTreeMap<String, [f64; 2]>,
     #[serde(default)]
     pub template_vars: BTreeMap<String, String>,
+    #[serde(default)]
+    pub last_seen_changelog: String,
 }
 
 impl Default for UiSettings {
@@ -48,6 +50,7 @@ impl Default for UiSettings {
             dll_sets: Vec::new(),
             dialog_sizes: BTreeMap::new(),
             template_vars: BTreeMap::new(),
+            last_seen_changelog: String::new(),
         }
     }
 }

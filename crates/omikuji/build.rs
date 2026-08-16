@@ -311,6 +311,7 @@ fn main() {
         "qml/components/dialogs/FoundRunnersDialog.qml",
         "qml/components/dialogs/CategoryEditDialog.qml",
         "qml/components/dialogs/ConfirmDialog.qml",
+        "qml/components/dialogs/ChangelogDialog.qml",
         "qml/components/popups/ContextMenu.qml",
         "qml/components/dialogs/DialogCard.qml",
         "qml/components/dialogs/DialogSection.qml",

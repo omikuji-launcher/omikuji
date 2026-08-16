@@ -1,6 +1,7 @@
 pub use anyhow;
 
 pub mod archive_source;
+pub mod changelog;
 pub mod components;
 pub mod components_config;
 pub mod defaults;
