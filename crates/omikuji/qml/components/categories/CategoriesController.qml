@@ -24,6 +24,13 @@ Item {
 
     function showForGame(gameIndex) { gameDialog.show(gameIndex) }
 
+    function setEnabled(index, value) {
+        let entries = ctrl._readEntries()
+        if (index < 0 || index >= entries.length) return
+        entries[index].enabled = value
+        ctrl._applyEntries(entries)
+    }
+
     function _readEntries() {
         if (!ctrl.uiSettings) return []
         try { return JSON.parse(ctrl.uiSettings.categoriesJson()) }

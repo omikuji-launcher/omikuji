@@ -306,6 +306,7 @@ fn main() {
         "qml/components/consolemode/ConsoleSettingsDialog.qml",
         "qml/components/consolemode/ConsoleTopBar.qml",
         "qml/components/categories/CategoriesController.qml",
+        "qml/components/categories/CategoryContextMenu.qml",
         // dialogs
         "qml/components/dialogs/ArchiveManageDialog.qml",
         "qml/components/dialogs/ArchiveSourceDialog.qml",

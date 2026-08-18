@@ -29,6 +29,7 @@ Item {
     property bool showGachas: true
 
     signal tabSelected(int index)
+    signal categoryMenuRequested(int sourceIndex, real x, real y)
     signal storeSelected(string storeName)
     signal downloadsClicked()
     signal settingsClicked()
@@ -52,6 +53,42 @@ Item {
         return y
     }
 
+    ListModel { id: tabsModel }
+
+    property bool _selfApplying: false
+
+    function _syncFromModel() {
+        let selected = root.tabs[root.currentIndex]
+        let next = []
+        for (let i = 0; i < tabsModel.count; i++) {
+            let t = tabsModel.get(i)
+            next.push({ label: t.label, icon: t.icon, kind: t.kind, value: t.value, sourceIndex: t.sourceIndex })
+        }
+        root.tabs = next
+        if (!selected) return
+        let idx = next.findIndex(t => t.kind === selected.kind && t.value === selected.value)
+        if (idx >= 0) root.currentIndex = idx
+    }
+
+    function _persistOrder() {
+        if (!uiSettings) return
+        let all = []
+        try { all = JSON.parse(uiSettings.categoriesJson()) } catch (e) { return }
+        let slots = []
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].enabled !== false) slots.push(i)
+        }
+        if (slots.length !== tabsModel.count) return
+        let reordered = all.slice()
+        for (let s = 0; s < slots.length; s++) {
+            reordered[slots[s]] = all[tabsModel.get(s).sourceIndex]
+        }
+        root._selfApplying = true
+        uiSettings.applyCategoriesJson(JSON.stringify(reordered))
+        root._selfApplying = false
+        _loadCategories()
+    }
+
     function _loadCategories() {
         if (!uiSettings) return
         let raw = uiSettings.categoriesJson()
@@ -61,9 +98,19 @@ Item {
         for (let i = 0; i < parsed.length; i++) {
             let c = parsed[i]
             if (c.enabled === false) continue
-            next.push({ label: CategoryLabels.label(c), icon: c.icon, kind: c.kind, value: c.value || "" })
+            next.push({ label: CategoryLabels.label(c), icon: c.icon, kind: c.kind, value: c.value || "", sourceIndex: i })
         }
+        let prev = root.tabs[root.currentIndex]
         root.tabs = next
+        tabsModel.clear()
+        for (let n = 0; n < next.length; n++) tabsModel.append(next[n])
+
+        // the selection follows the category itself, since editing the list shifts indices
+        let idx = prev ? next.findIndex(t => t.kind === prev.kind && t.value === prev.value) : -1
+        if (idx < 0) idx = 0
+        if (idx === root.currentIndex) return
+        root.currentIndex = idx
+        if (root.currentStore === "" && root.currentBottom === "") root.tabSelected(idx)
     }
 
     onUiSettingsChanged: _loadCategories()
@@ -71,7 +118,10 @@ Item {
 
     Connections {
         target: root.uiSettings
-        function onCategoriesChanged() { root._loadCategories() }
+        function onCategoriesChanged() {
+            if (root._selfApplying) return
+            root._loadCategories()
+        }
     }
 
     component NavItem: Item {
@@ -80,7 +130,13 @@ Item {
         property string label: ""
         property bool selected: false
         property bool badge: false
+        property bool reorderable: false
+        property bool reordering: false
         signal activated()
+        signal menuRequested(real x, real y)
+        signal reorderStarted()
+        signal reorderMoved(real winY)
+        signal reorderEnded()
 
         width: root.width
         height: 40
@@ -167,7 +223,34 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: navItem.activated()
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            preventStealing: navItem.reordering
+            onClicked: (mouse) => {
+                if (mouse.wasHeld && navItem.reorderable) return
+                if (mouse.button === Qt.RightButton) {
+                    let p = mapToItem(null, mouse.x, mouse.y)
+                    navItem.menuRequested(p.x, p.y)
+                } else {
+                    navItem.activated()
+                }
+            }
+            onPressAndHold: (mouse) => {
+                if (!navItem.reorderable || mouse.button !== Qt.LeftButton) return
+                navItem.reordering = true
+                navItem.reorderStarted()
+            }
+            onPositionChanged: (mouse) => {
+                if (!navItem.reordering) return
+                navItem.reorderMoved(mapToItem(null, mouse.x, mouse.y).y)
+            }
+            onReleased: navItem._finishReorder()
+            onCanceled: navItem._finishReorder()
+        }
+
+        function _finishReorder() {
+            if (!navItem.reordering) return
+            navItem.reordering = false
+            navItem.reorderEnded()
         }
     }
 
@@ -268,31 +351,51 @@ Item {
                 height: visible ? implicitHeight : 0
             }
 
-            Column {
+            ListView {
                 id: tabList
                 anchors.top: libraryHeader.bottom
                 anchors.topMargin: 8
                 anchors.left: parent.left
                 anchors.right: parent.right
+                height: contentHeight
                 spacing: 2
+                interactive: false
                 z: 1
 
-                Repeater {
-                    model: root.tabs
+                model: tabsModel
 
-                    NavItem {
-                        required property var modelData
-                        required property int index
+                moveDisplaced: Transition {
+                    NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+                }
 
-                        icon: modelData.icon
-                        label: modelData.label
-                        selected: index === root.currentIndex && root.currentStore === "" && root.currentBottom === ""
-                        onActivated: {
-                            root.currentIndex = index
-                            root.currentStore = ""
-                            root.tabSelected(index)
-                        }
+                delegate: NavItem {
+                    required property int index
+                    required property var model
+
+                    label: model.label
+                    icon: model.icon
+                    reorderable: tabsModel.count > 1
+                    selected: index === root.currentIndex && root.currentStore === "" && root.currentBottom === ""
+                    z: reordering ? 2 : 0
+                    scale: reordering ? 1.03 : 1.0
+                    opacity: reordering ? 0.92 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 120 } }
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                    onActivated: {
+                        root.currentIndex = index
+                        root.currentStore = ""
+                        root.tabSelected(index)
                     }
+                    onMenuRequested: (x, y) => root.categoryMenuRequested(model.sourceIndex, x, y)
+                    onReorderMoved: (winY) => {
+                        let local = tabList.mapFromItem(null, 0, winY).y
+                        let target = Math.max(0, Math.min(tabsModel.count - 1, Math.floor(local / 42)))
+                        if (target === index) return
+                        tabsModel.move(index, target, 1)
+                        root._syncFromModel()
+                    }
+                    onReorderEnded: root._persistOrder()
                 }
             }
 

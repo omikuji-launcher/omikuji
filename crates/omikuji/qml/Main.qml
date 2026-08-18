@@ -594,6 +594,8 @@ property real cardZoom: uiSettings.cardZoom
         showGog: uiSettings.showGog
         showGachas: uiSettings.showGachas
 
+        onCategoryMenuRequested: (sourceIndex, x, y) => categoryMenu.show(sourceIndex, x, y)
+
         onStoreSelected: (storeName) => {
             navTabs.currentBottom = ""
             if (storeName === "Steam") {
@@ -1078,6 +1080,15 @@ property real cardZoom: uiSettings.cardZoom
         id: categoriesController
         uiSettings: uiSettings
         gameModel: gameModel
+    }
+
+    CategoryContextMenu {
+        id: categoryMenu
+        uiSettings: uiSettings
+        onAddRequested: categoriesController.showAdd()
+        onEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)
+        onDeleteRequested: (idx, entry) => categoriesController.showDelete(idx, entry)
+        onHideRequested: (idx) => categoriesController.setEnabled(idx, false)
     }
 
     ArchiveManageDialog {
