@@ -1,6 +1,3 @@
-// EndfieldEdition enum lived here to carry api_base/game_appcode/launcher_appcode/channel/sub_channel as typed methods.
-// dropped 2026-04-26: per-edition data now lives in manifest.editions[].strategy_config (asset repo); strategy code reads from there.
-
 pub mod api;
 pub mod source;
 pub mod update;

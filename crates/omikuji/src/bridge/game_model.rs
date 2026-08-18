@@ -463,11 +463,7 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
-        fn gog_dir_has_game(
-            self: &GameModel,
-            app_id: &QString,
-            install_path: &QString,
-        ) -> bool;
+        fn gog_dir_has_game(self: &GameModel, app_id: &QString, install_path: &QString) -> bool;
 
         #[qinvokable]
         fn fetch_gog_install_size(
@@ -527,6 +523,13 @@ pub mod qobject {
             edition_id: &QString,
             install_path: &QString,
             temp_path: &QString,
+        ) -> QString;
+
+        #[qinvokable]
+        fn gacha_detect_edition(
+            self: &GameModel,
+            manifest_id: &QString,
+            install_path: &QString,
         ) -> QString;
 
         #[qinvokable]

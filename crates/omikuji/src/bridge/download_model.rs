@@ -167,6 +167,7 @@ impl qobject::DownloadModel {
         runner_version: &QString,
         prefix_path: &QString,
         temp_path: &QString,
+        import_existing: bool,
     ) -> QString {
         use omikuji_core::gacha::{manifest as gm, strategies};
 
@@ -185,7 +186,7 @@ impl qobject::DownloadModel {
         let prefix = prefix_path.to_string();
         let temp = temp_path.to_string();
 
-        let req = match strategies::build_install_request(
+        let mut req = match strategies::build_install_request(
             &manifest,
             &eid,
             &voices,
@@ -209,8 +210,17 @@ impl qobject::DownloadModel {
                 return QString::default();
             }
         };
+        if import_existing {
+            req.kind = downloads::DownloadKind::ImportExisting;
+            req.destructive_cleanup = false;
+        }
         let id = downloads::manager().enqueue(req);
         QString::from(&id)
+    }
+
+    fn gacha_supports_import(&self, manifest_id: &QString) -> bool {
+        omikuji_core::gacha::manifest::find(&manifest_id.to_string())
+            .is_some_and(|m| omikuji_core::gacha::strategies::supports_import(&m))
     }
 
     fn pause(self: Pin<&mut Self>, id: &QString) {

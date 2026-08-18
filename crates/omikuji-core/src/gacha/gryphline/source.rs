@@ -1,8 +1,5 @@
-//!update tries in order:
-// 1. per-file resource diffs (preferred): patch.json manifests with HDiffPatch
-//      variants keyed by base_md5. a 1.2.3 -> 1.2.4 update is ~160MB this way vs the 46GB full reinstall the top-level patch field would claim.
-// 2. overlay archive bundle (patch.patches[]), used when patch.json has no applicable variants for the installed version.
-// 3. error "full reinstall required" if server has no diff path.
+// update order: per-file resource diffs, then the overlay bundle, then give up.
+// the top-level patch field claims a 46GB reinstall where the diffs cost ~160MB
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
@@ -104,7 +101,6 @@ impl DownloadSource for GryphlineSource {
             return Ok(());
         }
 
-        // rand_str comes from teh get_latest pkg.file_path and is needed for the resource patch end(field)point
         let rand = api::rand_str_from(&resp);
         let game_version = major_minor(&target_version);
         let mut tried_v2 = false;
@@ -275,8 +271,7 @@ async fn apply_resource_patches(
         total_files
     );
 
-    // lazy-loaded bundle assets are fine; the game's own resource manager
-    // fetches them on first access, they don't represent a broken update
+    // lazy bundle assets are fine, the game refetches them on first access
     let success = unpatchable == 0;
     if success {
         let _ = std::fs::remove_dir_all(&scratch_root);
@@ -613,7 +608,6 @@ pub fn cleanup_gryphline_state(app_id: &str, install_path: &Path, temp_dir: Opti
     }
 }
 
-// returns total bytes across files, number of zip-segment files
 pub fn inspect_gryphline_temp(
     app_id: &str,
     install_path: &Path,

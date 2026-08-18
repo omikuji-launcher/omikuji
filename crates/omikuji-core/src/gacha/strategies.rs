@@ -1,7 +1,3 @@
-// strategy dispatch. each strategy is a compiled code path that the manifest names by string.
-// v1 wraps the existing per-source modules; the translation to manifest-only calls can happen
-// later without changing the bridge or ui surface.
-
 use anyhow::{Result, anyhow, bail};
 use std::path::{Path, PathBuf};
 
@@ -11,6 +7,7 @@ use crate::downloads::{DownloadKind, DownloadRequest};
 pub const HOYO_SOPHON: &str = "hoyo_sophon";
 pub const GRYPHLINE_RESOURCE_PATCH: &str = "gryphline_resource_patch";
 pub const KURO_RESOURCE_INDEX: &str = "kuro_resource_index";
+pub const YOSTAR_FILE_INDEX: &str = "yostar_file_index";
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct InstallSize {
@@ -20,7 +17,6 @@ pub struct InstallSize {
 
 #[derive(Debug, Clone, Default)]
 pub struct ExistingInstallInfo {
-    // leftover bytes in the scratch dir (resume-able partial download)
     pub scratch_bytes: u64,
     pub segments: u32,
     pub has_install: bool,
@@ -51,6 +47,7 @@ pub fn source_key(manifest: &GachaManifest) -> Result<&'static str> {
         HOYO_SOPHON => Ok("hoyo"),
         GRYPHLINE_RESOURCE_PATCH => Ok("endfield"),
         KURO_RESOURCE_INDEX => Ok("kuro"),
+        YOSTAR_FILE_INDEX => Ok("yostar"),
         other => bail!("unknown install_strategy: {}", other),
     }
 }
@@ -69,8 +66,6 @@ pub fn build_app_id(manifest: &GachaManifest, edition_id: &str, voices: &[String
     }
 }
 
-/// given an app_id, find the manifest, edition id, and voice ids that produced it
-/// used by launch hooks and bridge dispatchers.
 pub fn find_for_app_id(app_id: &str) -> Option<(GachaManifest, String, Vec<String>)> {
     let parts: Vec<&str> = app_id.splitn(3, ':').collect();
     if parts.len() < 2 {
@@ -147,6 +142,19 @@ pub fn build_install_request(
         destructive_cleanup: true,
         start_paused: false,
     })
+}
+
+pub fn detect_edition(manifest: &GachaManifest, install_path: &Path) -> Option<String> {
+    match manifest.install_strategy.as_str() {
+        YOSTAR_FILE_INDEX => crate::gacha::yostar::detect_edition(manifest, install_path),
+        _ => None,
+    }
+}
+
+pub fn supports_import(manifest: &GachaManifest) -> bool {
+    source_key(manifest)
+        .map(|k| crate::downloads::manager().source_supports_import(k))
+        .unwrap_or(false)
 }
 
 pub fn build_update_request(
@@ -226,6 +234,9 @@ pub async fn fetch_install_size(
                 install_bytes: s.install_bytes,
             })
         }
+        YOSTAR_FILE_INDEX => {
+            crate::gacha::yostar::api::fetch_install_size(manifest, edition_id).await
+        }
         other => bail!("unknown install_strategy: {}", other),
     }
 }
@@ -255,6 +266,20 @@ pub async fn check_for_update(
         }
         GRYPHLINE_RESOURCE_PATCH => {
             let info = crate::gacha::gryphline::update::check_for_update(manifest, edition_id)
+                .await
+                .ok()??;
+            Some(GachaUpdateInfo {
+                manifest_id: manifest.id.clone(),
+                edition_id: edition_id.to_string(),
+                from_version: info.from_version,
+                to_version: info.to_version,
+                download_size: info.download_size,
+                can_diff: info.can_diff,
+                delta_supported: info.delta_supported,
+            })
+        }
+        YOSTAR_FILE_INDEX => {
+            let info = crate::gacha::yostar::update::check_for_update(manifest, edition_id)
                 .await
                 .ok()??;
             Some(GachaUpdateInfo {
@@ -297,6 +322,9 @@ pub fn installed_version(manifest: &GachaManifest, edition_id: &str) -> Option<S
         KURO_RESOURCE_INDEX => {
             crate::gacha::kuro::installed_version(&manifest.game_slug, edition_id)
         }
+        YOSTAR_FILE_INDEX => {
+            crate::gacha::yostar::installed_version(&manifest.game_slug, edition_id)
+        }
         _ => None,
     }
 }
@@ -315,6 +343,9 @@ pub fn read_install_version(
         KURO_RESOURCE_INDEX => {
             crate::gacha::kuro::read_install_version(install_path, &edition.data_folder)
         }
+        YOSTAR_FILE_INDEX => {
+            crate::gacha::yostar::read_install_version(install_path, &edition.data_folder)
+        }
         _ => None,
     }
 }
@@ -330,8 +361,6 @@ pub fn inspect_existing(
         HOYO_SOPHON => {
             let (bytes, segments) =
                 crate::gacha::hoyo::source::inspect_hoyo_temp(&app_id, install_path, temp_dir);
-            // hoyo has no cheap "is installed" signal without touching the game's own manifest,
-            // so fall back to checking whether the edition's exe exists
             let has_install = edition_exe_name(manifest, edition_id)
                 .is_some_and(|exe| install_path.join(exe).exists());
             ExistingInstallInfo {
@@ -357,10 +386,7 @@ pub fn inspect_existing(
                 installed_version: None,
             }
         }
-        KURO_RESOURCE_INDEX => {
-            // kuro writes files straight into install_path with no scratch dir.
-            // partial downloads are invisible here; the resume hint wont light up
-            // until source.install() runs and size-matches per-file.
+        KURO_RESOURCE_INDEX | YOSTAR_FILE_INDEX => {
             let has_install = edition_exe_name(manifest, edition_id)
                 .is_some_and(|exe| install_path.join(exe).exists());
             ExistingInstallInfo {

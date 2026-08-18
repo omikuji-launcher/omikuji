@@ -4,14 +4,12 @@ use md5::{Digest, Md5};
 use std::collections::HashSet;
 use std::io::Read;
 use std::path::Path;
-use std::sync::atomic::AtomicU64;
-use std::sync::{Arc, Mutex};
 
 use super::api::{self, PatchConfig, ResourceFile, ResourceInfo};
 use super::krpdiff::Krpdiff;
-use super::source::{PARALLEL_FILES, download_one, sanitize_rel};
-use crate::downloads::rate::RateMeter;
+use super::source::sync_file;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
+use crate::gacha::file_sync::{PARALLEL_FILES, SyncProgress, download_one, sanitize_rel};
 
 pub(super) async fn run_patch_update(
     entry: &DownloadEntry,
@@ -32,22 +30,19 @@ pub(super) async fn run_patch_update(
     std::fs::create_dir_all(&out_root)?;
 
     let total: u64 = pidx.resource.iter().map(|r| r.size).sum();
-    let downloaded = Arc::new(AtomicU64::new(0));
-    let meter = Arc::new(Mutex::new(RateMeter::new(0)));
-    let meter_for_workers = meter.clone();
+    let progress = SyncProgress::new(total);
 
     let id = entry.id.clone();
     let cdn = info.cdn_url.clone();
     let patch_base = format!("{}{}", info.cdn_url, patch.base_url_rel);
     let resources = pidx.resource.clone();
     let dl_for_workers = dl_root.clone();
-    let downloaded_for_workers = downloaded.clone();
+    let progress_for_workers = progress.clone();
 
     let stream = futures_util::stream::iter(resources.into_iter().map(move |file| {
         let id = id.clone();
-        let downloaded = downloaded_for_workers.clone();
         let dl_root = dl_for_workers.clone();
-        let meter = meter_for_workers.clone();
+        let progress = progress_for_workers.clone();
         let base = if file.from_folder.is_empty() {
             patch_base.clone()
         } else {
@@ -57,7 +52,7 @@ pub(super) async fn run_patch_update(
             if check_control(&id) != ControlSignal::None {
                 return Ok::<_, anyhow::Error>(());
             }
-            download_one(&id, &file, &base, &dl_root, &downloaded, total, &meter).await
+            download_one(&id, &sync_file(&file, &base), &dl_root, &progress).await
         }
     }))
     .buffer_unordered(PARALLEL_FILES);
@@ -124,12 +119,9 @@ pub(super) async fn run_patch_update(
             }
             download_one(
                 &entry.id,
-                f,
-                &info.base_url,
+                &sync_file(f, &info.base_url),
                 &out_root,
-                &downloaded,
-                total,
-                &meter,
+                &progress,
             )
             .await?;
         }

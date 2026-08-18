@@ -255,7 +255,8 @@ fn main() {
         .qsignal_raw("fn download_failed(self: Pin<&mut DownloadModel>, id: &QString, error: &QString);")
         .qsignal_raw("fn state_changed(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw("fn enqueue_epic(self: Pin<&mut DownloadModel>, app_id: &QString, display_name: &QString, banner_url: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString) -> QString;")
-        .custom_invokable_raw("fn enqueue_gacha(self: Pin<&mut DownloadModel>, manifest_id: &QString, edition_id: &QString, voices_csv: &QString, display_name: &QString, install_path: &QString, runner_version: &QString, prefix_path: &QString, temp_path: &QString) -> QString;")
+        .custom_invokable_raw("fn enqueue_gacha(self: Pin<&mut DownloadModel>, manifest_id: &QString, edition_id: &QString, voices_csv: &QString, display_name: &QString, install_path: &QString, runner_version: &QString, prefix_path: &QString, temp_path: &QString, import_existing: bool) -> QString;")
+        .custom_invokable_raw("fn gacha_supports_import(self: &DownloadModel, manifest_id: &QString) -> bool;")
         .custom_invokable_raw("fn pause(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn resume(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn cancel(self: Pin<&mut DownloadModel>, id: &QString);")
@@ -428,10 +429,10 @@ fn main() {
         qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
 
     let builder = CxxQtBuilder::new_qml_module(qml_module)
-    .qrc_resources(&qrc_paths)
-    .files(staged_bridges)
-    .file(ui_settings_bridge)
-    .file(download_model_bridge);
+        .qrc_resources(&qrc_paths)
+        .files(staged_bridges)
+        .file(ui_settings_bridge)
+        .file(download_model_bridge);
 
     // link QtSvg, QIcon uses the image plugin system to load SVGs.
     // cxx-qt-build's qt_module("Svg") sets include paths but doesn't always add the shared lib to the runtime link

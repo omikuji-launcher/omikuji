@@ -588,7 +588,8 @@ when = { region = "CN" }
 
     #[test]
     fn when_rejects_unknown_input() {
-        let text = "[script]\nname = \"x\"\n[[step]]\ntask = \"init_prefix\"\nwhen = { nope = \"1\" }\n";
+        let text =
+            "[script]\nname = \"x\"\n[[step]]\ntask = \"init_prefix\"\nwhen = { nope = \"1\" }\n";
         assert!(
             Script::parse(text)
                 .unwrap_err()

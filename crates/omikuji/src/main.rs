@@ -4,7 +4,7 @@ mod log_fmt;
 mod single_instance;
 
 use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
-use std::ffi::{c_void, CString};
+use std::ffi::{CString, c_void};
 use std::path::PathBuf;
 
 unsafe extern "C" {

@@ -1,8 +1,3 @@
-// gacha discovery is fully manifest-driven. on every fetch:
-//  1. pull gacha/index.json from assets repo (canonical list of (publisher, game) pairs)
-//  2. re-fetch every manifest so users pick up assets-repo changes mid-session (not pulling if cached was braindead what the fuck i was doing)
-// adding a game = push manifest + push art + add 1 line to assets-repo's gacha/index.json. zero rust touch.
-
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 

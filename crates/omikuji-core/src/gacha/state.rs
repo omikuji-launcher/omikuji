@@ -20,7 +20,6 @@ pub fn read_installed_version(
         .filter(|s| !s.is_empty())
 }
 
-// errors are logged not returned; caller cant do anything useful with a write failure here
 pub fn write_installed_version(
     publisher_slug: &str,
     game_slug: &str,

@@ -1,6 +1,4 @@
-// app_id format: "{game}:{edition}" e.g. "genshin:global", "star-rail:china"
-// voice packs encoded in runner_version as comma-separated locale names:
-// "en-us,ja-jp" (empty = no voice packs, just game files)
+// voice packs ride in runner_version as a comma-separated locale list
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
@@ -96,7 +94,6 @@ impl DownloadSource for HoyoSource {
                 }
             }
 
-            // prefer byte progress when we have it; fall back to file counter
             let (done, total) = if rep.bytes_total > 0 {
                 (rep.bytes_done, rep.bytes_total)
             } else {

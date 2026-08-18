@@ -91,7 +91,9 @@ fn arch_targets(runner_dir: &Path, kind: DllKind) -> Option<(PathBuf, Option<Pat
         let pe32 = bundle.join("i386-windows");
         return Some((pe64, pe32.is_dir().then_some(pe32)));
     }
-    let classic64 = runner_dir.join("files/lib64/wine").join(kind.bundle_subdir());
+    let classic64 = runner_dir
+        .join("files/lib64/wine")
+        .join(kind.bundle_subdir());
     let dst64 = if classic64.is_dir() {
         classic64
     } else {
@@ -144,7 +146,11 @@ fn sync_from_game(runner_dir: &Path, game: &Game) -> Result<()> {
     Ok(())
 }
 
-pub fn apply_for_launch(runner_dir: &Path, game: &Game, env: &HashMap<String, String>) -> Result<()> {
+pub fn apply_for_launch(
+    runner_dir: &Path,
+    game: &Game,
+    env: &HashMap<String, String>,
+) -> Result<()> {
     sync_from_game(runner_dir, game)?;
     let Some(prefix) = env.get("WINEPREFIX").map(PathBuf::from) else {
         return Ok(());

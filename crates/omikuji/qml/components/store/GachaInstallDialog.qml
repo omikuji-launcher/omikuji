@@ -68,6 +68,7 @@ DialogCard {
     property int existingTempSegments: 0
     property bool existingInstall: false
     property string existingVersion: ""
+    property string detectedEdition: ""
     property string importDir: ""
     readonly property bool directImport: existingInstall && importDir !== "" && importDir === (installPath || "").trim()
 
@@ -185,6 +186,7 @@ DialogCard {
         existingTempSegments = 0
         existingInstall = false
         existingVersion = ""
+        detectedEdition = ""
         importDir = ""
         advised = null
         assetIndex = 0
@@ -295,7 +297,8 @@ DialogCard {
 
     function commitInstall() {
         let runner = selectedRunner()
-        if (existingInstall) {
+        let importing = existingInstall
+        if (importing && !downloadModel.gacha_supports_import(manifestId)) {
             let gid = gameModel.gacha_import_after_install(
                 manifestId, editionId, displayName, importDir, runner, prefixPath
             )
@@ -305,7 +308,8 @@ DialogCard {
         }
         let id = downloadModel.enqueue_gacha(
             manifestId, editionId, voicesSelected().join(","),
-            displayName, effectiveInstallPath, runner, prefixPath, tempPath
+            displayName, importing ? importDir : effectiveInstallPath,
+            runner, prefixPath, tempPath, importing
         )
         if (id && id.length > 0) installEnqueued(id)
         close()
@@ -377,6 +381,13 @@ DialogCard {
         gameModel.fetch_gacha_install_size(id, manifestId, editionId, voicesSelected().join(","))
     }
 
+    function _adoptDetectedEdition(dir) {
+        detectedEdition = gameModel.gacha_detect_edition(manifestId, dir) || ""
+        if (detectedEdition === "") return
+        let idx = editions.findIndex(e => e.id === detectedEdition)
+        if (idx >= 0 && idx !== editionIndex) editionIndex = idx
+    }
+
     function _inspect(path, temp) {
         let out = {}
         try { out = JSON.parse(gameModel.gacha_check_existing_install(manifestId, editionId, path, temp) || "{}") || {} }
@@ -396,6 +407,7 @@ DialogCard {
                 existingInstall = true
                 existingVersion = (typeof direct.installed_version === "string") ? direct.installed_version : ""
                 importDir = rawPath
+                _adoptDetectedEdition(rawPath)
                 return
             }
         }
@@ -408,6 +420,8 @@ DialogCard {
         existingInstall = nested.has_install === true
         existingVersion = (typeof nested.installed_version === "string") ? nested.installed_version : ""
         importDir = existingInstall ? effectiveInstallPath : ""
+        if (existingInstall) _adoptDetectedEdition(importDir)
+        else detectedEdition = ""
     }
 
     body: ColumnLayout {
@@ -582,6 +596,22 @@ DialogCard {
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
                 visible: text !== ""
+            }
+
+            NoteChip {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                visible: root.existingInstall && root.editions.length > 1
+                icon: root.detectedEdition !== "" ? "info" : "warning"
+                tone: root.detectedEdition !== "" ? Theme.accent : Theme.warning
+                text: {
+                    if (root.detectedEdition === "") {
+                        return qsTr("Select the region this folder holds. Importing the wrong one will not match these files.")
+                    }
+                    let hit = root.editions.find(e => e.id === root.detectedEdition)
+                    return qsTr("This folder holds the %1 version, and it has been selected for you, baby.")
+                        .arg(hit ? hit.label : root.detectedEdition)
+                }
             }
         }
 

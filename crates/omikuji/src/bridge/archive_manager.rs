@@ -568,7 +568,9 @@ impl qobject::ArchiveManagerBridge {
     }
 
     fn found_runners(&self) -> QString {
-        QString::from(&serde_json::to_string(&runners::found_runners()).unwrap_or_else(|_| "[]".into()))
+        QString::from(
+            &serde_json::to_string(&runners::found_runners()).unwrap_or_else(|_| "[]".into()),
+        )
     }
 
     fn installed_runner_path(&self, source: QString, name: QString) -> QString {

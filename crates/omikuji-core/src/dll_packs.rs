@@ -45,8 +45,12 @@ fn resolve_pack(
     kind: &str,
     pinned: &str,
 ) -> Option<(ArchiveSource, String)> {
-    let sources: Vec<ArchiveSource> =
-        cfg.layers.iter().filter(|s| s.kind == kind).cloned().collect();
+    let sources: Vec<ArchiveSource> = cfg
+        .layers
+        .iter()
+        .filter(|s| s.kind == kind)
+        .cloned()
+        .collect();
     let tag = if !pinned.is_empty() && pinned != "disabled" {
         pinned.to_string()
     } else {
@@ -80,7 +84,11 @@ pub fn resolved_layer(game: &Game, kind: &str) -> Option<String> {
 
 pub fn installed_versions_for_kind(kind: &str) -> Vec<String> {
     let mut out = Vec::new();
-    for source in components_config::get().layers.iter().filter(|s| s.kind == kind) {
+    for source in components_config::get()
+        .layers
+        .iter()
+        .filter(|s| s.kind == kind)
+    {
         for v in list_installed(source) {
             if !out.contains(&v) {
                 out.push(v);

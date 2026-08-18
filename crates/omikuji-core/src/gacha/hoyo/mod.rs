@@ -6,10 +6,6 @@ pub mod update;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-// HoyoGame enum lived here to carry per-game biz_ids/data_folders/needs_patch as typed methods.
-// dropped 2026-04-26: per-game data now lives in manifest.strategy_config (asset repo); strategy code reads from there.
-// adding a new hoyo gacha = push manifest + push art + 1 line in gacha/index.json. zero rust touch.
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HoyoEdition {
     Global,

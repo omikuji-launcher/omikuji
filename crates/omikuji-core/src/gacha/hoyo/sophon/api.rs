@@ -35,7 +35,6 @@ pub struct PackageInfo {
     pub branch: String,
     pub password: String,
     pub tag: String,
-    // if current version isnt in diff_tags, teh server cant produce a diff; full reinstall needed
     #[serde(default)]
     pub diff_tags: Vec<String>,
     #[serde(default)]

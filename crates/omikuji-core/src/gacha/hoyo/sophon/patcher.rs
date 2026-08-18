@@ -1,14 +1,5 @@
-// sophon diff-apply loop. ported from aag-core's SophonPatcher into tokio + spawn_blocking.
-//
-// per-file algorithm:
-//   1. target already has right size+md5 => skip
-//   2. patch_chunk has OriginalFileName => hpatchz path:
-//      verify original md5 => copy to tmp => hpatchz(tmp, artifact) => md5 check => move into place
-//   3. else copy-over path:
-//      artifact bytes are the new file (possibly wrapped in HDIFF13 envelope) => md5 check => move
-//
-// "globalgamemanagers" is held until the very end so the intall stays atomically "old"
-// until all other files are patched. a crash mid-update leaves the game in a consistent state.
+// ported from aag-core's SophonPatcher. globalgamemanagers is written last so a crash
+// mid-update leaves the install consistently "old" rather than half-patched
 
 use anyhow::{Result, anyhow};
 use futures_util::stream::{self, StreamExt};
@@ -223,9 +214,7 @@ fn finalize_file(tmp: &Path, target: &Path, size: u64, md5: &str) -> Result<()> 
     Ok(())
 }
 
-// some copy-over artifacts are HDIFF13-wrapped. detect via 7-byte magic,
-// skip the variable-length header, extract the trailing blob (optionally zstd-compressed).
-// ported verbatim from aag-core/updater.rs:1146-1190.
+// some copy-over artifacts are HDIFF13-wrapped; ported from aag-core/updater.rs:1146-1190
 
 fn parse_hdiff13_header<R: Read + Seek>(reader: &mut R) -> std::io::Result<(bool, u64)> {
     let mut buf = [0_u8; 128];

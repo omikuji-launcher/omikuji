@@ -386,14 +386,27 @@ fn pre_launch_update_check(game: &Game) -> Option<omikuji_core::process::UpdateN
             ))
         }
         "epic" if behavior().auto_check_epic_updates_on_launch => {
-            let info =
-                omikuji_core::store::epic::updates::blocking_check_epic_update(&game.source.app_id)?;
-            Some(notif(info.from_version, info.to_version, info.download_size, true, true))
+            let info = omikuji_core::store::epic::updates::blocking_check_epic_update(
+                &game.source.app_id,
+            )?;
+            Some(notif(
+                info.from_version,
+                info.to_version,
+                info.download_size,
+                true,
+                true,
+            ))
         }
         "gog" if behavior().auto_check_gog_updates_on_launch => {
             let info =
                 omikuji_core::store::gog::updates::blocking_check_gog_update(&game.source.app_id)?;
-            Some(notif(info.from_version, info.to_version, info.download_size, true, true))
+            Some(notif(
+                info.from_version,
+                info.to_version,
+                info.download_size,
+                true,
+                true,
+            ))
         }
         _ => None,
     }

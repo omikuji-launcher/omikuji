@@ -196,6 +196,10 @@ lazy_static! {
             "kuro".to_string(),
             Arc::new(crate::gacha::kuro::source::KuroSource),
         );
+        sources.insert(
+            "yostar".to_string(),
+            Arc::new(crate::gacha::yostar::source::YostarSource),
+        );
 
         let restored = load_queue();
         if !restored.is_empty() {
@@ -281,6 +285,11 @@ pub fn manager() -> Arc<DownloadManager> {
 impl DownloadManager {
     fn next_id() -> String {
         crate::library::generate_id()
+    }
+
+    pub fn source_supports_import(&self, key: &str) -> bool {
+        let inner = self.inner.lock().unwrap();
+        inner.sources.get(key).is_some_and(|s| s.supports_import())
     }
 
     pub fn source_supports_repair(&self, key: &str) -> bool {
@@ -756,6 +765,13 @@ fn cleanup_source_state(entry: &DownloadEntry) {
         }
         "kuro" => {
             crate::gacha::kuro::cleanup_kuro_state(
+                &entry.app_id,
+                &entry.install_path,
+                entry.temp_dir.as_deref(),
+            );
+        }
+        "yostar" => {
+            crate::gacha::yostar::cleanup_yostar_state(
                 &entry.app_id,
                 &entry.install_path,
                 entry.temp_dir.as_deref(),

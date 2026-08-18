@@ -17,6 +17,10 @@ pub trait DownloadSource: Send + Sync {
         false
     }
 
+    fn supports_import(&self) -> bool {
+        false
+    }
+
     async fn repair(&self, _entry: &DownloadEntry) -> Result<()> {
         Err(anyhow!("this source does not support repair"))
     }

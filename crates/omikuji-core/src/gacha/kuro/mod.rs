@@ -109,7 +109,6 @@ fn read_package_version_json(install_path: &std::path::Path) -> Option<String> {
     }
 }
 
-// no-op today: kuro writes directly into install_dir so theres no scratch to clean , kept for shape-consistency with hoyo/gryphline
 pub fn cleanup_kuro_state(
     _app_id: &str,
     _install_path: &std::path::Path,

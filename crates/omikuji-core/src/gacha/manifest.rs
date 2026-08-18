@@ -1,8 +1,3 @@
-// gacha manifest; declarative per-game config. the ui renders from editions/voice_locales and the bridge routes against it.
-//
-// storage: {gachas_dir}/{publisher_slug}/{game_slug}/manifest.json
-// schema_version gates forward-compat; unknown versions are logged and skipped rather than parsed as best-effort.
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -49,12 +44,9 @@ pub struct GachaManifest {
     #[serde(default)]
     pub letter_fallback: String,
 
-    // true: install writes arcihves to scratch dir first, then extracts (hoyo_sophon, gryphline_resource_patch).
-    // false: writes directly to install_path (kuro_resource_index). drives the dialog's temp-path field visibility and free-space math
     #[serde(default = "default_true")]
     pub uses_temp_dir: bool,
 
-    // per-strategy data, opaque to the manifest layer. parsed by the strategy code.
     #[serde(default)]
     pub strategy_config: serde_json::Value,
 }
@@ -71,7 +63,6 @@ pub struct ManifestEdition {
     // unity _Data folder name, per-edition for genshin, shared otherwise
     pub data_folder: String,
 
-    // per-strategy data (biz_id, api_base, index_url, etc), opaque to manifest layer
     #[serde(default)]
     pub strategy_config: serde_json::Value,
 }

@@ -241,7 +241,11 @@ pub fn list_installed_runners() -> Vec<(String, String, String)> {
 
     for path in iter_local_runner_dirs() {
         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-            runners.push((name.to_string(), String::new(), runner_kind(&path).to_string()));
+            runners.push((
+                name.to_string(),
+                String::new(),
+                runner_kind(&path).to_string(),
+            ));
         }
     }
 

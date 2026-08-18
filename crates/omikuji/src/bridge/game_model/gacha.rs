@@ -111,6 +111,17 @@ impl super::qobject::GameModel {
         });
     }
 
+    pub fn gacha_detect_edition(&self, manifest_id: &QString, install_path: &QString) -> QString {
+        let path =
+            omikuji_core::template_vars::TemplateVars::global().expand(&install_path.to_string());
+        omikuji_core::gacha::manifest::find(&manifest_id.to_string())
+            .and_then(|m| {
+                omikuji_core::gacha::strategies::detect_edition(&m, std::path::Path::new(&path))
+            })
+            .map(|e| QString::from(&e))
+            .unwrap_or_default()
+    }
+
     pub fn gacha_check_existing_install(
         &self,
         manifest_id: &QString,

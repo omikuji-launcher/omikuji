@@ -1,10 +1,3 @@
-// kuro launcher api, two-stage resolve:
-//   1. GET index.json: cdn + resource-index url + base-url for files
-//   2. GET indexFile.json: resource[] listing every file to fetch
-//
-// the install source then walks resource[] and dowloads each entry to
-// install_path/{resource.dest} directly. no archive extraction phase.
-
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 
@@ -24,7 +17,6 @@ pub struct ResourceInfo {
 #[derive(Debug, Clone)]
 pub struct PatchConfig {
     pub version: String,
-    // relative to cdn_url
     pub index_file_rel: String,
     pub base_url_rel: String,
     pub download_size: u64,
@@ -57,8 +49,6 @@ pub async fn fetch_resource_info(
         .await
         .map_err(|e| anyhow!("parse index.json: {}", e))?;
 
-    // kuro lists several cdns sorted by priority (P field, lowest wins). deterministic-
-    // pick-lowest is simpler than weighted random and adeuqate for a self-hosted launcher
     let mut cdns: Vec<&RawCdnEntry> = data.default.cdn_list.iter().collect();
     cdns.sort_by_key(|c| c.priority);
     let cdn_url = cdns
@@ -66,10 +56,6 @@ pub async fn fetch_resource_info(
         .map(|c| c.url.clone())
         .ok_or_else(|| anyhow!("cdnList empty in index.json"))?;
 
-    // two api shapes in the wild:
-    //   nested: version/indexFile/baseUrl under default.config  (WuWa 3.x /launcher/game/)
-    //   flat:   version/resources/resourcesBasePath under default (PGR + WuWa 2.x /pcstarter/...)
-    // same install behavior either way; pick out the fields that exist and normalize
     let (version, index_file_rel, base_url_rel, dl_bytes, inst_bytes, patch_configs) = match data
         .default
         .config
@@ -100,7 +86,6 @@ pub async fn fetch_resource_info(
             )
         }
         None => {
-            // flat shape has no aggregate sizes; caller walks indexFile if needed
             let def = &data.default;
             let v = def
                 .version
@@ -176,7 +161,6 @@ struct RawConfig {
 #[derive(Deserialize)]
 struct RawCdnEntry {
     url: String,
-    // lower is preferred, sometimes missing/0
     #[serde(rename = "P", default)]
     priority: i64,
 }
@@ -204,7 +188,7 @@ pub struct IndexFile {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ResourceFile {
     pub dest: String,
-    #[serde(deserialize_with = "deserialize_u64_or_string")]
+    #[serde(deserialize_with = "crate::gacha::file_sync::deserialize_size")]
     pub size: u64,
     #[serde(default)]
     pub md5: String,
@@ -230,25 +214,6 @@ pub struct PatchGroup {
     pub dst_files: Vec<ResourceFile>,
 }
 
-// server returns size as either a number or a stringified number depending on the endpoint
-fn deserialize_u64_or_string<'de, D>(d: D) -> std::result::Result<u64, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    use serde::de::Error;
-    let v = serde_json::Value::deserialize(d)?;
-    match v {
-        serde_json::Value::Number(n) => {
-            n.as_u64().ok_or_else(|| D::Error::custom("size not a u64"))
-        }
-        serde_json::Value::String(s) => s.parse().map_err(D::Error::custom),
-        other => Err(D::Error::custom(format!(
-            "size unexpected type: {:?}",
-            other
-        ))),
-    }
-}
-
 pub async fn fetch_index_file(index_file_url: &str) -> Result<IndexFile> {
     fetch_json(index_file_url).await
 }
@@ -264,8 +229,7 @@ async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
     if !resp.status().is_success() {
         anyhow::bail!("fetch indexFile: http {}", resp.status());
     }
-    // pull bytes and parse with serde_json directly so parse errorss carry line/column and
-    // a peek of the body. kuro responses hit 5-50 MB and bad json would otherwise fail with an opaque "error decoding response"
+    // parse by hand so errors carry line/column; these bodies hit 50 MB and reqwest's error is opaque
     let bytes = resp
         .bytes()
         .await

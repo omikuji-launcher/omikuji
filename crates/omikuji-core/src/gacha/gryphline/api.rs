@@ -1,10 +1,3 @@
-// gryphline launcher REST client for endfield.
-//
-// distinct from hoyo's hyp-connect API:
-//  - response body is flat (no {code, message, data} envelope on launcher endpoints)
-//  - numeric bytes come back as strings (can exceed js Number.MAX_SAFE_INTEGER), hence custom deserializers below
-//  - get_latest does NOT take rand_str; only the resources endpoint needs it,and its not actually random: it's a stable per-release token extracted from a prior get_latest response's pkg.file_path
-
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -134,7 +127,6 @@ fn encode(s: &str) -> String {
 }
 
 fn build_get_latest_url(cfg: &EditionConfig, version: &str) -> String {
-    // channel/sub_channel are integers here, strings in batch_proxy; not our concern
     let mut q = format!(
         "?appcode={}&launcher_appcode={}&channel={}&sub_channel={}&launcher_sub_channel={}",
         encode(&cfg.game_appcode),
@@ -180,14 +172,12 @@ pub fn patches_from(resp: &GetLatestData) -> &[PackFile] {
     resp.patch.as_ref().map(|p| &p.patches[..]).unwrap_or(&[])
 }
 
-// pkg.file_path is shaped .../{version}_{randstr}/files. pull the 16-char randstr out; it's stable per-release (not per-request) and get_latest_resources
-// requires it as a query param. returns empty string if shape doesnt match.
+// the randstr in pkg.file_path is stable per release, and get_latest_resources needs it
 pub fn rand_str_from(resp: &GetLatestData) -> String {
     let Some(pkg) = resp.pkg.as_ref() else {
         return String::new();
     };
     let fp = &pkg.file_path;
-    // match _<rand>/<tail>$ via manual scan, no regex dep
     let Some(tail_slash) = fp.rfind('/') else {
         return String::new();
     };
@@ -198,8 +188,6 @@ pub fn rand_str_from(resp: &GetLatestData) -> String {
     before[us + 1..].to_string()
 }
 
-// per-resource CDN paths. each resource's path serves patch.json (per-file HDiffPatch descriptors). domain field is redundant with each path's host.
-// patch_index_path is empty in practice, ignore it
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ResourceList {
     #[serde(default)]
@@ -265,10 +253,6 @@ pub async fn fetch_resources(
     })
 }
 
-// shape from live capture (resource=main, v1.2.4):
-//   { "version": "6668018-7", "files": [ResourcePatchFile, ...] }
-//
-// each file carries HDiffPatch variants keyed implicitly by which base build the patch was generated against
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ResourcePatchManifest {
     #[serde(default)]
@@ -283,7 +267,7 @@ pub struct ResourcePatchFile {
     pub md5: String,
     #[serde(default)]
     pub size: u64,
-    // diffType=1 is chk (hdiff patch). other vcalues arent observed in the wild, Treat them as "skip, unknown".
+    // diffType 1 is the only shape endfield ships; arknights uses 2 and is unsupported
     #[serde(default, rename = "diffType")]
     pub diff_type: u32,
     #[serde(default)]

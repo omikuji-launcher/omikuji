@@ -31,8 +31,7 @@ pub async fn check_for_update(
     let patches = super::api::patches_from(&resp);
     let overlay_size: u64 = patches.iter().map(|p| p.package_size).sum();
 
-    // gryphline's top-level patch field is null for minor bumps but per-resource
-    // patch.json almost always has hdiffpatch entries; stay optimistic, actual update() will surface a concrete error if neither path has anything <3333
+    // the top-level patch field is null on minor bumps but patch.json usually has entries, so stay optimistic <3333
     let can_diff = true;
     let download_size = overlay_size;
 
