@@ -212,6 +212,7 @@ ApplicationWindow {
             duration: 1000000000
             loops: Animation.Infinite
             running: root.visible && background.visible
+            paused: !root.active
         }
     }
 
