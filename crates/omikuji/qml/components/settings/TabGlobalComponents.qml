@@ -51,12 +51,13 @@ Item {
         function onComponentProgress(name, phase, percent){ root.refreshRuntime() }
         function onComponentCompleted(name, version)      { root.refreshRuntime() }
         function onComponentFailed(name, error)           { root.refreshRuntime() }
+        function onCheckingChanged()                      { root.refreshRuntime() }
     }
 
     Timer {
         interval: 500
         repeat: true
-        running: root.componentsBridge && root.componentsBridge.inProgress
+        running: root.componentsBridge && (root.componentsBridge.inProgress || root.componentsBridge.checking)
         onTriggered: root.refreshRuntime()
     }
 
@@ -229,6 +230,13 @@ Item {
         SettingsSection {
             label: qsTr("Runtime")
             width: parent.width
+            action: M3Button {
+                readonly property bool busy: root.componentsBridge && root.componentsBridge.checking
+                text: busy ? qsTr("Checking...") : qsTr("Check for updates")
+                variant: "tonal"
+                enabled: !busy && root.componentsBridge
+                onClicked: root.componentsBridge.checkUpdates()
+            }
 
             Text {
                 text: qsTr("External tools omikuji downloads on first run. Reinstall if a version is stale or corrupted.")
@@ -250,7 +258,8 @@ Item {
                         id: runtimeRow
                         required property string modelData
                         readonly property var meta: root.runtimeMeta[modelData] || ({ label: modelData, desc: "" })
-                        readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", percent: 0, error: "" })
+                        readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", latest: "", percent: 0, error: "" })
+                        readonly property bool hasUpdate: status.version && status.latest && status.latest !== status.version
                         readonly property bool busy: status.status === "installing"
                             || status.status === "downloading"
                             || status.status === "extracting"
@@ -300,8 +309,10 @@ Item {
                                     }
                                     Text {
                                         visible: runtimeRow.status.version && runtimeRow.status.version.length > 0
-                                        text: runtimeRow.status.version
-                                        color: Theme.textMuted
+                                        text: runtimeRow.hasUpdate
+                                            ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
+                                            : runtimeRow.status.version
+                                        color: runtimeRow.hasUpdate ? Theme.warning : Theme.textMuted
                                         font.pixelSize: Theme.type.caption.size
                                         font.family: "monospace"
                                         anchors.verticalCenter: parent.verticalCenter
@@ -336,10 +347,11 @@ Item {
                             readonly property bool busyState: runtimeRow.busy || (root.componentsBridge && root.componentsBridge.inProgress)
 
                             text: busyState ? qsTr("Working…")
+                                : runtimeRow.hasUpdate ? qsTr("Update")
                                 : runtimeRow.status.status === "completed" ? qsTr("Reinstall")
                                 : runtimeRow.status.status === "failed" ? qsTr("Retry")
                                 : qsTr("Install")
-                            variant: (busyState || runtimeRow.status.status === "completed") ? "tonal" : "filled"
+                            variant: (busyState || (runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
                             danger: runtimeRow.status.status === "failed" && !busyState
                             enabled: !busyState
                             onClicked: root.componentsBridge.reinstallComponent(runtimeRow.modelData)

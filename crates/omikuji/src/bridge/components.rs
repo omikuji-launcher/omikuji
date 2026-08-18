@@ -19,6 +19,7 @@ pub mod qobject {
         #[qproperty(i32, total_count, cxx_name = "totalCount")]
         #[qproperty(bool, in_progress, cxx_name = "inProgress")]
         #[qproperty(bool, all_done, cxx_name = "allDone")]
+        #[qproperty(bool, checking)]
         type ComponentsBridge = super::ComponentsRust;
     }
 
@@ -61,6 +62,10 @@ pub mod qobject {
         fn reinstall_component(self: Pin<&mut ComponentsBridge>, name: QString);
 
         #[qinvokable]
+        #[cxx_name = "checkUpdates"]
+        fn check_updates(self: Pin<&mut ComponentsBridge>);
+
+        #[qinvokable]
         fn refresh(self: Pin<&mut ComponentsBridge>);
 
         #[qinvokable]
@@ -74,15 +79,18 @@ pub struct ComponentsRust {
     pub total_count: i32,
     pub in_progress: bool,
     pub all_done: bool,
+    pub checking: bool,
 
     statuses: HashMap<String, ComponentStatusEntry>,
+    checks_pending: i32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct ComponentStatusEntry {
     status: String,
     percent: f64,
     version: String,
+    latest: String,
     error: String,
 }
 
@@ -103,9 +111,8 @@ impl Default for ComponentsRust {
                 spec.name.to_string(),
                 ComponentStatusEntry {
                     status,
-                    percent: 0.0,
                     version,
-                    error: String::new(),
+                    ..Default::default()
                 },
             );
         }
@@ -115,7 +122,9 @@ impl Default for ComponentsRust {
             total_count: specs.len() as i32,
             in_progress: false,
             all_done: pending.is_empty(),
+            checking: false,
             statuses,
+            checks_pending: 0,
         }
     }
 }
@@ -132,6 +141,7 @@ impl qobject::ComponentsBridge {
                         "status": v.status,
                         "percent": v.percent,
                         "version": v.version,
+                        "latest": v.latest,
                         "error": v.error,
                     }),
                 )
@@ -146,38 +156,34 @@ impl qobject::ComponentsBridge {
 
         for spec in specs {
             let current = self.statuses.get(spec.name).cloned();
+            let latest = current
+                .as_ref()
+                .map(|c| c.latest.clone())
+                .unwrap_or_default();
             let entry = match core_components::status_for(spec) {
                 core_components::ComponentStatus::Installed { version } => ComponentStatusEntry {
                     status: "completed".into(),
                     percent: 100.0,
                     version,
-                    error: String::new(),
+                    latest,
+                    ..Default::default()
                 },
-                core_components::ComponentStatus::Missing => {
-                    // don't overwrite a live "installing" status with "missing" becuase the file check races with the install thread
-                    if let Some(c) = current {
+                // don't overwrite a live "installing" status with "missing" becuase the file check races with the install thread
+                core_components::ComponentStatus::Missing => match current {
+                    Some(c)
                         if matches!(
                             c.status.as_str(),
                             "installing" | "downloading" | "extracting"
-                        ) {
-                            c
-                        } else {
-                            ComponentStatusEntry {
-                                status: "missing".into(),
-                                percent: 0.0,
-                                version: String::new(),
-                                error: String::new(),
-                            }
-                        }
-                    } else {
-                        ComponentStatusEntry {
-                            status: "missing".into(),
-                            percent: 0.0,
-                            version: String::new(),
-                            error: String::new(),
-                        }
+                        ) =>
+                    {
+                        c
                     }
-                }
+                    _ => ComponentStatusEntry {
+                        status: "missing".into(),
+                        latest,
+                        ..Default::default()
+                    },
+                },
             };
             self.as_mut()
                 .rust_mut()
@@ -225,6 +231,30 @@ impl qobject::ComponentsBridge {
         self.spawn_install(core_components::eager_pending());
     }
 
+    fn check_updates(mut self: Pin<&mut Self>) {
+        let specs = core_components::updatable();
+        if self.checking || specs.is_empty() {
+            return;
+        }
+        self.as_mut().set_checking(true);
+        self.as_mut().rust_mut().get_mut().checks_pending = specs.len() as i32;
+
+        thread::spawn(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build();
+            let Ok(rt) = rt else {
+                omikuji_core::components::push_fail_event("setup", "couldn't build tokio runtime");
+                return;
+            };
+            rt.block_on(async {
+                for spec in specs {
+                    core_components::check_update(spec).await;
+                }
+            });
+        });
+    }
+
     fn reinstall_component(mut self: Pin<&mut Self>, name: QString) {
         let target = name.to_string();
         let Some(spec) = core_components::specs::all()
@@ -263,9 +293,7 @@ impl qobject::ComponentsBridge {
                         name.clone(),
                         ComponentStatusEntry {
                             status: "installing".into(),
-                            percent: 0.0,
-                            version: String::new(),
-                            error: String::new(),
+                            ..Default::default()
                         },
                     );
                     self.as_mut().component_started(QString::from(&name));
@@ -306,6 +334,17 @@ impl qobject::ComponentsBridge {
                     }
                     self.as_mut()
                         .component_failed(QString::from(&name), QString::from(&error));
+                }
+                core_components::ComponentEvent::UpdateChecked { name, latest } => {
+                    if let Some(entry) = self.as_mut().rust_mut().get_mut().statuses.get_mut(&name)
+                    {
+                        entry.latest = latest;
+                    }
+                    let left = (self.checks_pending - 1).max(0);
+                    self.as_mut().rust_mut().get_mut().checks_pending = left;
+                    if left == 0 {
+                        self.as_mut().set_checking(false);
+                    }
                 }
             }
         }

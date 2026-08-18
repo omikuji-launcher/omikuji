@@ -81,6 +81,13 @@ pub fn gacha_tools(publisher_slug: &str) -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
+pub fn updatable() -> Vec<&'static ComponentSpec> {
+    specs::all()
+        .iter()
+        .filter(|s| matches!(s.source, Source::GithubRelease { .. }))
+        .collect()
+}
+
 pub fn ready(specs: &[&'static ComponentSpec]) -> bool {
     specs
         .iter()
@@ -113,6 +120,10 @@ pub enum ComponentEvent {
     Failed {
         name: String,
         error: String,
+    },
+    UpdateChecked {
+        name: String,
+        latest: String,
     },
 }
 
@@ -184,6 +195,26 @@ pub async fn install_one(spec: &'static ComponentSpec) -> Result<()> {
             Err(anyhow!(msg))
         }
     }
+}
+
+pub async fn check_update(spec: &'static ComponentSpec) {
+    let latest = match url_for(spec.settings_key) {
+        Ok(url) => match fetch_latest_release(&url).await {
+            Ok(release) => release.tag_name,
+            Err(e) => {
+                tracing::warn!("{} update check ({}): {}", spec.name, url, e);
+                String::new()
+            }
+        },
+        Err(e) => {
+            tracing::warn!("{} update check: {}", spec.name, e);
+            String::new()
+        }
+    };
+    push(ComponentEvent::UpdateChecked {
+        name: spec.name.to_string(),
+        latest,
+    });
 }
 
 fn url_for(key: SettingsKey) -> Result<String> {
