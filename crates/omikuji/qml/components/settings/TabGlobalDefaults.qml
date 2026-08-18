@@ -126,12 +126,11 @@ Item {
                     options: {
                         if (!root.gameModel) return [{ label: qsTr("System default"), value: "" }]
                         let runners = JSON.parse(root.gameModel.list_runners())
-                        return RG.groupRunners(runners, { includeSystemDefault: true })
+                        let grouped = RG.groupRunners(runners, { includeSystemDefault: true })
+                        return RG.withUnresolved(grouped, root.cfg["wine.version"] || "", Theme.error)
                     }
                     currentIndex: {
-                        let v = root.cfg["wine.version"] || ""
-                        let idx = RG.indexOfValue(options, v)
-                        return idx >= 0 ? idx : 0
+                        return Math.max(0, RG.indexOfValue(options, root.cfg["wine.version"] || ""))
                     }
                     onSelected: (val) => root.update("wine.version", val)
                 }

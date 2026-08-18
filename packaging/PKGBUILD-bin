@@ -36,7 +36,7 @@ package() {
 
     install -Dm644 "squashfs-root/io.github.reakjra.omikuji.desktop" \
         "$pkgdir/usr/share/applications/io.github.reakjra.omikuji.desktop"
-    sed -i "s|^Exec=.*|Exec=$_pkgname|" "$pkgdir/usr/share/applications/io.github.reakjra.omikuji.desktop"
+    sed -i "s|^Exec=.*|Exec=$_pkgname %f|" "$pkgdir/usr/share/applications/io.github.reakjra.omikuji.desktop"
     install -Dm644 "squashfs-root/io.github.reakjra.omikuji.png" \
         "$pkgdir/usr/share/icons/hicolor/512x512/apps/io.github.reakjra.omikuji.png"
 }

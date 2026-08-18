@@ -69,6 +69,12 @@ function indexOfValue(options, value) {
     return -1
 }
 
+function withUnresolved(options, value, tint) {
+    if (!value || indexOfValue(options, value) >= 0) return options
+    var ghost = [{ header: true, label: "Missing" }, { label: value, value: value, tint: tint }]
+    return ghost.concat(options)
+}
+
 function firstNonHeader(options) {
     for (var i = 0; i < options.length; i++) {
         if (!options[i].header) return i
