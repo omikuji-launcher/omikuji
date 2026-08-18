@@ -127,7 +127,7 @@ Item {
                         if (!root.gameModel) return [{ label: qsTr("System default"), value: "" }]
                         let runners = JSON.parse(root.gameModel.list_runners())
                         let grouped = RG.groupRunners(runners, { includeSystemDefault: true })
-                        return RG.withUnresolved(grouped, root.cfg["wine.version"] || "", Theme.error)
+                        return RG.withUnresolved(grouped, root.cfg["wine.version"] || "", { tint: Theme.error, missingLabel: qsTr("missing") })
                     }
                     currentIndex: {
                         return Math.max(0, RG.indexOfValue(options, root.cfg["wine.version"] || ""))

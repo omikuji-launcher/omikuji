@@ -37,8 +37,8 @@ Item {
         required property var apply
         width: parent.width
         readonly property var _versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
-        options: [{ label: qsTr("Default (global)"), value: "" }].concat(_versions.map(v => ({ label: v, value: v })))
-        currentIndex: Math.max(0, options.findIndex(o => o.value === (config[fieldKey] || "")))
+        options: RG.withUnresolved([{ label: qsTr("Default (global)"), value: "" }].concat(_versions.map(v => ({ label: v, value: v }))), config[fieldKey] || "", { tint: Theme.error, missingLabel: qsTr("missing") })
+        currentIndex: Math.max(0, RG.indexOfValue(options, config[fieldKey] || ""))
         onSelected: (v) => apply(fieldKey, v)
     }
 
@@ -107,7 +107,7 @@ Item {
                         void root.runnersVersion
                         if (!root.gameModel) return [{ label: qsTr("Loading..."), value: "" }]
                         let grouped = RG.groupRunners(JSON.parse(root.gameModel.list_runners()))
-                        return RG.withUnresolved(grouped, root.config["wine.version"] || "", Theme.error)
+                        return RG.withUnresolved(grouped, root.config["wine.version"] || "", { tint: Theme.error, missingLabel: qsTr("missing") })
                     }
                     currentIndex: {
                         void root.runnersVersion
