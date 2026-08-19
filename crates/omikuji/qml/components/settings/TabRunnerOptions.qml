@@ -105,13 +105,16 @@ Item {
                     options: {
                         // touch runnersVersion so QML re-evaluates the binding after install/delete
                         void root.runnersVersion
-                        if (!root.gameModel) return [{ label: qsTr("Loading..."), value: "" }]
-                        let grouped = RG.groupRunners(JSON.parse(root.gameModel.list_runners()))
-                        return RG.withUnresolved(grouped, root.config["wine.version"] || "", { tint: Theme.error, missingLabel: qsTr("missing") })
+                        let runners = root.gameModel ? JSON.parse(root.gameModel.list_runners()) : []
+                        return RG.runnerOptions(runners, root.config["wine.version"] || "", {
+                            emptyLabel: qsTr("No runners installed"),
+                            tint: Theme.error,
+                            missingLabel: qsTr("missing")
+                        })
                     }
                     currentIndex: {
                         void root.runnersVersion
-                        return Math.max(0, RG.indexOfValue(options, root.config["wine.version"] || ""))
+                        return RG.selectedIndex(options, root.config["wine.version"] || "")
                     }
                     onSelected: (val) => root.updateField("wine.version", val)
                 }

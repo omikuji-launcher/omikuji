@@ -76,6 +76,19 @@ function withUnresolved(options, value, opts) {
     return [{ label: label, value: value, tint: opts.tint }].concat(options)
 }
 
+function runnerOptions(rawList, currentValue, opts) {
+    opts = opts || {}
+    var list = rawList || []
+    var out = groupRunners(list, opts)
+    if (list.length === 0) out.push({ header: true, label: opts.emptyLabel || "" })
+    return withUnresolved(out, currentValue, { tint: opts.tint, missingLabel: opts.missingLabel })
+}
+
+function selectedIndex(options, value) {
+    var idx = indexOfValue(options, value || "")
+    return idx >= 0 ? idx : firstNonHeader(options)
+}
+
 function firstNonHeader(options) {
     for (var i = 0; i < options.length; i++) {
         if (!options[i].header) return i

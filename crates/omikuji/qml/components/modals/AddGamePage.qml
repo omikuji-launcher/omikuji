@@ -110,7 +110,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
             }
         }
 
@@ -122,7 +122,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.runnersVersion = Qt.binding(() => root.runnersVersion)
                 item.openDllSets = root.openDllSets
             }
@@ -136,7 +136,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.openEnvSets = root.openEnvSets
             }
         }

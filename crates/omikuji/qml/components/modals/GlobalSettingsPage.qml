@@ -68,8 +68,8 @@ Item {
             visible: active
             source: "../settings/TabGlobalComponents.qml"
             onLoaded: {
-                item.componentsBridge = root.componentsBridge
-                item.archiveManager = root.archiveManager
+                item.componentsBridge = Qt.binding(() => root.componentsBridge)
+                item.archiveManager = Qt.binding(() => root.archiveManager)
                 item.activeInstalls = Qt.binding(() => root.activeInstalls)
                 item.manageRequested.connect((cat, name, kind) => {
                     root.manageRequested(cat, name, kind)
@@ -89,8 +89,8 @@ Item {
             visible: active
             source: "../settings/TabGlobalOfuda.qml"
             onLoaded: {
-                item.ofudaBridge = root.ofudaBridge
-                item.uiSettings = root.uiSettings
+                item.ofudaBridge = Qt.binding(() => root.ofudaBridge)
+                item.uiSettings = Qt.binding(() => root.uiSettings)
                 item.openRequested.connect((p) => root.prefixOpenRequested(p))
                 item.createRequested.connect(() => root.prefixCreateRequested())
             }
@@ -102,9 +102,9 @@ Item {
             visible: active
             source: "../settings/TabGlobalDefaults.qml"
             onLoaded: {
-                item.defaults = root.defaults
-                item.gameModel = root.gameModel
-                item.uiSettings = root.uiSettings
+                item.defaults = Qt.binding(() => root.defaults)
+                item.gameModel = Qt.binding(() => root.gameModel)
+                item.uiSettings = Qt.binding(() => root.uiSettings)
                 item.applyToExistingRequested.connect(() => root.defaultsApplyToExistingRequested())
             }
         }
@@ -123,7 +123,7 @@ Item {
             visible: active
             source: "../settings/TabGlobalUi.qml"
             onLoaded: {
-                item.uiSettings = root.uiSettings
+                item.uiSettings = Qt.binding(() => root.uiSettings)
                 item.categoryAddRequested.connect(() => root.categoryAddRequested())
                 item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
                 item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
@@ -137,7 +137,7 @@ Item {
             visible: active
             source: "../settings/TabGlobalTheme.qml"
             onLoaded: {
-                item.uiSettings = root.uiSettings
+                item.uiSettings = Qt.binding(() => root.uiSettings)
                 item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
                 item.manageRadiiRequested.connect(() => root.manageRadiiRequested())
             }
@@ -148,7 +148,7 @@ Item {
             active: root.currentKind === "about"
             visible: active
             source: "../settings/TabGlobalAbout.qml"
-            onLoaded: item.gameModel = root.gameModel
+            onLoaded: item.gameModel = Qt.binding(() => root.gameModel)
         }
     }
 }

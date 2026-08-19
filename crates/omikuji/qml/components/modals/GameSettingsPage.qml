@@ -134,7 +134,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.refetchMediaRequested.connect(() => root.refetchMediaRequested(root.gameId))
             }
         }
@@ -147,7 +147,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.runnersVersion = Qt.binding(() => root.runnersVersion)
                 item.openDllSets = root.openDllSets
             }
@@ -161,7 +161,7 @@ Item {
             onLoaded: {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.openEnvSets = root.openEnvSets
             }
         }
@@ -175,7 +175,7 @@ Item {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
                 item.refreshConfig = root.refreshConfig
-                item.gameModel = root.gameModel
+                item.gameModel = Qt.binding(() => root.gameModel)
                 item.gameId = Qt.binding(() => root.gameId)
             }
         }
