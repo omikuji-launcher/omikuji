@@ -1,11 +1,11 @@
 use anyhow::{Result, anyhow, bail};
 use futures_util::StreamExt;
 use md5::{Digest, Md5};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io::Read;
 use std::path::Path;
 
-use super::api::{self, PatchConfig, ResourceFile, ResourceInfo};
+use super::api::{PatchConfig, PatchIndexFile, ResourceFile, ResourceInfo};
 use super::krpdiff::Krpdiff;
 use super::source::sync_file;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
@@ -15,11 +15,20 @@ pub(super) async fn run_patch_update(
     entry: &DownloadEntry,
     info: &ResourceInfo,
     patch: &PatchConfig,
+    pidx: &PatchIndexFile,
 ) -> Result<bool> {
-    let index_url = format!("{}{}", info.cdn_url, patch.index_file_rel);
-    let pidx = api::fetch_patch_index(&index_url).await?;
     if pidx.resource.is_empty() {
         bail!("patch indexFile returned zero resources");
+    }
+    if !pidx.zip_infos.is_empty() || !pidx.patch_infos.is_empty() {
+        bail!(
+            "patch indexFile carries {} zipInfos and {} patchInfos payloads, which are not implemented",
+            pidx.zip_infos.len(),
+            pidx.patch_infos.len()
+        );
+    }
+    if pidx.group_infos.is_empty() {
+        bail!("patch indexFile declares no groupInfos to apply");
     }
 
     let install_root = entry.install_path.clone();
@@ -66,34 +75,49 @@ pub(super) async fn run_patch_update(
     }
 
     set_status(&entry.id, DownloadStatus::Patching);
+    let mut pending_src: HashMap<&str, usize> = HashMap::new();
+    for g in &pidx.group_infos {
+        for s in &g.src_files {
+            *pending_src.entry(s.dest.as_str()).or_default() += 1;
+        }
+    }
+    let mut staged: Vec<&str> = Vec::new();
     for group in &pidx.group_infos {
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(false);
         }
         let diff_path = dl_root.join(sanitize_rel(&group.dest));
-        if !diff_path.exists() {
-            continue;
+        if diff_path.exists() {
+            let apply = {
+                let diff_path = diff_path.clone();
+                let install_root = install_root.clone();
+                let out_root = out_root.clone();
+                let dst_files = group.dst_files.clone();
+                tokio::task::spawn_blocking(move || {
+                    apply_group(&diff_path, &install_root, &out_root, &dst_files)
+                })
+            };
+            match apply.await? {
+                Ok(()) => staged.extend(group.dst_files.iter().map(|f| f.dest.as_str())),
+                Err(e) => {
+                    tracing::warn!(
+                        "krpdiff group {} failed, its files fall back to full download: {}",
+                        group.dest,
+                        e
+                    );
+                    for f in &group.dst_files {
+                        let _ = std::fs::remove_file(out_root.join(sanitize_rel(&f.dest)));
+                    }
+                }
+            }
+            let _ = std::fs::remove_file(&diff_path);
         }
-        let apply = {
-            let diff_path = diff_path.clone();
-            let install_root = install_root.clone();
-            let out_root = out_root.clone();
-            let dst_files = group.dst_files.clone();
-            tokio::task::spawn_blocking(move || {
-                apply_group(&diff_path, &install_root, &out_root, &dst_files)
-            })
-        };
-        if let Err(e) = apply.await? {
-            tracing::warn!(
-                "krpdiff group {} failed, its files fall back to full download: {}",
-                group.dest,
-                e
-            );
-            for f in &group.dst_files {
-                let _ = std::fs::remove_file(out_root.join(sanitize_rel(&f.dest)));
+        for s in &group.src_files {
+            if let Some(n) = pending_src.get_mut(s.dest.as_str()) {
+                *n = n.saturating_sub(1);
             }
         }
-        let _ = std::fs::remove_file(&diff_path);
+        flush_staged(&mut staged, &pending_src, &out_root, &install_root);
     }
 
     let mut fallback: Vec<ResourceFile> = Vec::new();
@@ -138,11 +162,7 @@ pub(super) async fn run_patch_update(
         if !src.exists() {
             continue;
         }
-        let dst = install_root.join(&rel);
-        if let Some(parent) = dst.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::rename(&src, &dst)?;
+        move_file(&src, &install_root.join(&rel))?;
     }
     move_tree(&out_root, &install_root)?;
 
@@ -210,4 +230,28 @@ fn move_tree(from: &Path, to: &Path) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn move_file(from: &Path, to: &Path) -> Result<()> {
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::rename(from, to)?;
+    Ok(())
+}
+
+fn flush_staged<'a>(
+    staged: &mut Vec<&'a str>,
+    pending_src: &HashMap<&'a str, usize>,
+    out_root: &Path,
+    install_root: &Path,
+) {
+    staged.retain(|dest| {
+        if pending_src.get(*dest).copied().unwrap_or(0) > 0 {
+            return true;
+        }
+        let rel = sanitize_rel(dest);
+        let src = out_root.join(&rel);
+        src.exists() && move_file(&src, &install_root.join(&rel)).is_err()
+    });
 }

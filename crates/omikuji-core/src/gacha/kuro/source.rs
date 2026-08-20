@@ -42,16 +42,29 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
 
     let info = api::fetch_resource_info(&manifest, &edition_id).await?;
 
+    let mut patch_stale: Vec<String> = Vec::new();
     if let DownloadKind::Update { from_version } = &entry.kind
         && let Some(pc) = info.matching_patch(from_version)
     {
-        match super::patcher::run_patch_update(entry, &info, pc).await {
-            Ok(true) => {
-                super::set_installed_version(&game_slug, &edition_id, &info.version);
-                return Ok(());
+        let index_url = format!("{}{}", info.cdn_url, pc.index_file_rel);
+        match api::fetch_patch_index(&index_url).await {
+            Ok(pidx) => match super::patcher::run_patch_update(entry, &info, pc, &pidx).await {
+                Ok(true) => {
+                    super::set_installed_version(&game_slug, &edition_id, &info.version);
+                    return Ok(());
+                }
+                Ok(false) => return Ok(()),
+                Err(e) => {
+                    tracing::warn!("kuro delta update failed, falling back to full sync: {}", e);
+                    patch_stale = pidx.delete_files.clone();
+                }
+            },
+            Err(e) => {
+                tracing::warn!(
+                    "kuro patch index fetch failed, falling back to full sync: {}",
+                    e
+                )
             }
-            Ok(false) => return Ok(()),
-            Err(e) => tracing::warn!("kuro delta update failed, falling back to full sync: {}", e),
         }
     }
 
@@ -75,7 +88,7 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
         return Ok(());
     }
 
-    for stale in &index.delete_files {
+    for stale in index.delete_files.iter().chain(patch_stale.iter()) {
         let p = install_root.join(file_sync::sanitize_rel(stale));
         if p.exists() {
             let _ = std::fs::remove_file(&p);

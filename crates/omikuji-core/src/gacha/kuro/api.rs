@@ -203,6 +203,10 @@ pub struct PatchIndexFile {
     pub delete_files: Vec<String>,
     #[serde(default, rename = "groupInfos")]
     pub group_infos: Vec<PatchGroup>,
+    #[serde(default, rename = "zipInfos")]
+    pub zip_infos: Vec<serde_json::Value>,
+    #[serde(default, rename = "patchInfos")]
+    pub patch_infos: Vec<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
