@@ -10,6 +10,20 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.10.0
+Added:
+- Yostar gacha integration (Arknights Global, KR, JP)
+- Library categories' context menu and drag function
+- Runtime components page 'check updates' button
+- Delete button for runtime components
+- Welcome dialog
+Fixes:
+- Console mode pause shader when not focused
+Changed:
+- Don't fetch umu-run automatically at app startup
+- Keep missing runner and layer label in game/app settings
+- States ui.toml migration
+
 ## 0.9.0
 Added:
 - Guard for duplicate game launches and wine tools spawns

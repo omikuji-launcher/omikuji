@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.9.1
+Version:        0.10.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,18 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sat Aug 22 2026 reakjra <reakjra@proton.me> - 0.10.0-1
+- Yostar gacha integration (Arknights (Global, KR, JP))
+- Library categories' context menu and drag function
+- Console mode pause shader when not focused
+- Keep missing runner label in game settings
+- Also layer
+- Runtime components page 'check updates' button
+- Don't fetch umu-run automatically
+- Delete button for runtime components
+- Welcome dialog
+- States ui.toml migration
+
 * Sun Aug 16 2026 reakjra <reakjra@proton.me> - 0.9.1-1
 - stupid ass flatpak image limit sizes
 

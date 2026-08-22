@@ -22,6 +22,22 @@
     </p>
   </description>
   <releases>
+    <release version="0.10.0" date="2026-08-22">
+      <description>
+        <ul>
+          <li>Yostar gacha integration (Arknights (Global, KR, JP))</li>
+          <li>Library categories' context menu and drag function</li>
+          <li>Console mode pause shader when not focused</li>
+          <li>Keep missing runner label in game settings</li>
+          <li>Also layer</li>
+          <li>Runtime components page 'check updates' button</li>
+          <li>Don't fetch umu-run automatically</li>
+          <li>Delete button for runtime components</li>
+          <li>Welcome dialog</li>
+          <li>States ui.toml migration</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.9.1" date="2026-08-16">
       <description>
         <ul>
