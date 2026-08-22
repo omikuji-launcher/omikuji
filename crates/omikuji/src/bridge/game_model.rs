@@ -191,6 +191,9 @@ pub mod qobject {
         fn launch_game_force(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
+        fn missing_component(self: &GameModel, index: i32) -> QString;
+
+        #[qinvokable]
         fn needs_prefix_prep(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
@@ -1376,6 +1379,16 @@ impl qobject::GameModel {
             "games": games,
         });
         QString::from(&v.to_string())
+    }
+
+    fn missing_component(&self, index: i32) -> QString {
+        let name = self
+            .library
+            .game
+            .get(index as usize)
+            .and_then(omikuji_core::launch::missing_component)
+            .unwrap_or_default();
+        QString::from(&name)
     }
 
     fn needs_prefix_prep(&self, index: i32) -> bool {

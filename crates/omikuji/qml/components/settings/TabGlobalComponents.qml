@@ -258,7 +258,8 @@ Item {
                         id: runtimeRow
                         required property string modelData
                         readonly property var meta: root.runtimeMeta[modelData] || ({ label: modelData, desc: "" })
-                        readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", latest: "", percent: 0, error: "" })
+                        readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", path: "", latest: "", percent: 0, error: "" })
+                        readonly property bool isSystem: status.status === "system"
                         readonly property bool hasUpdate: status.version && status.latest && status.latest !== status.version
                         readonly property bool busy: status.status === "installing"
                             || status.status === "downloading"
@@ -287,7 +288,7 @@ Item {
                                 height: 10
                                 radius: 5
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: runtimeRow.status.status === "completed" ? Theme.success
+                                color: runtimeRow.status.status === "completed" || runtimeRow.isSystem ? Theme.success
                                     : runtimeRow.status.status === "failed" ? Theme.error
                                     : runtimeRow.busy ? Theme.accent
                                     : Theme.textFaint
@@ -308,10 +309,12 @@ Item {
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
-                                        visible: runtimeRow.status.version && runtimeRow.status.version.length > 0
-                                        text: runtimeRow.hasUpdate
-                                            ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
-                                            : runtimeRow.status.version
+                                        visible: text.length > 0
+                                        text: runtimeRow.isSystem
+                                            ? (runtimeRow.status.path || "")
+                                            : runtimeRow.hasUpdate
+                                                ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
+                                                : (runtimeRow.status.version || "")
                                         color: runtimeRow.hasUpdate ? Theme.warning : Theme.textMuted
                                         font.pixelSize: Theme.type.caption.size
                                         font.family: "monospace"
@@ -329,7 +332,11 @@ Item {
                                 }
 
                                 Text {
-                                    text: runtimeRow.status.status === "failed" && runtimeRow.status.error ? runtimeRow.status.error : runtimeRow.meta.desc
+                                    text: runtimeRow.status.status === "failed" && runtimeRow.status.error
+                                        ? runtimeRow.status.error
+                                        : runtimeRow.isSystem
+                                            ? qsTr("Provided by your system, omikuji won't download its own.")
+                                            : runtimeRow.meta.desc
                                     color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
                                     font.pixelSize: Theme.type.caption.size
                                     elide: Text.ElideRight
@@ -338,10 +345,26 @@ Item {
                             }
                         }
 
-                        M3Button {
-                            id: actionBtn
+                        IconButton {
+                            id: removeBtn
                             anchors.right: parent.right
                             anchors.rightMargin: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: !runtimeRow.isSystem
+                                && (runtimeRow.status.status === "completed" || runtimeRow.busy)
+                            blocked: runtimeRow.busy
+                            icon: "close"
+                            danger: true
+                            onClicked: {
+                                root.componentsBridge.removeComponent(runtimeRow.modelData)
+                                root.refreshRuntime()
+                            }
+                        }
+
+                        M3Button {
+                            id: actionBtn
+                            anchors.right: removeBtn.visible ? removeBtn.left : parent.right
+                            anchors.rightMargin: removeBtn.visible ? Theme.space.xs : 12
                             anchors.verticalCenter: parent.verticalCenter
 
                             readonly property bool busyState: runtimeRow.busy || (root.componentsBridge && root.componentsBridge.inProgress)
@@ -351,10 +374,13 @@ Item {
                                 : runtimeRow.status.status === "completed" ? qsTr("Reinstall")
                                 : runtimeRow.status.status === "failed" ? qsTr("Retry")
                                 : qsTr("Install")
-                            variant: (busyState || (runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
+                            variant: (busyState || runtimeRow.isSystem || (runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
                             danger: runtimeRow.status.status === "failed" && !busyState
                             enabled: !busyState
-                            onClicked: root.componentsBridge.reinstallComponent(runtimeRow.modelData)
+                            onClicked: {
+                                root.componentsBridge.installComponent(runtimeRow.modelData)
+                                root.refreshRuntime()
+                            }
                         }
                     }
                 }

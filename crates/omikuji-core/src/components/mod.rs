@@ -1,7 +1,7 @@
 pub mod spec;
 pub mod specs;
 
-pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Source, Trigger};
+pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Source};
 
 use anyhow::{Result, anyhow};
 use std::collections::VecDeque;
@@ -32,8 +32,14 @@ fn write_version(name: &str, tag: &str) -> std::io::Result<()> {
 pub fn status_for(spec: &ComponentSpec) -> ComponentStatus {
     let canary = crate::runtime_dir().join(spec.dest);
     match (canary.exists(), read_version(spec.name)) {
-        (true, Some(ver)) => ComponentStatus::Installed { version: ver },
-        _ => ComponentStatus::Missing,
+        (true, Some(ver)) => ComponentStatus::Installed {
+            version: ver,
+            path: canary,
+        },
+        _ => match spec.system_probe.and_then(|probe| probe()) {
+            Some(path) => ComponentStatus::System { path },
+            None => ComponentStatus::Missing,
+        },
     }
 }
 
@@ -44,10 +50,10 @@ pub fn check_all() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
-pub fn eager_pending() -> Vec<&'static ComponentSpec> {
-    check_all()
-        .into_iter()
-        .filter(|s| matches!(s.trigger, Trigger::Eager))
+pub fn umu() -> Vec<&'static ComponentSpec> {
+    specs::all()
+        .iter()
+        .filter(|s| matches!(s.settings_key, SettingsKey::UmuRun))
         .collect()
 }
 
@@ -91,7 +97,19 @@ pub fn updatable() -> Vec<&'static ComponentSpec> {
 pub fn ready(specs: &[&'static ComponentSpec]) -> bool {
     specs
         .iter()
-        .all(|s| matches!(status_for(s), ComponentStatus::Installed { .. }))
+        .all(|s| !matches!(status_for(s), ComponentStatus::Missing))
+}
+
+pub fn remove(spec: &ComponentSpec) -> Result<()> {
+    for path in [
+        crate::runtime_dir().join(spec.dest),
+        version_marker(spec.name),
+    ] {
+        if path.exists() {
+            fs::remove_file(&path).map_err(|e| anyhow!("remove {}: {}", path.display(), e))?;
+        }
+    }
+    Ok(())
 }
 
 pub async fn ensure(specs: &[&'static ComponentSpec]) -> Result<()> {

@@ -22,7 +22,9 @@ Rectangle {
     readonly property string status: entry.status || "missing"
     readonly property real percent: entry.percent || 0
     readonly property string version: entry.version || ""
+    readonly property string path: entry.path || ""
     readonly property string error: entry.error || ""
+    readonly property bool isSystem: status === "system"
     readonly property bool isDone: status === "completed"
     readonly property bool isFailed: status === "failed"
     readonly property bool isActive: status === "installing" || status === "downloading"
@@ -38,7 +40,7 @@ Rectangle {
             Layout.preferredWidth: 20
             Layout.preferredHeight: 20
             size: 20
-            name: row.isDone ? "check_circle"
+            name: row.isDone || row.isSystem ? "check_circle"
                 : row.isFailed ? "close"
                 : "download"
             color: row.isDone ? Theme.accent
@@ -61,6 +63,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: row.isFailed ? qsTr("Failed: %1").arg(row.error)
+                    : row.isSystem ? (row.path || qsTr("Provided by your system"))
                     : row.isDone ? (row.version ? ("v" + row.version) : qsTr("Installed"))
                     : row.isActive ? (capitalize(row.status)
                           + (row.status === "downloading" ? " · " + Math.round(row.percent) + "%" : "…"))

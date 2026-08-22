@@ -15,10 +15,7 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
-        #[qproperty(i32, pending_count, cxx_name = "pendingCount")]
-        #[qproperty(i32, total_count, cxx_name = "totalCount")]
         #[qproperty(bool, in_progress, cxx_name = "inProgress")]
-        #[qproperty(bool, all_done, cxx_name = "allDone")]
         #[qproperty(bool, checking)]
         type ComponentsBridge = super::ComponentsRust;
     }
@@ -54,12 +51,16 @@ pub mod qobject {
         fn install_all(self: Pin<&mut ComponentsBridge>);
 
         #[qinvokable]
-        #[cxx_name = "installEager"]
-        fn install_eager(self: Pin<&mut ComponentsBridge>);
+        #[cxx_name = "installComponent"]
+        fn install_component(self: Pin<&mut ComponentsBridge>, name: QString);
 
         #[qinvokable]
-        #[cxx_name = "reinstallComponent"]
-        fn reinstall_component(self: Pin<&mut ComponentsBridge>, name: QString);
+        #[cxx_name = "removeComponent"]
+        fn remove_component(self: Pin<&mut ComponentsBridge>, name: QString);
+
+        #[qinvokable]
+        #[cxx_name = "componentReady"]
+        fn component_ready(self: &ComponentsBridge, name: QString) -> bool;
 
         #[qinvokable]
         #[cxx_name = "checkUpdates"]
@@ -75,10 +76,7 @@ pub mod qobject {
 }
 
 pub struct ComponentsRust {
-    pub pending_count: i32,
-    pub total_count: i32,
     pub in_progress: bool,
-    pub all_done: bool,
     pub checking: bool,
 
     statuses: HashMap<String, ComponentStatusEntry>,
@@ -90,38 +88,58 @@ struct ComponentStatusEntry {
     status: String,
     percent: f64,
     version: String,
+    path: String,
     latest: String,
     error: String,
 }
 
+fn spec_by_name(name: &str) -> Option<&'static core_components::ComponentSpec> {
+    core_components::specs::all()
+        .iter()
+        .find(|s| s.name == name)
+}
+
+fn is_busy(status: &str) -> bool {
+    matches!(
+        status,
+        "resolving" | "installing" | "downloading" | "extracting"
+    )
+}
+
+fn fresh_entry(spec: &core_components::ComponentSpec, latest: String) -> ComponentStatusEntry {
+    match core_components::status_for(spec) {
+        core_components::ComponentStatus::Installed { version, path } => ComponentStatusEntry {
+            status: "completed".into(),
+            percent: 100.0,
+            version,
+            path: path.display().to_string(),
+            latest,
+            ..Default::default()
+        },
+        core_components::ComponentStatus::System { path } => ComponentStatusEntry {
+            status: "system".into(),
+            percent: 100.0,
+            path: path.display().to_string(),
+            latest,
+            ..Default::default()
+        },
+        core_components::ComponentStatus::Missing => ComponentStatusEntry {
+            status: "missing".into(),
+            latest,
+            ..Default::default()
+        },
+    }
+}
+
 impl Default for ComponentsRust {
     fn default() -> Self {
-        let specs = core_components::specs::all();
-        let pending = core_components::eager_pending();
-
-        let mut statuses = HashMap::new();
-        for spec in specs {
-            let (status, version) = match core_components::status_for(spec) {
-                core_components::ComponentStatus::Installed { version } => {
-                    ("completed".to_string(), version)
-                }
-                core_components::ComponentStatus::Missing => ("missing".to_string(), String::new()),
-            };
-            statuses.insert(
-                spec.name.to_string(),
-                ComponentStatusEntry {
-                    status,
-                    version,
-                    ..Default::default()
-                },
-            );
-        }
+        let statuses = core_components::specs::all()
+            .iter()
+            .map(|spec| (spec.name.to_string(), fresh_entry(spec, String::new())))
+            .collect();
 
         Self {
-            pending_count: pending.len() as i32,
-            total_count: specs.len() as i32,
             in_progress: false,
-            all_done: pending.is_empty(),
             checking: false,
             statuses,
             checks_pending: 0,
@@ -141,6 +159,7 @@ impl qobject::ComponentsBridge {
                         "status": v.status,
                         "percent": v.percent,
                         "version": v.version,
+                        "path": v.path,
                         "latest": v.latest,
                         "error": v.error,
                     }),
@@ -151,39 +170,15 @@ impl qobject::ComponentsBridge {
     }
 
     fn refresh(mut self: Pin<&mut Self>) {
-        let specs = core_components::specs::all();
-        let pending = core_components::eager_pending();
-
-        for spec in specs {
+        for spec in core_components::specs::all() {
             let current = self.statuses.get(spec.name).cloned();
             let latest = current
                 .as_ref()
                 .map(|c| c.latest.clone())
                 .unwrap_or_default();
-            let entry = match core_components::status_for(spec) {
-                core_components::ComponentStatus::Installed { version } => ComponentStatusEntry {
-                    status: "completed".into(),
-                    percent: 100.0,
-                    version,
-                    latest,
-                    ..Default::default()
-                },
-                // don't overwrite a live "installing" status with "missing" becuase the file check races with the install thread
-                core_components::ComponentStatus::Missing => match current {
-                    Some(c)
-                        if matches!(
-                            c.status.as_str(),
-                            "installing" | "downloading" | "extracting"
-                        ) =>
-                    {
-                        c
-                    }
-                    _ => ComponentStatusEntry {
-                        status: "missing".into(),
-                        latest,
-                        ..Default::default()
-                    },
-                },
+            let entry = match current {
+                Some(c) if is_busy(&c.status) => c,
+                _ => fresh_entry(spec, latest),
             };
             self.as_mut()
                 .rust_mut()
@@ -191,10 +186,6 @@ impl qobject::ComponentsBridge {
                 .statuses
                 .insert(spec.name.into(), entry);
         }
-
-        let pc = pending.len() as i32;
-        self.as_mut().set_pending_count(pc);
-        self.as_mut().set_all_done(pc == 0);
     }
 
     // spawn an OS thread then block_on; we're inside #[tokio::main], so building a runtime directly would panic.
@@ -206,6 +197,20 @@ impl qobject::ComponentsBridge {
             return;
         }
         self.as_mut().set_in_progress(true);
+
+        for spec in &specs {
+            if let Some(entry) = self
+                .as_mut()
+                .rust_mut()
+                .get_mut()
+                .statuses
+                .get_mut(spec.name)
+            {
+                entry.status = "installing".into();
+                entry.percent = 0.0;
+                entry.error.clear();
+            }
+        }
 
         thread::spawn(move || {
             let rt = tokio::runtime::Builder::new_current_thread()
@@ -227,8 +232,23 @@ impl qobject::ComponentsBridge {
         self.spawn_install(core_components::check_all());
     }
 
-    fn install_eager(self: Pin<&mut Self>) {
-        self.spawn_install(core_components::eager_pending());
+    fn component_ready(&self, name: QString) -> bool {
+        spec_by_name(&name.to_string()).is_some_and(|s| core_components::ready(&[s]))
+    }
+
+    fn remove_component(mut self: Pin<&mut Self>, name: QString) {
+        let target = name.to_string();
+        let Some(spec) = spec_by_name(&target) else {
+            return;
+        };
+        if let Err(e) = core_components::remove(spec) {
+            omikuji_core::notifications::error(
+                format!("Couldn't remove {}", target),
+                e.to_string(),
+            );
+            return;
+        }
+        self.as_mut().refresh();
     }
 
     fn check_updates(mut self: Pin<&mut Self>) {
@@ -255,12 +275,9 @@ impl qobject::ComponentsBridge {
         });
     }
 
-    fn reinstall_component(mut self: Pin<&mut Self>, name: QString) {
+    fn install_component(mut self: Pin<&mut Self>, name: QString) {
         let target = name.to_string();
-        let Some(spec) = core_components::specs::all()
-            .iter()
-            .find(|s| s.name == target)
-        else {
+        let Some(spec) = spec_by_name(&target) else {
             omikuji_core::components::push_fail_event(
                 &target,
                 "unknown component (not in specs::all())",
@@ -273,12 +290,7 @@ impl qobject::ComponentsBridge {
     fn drain_events(mut self: Pin<&mut Self>) {
         let events = core_components::drain_events();
         if events.is_empty() {
-            let has_active = self.statuses.values().any(|s| {
-                matches!(
-                    s.status.as_str(),
-                    "installing" | "downloading" | "extracting"
-                )
-            });
+            let has_active = self.statuses.values().any(|s| is_busy(&s.status));
             if !has_active && self.in_progress {
                 self.as_mut().set_in_progress(false);
                 self.as_mut().refresh();

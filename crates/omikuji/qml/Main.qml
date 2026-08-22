@@ -226,15 +226,6 @@ ApplicationWindow {
         repeat: false
         running: true
         onTriggered: {
-            if (componentsBridge.pendingCount > 0 && !componentsBridge.inProgress) {
-                toastManager.show(
-                    "info",
-                    qsTr("Setting up omikuji"),
-                    qsTr("Fetching runtime components — see Downloads for progress.")
-                )
-                componentsBridge.installEager()
-            }
-
             let raw = gameModel.changelog_pending()
             let payload = null
             if (raw && raw.length > 0) {
@@ -245,6 +236,10 @@ ApplicationWindow {
             } else {
                 gameModel.mark_changelog_seen()
             }
+
+            if (!uiSettings.welcomeSeen) {
+                welcomeDialog.show()
+            }
         }
     }
 
@@ -252,11 +247,6 @@ ApplicationWindow {
         target: componentsBridge
         function onComponentFailed(name, error) {
             toastManager.show("error", qsTr("%1 failed").arg(name), qsTr("Retry it from the Downloads tab."))
-        }
-        function onAllDoneChanged() {
-            if (componentsBridge.allDone && componentsBridge.totalCount > 0) {
-                toastManager.show("success", qsTr("omikuji is ready"), qsTr("Runtime components installed."))
-            }
         }
     }
 
@@ -267,6 +257,7 @@ ApplicationWindow {
     readonly property var uiSettingsRef: uiSettings
     readonly property var envSetsDialogRef: envSetsDialog
     readonly property var dllSetsDialogRef: dllSetsDialog
+    property bool welcomeResumePending: false
     readonly property var componentsBridgeRef: componentsBridge
     readonly property var archiveManagerRef: archiveManager
     readonly property var ofudaBridgeRef: ofudaBridge
@@ -451,6 +442,11 @@ ApplicationWindow {
                 currentView = "downloads"
                 return false
             }
+        }
+        let missing = gameModel.missing_component(idx)
+        if (missing.length > 0) {
+            componentRequiredDialog.start(idx, forceSkipUpdateCheck, missing)
+            return true
         }
         if (gameModel.needs_prefix_prep(idx)) {
             prefixPrepDialog.start(idx, forceSkipUpdateCheck)
@@ -1105,6 +1101,11 @@ property real cardZoom: uiSettings.cardZoom
             removeSourceConfirm.show({ category: category, source: sourceName })
         }
         onMoveToSteamRequested: (sourceName, tag) => steamMoveDialog.show(archiveManager.installedRunnerPath(sourceName, tag), tag)
+        onClosed: {
+            if (!root.welcomeResumePending) return
+            root.welcomeResumePending = false
+            welcomeDialog.show()
+        }
     }
 
     ArchiveSourceDialog {
@@ -1194,6 +1195,24 @@ property real cardZoom: uiSettings.cardZoom
         onDismissed: gameModel.mark_changelog_seen()
     }
 
+    WelcomeDialog {
+        id: welcomeDialog
+        anchors.fill: parent
+        uiSettings: root.uiSettingsRef
+        componentsBridge: root.componentsBridgeRef
+        archiveManager: root.archiveManagerRef
+        onUmuInstallRequested: toastManager.show(
+            "info",
+            qsTr("Installing umu-run"),
+            qsTr("See Downloads for progress.")
+        )
+        onManageRequested: (category, source, kind) => {
+            root.welcomeResumePending = true
+            welcomeDialog.close()
+            archiveManageDialog.show(category, source, kind)
+        }
+    }
+
     ErrorDialog {
         id: errorDialog
         anchors.fill: parent
@@ -1231,6 +1250,13 @@ property real cardZoom: uiSettings.cardZoom
         gameModel: root.gameModelRef
         ofudaBridge: root.ofudaBridgeRef
         onInstalled: (gameId, gameName) => toastManager.show("success", qsTr("Game added"), gameName)
+    }
+
+    ComponentRequiredDialog {
+        id: componentRequiredDialog
+        anchors.fill: parent
+        componentsBridge: root.componentsBridgeRef
+        onLaunchReady: (idx, skip) => root.tryPlay(idx, skip)
     }
 
     PrefixPrepDialog {

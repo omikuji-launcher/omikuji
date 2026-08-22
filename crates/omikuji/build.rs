@@ -205,6 +205,7 @@ fn main() {
         .prop_readonly("fill_fields", kushi::Kind::Bool, "theme.fill_fields")
         .prop_readonly("radius_scale", kushi::Kind::F64, "theme.radius_scale")
         .prop_at("language", kushi::Kind::QString, "language")
+        .prop_at("welcome_seen", kushi::Kind::Bool, "state.welcome_seen")
         .qsignal("theme_changed")
         .json_accessor("categories", "Vec<CategoryEntry>", "categories", "categories_changed")
         .json_accessor("env_sets", "Vec<KvSet>", "env_sets", "env_sets_changed")
@@ -314,6 +315,8 @@ fn main() {
         "qml/components/dialogs/CategoryEditDialog.qml",
         "qml/components/dialogs/ConfirmDialog.qml",
         "qml/components/dialogs/ChangelogDialog.qml",
+        "qml/components/dialogs/ComponentRequiredDialog.qml",
+        "qml/components/dialogs/WelcomeDialog.qml",
         "qml/components/popups/ContextMenu.qml",
         "qml/components/dialogs/DialogCard.qml",
         "qml/components/dialogs/DialogSection.qml",

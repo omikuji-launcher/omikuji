@@ -36,7 +36,7 @@ Point it at a fork to add your own gachas. hmph.
 
 ## `[components]`
 
-Download URLs for the runtime tools (umu, hpatchz, legendary, gogdl, EGL dummy). `umu-run` is fetched on first launch; the rest are fetched when first needed, like a store login or a game install.
+Download URLs for the runtime tools (umu, hpatchz, legendary, gogdl, EGL dummy). They're fetched when first needed, like a store login or a game install.
 
 ```toml
 [components]

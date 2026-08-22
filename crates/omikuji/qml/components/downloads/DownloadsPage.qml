@@ -25,7 +25,6 @@ Item {
     readonly property bool componentsVisible: {
         if (!componentsBridge) return false
         if (componentsBridge.inProgress) return true
-        if (componentsBridge.pendingCount > 0) return true
         for (let k in componentStatuses) {
             if (componentStatuses[k] && componentStatuses[k].status === "failed") return true
         }

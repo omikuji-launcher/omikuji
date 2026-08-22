@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 #[derive(Debug, Clone)]
 pub struct ComponentSpec {
     pub name: &'static str,
@@ -5,13 +7,7 @@ pub struct ComponentSpec {
     pub extract: ExtractStrategy,
     pub dest: &'static str,
     pub settings_key: SettingsKey,
-    pub trigger: Trigger,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum Trigger {
-    Eager,
-    OnDemand,
+    pub system_probe: Option<fn() -> Option<PathBuf>>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -40,6 +36,7 @@ pub enum ExtractStrategy {
 
 #[derive(Debug, Clone)]
 pub enum ComponentStatus {
-    Installed { version: String },
+    Installed { version: String, path: PathBuf },
+    System { path: PathBuf },
     Missing,
 }

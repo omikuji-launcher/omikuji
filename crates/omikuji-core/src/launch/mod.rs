@@ -740,6 +740,20 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
     }
 }
 
+pub fn missing_component(game: &Game) -> Option<String> {
+    if matches!(
+        game.runner.runner_type.as_str(),
+        "steam" | "flatpak" | "native"
+    ) {
+        return None;
+    }
+    let version = &game.wine.version;
+    resolve_wine_exe(WineVariant::from_version(version), version)
+        .err()?
+        .downcast_ref::<ComponentMissing>()
+        .map(|c| c.name.clone())
+}
+
 fn resolve_steam_runner(version: &str) -> Result<PathBuf> {
     crate::store::steam::local::find_proton_install(version)
         .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version))?;
@@ -771,14 +785,18 @@ fn find_executable_in_paths(names: &[&str], extra_paths: &[&str]) -> Option<Path
     None
 }
 
-fn find_umu_run() -> Option<PathBuf> {
+pub fn umu_system_path() -> Option<PathBuf> {
     const SYSTEM_PATHS: &[&str] = &[
         "/app/share/umu/umu-run",
         "/usr/share/umu/umu-run",
         "/usr/local/share/umu/umu-run",
         "/opt/umu/umu-run",
     ];
-    if let Some(p) = find_executable_in_paths(&["umu-run", "umu_run.py"], SYSTEM_PATHS) {
+    find_executable_in_paths(&["umu-run", "umu_run.py"], SYSTEM_PATHS)
+}
+
+pub fn find_umu_run() -> Option<PathBuf> {
+    if let Some(p) = umu_system_path() {
         return Some(p);
     }
     let our_runtime = runtime_dir().join("umu-run");

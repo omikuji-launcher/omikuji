@@ -1,4 +1,4 @@
-use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source, Trigger};
+use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source};
 
 pub fn all() -> &'static [ComponentSpec] {
     COMPONENTS
@@ -15,7 +15,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         },
         dest: "umu-run",
         settings_key: SettingsKey::UmuRun,
-        trigger: Trigger::Eager,
+        system_probe: Some(crate::launch::umu_system_path),
     },
     ComponentSpec {
         name: "hpatchz",
@@ -27,7 +27,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         },
         dest: "hpatchz",
         settings_key: SettingsKey::Hpatchz,
-        trigger: Trigger::OnDemand,
+        system_probe: None,
     },
     ComponentSpec {
         name: "legendary",
@@ -37,7 +37,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "legendary",
         settings_key: SettingsKey::Legendary,
-        trigger: Trigger::OnDemand,
+        system_probe: None,
     },
     ComponentSpec {
         name: "gogdl",
@@ -47,7 +47,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "gogdl",
         settings_key: SettingsKey::Gogdl,
-        trigger: Trigger::OnDemand,
+        system_probe: None,
     },
     ComponentSpec {
         name: "egl-dummy",
@@ -55,6 +55,6 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "EpicGamesLauncher.exe",
         settings_key: SettingsKey::EglDummy,
-        trigger: Trigger::OnDemand,
+        system_probe: None,
     },
 ];

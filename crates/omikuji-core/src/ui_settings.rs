@@ -12,6 +12,8 @@ use std::path::PathBuf;
 #[serde(default)]
 pub struct UiSettings {
     pub language: String,
+    #[serde(default, rename = "last_seen_changelog", skip_serializing)]
+    pub legacy_last_seen_changelog: String,
     pub library: LibrarySettings,
     pub tabs: TabsSettings,
     pub nav: NavSettings,
@@ -31,13 +33,21 @@ pub struct UiSettings {
     #[serde(default)]
     pub template_vars: BTreeMap<String, String>,
     #[serde(default)]
+    pub state: AppState,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct AppState {
     pub last_seen_changelog: String,
+    pub welcome_seen: bool,
 }
 
 impl Default for UiSettings {
     fn default() -> Self {
         Self {
             language: "system".into(),
+            legacy_last_seen_changelog: String::new(),
             library: LibrarySettings::default(),
             tabs: TabsSettings::default(),
             nav: NavSettings::default(),
@@ -50,7 +60,7 @@ impl Default for UiSettings {
             dll_sets: Vec::new(),
             dialog_sizes: BTreeMap::new(),
             template_vars: BTreeMap::new(),
-            last_seen_changelog: String::new(),
+            state: AppState::default(),
         }
     }
 }
@@ -332,7 +342,8 @@ impl UiSettings {
         match std::fs::read_to_string(&path) {
             Ok(body) => match toml::from_str::<UiSettings>(&body) {
                 Ok(mut settings) => {
-                    if settings.migrate_category_auto_names() {
+                    let moved = settings.migrate_legacy_app_state();
+                    if settings.migrate_category_auto_names() || moved {
                         let _ = settings.save();
                     }
                     settings
@@ -347,6 +358,19 @@ impl UiSettings {
                 Self::default()
             }
         }
+    }
+
+    // TODO: remove after a 1 or 2 releases ig
+    fn migrate_legacy_app_state(&mut self) -> bool {
+        if self.legacy_last_seen_changelog.is_empty() {
+            return false;
+        }
+        if self.state.last_seen_changelog.is_empty() {
+            self.state.last_seen_changelog = std::mem::take(&mut self.legacy_last_seen_changelog);
+        } else {
+            self.legacy_last_seen_changelog.clear();
+        }
+        true
     }
 
     // TODO: remove after a 1 or 2 releases ig
@@ -375,7 +399,14 @@ impl UiSettings {
 
     // atomic write (tmp + rename) so a crash mid-save cant leave a half-written file (hopefully)
     pub fn save(&self) -> std::io::Result<()> {
-        let body = toml::to_string_pretty(self).map_err(std::io::Error::other)?;
+        let body = toml::to_string_pretty(self)
+            .map(|s| {
+                s.replace(
+                    "\n[state]\n",
+                    "\n# this section is omikuji's own bookkeeping for how it should behave, not meant to be edited by hand\n[state]\n",
+                )
+            })
+            .map_err(std::io::Error::other)?;
         crate::fs_util::write_atomic(&ui_settings_path(), body)
     }
 }

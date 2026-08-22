@@ -50,11 +50,13 @@ ComponentSpec {
     extract: ExtractStrategy::TarGz { inner_path: "mytool" },
     dest: "mytool",
     settings_key: SettingsKey::MyTool,
-    trigger: Trigger::OnDemand,
+    system_probe: None,
 },
 ```
 
-5. Pick the trigger. `Eager` fetches at boot (only umu uses this). `OnDemand` fetches when something calls `components::ensure(...)`. For `OnDemand`, add that `ensure` call at the point the tool becomes necessary (a store login, a game install). `epic_tools` and `gacha_tools` in `components/mod.rs` are the existing examples.
+5. Add a `components::ensure(...)` call at the point the tool becomes necessary (a store login, a game install). Nothing is fetched at boot. `epic_tools`, `gog_tools` and `gacha_tools` in `components/mod.rs` are the existing examples.
+
+6. Set `system_probe` if the tool is also packaged by distros. It takes a resolver returning the path of a system copy, and a hit reports the component as present so nothing is downloaded. `umu-run` uses `launch::umu_system_path` for this.
 
 ## A dialog
 
