@@ -152,7 +152,11 @@ fn launcher_command() -> String {
 
 fn generate_desktop_content(game: &Game) -> String {
     let icon = resolve_desktop_icon(game);
-    let exec = format!("{} run {}", launcher_command(), launch_target(game));
+    let exec = format!(
+        "{} run {} --notify-gui",
+        launcher_command(),
+        launch_target(game)
+    );
 
     format!(
         "[Desktop Entry]\n\

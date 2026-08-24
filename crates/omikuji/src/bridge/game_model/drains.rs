@@ -12,6 +12,31 @@ impl super::qobject::GameModel {
         }
     }
 
+    pub fn drain_launch_requests(mut self: Pin<&mut Self>) {
+        for request in omikuji_core::process::take_launch_requests() {
+            let index = self
+                .library
+                .game
+                .iter()
+                .position(|g| g.metadata.id == request.game_id)
+                .map(|i| i as i32);
+
+            match index {
+                Some(i) if self.as_mut().launch_game(i) => continue,
+                Some(_) => {}
+                None => {
+                    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                        game_id: request.game_id.clone(),
+                        title: "Couldn't launch".to_string(),
+                        message: "This game is no longer in the library.".to_string(),
+                        action: omikuji_core::process::ErrorAction::None,
+                    })
+                }
+            }
+            request.release();
+        }
+    }
+
     pub fn drain_update_notifications(mut self: Pin<&mut Self>) {
         for n in omikuji_core::process::take_update_notifications() {
             let display_name = self

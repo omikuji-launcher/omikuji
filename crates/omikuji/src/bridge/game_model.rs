@@ -5,7 +5,7 @@ mod drains;
 mod epic;
 mod gacha;
 mod gog;
-mod launch;
+pub(crate) mod launch;
 mod scripts;
 mod shortcuts;
 mod steam;
@@ -321,6 +321,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn drain_notifications(self: Pin<&mut GameModel>);
+
+        #[qinvokable]
+        fn drain_launch_requests(self: Pin<&mut GameModel>);
 
         #[qinvokable]
         fn drain_update_notifications(self: Pin<&mut GameModel>);

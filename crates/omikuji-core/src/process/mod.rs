@@ -1,4 +1,5 @@
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -341,7 +342,17 @@ use std::collections::{HashSet, VecDeque};
 lazy_static::lazy_static! {
     static ref EXITED_GAMES: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
     static ref LAUNCHING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
+    static ref LAUNCH_REQUESTS: Mutex<VecDeque<LaunchRequest>> = Mutex::new(VecDeque::new());
+    static ref EXIT_WAITERS: Mutex<ExitWaiters> = Mutex::new(HashMap::new());
+    static ref MARKED_IDS: Mutex<(Option<Instant>, HashSet<String>)> =
+        Mutex::new((None, HashSet::new()));
 }
+
+type ExitWaiters = HashMap<String, Vec<(u64, tokio::sync::oneshot::Sender<()>)>>;
+
+const MAX_LAUNCH_REQUESTS: usize = 10;
+const MARKED_IDS_TTL: Duration = Duration::from_millis(400);
+static WAITER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 pub fn mark_launching(game_id: &str) {
     if let Ok(mut set) = LAUNCHING.lock() {
@@ -359,8 +370,109 @@ pub fn is_launching(game_id: &str) -> bool {
     LAUNCHING.lock().is_ok_and(|s| s.contains(game_id))
 }
 
+pub struct LaunchSoulGuard {
+    _lock: nix::fcntl::Flock<std::fs::File>,
+}
+// yes this is a dbd reference, yes im mentally ill, yes fuck you too
+
+fn launch_lock_path(game_id: &str) -> PathBuf {
+    let mut dir = dirs::runtime_dir().unwrap_or_else(std::env::temp_dir);
+    dir.push(format!("omikuji-launch-{}.lock", game_id));
+    dir
+}
+
+pub fn launch_blocked(game_id: &str) -> bool {
+    try_claim_launch(game_id).is_none()
+}
+
+pub fn try_claim_launch(game_id: &str) -> Option<LaunchSoulGuard> {
+    if is_game_running(game_id) {
+        return None;
+    }
+
+    let file = std::fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(false)
+        .open(launch_lock_path(game_id))
+        .ok()?;
+
+    nix::fcntl::Flock::lock(file, nix::fcntl::FlockArg::LockExclusiveNonblock)
+        .ok()
+        .map(|lock| LaunchSoulGuard { _lock: lock })
+}
+
+pub struct LaunchRequest {
+    pub game_id: String,
+    waiter: u64,
+}
+
+impl LaunchRequest {
+    pub fn release(&self) {
+        let Ok(mut map) = EXIT_WAITERS.lock() else {
+            return;
+        };
+        let Some(waiters) = map.get_mut(&self.game_id) else {
+            return;
+        };
+        if let Some(pos) = waiters.iter().position(|(id, _)| *id == self.waiter) {
+            let (_, tx) = waiters.remove(pos);
+            let _ = tx.send(());
+        }
+        if waiters.is_empty() {
+            map.remove(&self.game_id);
+        }
+    }
+}
+
+pub fn release_exit_waiters(game_id: &str) {
+    if let Ok(mut map) = EXIT_WAITERS.lock()
+        && let Some(waiters) = map.remove(game_id)
+    {
+        for (_, tx) in waiters {
+            let _ = tx.send(());
+        }
+    }
+}
+
+pub fn request_launch(game_id: &str) -> tokio::sync::oneshot::Receiver<()> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let waiter = WAITER_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+
+    if let Ok(mut map) = EXIT_WAITERS.lock() {
+        map.entry(game_id.to_string())
+            .or_default()
+            .push((waiter, tx));
+    }
+
+    let evicted: Vec<LaunchRequest> = match LAUNCH_REQUESTS.lock() {
+        Ok(mut queue) => {
+            queue.push_back(LaunchRequest {
+                game_id: game_id.to_string(),
+                waiter,
+            });
+            let excess = queue.len().saturating_sub(MAX_LAUNCH_REQUESTS);
+            queue.drain(..excess).collect()
+        }
+        Err(_) => Vec::new(),
+    };
+    for request in evicted {
+        request.release();
+    }
+
+    rx
+}
+
+pub fn take_launch_requests() -> Vec<LaunchRequest> {
+    LAUNCH_REQUESTS
+        .lock()
+        .map(|mut q| q.drain(..).collect())
+        .unwrap_or_default()
+}
+
 pub fn notify_game_exited(game_id: &str) {
     clear_launching(game_id);
+    release_exit_waiters(game_id);
     if let Ok(mut queue) = EXITED_GAMES.lock() {
         queue.push_back(game_id.to_string());
         while queue.len() > 10 {
@@ -416,7 +528,7 @@ pub fn take_update_notifications() -> Vec<UpdateNotification> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)] // no ma ci sta averne 80, magari aggiungiamoci anche parametri di fisica quantistica
 pub enum ErrorAction {
     None,
     OpenGameSettings,
@@ -433,7 +545,7 @@ impl ErrorAction {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorNotification {
     pub game_id: String,
     pub title: String,
@@ -471,18 +583,20 @@ pub async fn launch_game(config: &crate::launch::LaunchConfig) -> Result<Process
 }
 
 pub fn is_game_running(game_id: &str) -> bool {
-    manager().find_by_game_id(game_id).is_some()
+    manager().find_by_game_id(game_id).is_some() || running_marked_ids().contains(game_id)
 }
 
 // non-blocking stop. schedules SIGTERM on the whole session, then SIGKILL 3s
 //later if anything survives. returns true if a tracked session was found.
 pub fn stop_game(game_id: &str) -> bool {
-    let Some(session) = manager().find_by_game_id(game_id) else {
-        return false;
+    let session_pid = match manager().find_by_game_id(game_id).map(|s| s.state) {
+        Some(ProcessState::Running { pid, .. }) => Some(pid),
+        _ => None,
     };
-    let ProcessState::Running { pid, .. } = session.state else {
+    let markers = marker_pids(game_id);
+    if session_pid.is_none() && markers.is_empty() {
         return false;
-    };
+    }
 
     // for non-steam games, pid == sid (we called setsid on spawn. [my head hurts])
     let is_steam = crate::library::Library::load_game_by_id(game_id)
@@ -491,7 +605,7 @@ pub fn stop_game(game_id: &str) -> bool {
         .map(|g| g.runner.runner_type == "steam")
         .unwrap_or(false);
 
-    tracing::info!("stopping game '{}' (pid: {})", game_id, pid);
+    tracing::info!("stopping game '{}' (pid: {:?})", game_id, session_pid);
 
     #[cfg(unix)]
     {
@@ -499,15 +613,16 @@ pub fn stop_game(game_id: &str) -> bool {
         use nix::unistd::Pid;
 
         if is_steam {
-            let _ = kill(Pid::from_raw(pid as i32), Signal::SIGTERM);
+            if let Some(pid) = session_pid {
+                let _ = kill(Pid::from_raw(pid as i32), Signal::SIGTERM);
+            }
             return true;
         }
 
-        let sid = pid;
         let game_id = game_id.to_string();
         std::thread::spawn(move || {
             let gather = || {
-                let mut pids = session_pids(sid);
+                let mut pids = session_pid.map(session_pids).unwrap_or_default();
                 for p in marker_pids(&game_id) {
                     if !pids.contains(&p) {
                         pids.push(p);
@@ -573,18 +688,7 @@ fn session_pids(sid: u32) -> Vec<u32> {
             continue;
         }
 
-        let Ok(stat) = std::fs::read_to_string(entry.path().join("stat")) else {
-            continue;
-        };
-        let Some(rparen) = stat.rfind(')') else {
-            continue;
-        };
-        let fields: Vec<&str> = stat[rparen + 1..].split_whitespace().collect();
-        // after ')': state[0], ppid[1], pgrp[2], session[3]
-        if fields.len() < 4 {
-            continue;
-        }
-        if fields[3].parse::<u32>().ok() == Some(sid) {
+        if session_of(pid) == Some(sid) {
             pids.push(pid);
         }
     }
@@ -592,13 +696,13 @@ fn session_pids(sid: u32) -> Vec<u32> {
 }
 
 #[cfg(target_os = "linux")]
-fn marker_pids(game_id: &str) -> Vec<u32> {
+fn marked_processes() -> Vec<(u32, String)> {
+    const KEY: &[u8] = b"OMIKUJI_GAME_ID=";
     let my_pid = std::process::id();
-    let needle = format!("OMIKUJI_GAME_ID={game_id}");
-    let mut pids = Vec::new();
+    let mut found = Vec::new();
 
     let Ok(entries) = std::fs::read_dir("/proc") else {
-        return pids;
+        return found;
     };
 
     for entry in entries.flatten() {
@@ -616,11 +720,22 @@ fn marker_pids(game_id: &str) -> Vec<u32> {
         let Ok(environ) = std::fs::read(entry.path().join("environ")) else {
             continue;
         };
-        if environ.split(|b| *b == 0).any(|e| e == needle.as_bytes()) {
-            pids.push(pid);
+        if let Some(id) = environ
+            .split(|b| *b == 0)
+            .find_map(|var| var.strip_prefix(KEY))
+        {
+            found.push((pid, String::from_utf8_lossy(id).into_owned()));
         }
     }
-    pids
+    found
+}
+
+fn marker_pids(game_id: &str) -> Vec<u32> {
+    marked_processes()
+        .into_iter()
+        .filter(|(_, id)| id == game_id)
+        .map(|(pid, _)| pid)
+        .collect()
 }
 
 // i mean the launcher isnt even meant at all outside linux but well, do it now and forget it forever
@@ -632,6 +747,59 @@ fn session_pids(_sid: u32) -> Vec<u32> {
 #[cfg(not(target_os = "linux"))]
 fn marker_pids(_game_id: &str) -> Vec<u32> {
     Vec::new()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn marked_processes() -> Vec<(u32, String)> {
+    Vec::new()
+}
+
+fn session_of(pid: u32) -> Option<u32> {
+    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    let rparen = stat.rfind(')')?;
+    stat[rparen + 1..].split_whitespace().nth(3)?.parse().ok()
+}
+
+fn runs_exe(pid: u32, exe_name: &str) -> bool {
+    let Ok(comm) = std::fs::read_to_string(format!("/proc/{pid}/comm")) else {
+        return false;
+    };
+    let comm = comm.trim().to_lowercase();
+    !comm.is_empty() && exe_name.to_lowercase().starts_with(&comm)
+}
+
+fn running_marked_ids() -> HashSet<String> {
+    let Ok(mut cache) = MARKED_IDS.lock() else {
+        return HashSet::new();
+    };
+    if let Some(taken_at) = cache.0
+        && taken_at.elapsed() < MARKED_IDS_TTL
+    {
+        return cache.1.clone();
+    }
+    let mut by_game: HashMap<String, Vec<u32>> = HashMap::new();
+    for (pid, game_id) in marked_processes() {
+        by_game.entry(game_id).or_default().push(pid);
+    }
+
+    let ids: HashSet<String> = by_game
+        .into_iter()
+        .filter(|(game_id, pids)| {
+            crate::library::Library::load_game_by_id(game_id)
+                .ok()
+                .flatten()
+                .and_then(|g| {
+                    g.metadata
+                        .exe
+                        .file_name()
+                        .map(|n| n.to_string_lossy().into_owned())
+                })
+                .is_some_and(|exe| pids.iter().any(|pid| runs_exe(*pid, &exe)))
+        })
+        .map(|(game_id, _)| game_id)
+        .collect();
+    *cache = (Some(Instant::now()), ids.clone());
+    ids
 }
 
 fn session_has_live_process(sid: u32) -> bool {

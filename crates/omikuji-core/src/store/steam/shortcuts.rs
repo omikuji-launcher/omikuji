@@ -176,13 +176,13 @@ fn launch_spec(game: &Game) -> (String, String) {
     if let Ok(app_id) = std::env::var("FLATPAK_ID") {
         (
             "/usr/bin/flatpak".to_string(),
-            format!("run {} run {}", app_id, target),
+            format!("run {} run {} --notify-gui", app_id, target),
         )
     } else {
         let exe = std::env::current_exe()
             .map(|p| p.display().to_string())
             .unwrap_or_else(|_| "omikuji".to_string());
-        (exe, format!("run {}", target))
+        (exe, format!("run {} --notify-gui", target))
     }
 }
 
@@ -191,10 +191,7 @@ fn matches_game(entry: &Entry, game: &Game) -> bool {
         return false;
     };
     let suffix = format!("_{}", game.metadata.id);
-    options
-        .split_whitespace()
-        .last()
-        .is_some_and(|t| t.ends_with(&suffix))
+    options.split_whitespace().any(|t| t.ends_with(&suffix))
 }
 
 pub fn shortcut_exists(game: &Game) -> bool {

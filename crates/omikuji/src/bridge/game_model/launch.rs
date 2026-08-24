@@ -13,13 +13,7 @@ impl super::qobject::GameModel {
             return false;
         };
 
-        if omikuji_core::process::is_game_running(&game.metadata.id)
-            || omikuji_core::process::is_launching(&game.metadata.id)
-        {
-            tracing::warn!(
-                "game '{}' is already running or launching",
-                game.metadata.name
-            );
+        if refuse_if_busy(&game) {
             return false;
         }
 
@@ -29,6 +23,7 @@ impl super::qobject::GameModel {
         std::thread::spawn(move || {
             if let Some(info) = pre_launch_update_check(&game) {
                 omikuji_core::process::clear_launching(&game.metadata.id);
+                omikuji_core::process::release_exit_waiters(&game.metadata.id);
                 omikuji_core::process::notify_update_required(info);
                 return;
             }
@@ -110,13 +105,7 @@ impl super::qobject::GameModel {
     }
 
     fn try_spawn_launch(&self, game: &Game) -> bool {
-        if omikuji_core::process::is_game_running(&game.metadata.id)
-            || omikuji_core::process::is_launching(&game.metadata.id)
-        {
-            tracing::warn!(
-                "game '{}' is already running or launching",
-                game.metadata.name
-            );
+        if refuse_if_busy(game) {
             return false;
         }
 
@@ -361,7 +350,9 @@ impl super::qobject::GameModel {
     }
 }
 
-fn pre_launch_update_check(game: &Game) -> Option<omikuji_core::process::UpdateNotification> {
+pub(crate) fn pre_launch_update_check(
+    game: &Game,
+) -> Option<omikuji_core::process::UpdateNotification> {
     let notif = |from_version, to_version, download_size, can_diff, delta_supported| {
         omikuji_core::process::UpdateNotification {
             game_id: game.metadata.id.clone(),
@@ -518,6 +509,25 @@ fn spawn_launch_thread(config: omikuji_core::launch::LaunchConfig) {
             }
         });
     });
+}
+
+fn refuse_if_busy(game: &Game) -> bool {
+    let id = &game.metadata.id;
+    if !omikuji_core::process::is_launching(id) && !omikuji_core::process::launch_blocked(id) {
+        return false;
+    }
+
+    tracing::warn!(
+        "game '{}' is already running or launching",
+        game.metadata.name
+    );
+    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+        game_id: id.clone(),
+        title: "Couldn't launch".to_string(),
+        message: "This game is already running or still starting up.".to_string(),
+        action: omikuji_core::process::ErrorAction::None,
+    });
+    true
 }
 
 fn notify_launch_failed(game_id: String, e: &omikuji_core::anyhow::Error) {

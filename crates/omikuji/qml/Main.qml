@@ -493,6 +493,7 @@ ApplicationWindow {
             gameModel.check_exited_games()
             root.refreshSelectedRunState()
             gameModel.drain_notifications()
+            gameModel.drain_launch_requests()
             gameModel.drain_update_notifications()
             gameModel.drain_errors()
             gameModel.drain_install_sizes()

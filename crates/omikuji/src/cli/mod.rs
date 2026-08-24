@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use omikuji_core::library::{Game, Library};
+use omikuji_core::process::{ErrorAction, ErrorNotification};
 use omikuji_core::ui_settings::UiSettings;
 use omikuji_core::{desktop, launch, process};
 use std::io::{self, IsTerminal, Write};
@@ -25,7 +26,14 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Cmd {
     #[command(about = "Launch a game by slug, id, or slug_id")]
-    Run { target: String },
+    Run {
+        target: String,
+        #[arg(
+            long,
+            help = "Report failures in the omikuji window instead of on stderr"
+        )]
+        notify_gui: bool,
+    },
     #[command(about = "Open omikuji in console (big picture) mode")]
     Console,
 }
@@ -41,9 +49,13 @@ pub fn dispatch() -> CliAction {
     let cli = Cli::parse();
 
     match cli.command {
-        Some(Cmd::Run { target }) => {
-            let handle = std::thread::spawn(move || run_game(&target));
-            CliAction::Exit(handle.join().unwrap_or(1))
+        Some(Cmd::Run { target, notify_gui }) => {
+            let handle = std::thread::spawn(move || run_game(&target, notify_gui));
+            match handle.join().unwrap_or(1) {
+                0 => CliAction::Exit(0),
+                _ if notify_gui => CliAction::Gui,
+                code => CliAction::Exit(code),
+            }
         }
         Some(Cmd::Console) => CliAction::Console,
         None => {
@@ -58,11 +70,40 @@ pub fn dispatch() -> CliAction {
     }
 }
 
-fn run_game(input: &str) -> i32 {
+struct Report {
+    gui: bool,
+    game_id: String,
+}
+
+impl Report {
+    fn error(&self, title: &str, message: impl Into<String>, action: ErrorAction) {
+        let message = message.into();
+        tracing::error!("{message}");
+        if self.gui {
+            process::notify_error(ErrorNotification {
+                game_id: self.game_id.clone(),
+                title: title.to_string(),
+                message,
+                action,
+            });
+        }
+    }
+}
+
+fn run_game(input: &str, notify_gui: bool) -> i32 {
+    let mut report = Report {
+        gui: notify_gui,
+        game_id: String::new(),
+    };
+
     let library = match Library::load() {
         Ok(l) => l,
         Err(e) => {
-            tracing::error!("failed to load library: {}", e);
+            report.error(
+                "Couldn't launch",
+                format!("Failed to load the library: {e}"),
+                ErrorAction::None,
+            );
             return 1;
         }
     };
@@ -71,15 +112,27 @@ fn run_game(input: &str) -> i32 {
         Resolved::Found(g) => g.clone(),
         Resolved::Multiple(matches) => match pick_from_matches(&matches) {
             Some(idx) => matches[idx].clone(),
-            None => return 2,
+            None => {
+                report.error(
+                    "Couldn't launch",
+                    format!("Several games match `{input}`. Launch it by its full slug_id."),
+                    ErrorAction::None,
+                );
+                return 2;
+            }
         },
         Resolved::NotFound => {
-            tracing::error!("no game matches '{}'", input);
+            report.error(
+                "Couldn't launch",
+                format!("No game matches `{input}`"),
+                ErrorAction::None,
+            );
             return 1;
         }
     };
 
-    launch_and_wait(&game)
+    report.game_id = game.metadata.id.clone();
+    launch_and_wait(&game, &report)
 }
 
 enum Resolved<'a> {
@@ -161,16 +214,35 @@ fn print_matches(matches: &[&Game]) {
     }
 }
 
-fn launch_and_wait(game: &Game) -> i32 {
-    if process::is_game_running(&game.metadata.id) {
-        tracing::warn!("'{}' is already running", game.metadata.name);
+fn launch_and_wait(game: &Game, report: &Report) -> i32 {
+    if report.gui && crate::single_instance::hand_off_launch(&game.metadata.id) {
+        return 0;
+    }
+
+    let Some(_guard) = process::try_claim_launch(&game.metadata.id) else {
+        report.error(
+            "Already running",
+            "This game is already running or still starting up.",
+            ErrorAction::None,
+        );
+        return 1;
+    };
+
+    if report.gui
+        && let Some(info) = crate::bridge::game_model::launch::pre_launch_update_check(game)
+    {
+        process::notify_update_required(info);
         return 1;
     }
 
     let config = match launch::prepare_launch(game) {
         Ok(c) => c,
         Err(e) => {
-            tracing::error!("failed to build launch config: {}", e);
+            report.error(
+                "Couldn't launch",
+                e.to_string(),
+                ErrorAction::OpenGameSettings,
+            );
             return 1;
         }
     };
@@ -181,13 +253,21 @@ fn launch_and_wait(game: &Game) -> i32 {
     let rt = match tokio::runtime::Runtime::new() {
         Ok(r) => r,
         Err(e) => {
-            tracing::error!("failed to start tokio runtime: {}", e);
+            report.error(
+                "Couldn't launch",
+                format!("Failed to start the tokio runtime: {e}"),
+                ErrorAction::None,
+            );
             return 1;
         }
     };
 
     if let Err(e) = rt.block_on(process::launch_game(&config)) {
-        tracing::error!("failed to launch: {}", e);
+        report.error(
+            "Couldn't launch",
+            e.to_string(),
+            ErrorAction::OpenGameSettings,
+        );
         return 1;
     }
 
