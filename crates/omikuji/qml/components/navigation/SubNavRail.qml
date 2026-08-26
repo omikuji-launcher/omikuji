@@ -15,24 +15,27 @@ Item {
     readonly property int itemHeight: 46
     readonly property int gap: Theme.space.xs
 
-    readonly property var topIndexes: root._indexesPinned(false)
-    readonly property var bottomIndexes: root._indexesPinned(true)
+    readonly property var topRows: root._rowsPinned(false)
+    readonly property var bottomRows: root._rowsPinned(true)
 
     implicitWidth: 200
     implicitHeight: items.length * itemHeight + Math.max(0, items.length - 1) * gap
 
-    function _indexesPinned(pinned) {
+    function _rowsPinned(pinned) {
         let out = []
-        for (let i = 0; i < items.length; i++)
-            if (!!items[i].pinned === pinned) out.push(i)
+        for (let i = 0; i < items.length; i++) {
+            let it = items[i]
+            if (!!it.pinned === pinned)
+                out.push({ index: i, icon: it.icon || "", label: it.label || "" })
+        }
         return out
     }
 
     function _rowY(index, top, bottom, railHeight) {
         let step = itemHeight + gap
-        let t = top.indexOf(index)
+        let t = top.findIndex(r => r.index === index)
         if (t >= 0) return t * step
-        let b = bottom.indexOf(index)
+        let b = bottom.findIndex(r => r.index === index)
         if (b < 0) return 0
         return railHeight - bottom.length * step + gap + b * step
     }
@@ -93,6 +96,26 @@ Item {
         }
     }
 
+    component RailSection: Column {
+        id: section
+        property var rows: []
+
+        width: root.width
+        spacing: root.gap
+
+        Repeater {
+            model: section.rows
+
+            RailRow {
+                required property var modelData
+                icon: modelData.icon
+                label: modelData.label
+                selected: modelData.index === root.currentIndex
+                onActivated: root.itemClicked(modelData.index)
+            }
+        }
+    }
+
     Squircle {
         readonly property int inset: Theme.space.xs
         x: inset
@@ -100,7 +123,7 @@ Item {
         height: root.itemHeight - inset * 2
         radius: Theme.radius.md
         fillColor: Theme.alpha(Theme.accent, 0.16)
-        y: root._rowY(root.currentIndex, root.topIndexes, root.bottomIndexes, root.height) + inset
+        y: root._rowY(root.currentIndex, root.topRows, root.bottomRows, root.height) + inset
         visible: root.currentIndex >= 0 && root.currentIndex < root.items.length
 
         Behavior on y {
@@ -108,39 +131,13 @@ Item {
         }
     }
 
-    Column {
+    RailSection {
         anchors.top: parent.top
-        width: parent.width
-        spacing: root.gap
-
-        Repeater {
-            model: root.topIndexes
-
-            RailRow {
-                required property var modelData
-                icon: root.items[modelData].icon || ""
-                label: root.items[modelData].label || ""
-                selected: modelData === root.currentIndex
-                onActivated: root.itemClicked(modelData)
-            }
-        }
+        rows: root.topRows
     }
 
-    Column {
+    RailSection {
         anchors.bottom: parent.bottom
-        width: parent.width
-        spacing: root.gap
-
-        Repeater {
-            model: root.bottomIndexes
-
-            RailRow {
-                required property var modelData
-                icon: root.items[modelData].icon || ""
-                label: root.items[modelData].label || ""
-                selected: modelData === root.currentIndex
-                onActivated: root.itemClicked(modelData)
-            }
-        }
+        rows: root.bottomRows
     }
 }
