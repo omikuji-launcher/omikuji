@@ -3,6 +3,12 @@ use std::time::{Duration, Instant};
 const WINDOW: Duration = Duration::from_millis(250);
 const SMOOTHING: f64 = 0.25;
 
+pub fn seeded_update(meter: &mut Option<RateMeter>, total_bytes: u64) -> u64 {
+    meter
+        .get_or_insert_with(|| RateMeter::new(total_bytes))
+        .update(total_bytes)
+}
+
 pub struct RateMeter {
     last_bytes: u64,
     last_time: Instant,

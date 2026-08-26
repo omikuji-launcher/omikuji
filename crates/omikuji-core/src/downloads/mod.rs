@@ -1,7 +1,10 @@
 pub mod io_stats;
+pub mod limits;
 pub(crate) mod proc_tree;
+pub mod proxy;
 pub mod rate;
 pub mod source;
+pub mod throttle;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
@@ -554,6 +557,7 @@ impl DownloadManager {
             };
 
             set_status(&entry.id, DownloadStatus::Starting);
+            throttle::global().reload();
 
             let result = match &entry.kind {
                 DownloadKind::Install => source.install(&entry).await,

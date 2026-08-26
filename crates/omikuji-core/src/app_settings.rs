@@ -27,6 +27,8 @@ pub struct AppSettings {
     pub dialog_sizes: BTreeMap<String, [f64; 2]>,
     pub behavior: BehaviorSettings,
     #[serde(default)]
+    pub download: DownloadSettings,
+    #[serde(default)]
     pub env_sets: Vec<KvSet>,
     #[serde(default)]
     pub dll_sets: Vec<KvSet>,
@@ -57,6 +59,7 @@ impl Default for AppSettings {
             categories: default_categories(),
             dialog_sizes: BTreeMap::new(),
             behavior: BehaviorSettings::default(),
+            download: DownloadSettings::default(),
             env_sets: Vec::new(),
             dll_sets: Vec::new(),
             template_vars: BTreeMap::new(),
@@ -225,6 +228,44 @@ impl Default for BehaviorSettings {
             show_tray_icon: false,
             double_click_launches: false,
             discord_show_launcher: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct DownloadSettings {
+    // must stay above the sub-tables, toml puts bare keys before them
+    pub bandwidth_mb_per_sec: f64,
+    pub epic: EpicDownloadSettings,
+    pub gog: GogDownloadSettings,
+    pub gacha: GachaDownloadSettings,
+}
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct EpicDownloadSettings {
+    pub workers: i32,
+    pub shared_memory_mb: i32,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct GogDownloadSettings {
+    pub workers: i32,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct GachaDownloadSettings {
+    pub max_connections: i32,
+    pub patch_threads: i32,
+}
+
+impl Default for GachaDownloadSettings {
+    fn default() -> Self {
+        Self {
+            max_connections: 32,
+            patch_threads: 4,
         }
     }
 }

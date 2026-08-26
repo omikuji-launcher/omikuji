@@ -8,7 +8,10 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
+use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
+use crate::downloads::proxy;
+use crate::downloads::rate::{RateMeter, seeded_update};
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
 };
@@ -97,6 +100,8 @@ impl DownloadSource for LegendarySource {
             .arg(&base_path_str)
             .arg("--game-folder")
             .arg(&game_folder)
+            .args(StoreLimits::epic().args())
+            .envs(proxy::env_vars().await)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .process_group(0)
@@ -128,6 +133,8 @@ impl DownloadSource for LegendarySource {
             .arg(&entry.app_id)
             .arg("-y")
             .arg("--skip-sdl")
+            .args(StoreLimits::epic().args())
+            .envs(proxy::env_vars().await)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .process_group(0)
@@ -203,21 +210,21 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     let mut dl_bytes: u64 = 0;
     let mut total_bytes: u64 = entry.bytes_total;
     let mut reusable_bytes: u64 = 0;
+    let mut meter: Option<RateMeter> = None;
 
     let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
     control_tick.tick().await;
 
-    let adjusted =
-        |pct: f64, dl: u64, total: u64, reusable: u64, speed: u64| -> (f64, u64, u64, u64) {
-            if reusable > 0 && total > 0 {
-                let base = reusable as f64 / total as f64;
-                let adj_pct = (base + (1.0 - base) * pct / 100.0) * 100.0;
-                let adj_dl = (adj_pct / 100.0 * total as f64) as u64;
-                (adj_pct, adj_dl, total, speed)
-            } else {
-                (pct, dl, total, speed)
-            }
-        };
+    let adjusted = |pct: f64, dl: u64, total: u64, reusable: u64| -> (f64, u64, u64) {
+        if reusable > 0 && total > 0 {
+            let base = reusable as f64 / total as f64;
+            let adj_pct = (base + (1.0 - base) * pct / 100.0) * 100.0;
+            let adj_dl = (adj_pct / 100.0 * total as f64) as u64;
+            (adj_pct, adj_dl, total)
+        } else {
+            (pct, dl, total)
+        }
+    };
 
     loop {
         tokio::select! {
@@ -226,8 +233,8 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
                     Ok(Some(l)) => {
                         parse_reusable(&l, &mut reusable_bytes);
                         if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
-                            report_progress(&entry.id, p, d, t, s);
+                            let (p, d, t) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes);
+                            report_progress(&entry.id, p, d, t, seeded_update(&mut meter, dl_bytes));
                         }
                     }
                     Ok(None) | Err(_) => break,
@@ -238,8 +245,8 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
                     Ok(Some(l)) => {
                         parse_reusable(&l, &mut reusable_bytes);
                         if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            let (p, d, t, s) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes, speed_bps);
-                            report_progress(&entry.id, p, d, t, s);
+                            let (p, d, t) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes);
+                            report_progress(&entry.id, p, d, t, seeded_update(&mut meter, dl_bytes));
                         } else {
                             tracing::debug!("{}", l);
                         }

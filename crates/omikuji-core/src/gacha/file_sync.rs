@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 
+use crate::downloads::limits::GachaLimits;
 use crate::downloads::rate::RateMeter;
+use crate::downloads::throttle;
 use crate::downloads::{ControlSignal, check_control, report_progress};
-
-pub const PARALLEL_FILES: usize = 8;
 
 #[derive(Debug, Clone)]
 pub struct SyncFile {
@@ -134,6 +134,7 @@ pub async fn download_one(
             .write_all(&bytes)
             .map_err(|e| anyhow!("write: {}", e))?;
         progress.advance(id, bytes.len() as u64);
+        throttle::global().take(bytes.len()).await;
     }
     writer.flush()?;
     Ok(())
@@ -156,7 +157,7 @@ pub async fn sync_all(
             download_one(&id, &file, &dest_root, &progress).await
         }
     }))
-    .buffer_unordered(PARALLEL_FILES);
+    .buffer_unordered(GachaLimits::load().connections);
 
     tokio::pin!(stream);
     while let Some(res) = stream.next().await {

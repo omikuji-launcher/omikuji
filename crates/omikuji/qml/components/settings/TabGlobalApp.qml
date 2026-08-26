@@ -13,6 +13,34 @@ Item {
 
     implicitHeight: content.height
 
+    component SpinRow: SettingsRow {
+        id: spinRow
+
+        property real from: 0
+        property real to: 128
+        property real stepSize: 1
+        property real value: 0
+        property int decimals: 0
+        property string zeroPlaceholder: ""
+        property string suffix: ""
+
+        signal moved(real value)
+
+        labelWidth: root.rowLabelWidth
+        contentRightMargin: 74
+
+        M3SpinBox {
+            from: spinRow.from
+            to: spinRow.to
+            stepSize: spinRow.stepSize
+            value: spinRow.value
+            decimals: spinRow.decimals
+            zeroPlaceholder: spinRow.zeroPlaceholder
+            suffix: spinRow.suffix
+            onMoved: (val) => spinRow.moved(val)
+        }
+    }
+
     Column {
         id: content
         width: parent.width
@@ -93,6 +121,95 @@ Item {
                     checked: appSettings ? appSettings.discordShowLauncher : true
                     onToggled: (val) => appSettings.applyDiscordShowLauncher(val)
                 }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Downloads")
+            width: parent.width
+
+            SpinRow {
+                label: qsTr("Bandwidth limit")
+                description: qsTr("Applies to every download, whatever the source.")
+                width: parent.width
+                from: 0
+                to: 1000
+                stepSize: 0.5
+                decimals: 2
+                suffix: "MB/s"
+                zeroPlaceholder: qsTr("Unlimited")
+                value: appSettings ? appSettings.bandwidthMbPerSec : 0
+                onMoved: (val) => appSettings.applyBandwidthMbPerSec(val)
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Epic downloads")
+            width: parent.width
+
+            SpinRow {
+                label: qsTr("Download workers")
+                description: qsTr("Auto lets legendary pick, which is min(2 x CPUs, 16).")
+                width: parent.width
+                from: 0
+                to: 128
+                zeroPlaceholder: qsTr("Auto")
+                value: appSettings ? appSettings.epicWorkers : 0
+                onMoved: (val) => appSettings.applyEpicWorkers(Math.round(val))
+            }
+
+            SpinRow {
+                label: qsTr("Shared memory")
+                description: qsTr("Buffer the workers download into. Auto is 1024.")
+                width: parent.width
+                from: 0
+                to: 16384
+                stepSize: 256
+                suffix: "MiB"
+                zeroPlaceholder: qsTr("Auto")
+                value: appSettings ? appSettings.epicSharedMemoryMb : 0
+                onMoved: (val) => appSettings.applyEpicSharedMemoryMb(Math.round(val))
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("GOG downloads")
+            width: parent.width
+
+            SpinRow {
+                label: qsTr("Download workers")
+                description: qsTr("Auto lets gogdl pick.")
+                width: parent.width
+                from: 0
+                to: 128
+                zeroPlaceholder: qsTr("Auto")
+                value: appSettings ? appSettings.gogWorkers : 0
+                onMoved: (val) => appSettings.applyGogWorkers(Math.round(val))
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Gacha downloads")
+            width: parent.width
+
+            SpinRow {
+                label: qsTr("Max connections")
+                description: qsTr("How many files download at the same time.")
+                width: parent.width
+                from: 1
+                to: 128
+                value: appSettings ? appSettings.gachaConnections : 32
+                onMoved: (val) => appSettings.applyGachaConnections(Math.round(val))
+            }
+
+            SpinRow {
+                label: qsTr("HoYo patch threads")
+                description: qsTr("Patches applied at once after an update. Raise it if patching feels slow.")
+                width: parent.width
+                from: 1
+                to: 32
+                value: appSettings ? appSettings.gachaPatchThreads : 4
+                onMoved: (val) => appSettings.applyGachaPatchThreads(Math.round(val))
             }
         }
 

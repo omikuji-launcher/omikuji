@@ -1,9 +1,13 @@
 .pragma library
 
+const KB = 1000
+const MB = KB * 1000
+const GB = MB * 1000
+
 function formatBytes(b) {
-    if (b >= 1024 * 1024 * 1024) return (b / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-    if (b >= 1024 * 1024) return (b / (1024 * 1024)).toFixed(1) + " MB"
-    if (b >= 1024) return (b / 1024).toFixed(1) + " KB"
+    if (b >= GB) return (b / GB).toFixed(2) + " GB"
+    if (b >= MB) return (b / MB).toFixed(1) + " MB"
+    if (b >= KB) return (b / KB).toFixed(1) + " KB"
     return Math.round(b) + " B"
 }
 
@@ -13,9 +17,8 @@ function formatSpeed(b) {
 
 function formatBytesShort(bytes) {
     if (bytes <= 0) return ""
-    let gb = bytes / (1024 * 1024 * 1024)
-    if (gb >= 1) return gb.toFixed(1) + " GB"
-    return (bytes / (1024 * 1024)).toFixed(0) + " MB"
+    if (bytes >= GB) return (bytes / GB).toFixed(1) + " GB"
+    return (bytes / MB).toFixed(0) + " MB"
 }
 
 function formatEta(secs) {

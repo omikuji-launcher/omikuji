@@ -13,9 +13,10 @@ use super::api::{DownloadInfo, SophonManifestEntry};
 use super::manifest::fetch_build_manifest;
 use super::patcher::{CancelFn, ProgressFn, ProgressReport, Stage};
 use super::protos::{FileChunk, ManifestFile};
+use crate::downloads::limits::GachaLimits;
+use crate::downloads::throttle;
 
-const PARALLEL_FILES: usize = 16;
-const PARALLEL_CHUNKS_PER_FILE: usize = 4;
+const CHUNKS_PER_FILE: usize = 4;
 
 pub async fn apply_install(
     entries: &[SophonManifestEntry],
@@ -70,6 +71,7 @@ pub async fn apply_install(
     let target = target_dir.clone();
     let progress_total = total_bytes;
     let file_count = all_files.len() as u64;
+    let (parallel_files, parallel_chunks) = GachaLimits::load().nested(CHUNKS_PER_FILE);
 
     let results: Vec<Result<()>> = stream::iter(all_files.into_iter().enumerate().map(
         |(idx, (file, download))| {
@@ -95,12 +97,13 @@ pub async fn apply_install(
                     idx as u64 + 1,
                     &on_progress,
                     &is_cancelled,
+                    parallel_chunks,
                 )
                 .await
             }
         },
     ))
-    .buffer_unordered(PARALLEL_FILES)
+    .buffer_unordered(parallel_files)
     .collect()
     .await;
 
@@ -124,6 +127,7 @@ async fn install_one_file(
     file_index: u64,
     on_progress: &Arc<ProgressFn>,
     is_cancelled: &Arc<CancelFn>,
+    parallel_chunks: usize,
 ) -> Result<()> {
     let dest = target_dir.join(sanitize_rel(&file.name));
     if let Some(parent) = dest.parent() {
@@ -222,17 +226,20 @@ async fn install_one_file(
                 if !resp.status().is_success() {
                     anyhow::bail!("GET {} http {}", url, resp.status());
                 }
-                let raw = resp
-                    .bytes()
-                    .await
-                    .map_err(|e| anyhow!("read chunk body: {}", e))?;
+                let mut raw: Vec<u8> = Vec::new();
+                let mut body = resp.bytes_stream();
+                while let Some(part) = body.next().await {
+                    let part = part.map_err(|e| anyhow!("read chunk body: {}", e))?;
+                    throttle::global().take(part.len()).await;
+                    raw.extend_from_slice(&part);
+                }
                 let decompressed = if download_compression == 1 {
-                    tokio::task::spawn_blocking(move || zstd::decode_all(&*raw))
+                    tokio::task::spawn_blocking(move || zstd::decode_all(&raw[..]))
                         .await
                         .map_err(|e| anyhow!("join zstd decode: {}", e))?
                         .map_err(|e| anyhow!("zstd decode chunk: {}", e))?
                 } else {
-                    raw.to_vec()
+                    raw
                 };
                 let h = handle.clone();
                 let offset = chunk.chunk_on_file_offset;
@@ -259,7 +266,7 @@ async fn install_one_file(
                 Ok(())
             }
         }))
-        .buffer_unordered(PARALLEL_CHUNKS_PER_FILE)
+        .buffer_unordered(parallel_chunks)
         .collect()
         .await;
 

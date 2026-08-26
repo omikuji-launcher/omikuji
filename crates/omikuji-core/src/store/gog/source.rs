@@ -5,7 +5,10 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
+use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
+use crate::downloads::proxy;
+use crate::downloads::rate::{RateMeter, seeded_update};
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
 };
@@ -52,7 +55,7 @@ impl DownloadSource for GogdlSource {
             ));
         }
 
-        let child = spawn_download(&gogdl, entry)?;
+        let child = spawn_download(&gogdl, entry).await?;
         run_with_progress(child, entry).await?;
 
         // heroic treats a clean gogdl exit as the install signal, we do too
@@ -92,7 +95,7 @@ impl DownloadSource for GogdlSource {
         let gogdl = gogdl_bin()?;
         // wipe stale manifest so gogdl sees the latest build before deciding whats to patch
         crate::store::gog::wipe_gogdl_manifest_for(&entry.app_id);
-        let child = spawn_download(&gogdl, entry)?;
+        let child = spawn_download(&gogdl, entry).await?;
         run_with_progress(child, entry).await
     }
 
@@ -118,7 +121,7 @@ impl DownloadSource for GogdlSource {
     }
 }
 
-fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
+async fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
     let support_dir = crate::store::gog::gog_dir()
         .join("support")
         .join(&entry.app_id);
@@ -143,6 +146,8 @@ fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Chil
         .arg("--skip-dlcs")
         .arg("--lang")
         .arg("en-US")
+        .args(StoreLimits::gog().args())
+        .envs(proxy::env_vars().await)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .process_group(0)
@@ -165,6 +170,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     let mut speed_bps: u64 = 0;
     let mut dl_bytes: u64 = 0;
     let mut total_bytes: u64 = entry.bytes_total;
+    let mut meter: Option<RateMeter> = None;
 
     let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
     control_tick.tick().await;
@@ -175,7 +181,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
                 match line {
                     Ok(Some(l)) => {
                         if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
+                            report_progress(&entry.id, pct, dl_bytes, total_bytes, seeded_update(&mut meter, dl_bytes));
                         }
                     }
                     Ok(None) | Err(_) => break,
@@ -185,7 +191,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
                 match line {
                     Ok(Some(l)) => {
                         if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            report_progress(&entry.id, pct, dl_bytes, total_bytes, speed_bps);
+                            report_progress(&entry.id, pct, dl_bytes, total_bytes, seeded_update(&mut meter, dl_bytes));
                         } else {
                             tracing::debug!("{}", l);
                         }

@@ -15,12 +15,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use super::api::{DownloadInfo, SophonDiff};
 use super::manifest::fetch_patch_manifest;
 use super::protos::{SophonPatchAssetChunk, SophonPatchAssetProperty, SophonPatchProto};
+use crate::downloads::limits::GachaLimits;
+use crate::downloads::throttle;
 use crate::external::hpatchz;
 
 const HOLD_LAST_FILE_SUFFIX: &str = "globalgamemanagers";
 const DEFAULT_RETRIES: u8 = 4;
-const PARALLEL_DOWNLOADS: usize = 4;
-const PARALLEL_PATCHES: usize = 4;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Stage {
@@ -368,6 +368,7 @@ async fn try_download_once(task: &FileTask, out: &Path) -> Result<()> {
             .await
             .map_err(|e| anyhow!("write: {}", e))?;
         written += chunk.len() as u64;
+        throttle::global().take(chunk.len()).await;
     }
     use tokio::io::AsyncWriteExt;
     file.flush().await.map_err(|e| anyhow!("flush: {}", e))?;
@@ -455,6 +456,7 @@ pub async fn apply_update(
     on_progress: ProgressFn,
     is_cancelled: CancelFn,
 ) -> Result<PatchOutcome> {
+    let limits = GachaLimits::load();
     let manifest = fetch_patch_manifest(diff).await?;
     let matching_field = diff.matching_field.clone();
     ensure_temp_dirs(&temp_root, &matching_field)?;
@@ -513,7 +515,7 @@ pub async fn apply_update(
                         .await
                 }
             })
-            .buffer_unordered(PARALLEL_DOWNLOADS)
+            .buffer_unordered(limits.connections)
             .collect()
             .await;
 
@@ -565,7 +567,7 @@ pub async fn apply_update(
                 Ok(())
             }
         })
-        .buffer_unordered(PARALLEL_PATCHES)
+        .buffer_unordered(limits.patch_threads)
         .collect()
         .await;
 

@@ -6,6 +6,7 @@ import QtQuick.Controls
 import "../controls"
 import "../primitives"
 import "../lib/ArchiveAssets.js" as AA
+import "../lib/Format.js" as Format
 
 
 DialogCard {
@@ -272,7 +273,7 @@ DialogCard {
                         width: parent.width
                         text: {
                             var parts = []
-                            if (versionRow.assetSize > 0) parts.push((versionRow.assetSize / (1024 * 1024)).toFixed(1) + " MB")
+                            if (versionRow.assetSize > 0) parts.push(Format.formatBytes(versionRow.assetSize))
                             if (versionRow.publishedAt.length >= 10) parts.push(versionRow.publishedAt.substring(0, 10))
                             return parts.join("  ·  ")
                         }

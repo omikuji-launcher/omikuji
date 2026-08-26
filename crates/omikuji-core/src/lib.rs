@@ -1,5 +1,6 @@
 pub use anyhow;
 
+pub mod app_settings;
 pub mod archive_source;
 pub mod changelog;
 pub mod components;
@@ -28,7 +29,6 @@ pub mod settings;
 pub mod store;
 pub mod system_info;
 pub mod template_vars;
-pub mod app_settings;
 pub mod wine_tools;
 
 use std::path::PathBuf;

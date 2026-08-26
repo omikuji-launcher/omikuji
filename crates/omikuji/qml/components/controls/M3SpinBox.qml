@@ -7,20 +7,23 @@ import "../primitives"
 Item {
     id: root
 
-    property int from: 0
-    property int to: 100
-    property int stepSize: 1
-    property int value: 0
+    property real from: 0
+    property real to: 100
+    property real stepSize: 1
+    property real value: 0
+    property int decimals: 0
     property string zeroPlaceholder: ""
+    property string suffix: ""
 
-    signal moved(int value)
+    signal moved(real value)
 
     implicitWidth: boxRow.implicitWidth
     implicitHeight: 36
 
-    readonly property string _displayText: (zeroPlaceholder !== "" && value === 0) ? zeroPlaceholder : String(value)
+    readonly property bool _showingPlaceholder: zeroPlaceholder !== "" && value === 0
+    readonly property string _displayText: _showingPlaceholder ? zeroPlaceholder : root.value.toFixed(root.decimals)
 
-    function _clamp(v) { return Math.max(root.from, Math.min(root.to, v)) }
+    function _clamp(v) { return Number(Math.max(root.from, Math.min(root.to, v)).toFixed(root.decimals)) }
     function _bump(delta) {
         let next = _clamp(root.value + delta * root.stepSize)
         if (next === root.value) return
@@ -73,6 +76,7 @@ Item {
     FieldSurface {
         anchors.fill: parent
         focused: valueInput.activeFocus
+        squareRight: suffixChip.visible
     }
 
     Row {
@@ -83,7 +87,7 @@ Item {
         StepButton { direction: -1; icon: "remove" }
 
         Item {
-            width: 44
+            width: Math.max(44, valueInput.implicitWidth + Theme.space.sm * 2)
             height: parent.height
 
             TextInput {
@@ -95,10 +99,12 @@ Item {
                 horizontalAlignment: TextInput.AlignHCenter
                 verticalAlignment: TextInput.AlignVCenter
                 selectByMouse: true
-                inputMethodHints: Qt.ImhDigitsOnly
-                validator: IntValidator { bottom: root.from; top: root.to }
+                inputMethodHints: root.decimals > 0 ? Qt.ImhFormattedNumbersOnly : Qt.ImhDigitsOnly
+                validator: RegularExpressionValidator {
+                    regularExpression: root.decimals > 0 ? /[0-9]*[.,]?[0-9]*/ : /[0-9]*/
+                }
                 onEditingFinished: {
-                    let parsed = parseInt(text, 10)
+                    let parsed = parseFloat(text.replace(",", "."))
                     if (isNaN(parsed)) parsed = root.from
                     let clamped = root._clamp(parsed)
                     if (clamped !== root.value) {
@@ -113,6 +119,33 @@ Item {
         }
 
         StepButton { direction: 1; icon: "add" }
+    }
+
+    Item {
+        id: suffixChip
+
+        anchors.left: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        visible: root.suffix !== "" && !root._showingPlaceholder
+        width: visible ? suffixText.implicitWidth + Theme.space.sm * 2 : 0
+
+        Rectangle {
+            anchors.fill: parent
+            anchors.topMargin: Theme.fillFields ? 0 : 1
+            anchors.bottomMargin: Theme.fillFields ? 0 : 1
+            topRightRadius: Theme.radius.sm
+            bottomRightRadius: Theme.radius.sm
+            color: Theme.alpha(Theme.text, 0.07)
+        }
+
+        Text {
+            id: suffixText
+            anchors.centerIn: parent
+            text: root.suffix
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.label.size
+        }
     }
 
     Timer {

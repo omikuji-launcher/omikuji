@@ -8,8 +8,9 @@ use std::path::Path;
 use super::api::{PatchConfig, PatchIndexFile, ResourceFile, ResourceInfo};
 use super::krpdiff::Krpdiff;
 use super::source::sync_file;
+use crate::downloads::limits::GachaLimits;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
-use crate::gacha::file_sync::{PARALLEL_FILES, SyncProgress, download_one, sanitize_rel};
+use crate::gacha::file_sync::{SyncProgress, download_one, sanitize_rel};
 
 pub(super) async fn run_patch_update(
     entry: &DownloadEntry,
@@ -64,7 +65,7 @@ pub(super) async fn run_patch_update(
             download_one(&id, &sync_file(&file, &base), &dl_root, &progress).await
         }
     }))
-    .buffer_unordered(PARALLEL_FILES);
+    .buffer_unordered(GachaLimits::load().connections);
 
     tokio::pin!(stream);
     while let Some(res) = stream.next().await {

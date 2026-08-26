@@ -16,6 +16,8 @@ struct ParsedHoyoApp {
     display_name: String,
     edition: HoyoEdition,
 }
+use crate::downloads::limits::GachaLimits;
+use crate::downloads::throttle;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
     report_progress, set_status,
@@ -105,7 +107,7 @@ impl DownloadSource for HoyoSource {
             } else {
                 0.0
             };
-            report_progress(&id_cb, pct, done, total, 0);
+            report_progress(&id_cb, pct, done, total, throttle::global().speed_bps());
         });
 
         let id_cancel = id.clone();
@@ -194,9 +196,6 @@ impl DownloadSource for HoyoSource {
         let total_bytes_arc = Arc::new(AtomicU64::new(0));
         let total_bytes_arc_cb = total_bytes_arc.clone();
         let id_cb = id.clone();
-        let rate = std::sync::Arc::new(std::sync::Mutex::new(
-            crate::downloads::rate::RateMeter::new(0),
-        ));
 
         set_status(&entry.id, DownloadStatus::Downloading);
 
@@ -212,13 +211,7 @@ impl DownloadSource for HoyoSource {
             } else {
                 0.0
             };
-            let bps_basis = if rep.bytes_session > 0 {
-                rep.bytes_session
-            } else {
-                done
-            };
-            let bps = rate.lock().unwrap().update(bps_basis);
-            report_progress(&id_cb, pct, done, total, bps);
+            report_progress(&id_cb, pct, done, total, throttle::global().speed_bps());
         });
 
         let id_cancel = id.clone();
@@ -259,7 +252,6 @@ impl DownloadSource for HoyoSource {
     }
 }
 
-const NUM_CONNECTIONS: usize = 8;
 const PIECE_SIZE: u64 = 256 * 1024 * 1024;
 
 pub async fn download_file(
@@ -275,7 +267,7 @@ pub async fn download_file(
         entry_id,
         base_offset,
         total_bytes,
-        NUM_CONNECTIONS,
+        GachaLimits::load().connections,
     )
     .await
 }
@@ -464,6 +456,7 @@ async fn download_file_conn(
                         .map_err(|e| anyhow!("worker {worker_id} piece {idx} stream error: {e}"))?;
                     file.write_all(&chunk).await?;
                     downloaded.fetch_add(chunk.len() as u64, Ordering::Relaxed);
+                    throttle::global().take(chunk.len()).await;
                 }
                 file.flush().await?;
                 {
@@ -603,6 +596,7 @@ async fn download_file_simple(
         file.write_all(&chunk).await?;
         downloaded += chunk.len() as u64;
         chunk_count += 1;
+        throttle::global().take(chunk.len()).await;
 
         let now = std::time::Instant::now();
         if now.duration_since(last_report).as_millis() >= 250 {
