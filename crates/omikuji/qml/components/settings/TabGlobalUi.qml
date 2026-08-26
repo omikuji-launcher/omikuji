@@ -132,7 +132,7 @@ Item {
                     from: 70
                     to: 200
                     stepSize: 5
-                    Component.onCompleted: value = uiSettings ? Math.round(uiSettings.uiScale * 100) : 100
+                    value: uiSettings ? Math.round(uiSettings.uiScale * 100) : 100
                     onMoved: (val) => uiSettings.applyUiScale(val / 100)
                 }
             }
