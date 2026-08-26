@@ -1,5 +1,10 @@
 self:
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 
 let
   inherit (lib)
@@ -16,6 +21,17 @@ let
   tomlFormat = pkgs.formats.toml { };
 in
 {
+  imports = [
+    (lib.mkRenamedOptionModule
+      [ "programs" "omikuji" "settings" "ui" ]
+      [ "programs" "omikuji" "settings" "apps" ]
+    )
+    (lib.mkRenamedOptionModule
+      [ "programs" "omikuji" "settings" "mutableUi" ]
+      [ "programs" "omikuji" "settings" "mutableApps" ]
+    )
+  ];
+  
   options.programs.omikuji = {
     enable = mkEnableOption "omikuji";
     package = mkPackageOption self.packages.${pkgs.stdenv.hostPlatform.system} "omikuji" { nullable = true; };
@@ -146,7 +162,7 @@ in
         '';
       };
 
-      mutableUi = mkOption {
+      mutableApps = mkOption {
         type = types.bool;
         default = true;
         description = ''
@@ -154,7 +170,7 @@ in
         '';
       };
 
-      ui = mkOption {
+      apps = mkOption {
         inherit (tomlFormat) type;
         default = { };
         example = literalExpression ''
@@ -211,7 +227,7 @@ in
 
     defaultsToml = tomlFormat.generate "omikuji-config-defaults" defaultSettingsMerged;
     settingsToml = tomlFormat.generate "omikuji-config-settings" cfg.settings.settings;
-    uiToml = tomlFormat.generate "omikuji-config-ui" cfg.settings.ui;
+    appsToml = tomlFormat.generate "omikuji-config-apps" cfg.settings.apps;
   in
   mkIf cfg.enable
   {
@@ -226,7 +242,7 @@ in
         # Generating settings
         omikujiDefaultsSettings = mkIf (defaultSettingsMerged != { } && cfg.settings.mutableDefaults) (impureConfigActivation "${config.xdg.dataHome}/omikuji/defaults.toml" defaultsToml);
         omikujiSettingsSettings = mkIf (cfg.settings.settings != { } && cfg.settings.mutableSettings) (impureConfigActivation "${config.xdg.dataHome}/omikuji/settings.toml" settingsToml);
-        omikujiUiSettings = mkIf (cfg.settings.ui != { } && cfg.settings.mutableUi) (impureConfigActivation "${config.xdg.dataHome}/omikuji/app.toml" uiToml);
+        omikujiAppsSettings = mkIf (cfg.settings.apps != { } && cfg.settings.mutableApps) (impureConfigActivation "${config.xdg.dataHome}/omikuji/app.toml" appsToml);
       };
     };
 
@@ -254,8 +270,8 @@ in
         source = settingsToml;
       };
 
-      "omikuji/app.toml" = mkIf (cfg.settings.ui != { } && !cfg.settings.mutableUi) {
-        source = uiToml;
+      "omikuji/app.toml" = mkIf (cfg.settings.apps != { } && !cfg.settings.mutableApps) {
+        source = appsToml;
       };
     }
     // lib.listToAttrs (
