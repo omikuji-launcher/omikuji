@@ -1,7 +1,8 @@
-# Home Manager Module Options
+# NixOS Module Options
 
 
-## [`programs.omikuji.enable`](#L20)
+<a id="options-programs-omikuji-enable"></a>
+## [`options.programs.omikuji.enable`](module.nix#L36)
 
 Whether to enable omikuji.
 
@@ -11,79 +12,95 @@ Whether to enable omikuji.
 
 **Example:** `true`
 
-## [`programs.omikuji.extraPackages`](#L23)
+<a id="options-programs-omikuji-package"></a>
+## [`options.programs.omikuji.package`](module.nix#L37)
+
+The omikuji package to use.
+
+**Type:** `package`
+
+**Default:** `pkgs.omikuji`
+
+<a id="options-programs-omikuji-extraPackages"></a>
+## [`options.programs.omikuji.extraPackages`](module.nix#L39)
 
 
 List of packages to pass as extraPkgs to lutris.
 Please note runners are not detected properly this way, use a proper option for those.
 
 
-**Type:** `with types; listOf package`
+**Type:** `list of package`
 
 **Default:** `[ ]`
 
 **Example:** `"with pkgs; [mangohud winetricks gamescope gamemode umu-launcher]"`
 
-## [`programs.omikuji.steamPackage`](#L33)
+<a id="options-programs-omikuji-steamPackage"></a>
+## [`options.programs.omikuji.steamPackage`](module.nix#L49)
 
 
 This must be the same you use for your system, or two instances will conflict,
 for example, if you configure steam through the nixos module, a good value is "osConfig.programs.steam.package"
 
 
-**Type:** `with types; nullOr package`
+**Type:** `null or package`
 
 **Default:** `null`
 
 **Example:** `"pkgs.steam or osConfig.programs.steam.package"`
 
-## [`programs.omikuji.winePackages`](#L43)
+<a id="options-programs-omikuji-winePackages"></a>
+## [`options.programs.omikuji.winePackages`](module.nix#L59)
 
 
 List of wine packages to be added for omikuji to use.
 
 
-**Type:** `with types; listOf package`
+**Type:** `list of package`
 
 **Default:** `[ ]`
 
 **Example:** `"[ pkgs.wineWow64Packages.full ]"`
 
-## [`programs.omikuji.protonPackages`](#L52)
+<a id="options-programs-omikuji-protonPackages"></a>
+## [`options.programs.omikuji.protonPackages`](module.nix#L68)
 
 
 List of proton packages to be added for omikuji to use with umu-launcher.
 
 
-**Type:** `with types; listOf package`
+**Type:** `list of package`
 
 **Default:** `[ ]`
 
 **Example:** `"[ pkgs.proton-ge-bin ]"`
 
-## [`programs.omikuji.defaultWinePackage`](#L61)
+<a id="options-programs-omikuji-defaultWinePackage"></a>
+## [`options.programs.omikuji.defaultWinePackage`](module.nix#L77)
 
 
 Default wine/proton package used in the settings.
 
 
-**Type:** `with types; nullOr package`
+**Type:** `null or package`
 
 **Default:** `null`
 
 **Example:** `"pkgs.proton-ge-bin"`
 
-## [`programs.omikuji.settings.mutableDefaults`](#L72)
+<a id="options-programs-omikuji-settings-mutableDefaults"></a>
+## [`options.programs.omikuji.settings.mutableDefaults`](module.nix#L88)
 
 
 Wether configuration in `defaults.toml` can be updated by omikuji.
 
 
-**Type:** `types.bool`
+**Type:** `boolean`
 
 **Default:** `true`
 
-## [`programs.omikuji.settings.defaults`](#L80)
+<a id="options-programs-omikuji-settings-defaults"></a>
+## [`options.programs.omikuji.settings.defaults`](module.nix#L96)
 
 
 Configuration written to
@@ -112,17 +129,19 @@ graphics.mangohud = true;
 system.gamemode = true;
 ```
 
-## [`programs.omikuji.settings.mutableSettings`](#L104)
+<a id="options-programs-omikuji-settings-mutableSettings"></a>
+## [`options.programs.omikuji.settings.mutableSettings`](module.nix#L120)
 
 
 Wether configuration in `settings.toml` can be updated by omikuji.
 
 
-**Type:** `types.bool`
+**Type:** `boolean`
 
 **Default:** `true`
 
-## [`programs.omikuji.settings.settings`](#L112)
+<a id="options-programs-omikuji-settings-settings"></a>
+## [`options.programs.omikuji.settings.settings`](module.nix#L128)
 
 
 Configuration written to
@@ -164,17 +183,19 @@ dll_packs = [
 ];
 ```
 
-## [`programs.omikuji.settings.mutableUi`](#L149)
+<a id="options-programs-omikuji-settings-mutableApps"></a>
+## [`options.programs.omikuji.settings.mutableApps`](module.nix#L165)
 
 
 Wether configuration in `app.toml` can be updated by omikuji.
 
 
-**Type:** `types.bool`
+**Type:** `boolean`
 
 **Default:** `true`
 
-## [`programs.omikuji.settings.ui`](#L157)
+<a id="options-programs-omikuji-settings-apps"></a>
+## [`options.programs.omikuji.settings.apps`](module.nix#L173)
 
 
 Configuration written to
@@ -208,5 +229,21 @@ console_mode = {
 };
 ```
 
+<a id="options-programs-omikuji-settings-ui"></a>
+## [`options.programs.omikuji.settings.ui`](module.nix#L25)
+
+> [!WARNING]
+> This option was renamed. Use [`programs.omikuji.settings.apps`](#options-programs-omikuji-settings-apps) instead.
+
+**Type:** `renamed option`
+
+<a id="options-programs-omikuji-settings-mutableUi"></a>
+## [`options.programs.omikuji.settings.mutableUi`](module.nix#L29)
+
+> [!WARNING]
+> This option was renamed. Use [`programs.omikuji.settings.mutableApps`](#options-programs-omikuji-settings-mutableApps) instead.
+
+**Type:** `renamed option`
+
 ---
-*Generated with [nix-doc](https://github.com/Thunderbottom/nix-doc)*
+*Generated with [nix-options-doc](https://github.com/Thunderbottom/nix-options-doc)*
