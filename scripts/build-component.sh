@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEFAULT_COMPONENTS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/omikuji/components"
+DEFAULT_COMPONENTS_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/omikuji/components/layers"
 BUILD_ROOT="${TMPDIR:-/tmp}/omikuji-component-build"
 
 DXVK_REPO="https://github.com/doitsujin/dxvk.git"
