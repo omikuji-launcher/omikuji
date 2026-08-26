@@ -150,7 +150,7 @@ in
         type = types.bool;
         default = true;
         description = ''
-          Wether configuration in `ui.toml` can be updated by omikuji.
+          Wether configuration in `app.toml` can be updated by omikuji.
         '';
       };
 
@@ -179,7 +179,7 @@ in
         '';
         description = ''
           Configuration written to
-          {file}`$XDG_DATA_HOME/omikuji/ui.toml`.
+          {file}`$XDG_DATA_HOME/omikuji/app.toml`.
         '';
       };
     };
@@ -226,7 +226,7 @@ in
         # Generating settings
         omikujiDefaultsSettings = mkIf (defaultSettingsMerged != { } && cfg.settings.mutableDefaults) (impureConfigActivation "${config.xdg.dataHome}/omikuji/defaults.toml" defaultsToml);
         omikujiSettingsSettings = mkIf (cfg.settings.settings != { } && cfg.settings.mutableSettings) (impureConfigActivation "${config.xdg.dataHome}/omikuji/settings.toml" settingsToml);
-        omikujiUiSettings = mkIf (cfg.settings.ui != { } && cfg.settings.mutableUi) (impureConfigActivation "${config.xdg.dataHome}/omikuji/ui.toml" uiToml);
+        omikujiUiSettings = mkIf (cfg.settings.ui != { } && cfg.settings.mutableUi) (impureConfigActivation "${config.xdg.dataHome}/omikuji/app.toml" uiToml);
       };
     };
 
@@ -254,7 +254,7 @@ in
         source = settingsToml;
       };
 
-      "omikuji/ui.toml" = mkIf (cfg.settings.ui != { } && !cfg.settings.mutableUi) {
+      "omikuji/app.toml" = mkIf (cfg.settings.ui != { } && !cfg.settings.mutableUi) {
         source = uiToml;
       };
     }
