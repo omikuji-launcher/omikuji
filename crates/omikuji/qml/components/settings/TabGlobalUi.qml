@@ -8,7 +8,7 @@ import "../primitives"
 Item {
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
 
     readonly property int rowLabelWidth: 200
 
@@ -29,9 +29,9 @@ Item {
             { label: qsTr("System default"), value: "system" },
             { label: "English", value: "en" }
         ]
-        if (!uiSettings) return opts
+        if (!appSettings) return opts
         let extra = []
-        try { extra = JSON.parse(uiSettings.availableLanguagesJson()) } catch (e) { extra = [] }
+        try { extra = JSON.parse(appSettings.availableLanguagesJson()) } catch (e) { extra = [] }
         for (let i = 0; i < extra.length; i++)
             opts.push({ label: extra[i].name, value: extra[i].code })
         return opts
@@ -42,9 +42,9 @@ Item {
     ListModel { id: categoriesModel }
 
     function _loadCategories() {
-        if (!uiSettings) return
+        if (!appSettings) return
         let arr = []
-        try { arr = JSON.parse(uiSettings.categoriesJson()) } catch (e) { arr = [] }
+        try { arr = JSON.parse(appSettings.categoriesJson()) } catch (e) { arr = [] }
         categoriesModel.clear()
         for (let i = 0; i < arr.length; i++) {
             let c = arr[i]
@@ -60,14 +60,14 @@ Item {
     }
 
     function _persistFromModel() {
-        if (!uiSettings) return
+        if (!appSettings) return
         let arr = []
         for (let i = 0; i < categoriesModel.count; i++) {
             let e = categoriesModel.get(i)
             arr.push({ enabled: e.enabled, name: e.name, icon: e.icon, kind: e.kind, value: e.value, auto_name: e.auto_name === true })
         }
         root._selfApplying = true
-        uiSettings.applyCategoriesJson(JSON.stringify(arr))
+        appSettings.applyCategoriesJson(JSON.stringify(arr))
         root._selfApplying = false
     }
 
@@ -76,11 +76,11 @@ Item {
         _persistFromModel()
     }
 
-    onUiSettingsChanged: { _loadCategories(); _refreshLanguageOptions() }
+    onAppSettingsChanged: { _loadCategories(); _refreshLanguageOptions() }
     Component.onCompleted: { _loadCategories(); _refreshLanguageOptions() }
 
     Connections {
-        target: uiSettings
+        target: appSettings
         function onCategoriesChanged() {
             if (root._selfApplying) return
             root._loadCategories()
@@ -106,13 +106,13 @@ Item {
                     width: 220
                     options: root._languageOptions
                     currentIndex: {
-                        let cur = uiSettings ? uiSettings.language : "system"
+                        let cur = appSettings ? appSettings.language : "system"
                         let opts = root._languageOptions
                         for (let i = 0; i < opts.length; i++)
                             if (opts[i].value === cur) return i
                         return 0
                     }
-                    onSelected: (value) => uiSettings.applyLanguage(value)
+                    onSelected: (value) => appSettings.applyLanguage(value)
                 }
             }
         }
@@ -132,8 +132,8 @@ Item {
                     from: 70
                     to: 200
                     stepSize: 5
-                    value: uiSettings ? Math.round(uiSettings.uiScale * 100) : 100
-                    onMoved: (val) => uiSettings.applyUiScale(val / 100)
+                    value: appSettings ? Math.round(appSettings.uiScale * 100) : 100
+                    onMoved: (val) => appSettings.applyUiScale(val / 100)
                 }
             }
 
@@ -144,12 +144,12 @@ Item {
 
                 M3Slider {
                     width: 220
-                    valueText: uiSettings ? Math.round(uiSettings.cardZoom * 100) + "%" : "100%"
+                    valueText: appSettings ? Math.round(appSettings.cardZoom * 100) + "%" : "100%"
                     from: 0.6
                     to: 1.5
                     stepSize: 0.05
-                    value: uiSettings ? uiSettings.cardZoom : 1.0
-                    onMoved: (val) => uiSettings.applyCardZoom(val)
+                    value: appSettings ? appSettings.cardZoom : 1.0
+                    onMoved: (val) => appSettings.applyCardZoom(val)
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -161,12 +161,12 @@ Item {
 
                 M3Slider {
                     width: 220
-                    valueText: uiSettings ? uiSettings.cardSpacing + "px" : "16px"
+                    valueText: appSettings ? appSettings.cardSpacing + "px" : "16px"
                     from: 4
                     to: 40
                     stepSize: 2
-                    value: uiSettings ? uiSettings.cardSpacing : 16
-                    onMoved: (val) => uiSettings.applyCardSpacing(Math.round(val))
+                    value: appSettings ? appSettings.cardSpacing : 16
+                    onMoved: (val) => appSettings.applyCardSpacing(Math.round(val))
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -176,8 +176,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.cardElevation : true
-                    onToggled: (val) => uiSettings.applyCardElevation(val)
+                    checked: appSettings ? appSettings.cardElevation : true
+                    onToggled: (val) => appSettings.applyCardElevation(val)
                 }
             }
 
@@ -194,12 +194,12 @@ Item {
                         { label: qsTr("Right"),  value: "right" }
                     ]
                     currentIndex: {
-                        let v = uiSettings ? uiSettings.cardFlow : "center"
+                        let v = appSettings ? appSettings.cardFlow : "center"
                         if (v === "left") return 0
                         if (v === "right") return 2
                         return 1
                     }
-                    onSelected: (value) => uiSettings.applyCardFlow(value)
+                    onSelected: (value) => appSettings.applyCardFlow(value)
                 }
             }
 
@@ -216,8 +216,8 @@ Item {
                         { label: qsTr("Name Z-A"),   value: "z-a" },
                         { label: qsTr("Custom"),     value: "custom" }
                     ]
-                    currentIndex: Math.max(0, options.findIndex(o => o.value === (uiSettings ? uiSettings.cardSort : "default")))
-                    onSelected: (value) => uiSettings.applyCardSort(value)
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (appSettings ? appSettings.cardSort : "default")))
+                    onSelected: (value) => appSettings.applyCardSort(value)
                 }
             }
 
@@ -234,8 +234,8 @@ Item {
                         { label: qsTr("Fit"), value: "fit" },
                         { label: qsTr("Frameless"), value: "frameless" }
                     ]
-                    currentIndex: Math.max(0, options.findIndex(o => o.value === (uiSettings ? uiSettings.cardStyle : "normal")))
-                    onSelected: (value) => uiSettings.applyCardStyle(value)
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (appSettings ? appSettings.cardStyle : "normal")))
+                    onSelected: (value) => appSettings.applyCardStyle(value)
                 }
             }
 
@@ -245,8 +245,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.showHidden : false
-                    onToggled: (val) => uiSettings.applyShowHidden(val)
+                    checked: appSettings ? appSettings.showHidden : false
+                    onToggled: (val) => appSettings.applyShowHidden(val)
                 }
             }
 
@@ -256,8 +256,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.dimHidden : false
-                    onToggled: (val) => uiSettings.applyDimHidden(val)
+                    checked: appSettings ? appSettings.dimHidden : false
+                    onToggled: (val) => appSettings.applyDimHidden(val)
                 }
             }
 
@@ -267,8 +267,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.mutedIcons : false
-                    onToggled: (val) => uiSettings.applyMutedIcons(val)
+                    checked: appSettings ? appSettings.mutedIcons : false
+                    onToggled: (val) => appSettings.applyMutedIcons(val)
                 }
             }
 
@@ -278,8 +278,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.filledIcons : false
-                    onToggled: (val) => uiSettings.applyFilledIcons(val)
+                    checked: appSettings ? appSettings.filledIcons : false
+                    onToggled: (val) => appSettings.applyFilledIcons(val)
                 }
             }
 
@@ -289,8 +289,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.highlightLogs : true
-                    onToggled: (val) => uiSettings.applyHighlightLogs(val)
+                    checked: appSettings ? appSettings.highlightLogs : true
+                    onToggled: (val) => appSettings.applyHighlightLogs(val)
                 }
             }
 
@@ -298,107 +298,22 @@ Item {
                 small: true
                 variant: "tonal"
                 text: qsTr("Manage colors")
-                visible: uiSettings ? uiSettings.highlightLogs : false
+                visible: appSettings ? appSettings.highlightLogs : false
                 onClicked: root.manageLogRulesRequested()
             }
         }
 
         SettingsSection {
-            label: qsTr("Behavior")
+            label: qsTr("Interaction")
             width: parent.width
-
-            SettingsRow {
-                label: qsTr("Hide while playing")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.minimizeOnLaunch : false
-                    onToggled: (val) => uiSettings.applyMinimizeOnLaunch(val)
-                }
-            }
 
             SettingsRow {
                 label: qsTr("Double-click card to launch")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.doubleClickLaunches : false
-                    onToggled: (val) => uiSettings.applyDoubleClickLaunches(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Show tray icon")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.showTrayIcon : false
-                    onToggled: (val) => uiSettings.applyShowTrayIcon(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Show app name in Discord RPC")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.discordShowLauncher : true
-                    onToggled: (val) => uiSettings.applyDiscordShowLauncher(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Unload store tabs")
-                description: qsTr("After 15s idle")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.unloadStorePages : true
-                    onToggled: (val) => uiSettings.applyUnloadStorePages(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Save game logs to disk")
-                description: qsTr("Off: logs live in memory only until the game exits. On: also written to cache/logs/.")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.saveGameLogs : false
-                    onToggled: (val) => uiSettings.applySaveGameLogs(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Check EG games updates on run")
-                description: qsTr("Might slowdown start times for Epic games")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.autoCheckEpicUpdatesOnLaunch : false
-                    onToggled: (val) => uiSettings.applyAutoCheckEpicUpdatesOnLaunch(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Check GOG games updates on run")
-                description: qsTr("Might slowdown start times for GOG games")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.autoCheckGogUpdatesOnLaunch : false
-                    onToggled: (val) => uiSettings.applyAutoCheckGogUpdatesOnLaunch(val)
-                }
-            }
-
-            SettingsRow {
-                label: qsTr("Check for updates on app launch")
-                description: qsTr("Queues updates in the downloads page on startup")
-                labelWidth: root.rowLabelWidth
-                width: parent.width
-                M3Switch {
-                    checked: uiSettings ? uiSettings.autoCheckUpdatesOnBoot : false
-                    onToggled: (val) => uiSettings.applyAutoCheckUpdatesOnBoot(val)
+                    checked: appSettings ? appSettings.doubleClickLaunches : false
+                    onToggled: (val) => appSettings.applyDoubleClickLaunches(val)
                 }
             }
         }
@@ -633,8 +548,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.showSteam : true
-                    onToggled: (val) => uiSettings.applyShowSteam(val)
+                    checked: appSettings ? appSettings.showSteam : true
+                    onToggled: (val) => appSettings.applyShowSteam(val)
                 }
             }
 
@@ -643,8 +558,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.showEpic : true
-                    onToggled: (val) => uiSettings.applyShowEpic(val)
+                    checked: appSettings ? appSettings.showEpic : true
+                    onToggled: (val) => appSettings.applyShowEpic(val)
                 }
             }
 
@@ -653,8 +568,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.showGog : true
-                    onToggled: (val) => uiSettings.applyShowGog(val)
+                    checked: appSettings ? appSettings.showGog : true
+                    onToggled: (val) => appSettings.applyShowGog(val)
                 }
             }
 
@@ -663,8 +578,8 @@ Item {
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: uiSettings ? uiSettings.showGachas : true
-                    onToggled: (val) => uiSettings.applyShowGachas(val)
+                    checked: appSettings ? appSettings.showGachas : true
+                    onToggled: (val) => appSettings.applyShowGachas(val)
                 }
             }
         }

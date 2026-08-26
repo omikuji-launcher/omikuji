@@ -9,7 +9,7 @@ DialogCard {
     id: popup
 
     property var icons: {
-        try { return JSON.parse(uiSettings.availableIconsJson()) }
+        try { return JSON.parse(appSettings.availableIconsJson()) }
         catch (e) { return [] }
     }
     property string selected: ""

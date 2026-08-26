@@ -30,16 +30,16 @@ ApplicationWindow {
         prefixValue = defaults.getConfig()["wine.prefix"] || ""
     }
 
-    UiSettingsBridge {
-        id: uiSettings
+    AppSettingsBridge {
+        id: appSettings
         Component.onCompleted: {
-            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
-            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
-            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
-            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
-            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
-            Theme.fillFields = Qt.binding(() => uiSettings.fillFields)
-            Theme.radiusScale = Qt.binding(() => uiSettings.radiusScale)
+            Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
+            Theme.fillFields = Qt.binding(() => appSettings.fillFields)
+            Theme.radiusScale = Qt.binding(() => appSettings.radiusScale)
             Theme.overrides = JSON.parse(overridesJson())
             Theme.fontSizes = JSON.parse(fontSizesJson())
             Theme.radiusOverrides = JSON.parse(radiusOverridesJson())
@@ -47,15 +47,15 @@ ApplicationWindow {
     }
 
     Connections {
-        target: uiSettings
+        target: appSettings
         function onThemeChanged() {
-            Theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(appSettings.overridesJson())
         }
         function onFontSizesChanged() {
-            Theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+            Theme.fontSizes = JSON.parse(appSettings.fontSizesJson())
         }
         function onRadiusOverridesChanged() {
-            Theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
+            Theme.radiusOverrides = JSON.parse(appSettings.radiusOverridesJson())
         }
     }
 

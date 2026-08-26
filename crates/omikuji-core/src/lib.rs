@@ -28,7 +28,7 @@ pub mod settings;
 pub mod store;
 pub mod system_info;
 pub mod template_vars;
-pub mod ui_settings;
+pub mod app_settings;
 pub mod wine_tools;
 
 use std::path::PathBuf;

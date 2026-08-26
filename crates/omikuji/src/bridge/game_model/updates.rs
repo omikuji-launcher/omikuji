@@ -83,7 +83,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn scan_all_for_updates(mut self: Pin<&mut Self>) {
-        let settings = omikuji_core::ui_settings::UiSettings::load();
+        let settings = omikuji_core::app_settings::AppSettings::load();
         if !settings.behavior.auto_check_updates_on_boot {
             return;
         }

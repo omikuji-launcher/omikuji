@@ -21,7 +21,7 @@ Item {
 
     property int downloadCount: 0
 
-    property var uiSettings: null
+    property var appSettings: null
 
     property bool showSteam: true
     property bool showEpic: true
@@ -71,9 +71,9 @@ Item {
     }
 
     function _persistOrder() {
-        if (!uiSettings) return
+        if (!appSettings) return
         let all = []
-        try { all = JSON.parse(uiSettings.categoriesJson()) } catch (e) { return }
+        try { all = JSON.parse(appSettings.categoriesJson()) } catch (e) { return }
         let slots = []
         for (let i = 0; i < all.length; i++) {
             if (all[i].enabled !== false) slots.push(i)
@@ -84,14 +84,14 @@ Item {
             reordered[slots[s]] = all[tabsModel.get(s).sourceIndex]
         }
         root._selfApplying = true
-        uiSettings.applyCategoriesJson(JSON.stringify(reordered))
+        appSettings.applyCategoriesJson(JSON.stringify(reordered))
         root._selfApplying = false
         _loadCategories()
     }
 
     function _loadCategories() {
-        if (!uiSettings) return
-        let raw = uiSettings.categoriesJson()
+        if (!appSettings) return
+        let raw = appSettings.categoriesJson()
         let parsed = []
         try { parsed = JSON.parse(raw) } catch (e) { parsed = [] }
         let next = []
@@ -113,11 +113,11 @@ Item {
         if (root.currentStore === "" && root.currentBottom === "") root.tabSelected(idx)
     }
 
-    onUiSettingsChanged: _loadCategories()
+    onAppSettingsChanged: _loadCategories()
     Component.onCompleted: _loadCategories()
 
     Connections {
-        target: root.uiSettings
+        target: root.appSettings
         function onCategoriesChanged() {
             if (root._selfApplying) return
             root._loadCategories()

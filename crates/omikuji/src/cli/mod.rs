@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use omikuji_core::library::{Game, Library};
 use omikuji_core::process::{ErrorAction, ErrorNotification};
-use omikuji_core::ui_settings::UiSettings;
+use omikuji_core::app_settings::AppSettings;
 use omikuji_core::{desktop, launch, process};
 use std::io::{self, IsTerminal, Write};
 
@@ -61,7 +61,7 @@ pub fn dispatch() -> CliAction {
         None => {
             if let Some(file) = cli.file {
                 CliAction::RunExe(file)
-            } else if UiSettings::load().console_mode.active {
+            } else if AppSettings::load().console_mode.active {
                 CliAction::Console
             } else {
                 CliAction::Gui

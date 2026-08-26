@@ -167,8 +167,8 @@ fn main() {
     qrc_paths.push("qml/components/lib/ArchiveAssets.js".to_string());
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let ui_settings_bridge = kushi::ObjectBridge::new("UiSettingsBridge")
-        .external_data("UiSettings", "UiSettings::load()")
+    let app_settings_bridge = kushi::ObjectBridge::new("AppSettingsBridge")
+        .external_data("AppSettings", "AppSettings::load()")
         .threading()
         .prop_at("card_zoom", kushi::Kind::F64, "library.card_zoom")
         .prop_at("card_spacing", kushi::Kind::I32, "library.card_spacing")
@@ -218,13 +218,13 @@ fn main() {
         .raw_field_persisted("color_overrides", "BTreeMap<String, String>", "s.theme.colors.clone()", "s.theme.colors = self.color_overrides.clone();")
         .raw_field("watcher", "Option<FileWatcher>", "None")
         .raw_field("suppress_reload_until", "Option<Instant>", "None")
-        .custom_invokable("initWatcher", "fn init_watcher(self: Pin<&mut UiSettingsBridge>);")
-        .custom_invokable("availableIconsJson", "fn available_icons_json(self: &UiSettingsBridge) -> QString;")
-        .custom_invokable("colorOverride", "fn color_override(self: &UiSettingsBridge, token: &QString) -> QString;")
-        .custom_invokable("setColorOverride", "fn set_color_override(self: Pin<&mut UiSettingsBridge>, token: &QString, hex: &QString);")
-        .custom_invokable("overridesJson", "fn overrides_json(self: &UiSettingsBridge) -> QString;")
-        .custom_invokable("availableFontsJson", "fn available_fonts_json(self: &UiSettingsBridge) -> QString;")
-        .custom_invokable("availableLanguagesJson", "fn available_languages_json(self: &UiSettingsBridge) -> QString;")
+        .custom_invokable("initWatcher", "fn init_watcher(self: Pin<&mut AppSettingsBridge>);")
+        .custom_invokable("availableIconsJson", "fn available_icons_json(self: &AppSettingsBridge) -> QString;")
+        .custom_invokable("colorOverride", "fn color_override(self: &AppSettingsBridge, token: &QString) -> QString;")
+        .custom_invokable("setColorOverride", "fn set_color_override(self: Pin<&mut AppSettingsBridge>, token: &QString, hex: &QString);")
+        .custom_invokable("overridesJson", "fn overrides_json(self: &AppSettingsBridge) -> QString;")
+        .custom_invokable("availableFontsJson", "fn available_fonts_json(self: &AppSettingsBridge) -> QString;")
+        .custom_invokable("availableLanguagesJson", "fn available_languages_json(self: &AppSettingsBridge) -> QString;")
         .reload_hook("reload_extras")
         .write_into(&out_dir);
 
@@ -375,6 +375,7 @@ fn main() {
         "qml/components/settings/TabGlobalDefaults.qml",
         "qml/components/settings/TabGlobalOfuda.qml",
         "qml/components/settings/TabGlobalPresets.qml",
+        "qml/components/settings/TabGlobalApp.qml",
         "qml/components/settings/TabGlobalTheme.qml",
         "qml/components/settings/TabGlobalUi.qml",
         "qml/components/settings/TabRunnerOptions.qml",
@@ -435,7 +436,7 @@ fn main() {
     let builder = CxxQtBuilder::new_qml_module(qml_module)
         .qrc_resources(&qrc_paths)
         .files(staged_bridges)
-        .file(ui_settings_bridge)
+        .file(app_settings_bridge)
         .file(download_model_bridge);
 
     // link QtSvg, QIcon uses the image plugin system to load SVGs.

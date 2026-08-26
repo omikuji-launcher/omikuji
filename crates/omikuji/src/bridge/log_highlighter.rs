@@ -67,7 +67,7 @@ pub mod qobject {
 use core::pin::Pin;
 use cxx_qt::CxxQtType;
 use cxx_qt_lib::QColor;
-use omikuji_core::ui_settings::LogRule;
+use omikuji_core::app_settings::LogRule;
 use regex::Regex;
 
 #[derive(Default)]

@@ -167,7 +167,7 @@ dll_packs = [
 ## [`programs.omikuji.settings.mutableUi`](#L149)
 
 
-Wether configuration in `ui.toml` can be updated by omikuji.
+Wether configuration in `app.toml` can be updated by omikuji.
 
 
 **Type:** `types.bool`
@@ -178,7 +178,7 @@ Wether configuration in `ui.toml` can be updated by omikuji.
 
 
 Configuration written to
-`$XDG_DATA_HOME/omikuji/ui.toml`.
+`$XDG_DATA_HOME/omikuji/app.toml`.
 
 
 **Type:** `any`

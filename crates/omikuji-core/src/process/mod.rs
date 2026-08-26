@@ -94,7 +94,7 @@ impl ProcessManager {
         crate::game_logs::reset_log(&config.game_id);
 
         // save_game_logs is opt-in; we still run ther reader so the log viewer works
-        let save_to_disk = crate::ui_settings::UiSettings::load()
+        let save_to_disk = crate::app_settings::AppSettings::load()
             .behavior
             .save_game_logs;
         let log_path = if save_to_disk {

@@ -73,18 +73,18 @@ Item {
         if (sizeKey === "") return
         let m = _sizesMap()
         delete m[sizeKey]
-        uiSettings.applyDialogSizesJson(JSON.stringify(m))
+        appSettings.applyDialogSizesJson(JSON.stringify(m))
     }
 
     function _sizesMap() {
-        try { return JSON.parse(uiSettings.dialogSizesJson()) } catch (err) { return {} }
+        try { return JSON.parse(appSettings.dialogSizesJson()) } catch (err) { return {} }
     }
 
     function _save() {
         if (sizeKey === "" || (fracW <= 0 && fracH <= 0)) return
         let m = _sizesMap()
         m[sizeKey] = [fracW, fracH]
-        uiSettings.applyDialogSizesJson(JSON.stringify(m))
+        appSettings.applyDialogSizesJson(JSON.stringify(m))
     }
 
     component Grip: MouseArea {

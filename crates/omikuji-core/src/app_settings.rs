@@ -1,8 +1,8 @@
-// ui preferences. live-mutable, app-written (via the bridge).
+// app preferences. live-mutable, app-written (via the bridge).
 //
 // separate from settings.toml on purpose: settings.toml is hacker knobs (paths, remote urls)
-// that the user edits and the app reads once at startup. ui.toml is the app's own scratch
-// for zom/tabs/layout prefs; app writes, qml reads live through the bridge, no restart needed.
+// that the user edits and the app reads once at startup. app.toml is the app's own scratch
+// for zoom/tabs/layout/behaviour prefs; app writes, qml reads live through the bridge, no restart needed.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -10,26 +10,26 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
-pub struct UiSettings {
+pub struct AppSettings {
     pub language: String,
     #[serde(default, rename = "last_seen_changelog", skip_serializing)]
     pub legacy_last_seen_changelog: String,
     pub library: LibrarySettings,
-    pub tabs: TabsSettings,
-    pub nav: NavSettings,
-    pub behavior: BehaviorSettings,
     pub display: DisplaySettings,
     pub theme: ThemeSettings,
+    pub nav: NavSettings,
+    pub tabs: TabsSettings,
     #[serde(default)]
     pub console_mode: ConsoleModeSettings,
     #[serde(default = "default_categories")]
     pub categories: Vec<CategoryEntry>,
     #[serde(default)]
+    pub dialog_sizes: BTreeMap<String, [f64; 2]>,
+    pub behavior: BehaviorSettings,
+    #[serde(default)]
     pub env_sets: Vec<KvSet>,
     #[serde(default)]
     pub dll_sets: Vec<KvSet>,
-    #[serde(default)]
-    pub dialog_sizes: BTreeMap<String, [f64; 2]>,
     #[serde(default)]
     pub template_vars: BTreeMap<String, String>,
     #[serde(default)]
@@ -43,22 +43,22 @@ pub struct AppState {
     pub welcome_seen: bool,
 }
 
-impl Default for UiSettings {
+impl Default for AppSettings {
     fn default() -> Self {
         Self {
             language: "system".into(),
             legacy_last_seen_changelog: String::new(),
             library: LibrarySettings::default(),
-            tabs: TabsSettings::default(),
-            nav: NavSettings::default(),
-            behavior: BehaviorSettings::default(),
             display: DisplaySettings::default(),
             theme: ThemeSettings::default(),
+            nav: NavSettings::default(),
+            tabs: TabsSettings::default(),
             console_mode: ConsoleModeSettings::default(),
             categories: default_categories(),
+            dialog_sizes: BTreeMap::new(),
+            behavior: BehaviorSettings::default(),
             env_sets: Vec::new(),
             dll_sets: Vec::new(),
-            dialog_sizes: BTreeMap::new(),
             template_vars: BTreeMap::new(),
             state: AppState::default(),
         }
@@ -317,16 +317,36 @@ impl Default for ConsoleModeSettings {
     }
 }
 
-pub fn ui_settings_path() -> PathBuf {
+fn data_root() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_else(|| PathBuf::from("."))
         .join("omikuji")
-        .join("ui.toml")
 }
 
-impl UiSettings {
+// TODO: remove the ui.toml handling after a 1 or 2 releases ig
+pub fn app_settings_path() -> PathBuf {
+    let path = data_root().join("app.toml");
+    let legacy = data_root().join("ui.toml");
+    if path.exists() || !legacy.exists() {
+        return path;
+    }
+    match std::fs::rename(&legacy, &path) {
+        Ok(()) => path,
+        Err(e) => {
+            tracing::warn!(
+                "couldn't rename {} to {}: {} - reading the legacy path",
+                legacy.display(),
+                path.display(),
+                e
+            );
+            legacy
+        }
+    }
+}
+
+impl AppSettings {
     pub fn load() -> Self {
-        let path = ui_settings_path();
+        let path = app_settings_path();
         if !path.exists() {
             let defaults = Self::default();
             if let Err(e) = defaults.save() {
@@ -340,7 +360,7 @@ impl UiSettings {
         }
 
         match std::fs::read_to_string(&path) {
-            Ok(body) => match toml::from_str::<UiSettings>(&body) {
+            Ok(body) => match toml::from_str::<AppSettings>(&body) {
                 Ok(mut settings) => {
                     let moved = settings.migrate_legacy_app_state();
                     if settings.migrate_category_auto_names() || moved {
@@ -407,6 +427,6 @@ impl UiSettings {
                 )
             })
             .map_err(std::io::Error::other)?;
-        crate::fs_util::write_atomic(&ui_settings_path(), body)
+        crate::fs_util::write_atomic(&app_settings_path(), body)
     }
 }

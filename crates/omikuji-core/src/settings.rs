@@ -4,7 +4,7 @@
 // dirs::data_dir()/omikuji/settings.toml; not user-redirectable, else chicken-and-egg when resloving where to read the redirect from.
 // everything it points at *is* user-redirectable via [paths].
 //
-// ui preferences (zoom, theme, tab visibility) live in ui_settings.rs,
+// ui preferences (zoom, theme, tab visibility) live in app_settings.rs,
 // different lifecycle, different audience. different mind. alpha or beta. your choice mate.
 
 use serde::{Deserialize, Serialize};

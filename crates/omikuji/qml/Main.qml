@@ -33,32 +33,32 @@ ApplicationWindow {
     flags: Qt.Window
 
     Connections {
-        target: uiSettings
+        target: appSettings
         function onThemeChanged() {
-            Theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(appSettings.overridesJson())
         }
         function onFontSizesChanged() {
-            Theme.fontSizes = JSON.parse(uiSettings.fontSizesJson())
+            Theme.fontSizes = JSON.parse(appSettings.fontSizesJson())
         }
         function onRadiusOverridesChanged() {
-            Theme.radiusOverrides = JSON.parse(uiSettings.radiusOverridesJson())
+            Theme.radiusOverrides = JSON.parse(appSettings.radiusOverridesJson())
         }
         function onCardSortChanged() {
-            gameModel.applySortMode(uiSettings.cardSort)
+            gameModel.applySortMode(appSettings.cardSort)
         }
     }
 
-    UiSettingsBridge {
-        id: uiSettings
+    AppSettingsBridge {
+        id: appSettings
         Component.onCompleted: {
             initWatcher()
-            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
-            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
-            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
-            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
-            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
-            Theme.fillFields = Qt.binding(() => uiSettings.fillFields)
-            Theme.radiusScale = Qt.binding(() => uiSettings.radiusScale)
+            Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
+            Theme.fillFields = Qt.binding(() => appSettings.fillFields)
+            Theme.radiusScale = Qt.binding(() => appSettings.radiusScale)
             Theme.uiScale = Qt.binding(() => root.uiScale)
             Theme.overrides = JSON.parse(overridesJson())
             Theme.fontSizes = JSON.parse(fontSizesJson())
@@ -81,7 +81,7 @@ ApplicationWindow {
         Component.onCompleted: {
             initThread()
             setIcon(":/qt/qml/omikuji/qml/icons/app.png")
-            if (uiSettings.showTrayIcon) {
+            if (appSettings.showTrayIcon) {
                 setEnabled(true)
                 root.pushTrayRecent()
             }
@@ -89,7 +89,7 @@ ApplicationWindow {
     }
 
     function pushTrayRecent() {
-        if (!uiSettings.showTrayIcon) return
+        if (!appSettings.showTrayIcon) return
         let dated = []
         for (let i = 0; i < gameModel.count; i++) {
             let g = gameModel.get_game(i)
@@ -134,7 +134,7 @@ ApplicationWindow {
     }
 
     onClosing: (close) => {
-        if (uiSettings.showTrayIcon) {
+        if (appSettings.showTrayIcon) {
             close.accepted = false
             root.visible = false
         }
@@ -237,7 +237,7 @@ ApplicationWindow {
                 gameModel.mark_changelog_seen()
             }
 
-            if (!uiSettings.welcomeSeen) {
+            if (!appSettings.welcomeSeen) {
                 welcomeDialog.show()
             }
         }
@@ -254,7 +254,7 @@ ApplicationWindow {
     readonly property var gameModelRef: gameModel
     readonly property var epicModelRef: epicModel
     readonly property var gogModelRef: gogModel
-    readonly property var uiSettingsRef: uiSettings
+    readonly property var appSettingsRef: appSettings
     readonly property var envSetsDialogRef: envSetsDialog
     readonly property var dllSetsDialogRef: dllSetsDialog
     property bool welcomeResumePending: false
@@ -271,7 +271,7 @@ ApplicationWindow {
                 root.refreshSelectedRunState()
             }
             // !root.visible guard: don't clobber a manual re-show mid-session
-            if (uiSettings.minimizeOnLaunch && !root.visible) {
+            if (appSettings.minimizeOnLaunch && !root.visible) {
                 root.visible = true
                 root.raise()
                 root.requestActivate()
@@ -279,7 +279,7 @@ ApplicationWindow {
         }
 
         onLaunchProceeding: () => {
-            if (uiSettings.minimizeOnLaunch) root.minimizeForLaunch()
+            if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
         }
 
         onUpdates_queued: (epicCount, gogCount) => {
@@ -469,7 +469,7 @@ ApplicationWindow {
         if (forceSkipUpdateCheck) {
             if (!gameModel.launch_game_force(idx)) return false
             isSelectedLaunching = true
-            if (uiSettings.minimizeOnLaunch) minimizeForLaunch()
+            if (appSettings.minimizeOnLaunch) minimizeForLaunch()
             return true
         }
         if (!gameModel.launch_game(idx)) return false
@@ -530,25 +530,25 @@ ApplicationWindow {
         }
     }
 
-property real cardZoom: uiSettings.cardZoom
-    property string cardStyle: uiSettings.cardStyle
+property real cardZoom: appSettings.cardZoom
+    property string cardStyle: appSettings.cardStyle
     readonly property int cardBaseWidth: 180
     readonly property int cardBaseHeight: 240
 
-    property real uiScale: uiSettings.uiScale > 0 ? uiSettings.uiScale : 1.0
+    property real uiScale: appSettings.uiScale > 0 ? appSettings.uiScale : 1.0
 
     // Ctrl+Plus (named key) because "Ctrl++" doesnt work. i mean not that this works for me but i guess whatever the fuck this thing wants.
     Shortcut {
         sequences: ["Ctrl+Plus", "Ctrl+Shift+=", "Ctrl+=", "Ctrl+Up", StandardKey.ZoomIn]
-        onActivated: uiSettings.applyUiScale(root.uiScale + 0.1)
+        onActivated: appSettings.applyUiScale(root.uiScale + 0.1)
     }
     Shortcut {
         sequences: ["Ctrl+-", "Ctrl+Down", StandardKey.ZoomOut]
-        onActivated: uiSettings.applyUiScale(root.uiScale - 0.1)
+        onActivated: appSettings.applyUiScale(root.uiScale - 0.1)
     }
     Shortcut {
         sequence: "Ctrl+0"
-        onActivated: uiSettings.applyUiScale(1.0)
+        onActivated: appSettings.applyUiScale(1.0)
     }
 
     Item {
@@ -570,26 +570,26 @@ property real cardZoom: uiSettings.cardZoom
         // above dropdown popups (z 50) so in-panel dropdowns dont bleed over the nav
         z: 100
 
-        width: uiSettings.navCollapsed ? 0 : uiSettings.navWidth
+        width: appSettings.navCollapsed ? 0 : appSettings.navWidth
         onWidthRequested: (v) => {
             if (v === 0) {
                 // drag to zero = collapse, dont overwrite the remembered expanded width
-                uiSettings.applyNavCollapsed(true)
+                appSettings.applyNavCollapsed(true)
             } else {
-                if (uiSettings.navCollapsed) uiSettings.applyNavCollapsed(false)
-                uiSettings.applyNavWidth(v)
+                if (appSettings.navCollapsed) appSettings.applyNavCollapsed(false)
+                appSettings.applyNavWidth(v)
             }
         }
 
         downloadCount: downloadModel.activeCount
         headerLabel: root.currentViewLabel
 
-        uiSettings: uiSettings
+        appSettings: appSettings
 
-        showSteam: uiSettings.showSteam
-        showEpic: uiSettings.showEpic
-        showGog: uiSettings.showGog
-        showGachas: uiSettings.showGachas
+        showSteam: appSettings.showSteam
+        showEpic: appSettings.showEpic
+        showGog: appSettings.showGog
+        showGachas: appSettings.showGachas
 
         onCategoryMenuRequested: (sourceIndex, x, y) => categoryMenu.show(sourceIndex, x, y)
 
@@ -632,7 +632,7 @@ property real cardZoom: uiSettings.cardZoom
         width: 6
         // above chrome (z 100) but below dialogs/toasts
         z: 150
-        visible: uiSettings.navCollapsed
+        visible: appSettings.navCollapsed
         enabled: visible
         cursorShape: Qt.SizeHorCursor
         hoverEnabled: true
@@ -649,13 +649,13 @@ property real cardZoom: uiSettings.cardZoom
             if (!didDrag && Math.abs(mouse.x - pressStartX) > 4) didDrag = true
             if (!didDrag) return
             if (mouse.x < 20) return
-            uiSettings.applyNavCollapsed(false)
+            appSettings.applyNavCollapsed(false)
             const target = Math.max(navTabs.minWidth, Math.min(navTabs.maxWidth, mouse.x))
-            uiSettings.applyNavWidth(target)
+            appSettings.applyNavWidth(target)
         }
         onReleased: (mouse) => {
             // bare click restores at remebmered width
-            if (!didDrag) uiSettings.applyNavCollapsed(false)
+            if (!didDrag) appSettings.applyNavCollapsed(false)
         }
 
         Rectangle {
@@ -677,7 +677,7 @@ property real cardZoom: uiSettings.cardZoom
         z: 100
 
         currentTabLabel: root.currentViewLabel
-        showTitle: uiSettings.navCollapsed || navTabs.iconOnly
+        showTitle: appSettings.navCollapsed || navTabs.iconOnly
         leftInset: navTabs.width
 
         showAddButton: root.currentView === "library"
@@ -691,22 +691,22 @@ property real cardZoom: uiSettings.cardZoom
             || root.currentView === "epic"
             || root.currentView === "gog"
             || root.currentView === "hoyo"
-        zoomValue: uiSettings.cardZoom
-        spacingValue: uiSettings.cardSpacing
-        sortValue: uiSettings.cardSort
+        zoomValue: appSettings.cardZoom
+        spacingValue: appSettings.cardSpacing
+        sortValue: appSettings.cardSort
         showSort: root.currentView === "library"
-        showHiddenValue: uiSettings.showHidden
+        showHiddenValue: appSettings.showHidden
         showHiddenOption: root.currentView === "library"
-        cardStyleValue: uiSettings.cardStyle
+        cardStyleValue: appSettings.cardStyle
 
         onAddClicked: root.activeModal = "addGame"
         onInstallScriptClicked: scriptBrowserDialog.show()
         onConsoleModeClicked: gameModel.launch_console_mode()
-        onZoomMoved: (v) => uiSettings.applyCardZoom(v)
-        onSpacingMoved: (v) => uiSettings.applyCardSpacing(v)
-        onSortSelected: (v) => uiSettings.applyCardSort(v)
-        onShowHiddenToggled: (v) => uiSettings.applyShowHidden(v)
-        onCardStyleSelected: (v) => uiSettings.applyCardStyle(v)
+        onZoomMoved: (v) => appSettings.applyCardZoom(v)
+        onSpacingMoved: (v) => appSettings.applyCardSpacing(v)
+        onSortSelected: (v) => appSettings.applyCardSort(v)
+        onShowHiddenToggled: (v) => appSettings.applyShowHidden(v)
+        onCardStyleSelected: (v) => appSettings.applyCardStyle(v)
     }
 
     Item {
@@ -744,15 +744,15 @@ property real cardZoom: uiSettings.cardZoom
                 gameModel: gameModel
                 selectedIndex: root.selectedGameIndex
                 cardZoom: root.cardZoom
-                cardSpacing: uiSettings.cardSpacing
-                cardElevation: uiSettings.cardElevation
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
                 cardBaseWidth: root.cardBaseWidth
                 cardBaseHeight: root.cardBaseHeight
-                cardFlow: uiSettings.cardFlow
+                cardFlow: appSettings.cardFlow
                 cardStyle: root.cardStyle
-                cardSort: uiSettings.cardSort
-                showHidden: uiSettings.showHidden
-                dimHidden: uiSettings.dimHidden
+                cardSort: appSettings.cardSort
+                showHidden: appSettings.showHidden
+                dimHidden: appSettings.dimHidden
                 searchText: topBar.searchText
                 filterKind: navTabs.tabs[navTabs.currentIndex]?.kind || "all"
                 filterValue: navTabs.tabs[navTabs.currentIndex]?.value || ""
@@ -761,7 +761,7 @@ property real cardZoom: uiSettings.cardZoom
                     topBar.defocusSearch()
                 }
                 onGameDoubleClicked: (index) => {
-                    if (uiSettings.doubleClickLaunches) root.tryPlay(index)
+                    if (appSettings.doubleClickLaunches) root.tryPlay(index)
                 }
                 onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)
                 onBackgroundClicked: {
@@ -805,15 +805,15 @@ property real cardZoom: uiSettings.cardZoom
             id: steamStorePanel
             viewName: "steam"
             currentView: root.currentView
-            unloadIdle: uiSettings.unloadStorePages
+            unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             sourceComponent: SteamLibrary {
                 gameModel: root.gameModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
-                cardSpacing: uiSettings.cardSpacing
-                cardElevation: uiSettings.cardElevation
-                cardFlow: uiSettings.cardFlow
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
+                cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 onBackClicked: {
                     navTabs.currentStore = ""
@@ -827,15 +827,15 @@ property real cardZoom: uiSettings.cardZoom
             id: epicStorePanel
             viewName: "epic"
             currentView: root.currentView
-            unloadIdle: uiSettings.unloadStorePages
+            unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             sourceComponent: EpicLibrary {
                 epicModel: root.epicModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
-                cardSpacing: uiSettings.cardSpacing
-                cardElevation: uiSettings.cardElevation
-                cardFlow: uiSettings.cardFlow
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
+                cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 activeDownloads: epicController.activeDownloads
                 onBackClicked: {
@@ -852,15 +852,15 @@ property real cardZoom: uiSettings.cardZoom
             id: gogStorePanel
             viewName: "gog"
             currentView: root.currentView
-            unloadIdle: uiSettings.unloadStorePages
+            unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             sourceComponent: GogLibrary {
                 gogModel: root.gogModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
-                cardSpacing: uiSettings.cardSpacing
-                cardElevation: uiSettings.cardElevation
-                cardFlow: uiSettings.cardFlow
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
+                cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 activeDownloads: gogController.activeDownloads
                 onBackClicked: {
@@ -877,7 +877,7 @@ property real cardZoom: uiSettings.cardZoom
             id: hoyoStorePanel
             viewName: "hoyo"
             currentView: root.currentView
-            unloadIdle: uiSettings.unloadStorePages
+            unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             property bool manifestsFetched: false
             onActivated: {
@@ -890,9 +890,9 @@ property real cardZoom: uiSettings.cardZoom
                 gameModel: root.gameModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
-                cardSpacing: uiSettings.cardSpacing
-                cardElevation: uiSettings.cardElevation
-                cardFlow: uiSettings.cardFlow
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
+                cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 onBackClicked: {
                     navTabs.currentStore = ""
@@ -1028,8 +1028,8 @@ property real cardZoom: uiSettings.cardZoom
 
     SetsDialog {
         id: envSetsDialog
-        libRead: () => uiSettings.envSetsJson()
-        libWrite: (j) => uiSettings.applyEnvSetsJson(j)
+        libRead: () => appSettings.envSetsJson()
+        libWrite: (j) => appSettings.applyEnvSetsJson(j)
         copyKey: "launch.env"
         syncKey: "launch.env_sets"
         keyPlaceholder: "VAR_NAME"
@@ -1040,8 +1040,8 @@ property real cardZoom: uiSettings.cardZoom
 
     SetsDialog {
         id: dllSetsDialog
-        libRead: () => uiSettings.dllSetsJson()
-        libWrite: (j) => uiSettings.applyDllSetsJson(j)
+        libRead: () => appSettings.dllSetsJson()
+        libWrite: (j) => appSettings.applyDllSetsJson(j)
         copyKey: "wine.dll_overrides"
         syncKey: "wine.dll_override_sets"
         keyPlaceholder: "dll_name"
@@ -1052,36 +1052,36 @@ property real cardZoom: uiSettings.cardZoom
 
     FontSizesDialog {
         id: fontSizesDialog
-        uiSettings: root.uiSettingsRef
+        appSettings: root.appSettingsRef
     }
 
     RadiiDialog {
         id: radiiDialog
-        uiSettings: root.uiSettingsRef
+        appSettings: root.appSettingsRef
     }
 
     TemplateVarsDialog {
         id: templateVarsDialog
         anchors.fill: parent
-        uiSettings: root.uiSettingsRef
+        appSettings: root.appSettingsRef
         gameModel: root.gameModelRef
     }
 
     LogRulesDialog {
         id: logRulesDialog
         anchors.fill: parent
-        uiSettings: uiSettings
+        appSettings: appSettings
     }
 
     CategoriesController {
         id: categoriesController
-        uiSettings: uiSettings
+        appSettings: appSettings
         gameModel: gameModel
     }
 
     CategoryContextMenu {
         id: categoryMenu
-        uiSettings: uiSettings
+        appSettings: appSettings
         onAddRequested: categoriesController.showAdd()
         onEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)
         onDeleteRequested: (idx, entry) => categoriesController.showDelete(idx, entry)
@@ -1168,7 +1168,7 @@ property real cardZoom: uiSettings.cardZoom
             gameId: modelData.gameId
             gameName: modelData.gameName
             gameModel: root.gameModelRef
-            uiSettings: root.uiSettingsRef
+            appSettings: root.appSettingsRef
             onWindowClosed: root.closeGameLogs(gameId)
         }
     }
@@ -1199,7 +1199,7 @@ property real cardZoom: uiSettings.cardZoom
     WelcomeDialog {
         id: welcomeDialog
         anchors.fill: parent
-        uiSettings: root.uiSettingsRef
+        appSettings: root.appSettingsRef
         componentsBridge: root.componentsBridgeRef
         archiveManager: root.archiveManagerRef
         onUmuInstallRequested: toastManager.show(
@@ -1444,7 +1444,7 @@ property real cardZoom: uiSettings.cardZoom
         onCloseRequested: root.activeModal = ""
         pageComponent: Component {
             GlobalSettingsPage {
-                uiSettings: root.uiSettingsRef
+                appSettings: root.appSettingsRef
                 componentsBridge: root.componentsBridgeRef
                 archiveManager: root.archiveManagerRef
                 ofudaBridge: root.ofudaBridgeRef

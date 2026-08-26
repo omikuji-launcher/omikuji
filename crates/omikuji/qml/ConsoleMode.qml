@@ -17,7 +17,7 @@ ApplicationWindow {
 
     readonly property real uiScale: Math.max(0.5, Math.min(width / 1920, height / 1080, 2.0))
 
-    readonly property string consoleBackground: uiSettings.consoleBackground || "wave"
+    readonly property string consoleBackground: appSettings.consoleBackground || "wave"
 
     property bool oskOpen: false
     readonly property bool oskVisible: topBar.searchExpanded && oskOpen
@@ -54,9 +54,9 @@ ApplicationWindow {
     }
 
     Connections {
-        target: uiSettings
+        target: appSettings
         function onThemeChanged() {
-            Theme.overrides = JSON.parse(uiSettings.overridesJson())
+            Theme.overrides = JSON.parse(appSettings.overridesJson())
         }
     }
 
@@ -73,15 +73,15 @@ ApplicationWindow {
         }
     }
 
-    UiSettingsBridge {
-        id: uiSettings
+    AppSettingsBridge {
+        id: appSettings
         Component.onCompleted: {
             initWatcher()
-            Theme.mutedIcons = Qt.binding(() => uiSettings.mutedIcons)
-            Theme.filledIcons = Qt.binding(() => uiSettings.filledIcons)
-            Theme.followSystemColors = Qt.binding(() => uiSettings.followSystemColors)
-            Theme.followSystemFont = Qt.binding(() => uiSettings.followSystemFont)
-            Theme.fontFamily = Qt.binding(() => uiSettings.fontFamily)
+            Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
+            Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
+            Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
+            Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
+            Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
             Theme.overrides = JSON.parse(overridesJson())
         }
     }
@@ -264,7 +264,7 @@ ApplicationWindow {
         id: settingsDialog
         anchors.fill: parent
         currentBackground: root.consoleBackground
-        onBackgroundSelected: (name) => uiSettings.applyConsoleBackground(name)
+        onBackgroundSelected: (name) => appSettings.applyConsoleBackground(name)
     }
 
     ConsoleCardRow {
@@ -274,7 +274,7 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.topMargin: 110 * root.uiScale
         gameModelRef: gameModel
-        uiSettingsRef: uiSettings
+        appSettingsRef: appSettings
         uiScale: root.uiScale
         searchText: topBar.searchText
 
@@ -317,7 +317,7 @@ ApplicationWindow {
         if (idx < 0) return false
         if (gameModel.launch_game(idx)) {
             cardRow.markFocusedRunning()
-            if (uiSettings.minimizeOnLaunch) {
+            if (appSettings.minimizeOnLaunch) {
                 root.visible = false
                 root.releaseResources()
                 gameModel.trim_heap()

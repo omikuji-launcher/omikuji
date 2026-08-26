@@ -8,7 +8,7 @@ import "../primitives"
 DialogCard {
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
 
     title: qsTr("Corner radius")
     maxWidth: 420
@@ -33,10 +33,10 @@ DialogCard {
 
     function applyRadius(key, px) {
         let m = {}
-        try { m = JSON.parse(uiSettings.radiusOverridesJson()) } catch (e) {}
+        try { m = JSON.parse(appSettings.radiusOverridesJson()) } catch (e) {}
         if (px === defaultFor(key)) delete m[key]
         else m[key] = px
-        uiSettings.applyRadiusOverridesJson(JSON.stringify(m))
+        appSettings.applyRadiusOverridesJson(JSON.stringify(m))
     }
 
     body: Column {
@@ -90,7 +90,7 @@ DialogCard {
     footerLeft: M3Button {
         text: qsTr("Reset all")
         variant: "tonal"
-        onClicked: root.uiSettings.applyRadiusOverridesJson("{}")
+        onClicked: root.appSettings.applyRadiusOverridesJson("{}")
     }
 
     actions: M3Button {

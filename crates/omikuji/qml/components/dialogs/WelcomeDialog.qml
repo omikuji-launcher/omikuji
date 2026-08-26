@@ -13,7 +13,7 @@ DialogCard {
 
     sizeKey: "welcome"
 
-    property var uiSettings: null
+    property var appSettings: null
     property var componentsBridge: null
     property var archiveManager: null
 
@@ -52,7 +52,7 @@ DialogCard {
     }
 
     function finish() {
-        if (uiSettings) uiSettings.applyWelcomeSeen(true)
+        if (appSettings) appSettings.applyWelcomeSeen(true)
         if (installUmu && !umuPresent && componentsBridge) {
             componentsBridge.installComponent("umu-run")
             umuInstallRequested()

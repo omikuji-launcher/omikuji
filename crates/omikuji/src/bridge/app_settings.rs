@@ -5,7 +5,7 @@
 
 use cxx_qt::Threading;
 use omikuji_core::fs_watcher::FileWatcher;
-use omikuji_core::ui_settings::{CategoryEntry, KvSet, LogRule, UiSettings, ui_settings_path};
+use omikuji_core::app_settings::{CategoryEntry, KvSet, LogRule, AppSettings, app_settings_path};
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
 
@@ -14,11 +14,11 @@ unsafe extern "C" {
     fn omikuji_available_languages_json() -> *const std::os::raw::c_char;
 }
 
-include!(concat!(env!("OUT_DIR"), "/ui_settings_bridge.rs"));
+include!(concat!(env!("OUT_DIR"), "/app_settings_bridge.rs"));
 
 include!(concat!(env!("OUT_DIR"), "/icon_names.rs"));
 
-impl qobject::UiSettingsBridge {
+impl qobject::AppSettingsBridge {
     fn persist(mut self: Pin<&mut Self>) {
         // 600ms covers the 150ms debounce plus qt_thread hop slack
         self.as_mut().rust_mut().get_mut().suppress_reload_until =
@@ -78,7 +78,7 @@ impl qobject::UiSettingsBridge {
         self.as_mut().theme_changed();
     }
 
-    fn reload_extras(mut self: Pin<&mut Self>, _s: &UiSettings) {
+    fn reload_extras(mut self: Pin<&mut Self>, _s: &AppSettings) {
         self.as_mut().theme_changed();
     }
 
@@ -147,10 +147,10 @@ impl qobject::UiSettingsBridge {
         if self.as_ref().rust().watcher.is_some() {
             return;
         }
-        let path = ui_settings_path();
+        let path = app_settings_path();
         let qt_thread = self.as_mut().qt_thread();
         let watcher = FileWatcher::watch(path, move || {
-            let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::UiSettingsBridge>| {
+            let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::AppSettingsBridge>| {
                 let within_window = obj
                     .as_ref()
                     .rust()
@@ -166,7 +166,7 @@ impl qobject::UiSettingsBridge {
         match watcher {
             Ok(w) => {
                 self.as_mut().rust_mut().get_mut().watcher = Some(w);
-                tracing::debug!("watching {} via notify", ui_settings_path().display());
+                tracing::debug!("watching {} via notify", app_settings_path().display());
             }
             Err(e) => tracing::error!("failed to start watcher: {e}"),
         }

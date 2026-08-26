@@ -460,7 +460,7 @@ pub fn spawn(config: &LaunchConfig) -> Result<std::process::Child> {
 }
 
 fn apply_kv_sets(
-    sets: &[crate::ui_settings::KvSet],
+    sets: &[crate::app_settings::KvSet],
     ids: &[String],
     mut apply: impl FnMut(&str, &str),
 ) {
@@ -485,7 +485,7 @@ fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
         pairs.push((k.clone(), v.clone()));
     }
     if !game.launch.env_sets.is_empty() {
-        let ui = crate::ui_settings::UiSettings::load();
+        let ui = crate::app_settings::AppSettings::load();
         apply_kv_sets(&ui.env_sets, &game.launch.env_sets, |key, value| {
             pairs.push((key.to_string(), value.to_string()));
         });
@@ -638,7 +638,7 @@ pub fn build_env(
     }
 
     if !game.wine.dll_override_sets.is_empty() {
-        let ui = crate::ui_settings::UiSettings::load();
+        let ui = crate::app_settings::AppSettings::load();
         apply_kv_sets(&ui.dll_sets, &game.wine.dll_override_sets, |key, value| {
             append_dll_override(&mut env, &format!("{key}={value}"));
         });

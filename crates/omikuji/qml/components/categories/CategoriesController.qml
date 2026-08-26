@@ -8,7 +8,7 @@ Item {
     // hoists the nested dialogs above nav/topbar so their dim covers the whole window
     z: 2000
 
-    property var uiSettings: null
+    property var appSettings: null
     property var gameModel: null
 
     property int _pendingGameIdx: -1
@@ -32,13 +32,13 @@ Item {
     }
 
     function _readEntries() {
-        if (!ctrl.uiSettings) return []
-        try { return JSON.parse(ctrl.uiSettings.categoriesJson()) }
+        if (!ctrl.appSettings) return []
+        try { return JSON.parse(ctrl.appSettings.categoriesJson()) }
         catch (e) { return [] }
     }
 
     function _applyEntries(entries) {
-        if (ctrl.uiSettings) ctrl.uiSettings.applyCategoriesJson(JSON.stringify(entries))
+        if (ctrl.appSettings) ctrl.appSettings.applyCategoriesJson(JSON.stringify(entries))
     }
 
     CategoryEditDialog {
@@ -63,7 +63,7 @@ Item {
         id: gameDialog
         anchors.fill: parent
         gameModel: ctrl.gameModel
-        uiSettings: ctrl.uiSettings
+        appSettings: ctrl.appSettings
         onRequestNewCategory: {
             ctrl._pendingGameIdx = gameDialog.gameIndex
             gameDialog.hide()
