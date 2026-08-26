@@ -12,4 +12,4 @@ pub mod migration;
 pub mod ofuda;
 pub mod scripts;
 pub mod tray;
-pub mod ui_settings;
+pub mod app_settings;

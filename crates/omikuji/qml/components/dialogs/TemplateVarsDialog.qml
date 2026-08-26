@@ -9,7 +9,7 @@ DialogCard {
     id: root
     sizeKey: "template_vars"
 
-    property var uiSettings: null
+    property var appSettings: null
     property var gameModel: null
 
     maxWidth: 620
@@ -66,12 +66,12 @@ DialogCard {
 
         KeyValueTable {
             width: parent.width
-            json: root.uiSettings ? root.uiSettings.templateVarsJson() : "{}"
+            json: root.appSettings ? root.appSettings.templateVarsJson() : "{}"
             keyPlaceholder: "my_var"
             valuePlaceholder: "/some/path or ${prefixes_path}"
             addLabel: qsTr("Add variable")
             gameModel: root.gameModel
-            onChanged: (j) => { if (root.uiSettings) root.uiSettings.applyTemplateVarsJson(j) }
+            onChanged: (j) => { if (root.appSettings) root.appSettings.applyTemplateVarsJson(j) }
         }
     }
 

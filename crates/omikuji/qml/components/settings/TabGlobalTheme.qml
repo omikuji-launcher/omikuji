@@ -10,7 +10,7 @@ import "../controls"
 Item {
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
 
     signal manageFontSizesRequested()
     signal manageRadiiRequested()
@@ -34,9 +34,9 @@ Item {
     implicitHeight: content.height
 
     function _refresh() {
-        if (!uiSettings) return
-        try { overrides = JSON.parse(uiSettings.overridesJson()) } catch (e) { overrides = ({}) }
-        try { fonts = JSON.parse(uiSettings.availableFontsJson()) } catch (e) { fonts = [] }
+        if (!appSettings) return
+        try { overrides = JSON.parse(appSettings.overridesJson()) } catch (e) { overrides = ({}) }
+        try { fonts = JSON.parse(appSettings.availableFontsJson()) } catch (e) { fonts = [] }
     }
 
     function _hasOverride(token) {
@@ -44,15 +44,15 @@ Item {
     }
 
     function _effective(token) {
-        if (!uiSettings || uiSettings.followSystemColors) return Theme[token]
+        if (!appSettings || appSettings.followSystemColors) return Theme[token]
         return _hasOverride(token) ? overrides[token] : Theme[token]
     }
 
-    onUiSettingsChanged: _refresh()
+    onAppSettingsChanged: _refresh()
     Component.onCompleted: _refresh()
 
     Connections {
-        target: root.uiSettings
+        target: root.appSettings
         function onThemeChanged() { root._refresh() }
     }
 
@@ -60,8 +60,8 @@ Item {
         id: pickerDialog
         property string targetToken: ""
         onAccepted: {
-            if (root.uiSettings && targetToken !== "") {
-                root.uiSettings.setColorOverride(targetToken, selectedColor.toString())
+            if (root.appSettings && targetToken !== "") {
+                root.appSettings.setColorOverride(targetToken, selectedColor.toString())
             }
         }
     }
@@ -80,8 +80,8 @@ Item {
                 description: qsTr("Use the desktop palette. Disable to apply per-token overrides below.")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
-                    checked: root.uiSettings ? root.uiSettings.followSystemColors : true
-                    onToggled: (value) => root.uiSettings.applyFollowSystemColors(value)
+                    checked: root.appSettings ? root.appSettings.followSystemColors : true
+                    onToggled: (value) => root.appSettings.applyFollowSystemColors(value)
                 }
             }
 
@@ -93,7 +93,7 @@ Item {
                     width: content.width
                     label: modelData.label
                     labelWidth: root.rowLabelWidth
-                    opacity: (root.uiSettings && !root.uiSettings.followSystemColors) ? 1.0 : 0.4
+                    opacity: (root.appSettings && !root.appSettings.followSystemColors) ? 1.0 : 0.4
 
                     Row {
                         spacing: 10
@@ -103,8 +103,8 @@ Item {
                             icon: "close"
                             size: 24
                             danger: true
-                            visible: root._hasOverride(tokenRow.modelData.key) && root.uiSettings && !root.uiSettings.followSystemColors
-                            onClicked: root.uiSettings.setColorOverride(tokenRow.modelData.key, "")
+                            visible: root._hasOverride(tokenRow.modelData.key) && root.appSettings && !root.appSettings.followSystemColors
+                            onClicked: root.appSettings.setColorOverride(tokenRow.modelData.key, "")
                         }
 
                         Text {
@@ -126,7 +126,7 @@ Item {
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                enabled: root.uiSettings && !root.uiSettings.followSystemColors
+                                enabled: root.appSettings && !root.appSettings.followSystemColors
                                 onClicked: {
                                     pickerDialog.targetToken = tokenRow.modelData.key
                                     pickerDialog.selectedColor = root._effective(tokenRow.modelData.key)
@@ -148,8 +148,8 @@ Item {
                 description: qsTr("Use the desktop default font. Disable to pick a family below.")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
-                    checked: root.uiSettings ? root.uiSettings.followSystemFont : true
-                    onToggled: (value) => root.uiSettings.applyFollowSystemFont(value)
+                    checked: root.appSettings ? root.appSettings.followSystemFont : true
+                    onToggled: (value) => root.appSettings.applyFollowSystemFont(value)
                 }
             }
 
@@ -157,7 +157,7 @@ Item {
                 label: qsTr("Font family")
                 description: qsTr("Applied app-wide. Requires restart.")
                 labelWidth: root.rowLabelWidth
-                opacity: (root.uiSettings && !root.uiSettings.followSystemFont) ? 1.0 : 0.4
+                opacity: (root.appSettings && !root.appSettings.followSystemFont) ? 1.0 : 0.4
 
                 M3Dropdown {
                     width: 260
@@ -169,15 +169,15 @@ Item {
                         return arr
                     }
                     currentIndex: {
-                        if (!root.uiSettings) return 0
-                        let v = root.uiSettings.fontFamily
+                        if (!root.appSettings) return 0
+                        let v = root.appSettings.fontFamily
                         if (!v) return 0
                         for (let i = 0; i < root.fonts.length; i++) {
                             if (root.fonts[i] === v) return i + 1
                         }
                         return 0
                     }
-                    onSelected: (value) => root.uiSettings.applyFontFamily(value)
+                    onSelected: (value) => root.appSettings.applyFontFamily(value)
                 }
             }
 

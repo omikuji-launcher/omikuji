@@ -74,7 +74,7 @@ async fn main() {
 
     unsafe { omikuji_app_init() };
 
-    let ui = omikuji_core::ui_settings::UiSettings::load();
+    let ui = omikuji_core::app_settings::AppSettings::load();
 
     if let Ok(lang) = CString::new(ui.language) {
         unsafe { omikuji_install_translator(lang.as_ptr()) };

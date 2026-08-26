@@ -19,7 +19,7 @@ Rectangle {
 
     ThemedLogHighlighter {
         id: highlighter
-        settings: uiSettings
+        settings: appSettings
     }
 
     Component.onCompleted: highlighter.attach(area.textDocument)

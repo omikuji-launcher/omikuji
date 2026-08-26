@@ -12,7 +12,7 @@ Item {
 
     property var defaults: null
     property var gameModel: null
-    property var uiSettings: null
+    property var appSettings: null
 
     signal applyToExistingRequested()
 

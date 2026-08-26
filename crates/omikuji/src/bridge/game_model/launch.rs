@@ -329,7 +329,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn launch_console_mode(&self) {
-        omikuji_core::ui_settings::UiSettings::set_console_mode_active(true);
+        omikuji_core::app_settings::AppSettings::set_console_mode_active(true);
         if let Ok(exe) = std::env::current_exe() {
             let _ = std::process::Command::new(exe)
                 .arg("console")
@@ -340,7 +340,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn launch_desktop_mode(&self) {
-        omikuji_core::ui_settings::UiSettings::set_console_mode_active(false);
+        omikuji_core::app_settings::AppSettings::set_console_mode_active(false);
         if let Ok(exe) = std::env::current_exe() {
             let _ = std::process::Command::new(exe)
                 .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
@@ -364,7 +364,7 @@ pub(crate) fn pre_launch_update_check(
             delta_supported,
         }
     };
-    let behavior = || omikuji_core::ui_settings::UiSettings::load().behavior;
+    let behavior = || omikuji_core::app_settings::AppSettings::load().behavior;
     match game.source.kind.as_str() {
         "gacha" => {
             let info = blocking_check_gacha_update(&game.source.app_id)?;

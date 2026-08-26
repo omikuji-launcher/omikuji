@@ -18,7 +18,7 @@ Window {
     property string gameId: ""
     property string gameName: ""
     property var gameModel: null
-    property var uiSettings: null
+    property var appSettings: null
     property bool autoScroll: true
     property bool justSaved: false
     property bool searchExpanded: false
@@ -77,7 +77,7 @@ Window {
 
     ThemedLogHighlighter {
         id: highlighter
-        settings: logWindow.uiSettings
+        settings: logWindow.appSettings
     }
 
     onClosing: windowClosed()

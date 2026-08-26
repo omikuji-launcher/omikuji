@@ -7,7 +7,7 @@ import "../controls"
 DialogCard {
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
 
     title: qsTr("Font sizes")
     maxWidth: 420
@@ -27,10 +27,10 @@ DialogCard {
 
     function applySize(key, px) {
         let m = {}
-        try { m = JSON.parse(uiSettings.fontSizesJson()) } catch (e) {}
+        try { m = JSON.parse(appSettings.fontSizesJson()) } catch (e) {}
         if (px === Theme.fontDefaults[key]) delete m[key]
         else m[key] = px
-        uiSettings.applyFontSizesJson(JSON.stringify(m))
+        appSettings.applyFontSizesJson(JSON.stringify(m))
     }
 
     body: Column {
@@ -75,7 +75,7 @@ DialogCard {
     footerLeft: M3Button {
         text: qsTr("Reset all")
         variant: "tonal"
-        onClicked: root.uiSettings.applyFontSizesJson("{}")
+        onClicked: root.appSettings.applyFontSizesJson("{}")
     }
 
     actions: M3Button {

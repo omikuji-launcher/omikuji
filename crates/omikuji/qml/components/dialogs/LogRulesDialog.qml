@@ -9,7 +9,7 @@ DialogCard {
     sizeKey: "log_rules"
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
 
     title: qsTr("Log highlight colors")
     maxWidth: 620
@@ -19,7 +19,7 @@ DialogCard {
     function show() {
         rulesModel.clear()
         let rules = []
-        try { rules = JSON.parse(uiSettings.logRulesJson()) } catch (e) {}
+        try { rules = JSON.parse(appSettings.logRulesJson()) } catch (e) {}
         for (const r of rules) rulesModel.append({ pattern: r.pattern || "", colorValue: r.color || "" })
         open()
     }
@@ -30,7 +30,7 @@ DialogCard {
             const r = rulesModel.get(i)
             if (r.pattern.length > 0) out.push({ pattern: r.pattern, color: r.colorValue })
         }
-        uiSettings.applyLogRulesJson(JSON.stringify(out))
+        appSettings.applyLogRulesJson(JSON.stringify(out))
         close()
     }
 

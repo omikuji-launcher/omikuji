@@ -4,7 +4,7 @@ import QtQuick
 Item {
     id: root
 
-    property var uiSettings: null
+    property var appSettings: null
     property var componentsBridge: null
     property var archiveManager: null
     property var ofudaBridge: null
@@ -42,17 +42,18 @@ Item {
     function closeAction() {}
 
     property var tabs: [
-        { label: qsTr("Components"), kind: "components", icon: "layers" },
-        { label: "Ofuda",            kind: "ofuda",      icon: "ofuda" },
+        { label: qsTr("App"),        kind: "app",        icon: "dataset" },
+        { label: qsTr("Interface"),  kind: "ui",         icon: "tune" },
         { label: qsTr("Defaults"),   kind: "defaults",   icon: "settings" },
         { label: qsTr("Presets"),    kind: "presets",    icon: "view_list" },
-        { label: qsTr("Interface"),  kind: "ui",         icon: "tune" },
-        { label: qsTr("Theme"),      kind: "theme",      icon: "imagesmode" },
-        { label: qsTr("About"),      kind: "about",      icon: "verified" }
+        { label: qsTr("Components"), kind: "components", icon: "layers" },
+        { label: "Ofuda",            kind: "ofuda",      icon: "ofuda" },
+        { label: qsTr("Theme"),      kind: "theme",      icon: "imagesmode", pinned: true },
+        { label: qsTr("About"),      kind: "about",      icon: "verified",   pinned: true }
     ]
     property int currentTabIndex: 0
     readonly property string currentKind:
-        tabs[currentTabIndex] ? tabs[currentTabIndex].kind : "components"
+        tabs[currentTabIndex] ? tabs[currentTabIndex].kind : "app"
 
     implicitHeight: contentCol.implicitHeight
 
@@ -90,7 +91,7 @@ Item {
             source: "../settings/TabGlobalOfuda.qml"
             onLoaded: {
                 item.ofudaBridge = Qt.binding(() => root.ofudaBridge)
-                item.uiSettings = Qt.binding(() => root.uiSettings)
+                item.appSettings = Qt.binding(() => root.appSettings)
                 item.openRequested.connect((p) => root.prefixOpenRequested(p))
                 item.createRequested.connect(() => root.prefixCreateRequested())
             }
@@ -104,7 +105,7 @@ Item {
             onLoaded: {
                 item.defaults = Qt.binding(() => root.defaults)
                 item.gameModel = Qt.binding(() => root.gameModel)
-                item.uiSettings = Qt.binding(() => root.uiSettings)
+                item.appSettings = Qt.binding(() => root.appSettings)
                 item.applyToExistingRequested.connect(() => root.defaultsApplyToExistingRequested())
             }
         }
@@ -123,7 +124,7 @@ Item {
             visible: active
             source: "../settings/TabGlobalUi.qml"
             onLoaded: {
-                item.uiSettings = Qt.binding(() => root.uiSettings)
+                item.appSettings = Qt.binding(() => root.appSettings)
                 item.categoryAddRequested.connect(() => root.categoryAddRequested())
                 item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
                 item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
@@ -133,11 +134,19 @@ Item {
 
         Loader {
             width: parent.width
+            active: root.currentKind === "app"
+            visible: active
+            source: "../settings/TabGlobalApp.qml"
+            onLoaded: item.appSettings = Qt.binding(() => root.appSettings)
+        }
+
+        Loader {
+            width: parent.width
             active: root.currentKind === "theme"
             visible: active
             source: "../settings/TabGlobalTheme.qml"
             onLoaded: {
-                item.uiSettings = Qt.binding(() => root.uiSettings)
+                item.appSettings = Qt.binding(() => root.appSettings)
                 item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
                 item.manageRadiiRequested.connect(() => root.manageRadiiRequested())
             }

@@ -6,7 +6,7 @@ Item {
     anchors.fill: parent
     z: 2000
 
-    property var uiSettings: null
+    property var appSettings: null
 
     signal addRequested()
     signal editRequested(int index, var entry)
@@ -26,9 +26,9 @@ Item {
     property real _pendingY: 0
 
     function _entry(index) {
-        if (!ctrl.uiSettings || index < 0) return null
+        if (!ctrl.appSettings || index < 0) return null
         let entries = []
-        try { entries = JSON.parse(ctrl.uiSettings.categoriesJson()) } catch (e) { entries = [] }
+        try { entries = JSON.parse(ctrl.appSettings.categoriesJson()) } catch (e) { entries = [] }
         return index < entries.length ? entries[index] : null
     }
 

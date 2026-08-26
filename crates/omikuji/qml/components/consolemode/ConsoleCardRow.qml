@@ -7,7 +7,7 @@ Item {
     id: row
 
     property var gameModelRef
-    property var uiSettingsRef
+    property var appSettingsRef
     property real uiScale: 1.0
     property bool isFocusedRunning: false
     property string searchText: ""
@@ -61,8 +61,8 @@ Item {
 
     function _loadCategories() {
         let arr = []
-        if (uiSettingsRef) {
-            try { arr = JSON.parse(uiSettingsRef.categoriesJson()) } catch (e) { arr = [] }
+        if (appSettingsRef) {
+            try { arr = JSON.parse(appSettingsRef.categoriesJson()) } catch (e) { arr = [] }
         }
         let enabled = arr.filter(c => c.enabled !== false)
         if (enabled.length === 0) {
@@ -179,7 +179,7 @@ Item {
     }
 
     Connections {
-        target: row.uiSettingsRef
+        target: row.appSettingsRef
         ignoreUnknownSignals: true
         function onChanged() { row._loadCategories() }
     }

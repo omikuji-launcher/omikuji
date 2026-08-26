@@ -45,7 +45,7 @@ type UserVarsCache = Option<(SystemTime, Vec<(String, String)>)>;
 static USER_VARS: Mutex<UserVarsCache> = Mutex::new(None);
 
 fn user_vars() -> Vec<(String, String)> {
-    let mtime = std::fs::metadata(crate::ui_settings::ui_settings_path())
+    let mtime = std::fs::metadata(crate::app_settings::app_settings_path())
         .and_then(|m| m.modified())
         .unwrap_or(SystemTime::UNIX_EPOCH);
     let mut guard = USER_VARS.lock().unwrap();
@@ -54,7 +54,7 @@ fn user_vars() -> Vec<(String, String)> {
     {
         return vars.clone();
     }
-    let vars: Vec<(String, String)> = crate::ui_settings::UiSettings::load()
+    let vars: Vec<(String, String)> = crate::app_settings::AppSettings::load()
         .template_vars
         .into_iter()
         .filter(|(k, _)| !k.is_empty() && !RESERVED.contains(&k.as_str()))

@@ -11,7 +11,7 @@ DialogCard {
     id: root
 
     property var gameModel: null
-    property var uiSettings: null
+    property var appSettings: null
     property int gameIndex: -1
     property string gameName: ""
 
@@ -38,9 +38,9 @@ DialogCard {
     function hide() { close() }
 
     function _loadCategories() {
-        if (!uiSettings) { root.tagCategories = []; return }
+        if (!appSettings) { root.tagCategories = []; return }
         let all = []
-        try { all = JSON.parse(uiSettings.categoriesJson()) } catch (e) { all = [] }
+        try { all = JSON.parse(appSettings.categoriesJson()) } catch (e) { all = [] }
         let tags = []
         for (let i = 0; i < all.length; i++) {
             if (all[i].kind === "tag") tags.push(all[i])
@@ -68,7 +68,7 @@ DialogCard {
     onCloseRequested: root.close()
 
     Connections {
-        target: root.uiSettings
+        target: root.appSettings
         function onCategoriesChanged() {
             if (root.shown) root._loadCategories()
         }

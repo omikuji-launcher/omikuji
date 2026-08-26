@@ -47,7 +47,7 @@ pub fn set_playing(game: &Game) {
                     .large_text(&game.metadata.name),
             );
 
-        if crate::ui_settings::UiSettings::load()
+        if crate::app_settings::AppSettings::load()
             .behavior
             .discord_show_launcher
         {

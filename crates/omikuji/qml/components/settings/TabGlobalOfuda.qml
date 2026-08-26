@@ -11,14 +11,14 @@ Item {
     id: root
 
     property var ofudaBridge: null
-    property var uiSettings: null
+    property var appSettings: null
     property var prefixes: []
     property var steamPrefixes: []
 
     signal openRequested(var prefix)
     signal createRequested()
 
-    readonly property bool showSteam: uiSettings ? uiSettings.showSteamPrefixes : false
+    readonly property bool showSteam: appSettings ? appSettings.showSteamPrefixes : false
 
     function refresh() {
         if (!ofudaBridge) return
@@ -175,7 +175,7 @@ Item {
             width: parent.width
             action: M3Switch {
                 checked: root.showSteam
-                onToggled: (val) => { if (root.uiSettings) root.uiSettings.applyShowSteamPrefixes(val) }
+                onToggled: (val) => { if (root.appSettings) root.appSettings.applyShowSteamPrefixes(val) }
             }
 
             Text {

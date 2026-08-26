@@ -1,6 +1,6 @@
 # Configuration
 
-Main config lives at `~/.local/share/omikuji/settings.toml`, auto-generated on first run. Edit it and restart to apply (only `ui.toml` is live-watched).
+Main config lives at `~/.local/share/omikuji/settings.toml`, auto-generated on first run. Edit it and restart to apply (only `app.toml` is live-watched).
 
 Most sections rarely need touching. The two worth knowing are `[[runners]]` and `[[dll_packs]]`, which let you add your own wine/proton/DXVK sources without touching code.
 

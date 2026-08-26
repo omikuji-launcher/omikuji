@@ -648,7 +648,7 @@ use cxx_qt_lib::{
 
 use omikuji_core::library::{Game, Library, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
-use omikuji_core::ui_settings::UiSettings;
+use omikuji_core::app_settings::AppSettings;
 
 const ROLE_ID: i32 = 0x0100;
 const ROLE_NAME: i32 = 0x0101;
@@ -709,7 +709,7 @@ pub struct GameModelRust {
 impl Default for GameModelRust {
     fn default() -> Self {
         let mut library = Library::load().unwrap_or_default();
-        let sort_mode = SortMode::parse(&UiSettings::load().display.card_sort);
+        let sort_mode = SortMode::parse(&AppSettings::load().display.card_sort);
         library.game.sort_by(|a, b| sort_mode.cmp(a, b));
         let count = library.game.len() as i32;
         Self {
