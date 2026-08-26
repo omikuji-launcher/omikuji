@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.10.0
+Version:        0.11.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,12 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Wed Aug 26 2026 reakjra <reakjra@proton.me> - 0.11.0-1
+- run --notify-gui cli flag or cross-process run state (updates, errors, etc.)
+- settings migrations and layout adjustements (from ui.toml -> app.toml)
+- settings page UI adjustement
+- downloads bandwidth limit and various params
+
 * Sat Aug 22 2026 reakjra <reakjra@proton.me> - 0.10.0-1
 - Yostar gacha integration (Arknights (Global, KR, JP))
 - Library categories' context menu and drag function

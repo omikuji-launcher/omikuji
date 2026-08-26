@@ -10,6 +10,15 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.11.0
+Added:
+- "run --notify-gui" cli flag for cross-process run state (updates, errors, etc.)
+- Downloads bandwidth limit and various download params
+
+Changed:
+- Settings file ui.toml changed to app.toml
+- Settings page layout improved (new tab for behaviour settings)
+
 ## 0.10.0
 Added:
 - Yostar gacha integration (Arknights Global, KR, JP)
@@ -17,8 +26,10 @@ Added:
 - Runtime components page 'check updates' button
 - Delete button for runtime components
 - Welcome dialog
+
 Fixes:
 - Console mode pause shader when not focused
+
 Changed:
 - Don't fetch umu-run automatically at app startup
 - Keep missing runner and layer label in game/app settings
@@ -33,6 +44,7 @@ Added:
 - 'starting' play button state for gog, epic and gachas updates check
 - Changelogs dialog
 - '--talk-name=org.kde.StatusNotifierWatcher' for flatpak build
+
 Changed:
 - App icon
 - Wrapped default library categories with qsTr for translation
