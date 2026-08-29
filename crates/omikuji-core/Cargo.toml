@@ -28,6 +28,7 @@ prost = "0.13"
 zstd = "0.13"
 md-5 = "0.10"
 sha2 = "0.10"
+regex = "1"
 flate2 = "1"
 tar = "0.4"
 zip = { version = "2", default-features = false, features = ["deflate"] }

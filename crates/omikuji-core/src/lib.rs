@@ -23,6 +23,7 @@ pub mod migration;
 pub mod notifications;
 pub mod prefixes;
 pub mod process;
+pub mod registry;
 pub mod runners;
 pub mod scripts;
 pub mod settings;

@@ -222,6 +222,39 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
     Ok(())
 }
 
+pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {
+    let mut chars = win_path.chars();
+    let letter = chars.next()?.to_ascii_lowercase();
+    if !letter.is_ascii_alphabetic() || chars.next()? != ':' {
+        return None;
+    }
+    let link = prefix.join("dosdevices").join(format!("{letter}:"));
+    let root = std::fs::canonicalize(&link)
+        .ok()
+        .or_else(|| std::fs::read_link(&link).ok())?;
+    let rest = win_path[2..].replace('\\', "/");
+    let mut out = root;
+    for part in rest.split('/').filter(|p| !p.is_empty() && *p != ".") {
+        out = match resolve_component(&out, part) {
+            Some(found) => found,
+            None => out.join(part),
+        };
+    }
+    Some(out)
+}
+
+fn resolve_component(dir: &Path, name: &str) -> Option<PathBuf> {
+    let exact = dir.join(name);
+    if exact.exists() {
+        return Some(exact);
+    }
+    std::fs::read_dir(dir)
+        .ok()?
+        .flatten()
+        .find(|e| e.file_name().to_string_lossy().eq_ignore_ascii_case(name))
+        .map(|e| e.path())
+}
+
 pub fn delete_prefix(target: &Path) -> bool {
     if !target.is_dir() {
         tracing::warn!("delete_prefix: not a directory: {}", target.display());

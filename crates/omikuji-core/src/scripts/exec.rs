@@ -2,6 +2,7 @@ use super::{InputKind, Script, Step, StepAction, interpolate};
 use crate::library::Game;
 use crate::wine_tools::WineTool;
 use anyhow::{Context, Result, bail};
+use regex::Regex;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::{BufRead, Read, Write};
@@ -104,8 +105,21 @@ pub fn execute<F: FnMut(&str)>(
                     &mut on_line,
                 )?;
             }
-            StepAction::Download { url, dest, sha256 } => {
-                let url = interpolate(url, &vars)?;
+            StepAction::Download {
+                url,
+                url_from,
+                url_match,
+                dest,
+                sha256,
+            } => {
+                let url = if url.is_empty() {
+                    let source = interpolate(url_from, &vars)?;
+                    let resolved = resolve_url(&source, url_match)?;
+                    on_line(&format!("resolved {resolved}"));
+                    resolved
+                } else {
+                    interpolate(url, &vars)?
+                };
                 let dest = PathBuf::from(interpolate(dest, &vars)?);
                 download_to(&url, &dest, sha256, &mut on_line)?;
             }
@@ -139,7 +153,17 @@ pub fn execute<F: FnMut(&str)>(
 
     let outcome = match chosen {
         Some(spec) => {
-            let exe = PathBuf::from(interpolate(&spec.exe, &vars)?);
+            let exe = if !spec.exe_from_registry.is_empty() {
+                registry_exe(&prefix, &spec.exe_from_registry, &spec.exe).unwrap_or_else(|| {
+                    on_line(&format!(
+                        "no install recorded in the registry under {}",
+                        spec.exe_from_registry
+                    ));
+                    PathBuf::new()
+                })
+            } else {
+                PathBuf::from(interpolate(&spec.exe, &vars)?)
+            };
             let exe_found = exe.is_file();
             if !exe_found {
                 on_line(&format!("game exe not found at {}", exe.display()));
@@ -259,6 +283,60 @@ fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
     };
     tar::Archive::new(decode(reader)?).unpack(dest)?;
     Ok(())
+}
+
+fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {
+    let values = crate::registry::read_key(
+        prefix,
+        &format!("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{key}"),
+    )?;
+    if relative.is_empty() {
+        let icon = first_path(values.get("DisplayIcon")?);
+        if !icon.to_ascii_lowercase().ends_with(".exe") {
+            return None;
+        }
+        return crate::prefixes::wine_path_to_host(prefix, icon);
+    }
+    let dir = install_dir(&values)?;
+    Some(crate::prefixes::wine_path_to_host(prefix, &dir)?.join(relative))
+}
+
+fn install_dir(values: &crate::registry::Values) -> Option<String> {
+    if let Some(location) = values
+        .get("InstallLocation")
+        .filter(|v| !v.trim().is_empty())
+    {
+        return Some(location.trim_end_matches('\\').to_string());
+    }
+    ["DisplayIcon", "UninstallString"]
+        .iter()
+        .filter_map(|k| values.get(*k))
+        .find_map(|raw| first_path(raw).rsplit_once('\\').map(|(dir, _)| dir.to_string()))
+}
+
+fn first_path(raw: &str) -> &str {
+    let raw = raw.trim();
+    match raw.strip_prefix('"') {
+        Some(rest) => rest.split('"').next().unwrap_or(rest),
+        None => raw.split(',').next().unwrap_or(raw),
+    }
+}
+
+fn resolve_url(source: &str, pattern: &str) -> Result<String> {
+    let body = reqwest::blocking::Client::builder()
+        .user_agent("omikuji")
+        .build()?
+        .get(source)
+        .send()
+        .with_context(|| format!("requesting {source}"))?
+        .error_for_status()?
+        .text()?;
+
+    let re = Regex::new(pattern)?;
+    let found = re
+        .find(&body)
+        .with_context(|| format!("url_match \"{pattern}\" found nothing at {source}"))?;
+    Ok(found.as_str().to_string())
 }
 
 fn download_to<F: FnMut(&str)>(

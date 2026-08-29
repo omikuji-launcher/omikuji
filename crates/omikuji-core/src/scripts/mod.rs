@@ -1,4 +1,5 @@
 use anyhow::{Context, Result, bail};
+use regex::Regex;
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -104,7 +105,12 @@ pub enum StepAction {
         verbs: Vec<String>,
     },
     Download {
+        #[serde(default)]
         url: String,
+        #[serde(default)]
+        url_from: String,
+        #[serde(default)]
+        url_match: String,
         dest: String,
         #[serde(default)]
         sha256: String,
@@ -128,7 +134,13 @@ impl Step {
         match &self.action {
             StepAction::InitPrefix => "initializing prefix".into(),
             StepAction::Winetricks { verbs } => format!("winetricks {}", verbs.join(" ")),
-            StepAction::Download { url, .. } => format!("downloading {url}"),
+            StepAction::Download { url, url_from, .. } => {
+                if url.is_empty() {
+                    format!("resolving download from {url_from}")
+                } else {
+                    format!("downloading {url}")
+                }
+            }
             StepAction::Extract { archive, .. } => format!("extracting {archive}"),
             StepAction::RunExe { exe, .. } => format!("running {exe}"),
             StepAction::Shell { .. } => "running shell step".into(),
@@ -139,7 +151,10 @@ impl Step {
 #[derive(Debug, Clone, Deserialize)]
 pub struct GameSpec {
     pub name: String,
+    #[serde(default)]
     pub exe: String,
+    #[serde(default)]
+    pub exe_from_registry: String,
     #[serde(default)]
     pub runner: String,
     #[serde(default)]
@@ -193,14 +208,52 @@ impl Script {
             if game.name.trim().is_empty() {
                 bail!("game.name is empty");
             }
-            if game.exe.trim().is_empty() {
-                bail!("game.exe is empty");
+            match (
+                game.exe.trim().is_empty(),
+                game.exe_from_registry.trim().is_empty(),
+            ) {
+                (true, true) => bail!("game needs exe or exe_from_registry"),
+                (false, false) if game.exe.starts_with('/') || game.exe.contains("${") => {
+                    bail!("exe must be relative to the install folder when exe_from_registry is set")
+                }
+                _ => {}
             }
             if !matches!(game.runner.as_str(), "" | "wine" | "native") {
                 bail!(
                     "game.runner \"{}\" is not supported (wine, native)",
                     game.runner
                 );
+            }
+        }
+
+        for step in &self.steps {
+            let StepAction::Download {
+                url,
+                url_from,
+                url_match,
+                sha256,
+                ..
+            } = &step.action
+            else {
+                continue;
+            };
+            match (url.trim().is_empty(), url_from.trim().is_empty()) {
+                (true, true) => bail!("download step needs url or url_from"),
+                (false, false) => bail!("download step has both url and url_from"),
+                (false, true) if !url_match.trim().is_empty() => {
+                    bail!("url_match is only valid with url_from")
+                }
+                (true, false) => {
+                    if url_match.trim().is_empty() {
+                        bail!("url_from needs url_match");
+                    }
+                    Regex::new(url_match)
+                        .with_context(|| format!("invalid url_match \"{url_match}\""))?;
+                    if !sha256.trim().is_empty() {
+                        bail!("sha256 cannot be used with url_from, the target changes per release");
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -287,8 +340,11 @@ impl Script {
         for step in &self.steps {
             match &step.action {
                 StepAction::InitPrefix | StepAction::Winetricks { .. } => {}
-                StepAction::Download { url, dest, .. } => {
+                StepAction::Download {
+                    url, url_from, dest, ..
+                } => {
                     out.push(url);
+                    out.push(url_from);
                     out.push(dest);
                 }
                 StepAction::Extract { archive, dest } => {
@@ -486,6 +542,12 @@ dest = "${cache}/patch.zip"
 sha256 = "abc123"
 
 [[step]]
+task = "download"
+url_from = "https://example.com/downloads.js"
+url_match = 'https://[^"]+\.exe'
+dest = "${cache}/setup.exe"
+
+[[step]]
 task = "extract"
 archive = "${cache}/patch.zip"
 dest = "${prefix}/drive_c/Game"
@@ -514,12 +576,12 @@ d3d11 = "n,b"
     fn kitchen_sink() {
         let s = Script::parse(SAMPLE).unwrap();
         assert_eq!(s.inputs.len(), 3);
-        assert_eq!(s.steps.len(), 6);
+        assert_eq!(s.steps.len(), 7);
         assert!(s.has_shell());
         assert_eq!(s.prefix_input().unwrap().id, "prefix");
         assert_eq!(s.games[0].dll_overrides["d3d11"], "n,b");
         assert!(
-            matches!(&s.steps[4].action, StepAction::RunExe { dll_overrides, .. } if dll_overrides["powershell"] == "d")
+            matches!(&s.steps[5].action, StepAction::RunExe { dll_overrides, .. } if dll_overrides["powershell"] == "d")
         );
         assert!(
             Script::parse(SAMPLE.split("[game]").next().unwrap())
@@ -624,6 +686,41 @@ when = { region = "CN" }
                 "id = \"installer\"\nkind = \"file\"",
                 "id = \"installer\"\nkind = \"prefix\"",
                 "prefix input",
+            ),
+            (
+                "url_from = \"https://example.com/downloads.js\"",
+                "url = \"https://example.com/setup.exe\"",
+                "only valid with url_from",
+            ),
+            (
+                "url_match = 'https://[^\"]+\\.exe'\n",
+                "",
+                "needs url_match",
+            ),
+            (
+                "url_match = 'https://[^\"]+\\.exe'",
+                "url_match = 'https://[('",
+                "invalid url_match",
+            ),
+            (
+                "dest = \"${cache}/setup.exe\"",
+                "dest = \"${cache}/setup.exe\"\nsha256 = \"abc123\"",
+                "changes per release",
+            ),
+            (
+                "url = \"https://example.com/patch.zip\"\n",
+                "",
+                "needs url or url_from",
+            ),
+            (
+                "exe = \"${prefix}/drive_c/Game/game.exe\"",
+                "exe = \"${prefix}/drive_c/Game/game.exe\"\nexe_from_registry = \"Thing\"",
+                "must be relative",
+            ),
+            (
+                "exe = \"${prefix}/drive_c/Game/game.exe\"\n",
+                "",
+                "needs exe or exe_from_registry",
             ),
         ];
         for (from, to, expect) in breakages {

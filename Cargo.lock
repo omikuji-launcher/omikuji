@@ -1612,6 +1612,7 @@ dependencies = [
  "notify",
  "prost",
  "prost-build",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",

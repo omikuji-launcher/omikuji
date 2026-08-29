@@ -52,6 +52,14 @@ Item {
     function open() { shown = true }
     function close() { shown = false }
 
+    function _clampBody() {
+        const max = Math.max(0, bodyFlick.contentHeight - bodyFlick.height)
+        if (bodyFlick.contentY > max) {
+            revealAnim.stop()
+            bodyFlick.contentY = max
+        }
+    }
+
     function revealInBody(item, margin) {
         if (!item || bodyFlick.contentHeight <= bodyFlick.height) return
         const pad = margin === undefined ? Theme.space.xxl : margin
@@ -271,6 +279,8 @@ Item {
             clip: true
             interactive: root.scrollable && !root.fillHeight && contentHeight > height
             boundsBehavior: Flickable.StopAtBounds
+            onContentHeightChanged: root._clampBody()
+            onHeightChanged: root._clampBody()
             ScrollBar.vertical: ThinScrollBar {
                 parent: cardWrap
                 anchors.top: bodyFlick.top

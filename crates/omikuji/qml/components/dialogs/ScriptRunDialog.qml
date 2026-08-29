@@ -370,37 +370,16 @@ DialogCard {
             }
         }
 
-        Rectangle {
+        NoteChip {
+            id: doneNote
             width: parent.width
             visible: root.succeeded
-            radius: Theme.radius.md
-            color: Theme.alpha(Theme.success, 0.12)
-            height: doneRow.implicitHeight + Theme.space.md * 2
-
-            Row {
-                id: doneRow
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: Theme.space.md
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: Theme.space.sm
-
-                SvgIcon {
-                    name: "check_circle"
-                    size: 18
-                    color: Theme.success
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-                Text {
-                    width: parent.width - 18 - Theme.space.sm
-                    text: root.detail.isUtility === true
-                        ? qsTr("Script finished.")
-                        : qsTr("%1 was added to your library.").arg(root.detail.gameName || root.detail.name || qsTr("The game"))
-                    color: Theme.success
-                    font.pixelSize: Theme.type.caption.size
-                    wrapMode: Text.WordWrap
-                }
-            }
+            icon: "check_circle"
+            tone: Theme.success
+            text: root.detail.isUtility === true
+                ? qsTr("Script finished.")
+                : qsTr("%1 was added to your library.").arg(root.detail.gameName || root.detail.name || qsTr("The game"))
+            onVisibleChanged: if (visible) Qt.callLater(() => root.revealInBody(doneNote))
         }
 
         NoteChip {
