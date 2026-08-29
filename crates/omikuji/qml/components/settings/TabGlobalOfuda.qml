@@ -5,7 +5,9 @@ import omikuji 1.0
 
 import "."
 import "../controls"
+import "../downloads"
 import "../primitives"
+import "../lib/Format.js" as Format
 
 Item {
     id: root
@@ -14,6 +16,7 @@ Item {
     property var appSettings: null
     property var prefixes: []
     property var steamPrefixes: []
+    property var sizes: ({})
 
     signal openRequested(var prefix)
     signal createRequested()
@@ -32,6 +35,8 @@ Item {
         } catch (e) {
             steamPrefixes = []
         }
+        const paths = prefixes.concat(steamPrefixes).map(p => p.path)
+        ofudaBridge.scanSizes(JSON.stringify(paths))
     }
 
     onOfudaBridgeChanged: {
@@ -44,18 +49,51 @@ Item {
         target: root.ofudaBridge
         enabled: root.ofudaBridge !== null
         function onChanged() { root.refresh() }
+        function onSizeReady(path, bytes) {
+            root.sizes = Object.assign({}, root.sizes, { [path]: bytes })
+        }
     }
 
     implicitHeight: content.height
+
+    component StatCell: Column {
+        id: cell
+
+        property string label: ""
+        property string value: ""
+        property real minWidth: 0
+
+        visible: value !== ""
+        width: Math.max(implicitWidth, minWidth)
+        spacing: 2
+
+        CapsLabel {
+            width: cell.width
+            horizontalAlignment: Text.AlignHCenter
+            text: cell.label
+            size: Theme.type.caption.size
+        }
+        Text {
+            width: cell.width
+            horizontalAlignment: Text.AlignHCenter
+            text: cell.value
+            color: Theme.text
+            font.pixelSize: Theme.type.label.size
+            font.weight: Font.DemiBold
+        }
+    }
 
     component PrefixRow: Item {
         id: row
 
         property var prefix: ({})
         property string detail: ""
+        property real sizeBytes: -1
 
         width: parent.width
-        height: rowText.height + Theme.space.lg + Theme.space.xs
+        readonly property real topBlock: Math.max(iconBox.height, stats.height, nameText.height)
+
+        height: Theme.space.lg * 2 + topBlock + Theme.space.sm + pathText.height
 
         Squircle {
             anchors.fill: parent
@@ -63,47 +101,56 @@ Item {
             fillColor: Theme.cardBg
         }
 
-        Column {
-            id: rowText
+        Squircle {
+            id: iconBox
             anchors.left: parent.left
             anchors.leftMargin: Theme.space.lg
-            anchors.right: manageBtn.left
+            anchors.verticalCenter: stats.verticalCenter
+            width: 34
+            height: 34
+            radius: Theme.radius.sm
+            fillColor: Theme.alpha(Theme.accent, 0.10)
+
+            SvgIcon {
+                anchors.centerIn: parent
+                name: row.prefix.kind === "steam" ? "steam" : "ofuda"
+                size: 18
+                color: Theme.accent
+            }
+        }
+
+        Text {
+            id: nameText
+            anchors.left: iconBox.right
+            anchors.leftMargin: Theme.space.lg
+            anchors.right: stats.left
             anchors.rightMargin: Theme.space.md
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            anchors.verticalCenter: stats.verticalCenter
+            text: row.prefix.name || ""
+            color: Theme.text
+            font.pixelSize: Theme.type.headline.size
+            font.weight: Font.DemiBold
+            elide: Text.ElideRight
+        }
 
-            Item {
-                width: parent.width
-                height: nameText.implicitHeight
+        Row {
+            id: stats
+            anchors.right: manageBtn.left
+            anchors.rightMargin: Theme.space.xl
+            anchors.top: parent.top
+            anchors.topMargin: Theme.space.lg
+            spacing: Theme.space.xl
 
-                Text {
-                    id: nameText
-                    text: row.prefix.name || ""
-                    color: Theme.text
-                    font.pixelSize: Theme.type.subtitle.size
-                    font.weight: Font.DemiBold
-                    elide: Text.ElideRight
-                    width: Math.min(implicitWidth, parent.width - (detailText.visible ? detailText.implicitWidth + Theme.space.sm : 0))
-                }
-                Text {
-                    id: detailText
-                    visible: row.detail !== ""
-                    anchors.left: nameText.right
-                    anchors.leftMargin: Theme.space.sm
-                    anchors.baseline: nameText.baseline
-                    text: "· " + row.detail
-                    color: Theme.textSubtle
-                    font.pixelSize: Theme.type.caption.size
-                }
+            StatCell {
+                label: qsTr("Size")
+                value: row.sizeBytes < 0 ? "—" : Format.formatBytes(row.sizeBytes)
+                minWidth: 76
             }
 
-            Text {
-                width: parent.width
-                text: row.prefix.path || ""
-                color: Theme.accent
-                font.pixelSize: Theme.type.caption.size
-                font.family: "monospace"
-                elide: Text.ElideMiddle
+            StatCell {
+                label: qsTr("Games")
+                value: row.detail
+                minWidth: 62
             }
         }
 
@@ -111,10 +158,25 @@ Item {
             id: manageBtn
             anchors.right: parent.right
             anchors.rightMargin: Theme.space.md
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: stats.verticalCenter
             text: qsTr("Manage")
             variant: "tonal"
             onClicked: root.openRequested(row.prefix)
+        }
+
+        Text {
+            id: pathText
+            anchors.left: iconBox.right
+            anchors.leftMargin: Theme.space.lg
+            anchors.right: parent.right
+            anchors.rightMargin: Theme.space.lg
+            anchors.top: parent.top
+            anchors.topMargin: Theme.space.lg + row.topBlock + Theme.space.sm
+            text: row.prefix.path || ""
+            color: Theme.accent
+            font.pixelSize: Theme.type.caption.size
+            font.family: "monospace"
+            elide: Text.ElideMiddle
         }
     }
 
@@ -153,9 +215,8 @@ Item {
                         prefix: modelData
                         detail: modelData.gameCount === 0
                             ? qsTr("Orphan")
-                            : modelData.gameCount === 1
-                                ? qsTr("1 game")
-                                : qsTr("%1 games").arg(modelData.gameCount)
+                            : String(modelData.gameCount)
+                        sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
                     }
                 }
 
@@ -198,6 +259,7 @@ Item {
                     delegate: PrefixRow {
                         required property var modelData
                         prefix: modelData
+                        sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
                     }
                 }
 

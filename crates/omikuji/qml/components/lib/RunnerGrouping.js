@@ -20,8 +20,9 @@ function compareDesc(a, b) {
 }
 
 function displayLabel(value, name) {
-    if (value === "system") return "System Wine"
-    if (value.indexOf("system:") === 0) return value.substring(7) + " (System)"
+    if (value === "system") return name ? "System Wine " + name : "System Wine"
+    if (value.indexOf("system:") === 0)
+        return value.substring(7) + (name ? " " + name : "") + " (System)"
     if (value.indexOf("steam:") === 0) return (name || value.substring(6)) + " (Steam)"
     return name || value
 }

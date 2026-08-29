@@ -73,7 +73,7 @@ impl ProcessManager {
 
         if game.runner.runner_type != "steam"
             && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
-            && !crate::store::steam::local::is_steam_installed_proton(&runner_dir)
+            && !crate::store::steam::local::under_steamapps_common(&runner_dir)
             && let Err(e) =
                 crate::runners::dll_override::apply_for_launch(&runner_dir, &game, &config.env)
         {

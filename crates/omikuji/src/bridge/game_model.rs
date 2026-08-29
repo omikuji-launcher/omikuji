@@ -729,7 +729,7 @@ fn runner_display(game: &Game) -> String {
         "steam" if !game.source.app_id.is_empty() => format!("steam:{}", game.source.app_id),
         "flatpak" if !game.source.app_id.is_empty() => format!("flatpak:{}", game.source.app_id),
         "native" => "Native".to_string(),
-        _ => game.wine.version.clone(),
+        _ => omikuji_core::runners::display_name(&game.wine.version),
     }
 }
 

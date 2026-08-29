@@ -473,10 +473,6 @@ pub fn find_steam_proton_version(appid: &str) -> Option<String> {
 }
 
 // validate like lutris, steam makes empty placeholder folders, tsk.
-pub fn is_proton_install(path: &Path) -> bool {
-    path.join("proton").is_file()
-}
-
 pub fn iter_steam_protons() -> Vec<(String, PathBuf)> {
     let mut out = Vec::new();
     for ctd in iter_compat_tools_dirs() {
@@ -494,7 +490,7 @@ fn push_protons_from(parent: &Path, out: &mut Vec<(String, PathBuf)>) {
     };
     for e in entries.flatten() {
         let p = e.path();
-        if is_proton_install(&p)
+        if crate::runners::is_proton_dir(&p)
             && let Some(name) = p.file_name().and_then(|n| n.to_str())
         {
             out.push((name.to_string(), p));
@@ -517,7 +513,7 @@ pub fn proton_display_name(dir: &Path) -> Option<String> {
         .map(str::to_string)
 }
 
-pub fn is_steam_installed_proton(dir: &Path) -> bool {
+pub fn under_steamapps_common(dir: &Path) -> bool {
     get_steamapps_dirs()
         .into_iter()
         .any(|d| dir.starts_with(d.join("common")))

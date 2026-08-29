@@ -33,6 +33,10 @@ pub mod qobject {
         fn create_output(self: Pin<&mut OfudaBridge>, line: QString);
 
         #[qsignal]
+        #[cxx_name = "sizeReady"]
+        fn size_ready(self: Pin<&mut OfudaBridge>, path: QString, bytes: f64);
+
+        #[qsignal]
         #[cxx_name = "commandOutput"]
         fn command_output(self: Pin<&mut OfudaBridge>, line: QString);
 
@@ -47,6 +51,10 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "listSteamJson"]
         fn list_steam_json(self: &OfudaBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "scanSizes"]
+        fn scan_sizes(self: Pin<&mut OfudaBridge>, paths_json: &QString);
 
         #[qinvokable]
         #[cxx_name = "runTool"]
@@ -219,6 +227,21 @@ impl qobject::OfudaBridge {
                 obj.as_mut().create_finished(ok, QString::from(&err));
                 obj.as_mut().changed();
             });
+        });
+    }
+
+    fn scan_sizes(mut self: Pin<&mut Self>, paths_json: &QString) {
+        let Ok(paths) = serde_json::from_str::<Vec<String>>(&paths_json.to_string()) else {
+            return;
+        };
+        let qt = self.as_mut().qt_thread();
+        std::thread::spawn(move || {
+            for path in paths {
+                let bytes = omikuji_core::fs_util::dir_size(std::path::Path::new(&path)) as f64;
+                let _ = qt.queue(move |mut obj: Pin<&mut qobject::OfudaBridge>| {
+                    obj.as_mut().size_ready(QString::from(&path), bytes);
+                });
+            }
         });
     }
 

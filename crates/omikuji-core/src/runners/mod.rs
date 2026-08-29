@@ -5,6 +5,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{LazyLock, Mutex};
 
 pub mod dll_override;
 
@@ -254,17 +255,64 @@ pub fn list_installed_runners() -> Vec<(String, String, String)> {
         runners.push((format!("steam:{name}"), label, "proton".to_string()));
     }
 
-    for name in system_wine_paths().keys() {
-        runners.push((format!("system:{name}"), String::new(), "wine".to_string()));
+    for (name, path) in system_wine_paths() {
+        let label = wine_version(&path).unwrap_or_default();
+        runners.push((format!("system:{name}"), label, "wine".to_string()));
     }
 
-    if which::which("wine").is_ok() {
-        runners.push(("system".to_string(), String::new(), "wine".to_string()));
+    if let Ok(path) = which::which("wine") {
+        let label = wine_version(&path).unwrap_or_default();
+        runners.push(("system".to_string(), label, "wine".to_string()));
     }
 
     runners.sort();
     runners.dedup();
     runners
+}
+
+static WINE_VERSIONS: LazyLock<Mutex<HashMap<PathBuf, Option<String>>>> =
+    LazyLock::new(Default::default);
+
+pub fn wine_version(exe: &Path) -> Option<String> {
+    if let Ok(cache) = WINE_VERSIONS.lock()
+        && let Some(hit) = cache.get(exe)
+    {
+        return hit.clone();
+    }
+    let probed = probe_wine_version(exe);
+    if let Ok(mut cache) = WINE_VERSIONS.lock() {
+        cache.insert(exe.to_path_buf(), probed.clone());
+    }
+    probed
+}
+
+fn probe_wine_version(exe: &Path) -> Option<String> {
+    let out = Command::new(exe).arg("--version").output().ok()?;
+    let text = String::from_utf8_lossy(&out.stdout);
+    let version = text.trim();
+    if version.is_empty() {
+        return None;
+    }
+    Some(version.strip_prefix("wine-").unwrap_or(version).to_string())
+}
+
+pub fn display_name(version: &str) -> String {
+    let named = version.strip_prefix("system:");
+    if !(version.is_empty() || version == "system" || named.is_some()) {
+        return version.to_string();
+    }
+    let exe = match named {
+        Some(name) => system_wine_paths().get(name).cloned(),
+        None => which::which("wine").ok(),
+    };
+    let probed = exe.as_deref().and_then(wine_version);
+    let base = named.unwrap_or("System Wine");
+    match (probed, named.is_some()) {
+        (Some(v), true) => format!("{base} {v} (System)"),
+        (Some(v), false) => format!("{base} {v}"),
+        (None, true) => format!("{base} (System)"),
+        (None, false) => base.to_string(),
+    }
 }
 
 pub fn system_wine_paths() -> HashMap<String, PathBuf> {
@@ -297,7 +345,40 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
         }
     }
 
+    let primary = which::which("wine")
+        .ok()
+        .and_then(|p| std::fs::canonicalize(p).ok());
+    for dir in std::env::var_os("PATH").iter().flat_map(std::env::split_paths) {
+        let bin = dir.join("wine");
+        if !bin.is_file() {
+            continue;
+        }
+        let Ok(real) = std::fs::canonicalize(&bin) else {
+            continue;
+        };
+        if primary.as_ref() == Some(&real) {
+            continue;
+        }
+        if paths
+            .values()
+            .any(|p| std::fs::canonicalize(p).ok().as_ref() == Some(&real))
+        {
+            continue;
+        }
+        if let Some(name) = wine_root_name(&dir) {
+            paths.entry(name).or_insert(bin);
+        }
+    }
+
     paths
+}
+
+fn wine_root_name(dir: &Path) -> Option<String> {
+    let root = match dir.file_name() {
+        Some(name) if name == "bin" => dir.parent()?,
+        _ => dir,
+    };
+    Some(root.file_name()?.to_str()?.to_string())
 }
 
 fn clean_lspci(name: &str) -> String {

@@ -108,7 +108,6 @@ Popup {
             Column {
                 width: parent.width
                 spacing: 8
-                visible: root.showHiddenOption
 
                 Text {
                     text: qsTr("Card style")

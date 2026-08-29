@@ -48,11 +48,10 @@ impl LaunchConfig {
     }
 }
 
-// wine build variant, detected from version string
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WineVariant {
     System,
-    WineGE,
+    Runner,
     // proton requires umu-launcher
     Proton,
 }
@@ -71,11 +70,11 @@ impl WineVariant {
         }
         match crate::runners::runner_dir(version) {
             Some(dir) if crate::runners::is_proton_dir(&dir) => WineVariant::Proton,
-            Some(_) => WineVariant::WineGE,
+            Some(_) => WineVariant::Runner,
             None if looks_like_proton(version.strip_prefix("steam:").unwrap_or(version)) => {
                 WineVariant::Proton
             }
-            None => WineVariant::WineGE,
+            None => WineVariant::Runner,
         }
     }
 }
@@ -717,7 +716,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
 
     match variant {
         WineVariant::System => Ok(PathBuf::from("wine")),
-        WineVariant::WineGE => crate::runners::installed_runner_dir(version)
+        WineVariant::Runner => crate::runners::installed_runner_dir(version)
             .map(|d| d.join("bin").join("wine"))
             .filter(|p| p.exists())
             .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version)),
@@ -945,9 +944,9 @@ mod tests {
         assert_eq!(WineVariant::from_version("system"), WineVariant::System);
         assert_eq!(
             WineVariant::from_version("wine-ge-9-5"),
-            WineVariant::WineGE
+            WineVariant::Runner
         );
-        assert_eq!(WineVariant::from_version("lutris-7.2"), WineVariant::WineGE);
+        assert_eq!(WineVariant::from_version("lutris-7.2"), WineVariant::Runner);
         assert_eq!(
             WineVariant::from_version("GE-Proton10-34"),
             WineVariant::Proton
@@ -1004,7 +1003,7 @@ mod tests {
         let inherited_no = std::env::var_os("PROTON_NO_NTSYNC").is_some();
         let env = build_env(
             &game("wine-ge-9-5", true),
-            WineVariant::WineGE,
+            WineVariant::Runner,
             Path::new("wine"),
             EnvPurpose::Session,
         );
