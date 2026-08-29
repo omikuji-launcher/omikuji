@@ -141,6 +141,17 @@ Item {
                 value: appSettings ? appSettings.bandwidthMbPerSec : 0
                 onMoved: (val) => appSettings.applyBandwidthMbPerSec(val)
             }
+
+            SettingsRow {
+                label: qsTr("Notify when a download finishes")
+                description: qsTr("Sends a desktop notification.")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.notifyOnDownloadComplete : true
+                    onToggled: (val) => appSettings.applyNotifyOnDownloadComplete(val)
+                }
+            }
         }
 
         SettingsSection {

@@ -301,6 +301,12 @@ impl qobject::DownloadModel {
                         entry.progress = 100.0;
                         self.as_mut().notify_row_changed(idx as i32);
                     }
+                    if omikuji_core::app_settings::AppSettings::load()
+                        .behavior
+                        .notify_on_download_complete
+                    {
+                        crate::notify::send(&display_name, "Download finished");
+                    }
                     let prefix_str = prefix_path
                         .as_ref()
                         .map(|p| p.to_string_lossy().to_string())

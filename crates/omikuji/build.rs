@@ -188,6 +188,7 @@ fn main() {
         .prop_at("auto_check_updates_on_boot", kushi::Kind::Bool, "behavior.auto_check_updates_on_boot")
         .prop_at("show_tray_icon", kushi::Kind::Bool, "behavior.show_tray_icon")
         .prop_at("discord_show_launcher", kushi::Kind::Bool, "behavior.discord_show_launcher")
+        .prop_at("notify_on_download_complete", kushi::Kind::Bool, "behavior.notify_on_download_complete")
         .prop_at("bandwidth_mb_per_sec", kushi::Kind::F64, "download.bandwidth_mb_per_sec")
         .prop_at("epic_workers", kushi::Kind::I32, "download.epic.workers")
         .prop_at("epic_shared_memory_mb", kushi::Kind::I32, "download.epic.shared_memory_mb")
@@ -463,6 +464,9 @@ fn main() {
     let builder = builder.qt_module("Qml");
     println!("cargo:rustc-link-lib=Qt6Qml");
 
+    let builder = builder.qt_module("DBus");
+    println!("cargo:rustc-link-lib=Qt6DBus");
+
     let builder = unsafe {
         builder.cc_builder(|cc| {
             cc.flag_if_supported("-Wno-sfinae-incomplete");
@@ -471,6 +475,7 @@ fn main() {
             cc.file("src/tray_native.cpp");
             cc.file("src/i18n.cpp");
             cc.file("src/hot_reload.cpp");
+            cc.file("src/notify.cpp");
         })
     };
     println!("cargo:rerun-if-changed=src/app_icon.cpp");
@@ -478,6 +483,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/tray_native.cpp");
     println!("cargo:rerun-if-changed=src/i18n.cpp");
     println!("cargo:rerun-if-changed=src/hot_reload.cpp");
+    println!("cargo:rerun-if-changed=src/notify.cpp");
 
     builder.build();
 }

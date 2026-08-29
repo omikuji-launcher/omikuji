@@ -52,13 +52,14 @@ Item {
     function open() { shown = true }
     function close() { shown = false }
 
-    function revealInBody(item) {
+    function revealInBody(item, margin) {
         if (!item || bodyFlick.contentHeight <= bodyFlick.height) return
+        const pad = margin === undefined ? Theme.space.xxl : margin
         const top = item.mapToItem(bodyLoader, 0, 0).y
         const bottom = top + item.height
         let to = bodyFlick.contentY
-        if (bottom > bodyFlick.contentY + bodyFlick.height) to = bottom - bodyFlick.height
-        else if (top < bodyFlick.contentY) to = top
+        if (bottom > bodyFlick.contentY + bodyFlick.height) to = bottom + pad - bodyFlick.height
+        else if (top < bodyFlick.contentY) to = top - pad
         to = Math.max(0, Math.min(to, bodyFlick.contentHeight - bodyFlick.height))
         if (Math.abs(to - bodyFlick.contentY) < 1) return
         revealAnim.stop()

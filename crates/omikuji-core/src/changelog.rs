@@ -43,7 +43,7 @@ pub fn notes_since(last_seen: &str, current: &str) -> Option<String> {
     if chosen.is_empty() {
         return None;
     }
-    chosen.sort_by(|a, b| b.0.cmp(&a.0));
+    chosen.sort_by_key(|c| std::cmp::Reverse(c.0));
 
     let multi = chosen.len() > 1;
     let mut result = String::new();

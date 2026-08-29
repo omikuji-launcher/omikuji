@@ -215,6 +215,7 @@ pub struct BehaviorSettings {
     pub show_tray_icon: bool,
     pub double_click_launches: bool,
     pub discord_show_launcher: bool,
+    pub notify_on_download_complete: bool,
 }
 
 impl Default for BehaviorSettings {
@@ -228,6 +229,7 @@ impl Default for BehaviorSettings {
             show_tray_icon: false,
             double_click_launches: false,
             discord_show_launcher: true,
+            notify_on_download_complete: true,
         }
     }
 }

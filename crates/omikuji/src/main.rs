@@ -1,6 +1,7 @@
 mod bridge;
 mod cli;
 mod log_fmt;
+mod notify;
 mod single_instance;
 
 use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
