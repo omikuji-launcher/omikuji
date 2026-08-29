@@ -19,7 +19,6 @@ DialogCard {
     property var entries: []
     property var remoteEntries: []
     property bool installingRemote: false
-    property string errorText: ""
 
     function _match(e, q) {
         return e.name.toLowerCase().includes(q)
@@ -62,7 +61,7 @@ DialogCard {
 
     function show() {
         searchText = ""
-        errorText = ""
+        root.errorText = ""
         installingRemote = false
         remoteEntries = []
         entries = scriptsBridge ? JSON.parse(scriptsBridge.listJson()) : []
@@ -117,22 +116,9 @@ DialogCard {
             onTextEdited: (t) => root.searchText = t
         }
 
-        Text {
-            id: errorLabel
-            anchors.top: searchField.bottom
-            anchors.topMargin: Theme.space.xs
-            anchors.left: parent.left
-            anchors.right: parent.right
-            visible: root.errorText !== ""
-            text: root.errorText
-            color: Theme.error
-            font.pixelSize: Theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
-
         ListView {
             id: scriptList
-            anchors.top: root.errorText !== "" ? errorLabel.bottom : searchField.bottom
+            anchors.top: searchField.bottom
             anchors.topMargin: Theme.space.md
             anchors.left: parent.left
             anchors.right: parent.right

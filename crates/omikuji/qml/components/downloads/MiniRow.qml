@@ -22,7 +22,7 @@ Item {
 
     signal cancelRequested(string id, string displayName)
 
-    implicitHeight: 58
+    implicitHeight: 58 + (errorNote.visible ? errorNote.height + Theme.space.sm : 0)
 
     readonly property bool isPaused: status === "Paused"
     readonly property bool isFailed: status === "Failed"
@@ -36,9 +36,13 @@ Item {
     }
 
     RowLayout {
-        anchors.fill: parent
+        id: mainRow
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.leftMargin: Theme.space.sm
         anchors.rightMargin: Theme.space.sm
+        height: 58
         spacing: Theme.space.md
 
         BannerThumb {
@@ -98,8 +102,21 @@ Item {
         }
     }
 
+    NoteChip {
+        id: errorNote
+        anchors.top: mainRow.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: Theme.space.sm
+        anchors.rightMargin: Theme.space.sm
+        visible: row.isFailed && row.error !== ""
+        text: row.error
+        icon: "error"
+        tone: Theme.error
+    }
+
     function metaLine() {
-        if (isFailed) return error || qsTr("Failed")
+        if (isFailed) return qsTr("Failed")
         if (isPaused) {
             let bytes = bytesTotal > 0
                 ? Format.formatBytes(bytesDownloaded) + " / " + Format.formatBytes(bytesTotal)

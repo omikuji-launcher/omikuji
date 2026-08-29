@@ -16,6 +16,8 @@ Item {
 
     property bool shown: false
     property string title: ""
+    property string errorText: ""
+    property bool errorAtTop: true
     property real maxWidth: 440
     property Component leftPanel: null
     property Component rightPanel: null
@@ -49,6 +51,28 @@ Item {
 
     function open() { shown = true }
     function close() { shown = false }
+
+    function revealInBody(item) {
+        if (!item || bodyFlick.contentHeight <= bodyFlick.height) return
+        const top = item.mapToItem(bodyLoader, 0, 0).y
+        const bottom = top + item.height
+        let to = bodyFlick.contentY
+        if (bottom > bodyFlick.contentY + bodyFlick.height) to = bottom - bodyFlick.height
+        else if (top < bodyFlick.contentY) to = top
+        to = Math.max(0, Math.min(to, bodyFlick.contentHeight - bodyFlick.height))
+        if (Math.abs(to - bodyFlick.contentY) < 1) return
+        revealAnim.stop()
+        revealAnim.to = to
+        revealAnim.start()
+    }
+
+    NumberAnimation {
+        id: revealAnim
+        target: bodyFlick
+        property: "contentY"
+        duration: Theme.dur.med
+        easing.type: Theme.ease.standard
+    }
 
     onShownChanged: {
         resizer.markUnsettled()
@@ -216,9 +240,24 @@ Item {
             }
         }
 
+        NoteChip {
+            id: errorChip
+            anchors.top: header.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: Theme.space.xl
+            anchors.rightMargin: Theme.space.xl
+            visible: root.errorAtTop && root.errorText !== ""
+            height: visible ? implicitHeight : 0
+            text: root.errorText
+            icon: "error"
+            tone: Theme.error
+        }
+
         Flickable {
             id: bodyFlick
-            anchors.top: header.bottom
+            anchors.top: errorChip.bottom
+            anchors.topMargin: errorChip.visible ? Theme.space.md : 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: actionsLoader.active ? actionsLoader.top

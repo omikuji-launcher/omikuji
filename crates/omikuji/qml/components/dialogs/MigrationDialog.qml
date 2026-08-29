@@ -10,7 +10,6 @@ DialogCard {
 
     property var bridge: null
     property bool done: false
-    property string errorText: ""
     property string outputText: ""
 
     readonly property bool busy: bridge ? bridge.running : false
@@ -55,17 +54,16 @@ DialogCard {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            text: root.errorText !== ""
-                ? root.errorText
-                : root.done
-                    ? qsTr("Everything moved. Omikuji needs a restart to pick up the new layout.")
-                    : root.busy
-                        ? qsTr("Moving things around, hold on...")
-                        : qsTr("This version reorganizes the data folder: runners and graphics layers now live under components/, GOG data moves into runtime/, and sources move to components.toml. Folders you relocated in settings stay where they are.")
-            color: root.errorText !== "" ? Theme.error : Theme.textMuted
+            text: root.done
+                ? qsTr("Everything moved. Omikuji needs a restart to pick up the new layout.")
+                : root.busy
+                    ? qsTr("Moving things around, hold on...")
+                    : qsTr("This version reorganizes the data folder: runners and graphics layers now live under components/, GOG data moves into runtime/, and sources move to components.toml. Folders you relocated in settings stay where they are.")
+            color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }
+        // literally 0 need to edit it but who cares
 
         OutputLog {
             visible: root.expanded

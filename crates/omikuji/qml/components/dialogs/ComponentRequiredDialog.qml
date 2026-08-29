@@ -19,7 +19,6 @@ DialogCard {
     property bool installing: false
     property string phase: ""
     property real percent: 0
-    property string errorText: ""
 
     signal launchReady(int idx, bool skip)
 
@@ -91,11 +90,9 @@ DialogCard {
 
         Text {
             Layout.fillWidth: true
-            visible: root.installing || root.errorText !== ""
-            text: root.errorText !== ""
-                ? root.errorText
-                : qsTr("Installing %1... %2").arg(root.componentName).arg(root.phase)
-            color: root.errorText !== "" ? Theme.error : Theme.textMuted
+            visible: root.installing
+            text: qsTr("Installing %1... %2").arg(root.componentName).arg(root.phase)
+            color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }

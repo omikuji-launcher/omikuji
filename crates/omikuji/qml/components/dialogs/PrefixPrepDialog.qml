@@ -13,7 +13,6 @@ DialogCard {
     property int gameIndex: -1
     property bool skipUpdateCheck: false
     property bool cancelled: false
-    property string errorText: ""
     property string outputText: ""
 
     signal launchReady(int idx, bool skip)
@@ -64,10 +63,8 @@ DialogCard {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            text: root.errorText !== ""
-                ? root.errorText
-                : qsTr("First launch for this game, setting up the wine prefix. It'll start once this finishes.")
-            color: root.errorText !== "" ? Theme.error : Theme.textMuted
+            text: qsTr("First launch for this game, setting up the wine prefix. It'll start once this finishes.")
+            color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
         }

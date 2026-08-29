@@ -13,7 +13,6 @@ DialogCard {
     property string runnerName: ""
     property var roots: []
     property var checkedPaths: ({})
-    property string errorText: ""
     property bool working: false
 
     maxWidth: 440
@@ -22,7 +21,7 @@ DialogCard {
     function show(dir, name) {
         runnerDir = dir
         runnerName = name
-        errorText = ""
+        root.errorText = ""
         working = false
         try { roots = JSON.parse(archiveManager.listSteamRoots()) } catch (e) { roots = [] }
         var c = {}
@@ -135,14 +134,6 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Text {
-            visible: root.errorText !== ""
-            width: parent.width
-            text: root.errorText
-            color: Theme.error
-            font.pixelSize: Theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
     }
 
     actions: Row {

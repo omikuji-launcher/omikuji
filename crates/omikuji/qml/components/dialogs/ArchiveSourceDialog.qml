@@ -10,7 +10,6 @@ DialogCard {
 
     property var archiveManager: null
     property string category: "runners"
-    property string errorText: ""
 
     property string nameValue: ""
     property string descValue: ""
@@ -37,7 +36,7 @@ DialogCard {
         nameValue = ""
         descValue = ""
         urlValue = ""
-        errorText = ""
+        root.errorText = ""
         open()
     }
 
@@ -59,7 +58,7 @@ DialogCard {
             api_url: normalizedUrl(),
             desc: descValue.trim()
         }))
-        if (err && err.length > 0) errorText = err
+        if (err && err.length > 0) root.errorText = err
         else close()
     }
 
@@ -117,14 +116,6 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Text {
-            visible: root.errorText !== ""
-            width: parent.width
-            text: root.errorText
-            color: Theme.error
-            font.pixelSize: Theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
     }
 
     actions: Row {

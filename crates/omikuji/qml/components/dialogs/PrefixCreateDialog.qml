@@ -13,7 +13,6 @@ DialogCard {
     property var ofudaBridge: null
 
     readonly property bool busy: ofudaBridge ? ofudaBridge.creating : false
-    property string errorText: ""
 
     property string nameValue: ""
     property string runnerValue: ""
@@ -25,7 +24,7 @@ DialogCard {
 
     function show() {
         nameValue = ""
-        errorText = ""
+        root.errorText = ""
         outputText = ""
         open()
     }
@@ -104,14 +103,6 @@ DialogCard {
             }
         }
 
-        Text {
-            visible: root.errorText !== ""
-            width: parent.width
-            text: root.errorText
-            color: Theme.error
-            font.pixelSize: Theme.type.caption.size
-            wrapMode: Text.WordWrap
-        }
     }
 
     actions: Row {

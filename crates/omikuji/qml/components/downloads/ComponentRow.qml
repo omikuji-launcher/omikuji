@@ -17,7 +17,7 @@ Rectangle {
 
     radius: Theme.radius.md
     color: Theme.alpha(Theme.text, 0.05)
-    implicitHeight: 56
+    implicitHeight: 56 + (errorNote.visible ? errorNote.height + Theme.space.sm : 0)
 
     readonly property string status: entry.status || "missing"
     readonly property real percent: entry.percent || 0
@@ -31,9 +31,13 @@ Rectangle {
         || status === "extracting" || status === "resolving"
 
     RowLayout {
-        anchors.fill: parent
+        id: mainRow
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.leftMargin: 14
         anchors.rightMargin: 14
+        height: 56
         spacing: 12
 
         SvgIcon {
@@ -62,13 +66,13 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                text: row.isFailed ? qsTr("Failed: %1").arg(row.error)
+                text: row.isFailed ? qsTr("Failed")
                     : row.isSystem ? (row.path || qsTr("Provided by your system"))
                     : row.isDone ? (row.version ? ("v" + row.version) : qsTr("Installed"))
-                    : row.isActive ? (capitalize(row.status)
+                    : row.isActive ? (row.capitalize(row.status)
                           + (row.status === "downloading" ? " · " + Math.round(row.percent) + "%" : "…"))
                     : qsTr("Pending")
-                color: row.isFailed ? (Theme.error || "#e06060") : Theme.textMuted
+                color: row.isFailed ? Theme.error : Theme.textMuted
                 font.pixelSize: Theme.type.caption.size
                 elide: Text.ElideRight
             }
@@ -97,6 +101,19 @@ Rectangle {
             icon: "sync"
             onClicked: row.retryRequested()
         }
+    }
+
+    NoteChip {
+        id: errorNote
+        anchors.top: mainRow.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.leftMargin: 14
+        anchors.rightMargin: 14
+        visible: row.isFailed && row.error !== ""
+        text: row.error
+        icon: "error"
+        tone: Theme.error
     }
 
     function capitalize(s) {

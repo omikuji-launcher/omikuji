@@ -22,7 +22,7 @@ DialogCard {
     property var detail: ({})
     property var values: ({})
     property int valuesRev: 0
-    property string errorText: ""
+    errorAtTop: false
     property string outputText: ""
     property bool succeeded: false
     property bool sourceExpanded: false
@@ -403,13 +403,14 @@ DialogCard {
             }
         }
 
-        Text {
+        NoteChip {
+            id: errorNote
             width: parent.width
             visible: root.errorText !== ""
             text: root.errorText
-            color: Theme.error
-            font.pixelSize: Theme.type.caption.size
-            wrapMode: Text.WordWrap
+            icon: "error"
+            tone: Theme.error
+            onVisibleChanged: if (visible) Qt.callLater(() => root.revealInBody(errorNote))
         }
 
         M3Button {
