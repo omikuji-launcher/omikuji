@@ -131,6 +131,7 @@ DialogCard {
         }
 
         ListView {
+            id: scriptList
             anchors.top: root.errorText !== "" ? errorLabel.bottom : searchField.bottom
             anchors.topMargin: Theme.space.md
             anchors.left: parent.left
@@ -291,6 +292,11 @@ DialogCard {
                     }
                 }
             }
+        }
+
+        ScrollEdgeFade {
+            anchors.fill: scriptList
+            flickable: scriptList
         }
 
         Text {

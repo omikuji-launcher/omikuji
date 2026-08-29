@@ -209,22 +209,11 @@ Item {
             onWheel: (wheel) => wheel.accepted = true
         }
 
-        SvgIcon {
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 4
-            anchors.horizontalCenter: parent.horizontalCenter
-            name: "chevron_left"
-            size: 18
-            rotation: -90
-            color: Theme.textMuted
+        ScrollEdgeFade {
+            anchors.fill: parent
             z: 1
-            opacity: {
-                if (!popup.visible) return 0
-                var remaining = popupFlick.contentHeight - (popupFlick.contentY + popupFlick.height)
-                if (remaining <= 2) return 0
-                return Math.min(1.0, remaining / 12)
-            }
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            flickable: popupFlick
+            fade: false
         }
 
         Flickable {

@@ -422,6 +422,7 @@ fn main() {
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",
         "qml/components/cards/StoreCardAction.qml",
+        "qml/components/primitives/ScrollEdgeFade.qml",
         "qml/components/primitives/Sparkline.qml",
         "qml/components/primitives/Squircle.qml",
         "qml/components/primitives/SvgIcon.qml",
