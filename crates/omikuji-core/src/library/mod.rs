@@ -392,12 +392,6 @@ impl Library {
         Ok(None)
     }
 
-    pub fn add_game(&mut self, game: Game) -> Result<()> {
-        self.save_game(&game)?;
-        self.game.push(game);
-        Ok(())
-    }
-
     pub fn save_game(&self, game: &Game) -> Result<()> {
         Self::save_game_static(game)
     }
@@ -456,13 +450,6 @@ impl Library {
     pub fn remove_game_file(id: &str) -> Result<()> {
         if let Some(path) = Self::find_game_file_by_id(id)? {
             fs::remove_file(&path)?;
-        }
-        Ok(())
-    }
-
-    pub fn save_all(&self) -> Result<()> {
-        for game in &self.game {
-            self.save_game(game)?;
         }
         Ok(())
     }

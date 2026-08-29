@@ -15,10 +15,8 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst))
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub enum ProcessState {
-    #[default]
-    Stopped,
     Running {
         pid: u32,
         started_at: Instant,

@@ -139,8 +139,4 @@ impl TemplateVars {
     ) -> std::collections::HashMap<String, String> {
         env.into_iter().map(|(k, v)| (k, self.expand(&v))).collect()
     }
-
-    pub fn into_map(self) -> std::collections::HashMap<String, String> {
-        self.0.into_iter().collect()
-    }
 }

@@ -79,22 +79,6 @@ impl SteamGame {
             self.appid
         )
     }
-
-    pub fn header_image_url(&self) -> String {
-        format!(
-            "https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg",
-            self.appid
-        )
-    }
-
-    pub fn icon_url(&self) -> Option<String> {
-        self.img_icon_url.as_ref().map(|hash| {
-            format!(
-                "http://media.steampowered.com/steamcommunity/public/images/apps/{}/{hash}.jpg",
-                self.appid
-            )
-        })
-    }
 }
 
 #[cfg(test)]

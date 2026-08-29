@@ -44,14 +44,3 @@ pub async fn check_for_update(
         delta_supported: true,
     }))
 }
-
-pub async fn check_by_app_id(app_id: &str) -> Option<UpdateInfo> {
-    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
-    match check_for_update(&manifest, &edition_id).await {
-        Ok(info) => info,
-        Err(e) => {
-            tracing::error!("update check for {} failed: {}", app_id, e);
-            None
-        }
-    }
-}

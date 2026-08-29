@@ -157,39 +157,6 @@ pub fn supports_import(manifest: &GachaManifest) -> bool {
         .unwrap_or(false)
 }
 
-pub fn build_update_request(
-    manifest: &GachaManifest,
-    edition_id: &str,
-    from_version: String,
-    display_name: String,
-    install_path: PathBuf,
-    prefix_path: Option<PathBuf>,
-    runner_version: String,
-) -> Result<DownloadRequest> {
-    require_edition(manifest, edition_id)?;
-    let source = source_key(manifest)?.to_string();
-    let app_id = build_app_id(manifest, edition_id, &[]);
-    let banner_url = resolve_poster(manifest);
-    Ok(DownloadRequest {
-        source,
-        app_id,
-        game_id: String::new(),
-        display_name,
-        banner_url: if banner_url.is_empty() {
-            None
-        } else {
-            Some(banner_url)
-        },
-        install_path,
-        prefix_path,
-        runner_version,
-        temp_dir: None,
-        kind: DownloadKind::Update { from_version },
-        destructive_cleanup: false,
-        start_paused: false,
-    })
-}
-
 fn require_edition(manifest: &GachaManifest, edition_id: &str) -> Result<()> {
     if manifest.editions.iter().any(|e| e.id == edition_id) {
         Ok(())

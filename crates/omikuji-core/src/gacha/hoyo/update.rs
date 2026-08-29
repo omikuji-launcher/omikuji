@@ -2,8 +2,6 @@ use anyhow::Result;
 
 use super::sophon;
 use super::{HoyoEdition, installed_version};
-use crate::gacha::manifest::{GachaManifest, load_all};
-use crate::gacha::strategies::HOYO_SOPHON;
 
 #[derive(Debug, Clone)]
 pub struct UpdateInfo {
@@ -69,82 +67,4 @@ pub async fn check_for_update(
         can_diff,
         delta_supported,
     }))
-}
-
-pub async fn check_all_installed() -> Vec<UpdateInfo> {
-    let mut out = Vec::new();
-    for manifest in hoyo_manifests() {
-        for edition in manifest.editions {
-            let Some(edition_enum) = parse_edition(&edition.id) else {
-                continue;
-            };
-            if installed_version(&manifest.game_slug, edition_enum).is_none() {
-                continue;
-            }
-            let Some(biz_id) = edition
-                .strategy_config
-                .get("biz_id")
-                .and_then(|v| v.as_str())
-            else {
-                continue;
-            };
-            if let Ok(Some(info)) =
-                check_for_update(biz_id, &manifest.game_slug, edition_enum).await
-            {
-                out.push(info);
-            }
-        }
-    }
-    out
-}
-
-pub async fn check_by_app_id(app_id: &str) -> Option<UpdateInfo> {
-    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
-    let edition = parse_edition(&edition_id)?;
-    let biz_id = manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)?
-        .strategy_config
-        .get("biz_id")?
-        .as_str()?;
-    match check_for_update(biz_id, &manifest.game_slug, edition).await {
-        Ok(info) => info,
-        Err(e) => {
-            tracing::error!("update check for {} failed: {}", app_id, e);
-            None
-        }
-    }
-}
-
-pub fn update_app_id(info: &UpdateInfo) -> String {
-    format!(
-        "{}:{}",
-        info.game_slug,
-        match info.edition {
-            HoyoEdition::Global => "global",
-            HoyoEdition::China => "china",
-        }
-    )
-}
-
-pub fn current_version(app_id: &str) -> Option<String> {
-    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)?;
-    let edition = parse_edition(&edition_id)?;
-    installed_version(&manifest.game_slug, edition)
-}
-
-fn hoyo_manifests() -> Vec<GachaManifest> {
-    load_all()
-        .into_iter()
-        .filter(|m| m.install_strategy == HOYO_SOPHON)
-        .collect()
-}
-
-fn parse_edition(id: &str) -> Option<HoyoEdition> {
-    match id {
-        "global" => Some(HoyoEdition::Global),
-        "china" => Some(HoyoEdition::China),
-        _ => None,
-    }
 }

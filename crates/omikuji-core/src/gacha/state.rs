@@ -38,10 +38,6 @@ pub fn write_installed_version(
     }
 }
 
-pub fn state_path_for(publisher_slug: &str, game_slug: &str) -> impl AsRef<Path> {
-    game_state_dir(publisher_slug, game_slug)
-}
-
 pub fn read_install_dotversion(install_path: &Path) -> Option<String> {
     let bytes = std::fs::read(install_path.join(".version")).ok()?;
     if bytes.len() == 3 {

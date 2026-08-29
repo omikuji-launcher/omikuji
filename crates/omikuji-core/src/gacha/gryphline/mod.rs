@@ -6,10 +6,6 @@ use std::path::PathBuf;
 
 const PUBLISHER_SLUG: &str = "hypergryph";
 
-pub fn make_app_id(edition_id: &str) -> String {
-    format!("endfield:{}", edition_id)
-}
-
 pub fn version_file(game_slug: &str, edition_id: &str) -> PathBuf {
     crate::gacha::state::version_file(PUBLISHER_SLUG, game_slug, edition_id)
 }

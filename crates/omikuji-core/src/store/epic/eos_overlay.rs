@@ -79,24 +79,3 @@ pub fn disable(prefix: &Path) -> Result<()> {
 
     Ok(())
 }
-
-pub fn is_enabled(prefix: &Path) -> bool {
-    let bin = match find_legendary() {
-        Some(b) => b,
-        None => return false,
-    };
-
-    let output = match Command::new(&bin)
-        .arg("eos-overlay")
-        .arg("info")
-        .arg("--prefix")
-        .arg(prefix)
-        .output()
-    {
-        Ok(o) => o,
-        Err(_) => return false,
-    };
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout.contains("Overlay enabled: Yes")
-}

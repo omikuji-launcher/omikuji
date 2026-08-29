@@ -17,10 +17,6 @@ pub fn list_sources() -> Vec<ArchiveSource> {
     components_config::get().runners
 }
 
-pub fn source_by_name(name: &str) -> Option<ArchiveSource> {
-    list_sources().into_iter().find(|s| s.name == name)
-}
-
 pub fn source_root(source: &ArchiveSource) -> PathBuf {
     runners_dir().join(&source.name)
 }

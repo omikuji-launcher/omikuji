@@ -70,12 +70,6 @@ impl EpicStore {
         Ok(self.display_name.clone())
     }
 
-    // legendary refreshes its own tokens on every list/install/info call ,we dont need to do anything here
-    pub async fn try_refresh(&mut self) -> bool {
-        self.refresh_display_name();
-        self.is_logged_in()
-    }
-
     pub async fn logout(&mut self) -> Result<()> {
         if let Ok(bin) = require_legendary() {
             let _ = AsyncCommand::new(&bin)

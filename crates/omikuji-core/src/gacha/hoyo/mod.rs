@@ -76,19 +76,6 @@ impl VoiceLocale {
     }
 }
 
-pub fn parse_voice_csv(csv: &str) -> Vec<VoiceLocale> {
-    csv.split(',')
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .filter_map(|s| {
-            VoiceLocale::all()
-                .iter()
-                .find(|v| v.api_name() == s)
-                .copied()
-        })
-        .collect()
-}
-
 const PUBLISHER_SLUG: &str = "hoyoverse";
 
 fn edition_id(edition: HoyoEdition) -> &'static str {

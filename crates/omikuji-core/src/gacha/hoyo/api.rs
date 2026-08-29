@@ -9,12 +9,6 @@ pub struct InstallSize {
     pub install_bytes: u64,
 }
 
-impl InstallSize {
-    pub fn peak_bytes(&self) -> u64 {
-        self.download_bytes + self.install_bytes
-    }
-}
-
 pub async fn fetch_install_size(
     biz_id: &str,
     edition: HoyoEdition,
@@ -74,12 +68,6 @@ pub struct PackageFile {
 pub struct AudioPackage {
     pub locale: VoiceLocale,
     pub file: PackageFile,
-}
-
-#[derive(Debug, Clone)]
-pub struct GameConfig {
-    pub exe_name: String,
-    pub audio_pkg_path: String,
 }
 
 pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePackageInfo> {
@@ -154,44 +142,6 @@ pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePa
     })
 }
 
-pub async fn fetch_config(biz_id: &str, edition: HoyoEdition) -> Result<GameConfig> {
-    let url = format!(
-        "{}/getGameConfigs?launcher_id={}",
-        edition.api_base(),
-        edition.launcher_id()
-    );
-
-    let resp: ApiResponse<LaunchConfigsData> = reqwest::get(&url)
-        .await
-        .map_err(|e| anyhow!("failed to reach hoyo config api: {}", e))?
-        .json()
-        .await
-        .map_err(|e| anyhow!("failed to parse hoyo config response: {}", e))?;
-
-    if resp.retcode != 0 {
-        return Err(anyhow!(
-            "hoyo config api error {}: {}",
-            resp.retcode,
-            resp.message
-        ));
-    }
-
-    let data = resp
-        .data
-        .ok_or_else(|| anyhow!("hoyo config api returned no data"))?;
-
-    let config = data
-        .launch_configs
-        .into_iter()
-        .find(|lc| lc.game.id == biz_id)
-        .ok_or_else(|| anyhow!("game config {} not found in api response", biz_id))?;
-
-    Ok(GameConfig {
-        exe_name: config.exe_file_name,
-        audio_pkg_path: config.audio_pkg_res_dir.unwrap_or_default(),
-    })
-}
-
 #[derive(Deserialize)]
 struct ApiResponse<T> {
     retcode: i32,
@@ -242,18 +192,6 @@ struct RawAudioPackage {
     md5: String,
     size: String,
     decompressed_size: String,
-}
-
-#[derive(Deserialize)]
-struct LaunchConfigsData {
-    launch_configs: Vec<LaunchConfigEntry>,
-}
-
-#[derive(Deserialize)]
-struct LaunchConfigEntry {
-    game: GameRef,
-    exe_file_name: String,
-    audio_pkg_res_dir: Option<String>,
 }
 
 fn parse_size(s: &str) -> u64 {

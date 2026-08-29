@@ -12,10 +12,6 @@ pub fn list_sources() -> Vec<ArchiveSource> {
     components_config::get().layers
 }
 
-pub fn source_by_name(name: &str) -> Option<ArchiveSource> {
-    list_sources().into_iter().find(|s| s.name == name)
-}
-
 // per-source root: components/layers/{source.name}/. versions land inside as {tag}/.
 pub fn source_root(source: &ArchiveSource) -> PathBuf {
     crate::layers_dir().join(&source.name)

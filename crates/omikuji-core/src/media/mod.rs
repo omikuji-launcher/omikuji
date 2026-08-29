@@ -120,10 +120,6 @@ fn to_qml_url(s: &str) -> String {
         s.to_string()
     }
 }
-pub fn fetch_media_blocking(game_id: &str, game_name: &str) -> FetchResult {
-    fetch_media_blocking_with(game_id, game_name, |_| {})
-}
-
 pub fn fetch_media_blocking_with<F>(game_id: &str, game_name: &str, mut on_asset: F) -> FetchResult
 where
     F: FnMut(&MediaType),
@@ -314,10 +310,6 @@ pub struct FetchResult {
     pub banner: Option<PathBuf>,
     pub coverart: Option<PathBuf>,
     pub icon: Option<PathBuf>,
-}
-
-pub fn fetch_steam_media_blocking(appid: &str) -> FetchResult {
-    fetch_steam_media_blocking_with(appid, |_| {})
 }
 
 pub fn fetch_steam_media_blocking_with<F>(appid: &str, mut on_asset: F) -> FetchResult

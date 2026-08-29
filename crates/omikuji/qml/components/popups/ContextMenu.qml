@@ -100,28 +100,6 @@ Popup {
         open()
     }
 
-    function openBelow(anchorItem) {
-        if (!anchorItem) { open(); return }
-        if (!parent) { open(); return }
-        let win = anchorItem.Window.window
-        let z = Theme.uiScale
-        let w = _computedWidth() * z
-        let h = _computedHeight() * z
-
-        let a = anchorItem.mapToItem(null, 0, anchorItem.height + 4)
-        if (win) {
-            if (a.y + h > win.height - 4) {
-                openAbove(anchorItem)
-                return
-            }
-            let overflowRight = (a.x + w) - (win.width - 4)
-            if (overflowRight > 0) a.x -= overflowRight
-        }
-
-        _moveTo(a.x, a.y)
-        open()
-    }
-
     function openAtCursor(winX, winY) {
         let anchorItem = parent || null
         let win = anchorItem ? anchorItem.Window.window : null

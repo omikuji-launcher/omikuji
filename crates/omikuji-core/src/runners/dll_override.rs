@@ -33,10 +33,6 @@ impl DllKind {
             DllKind::Nvapi => "nvapi",
         }
     }
-
-    pub fn from_pack_kind(s: &str) -> Option<Self> {
-        DllKind::ALL.into_iter().find(|k| k.pack_kind() == s)
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
