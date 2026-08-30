@@ -9,7 +9,7 @@ A Qt/QML based games/apps launcher for Linux. Built 'cause I couldn't bear havin
 >
 > Docs might be not updated to the latest version and/or comprehensive, be careful accordingly!
 
-- [Configuration](https://omikuji-launcher.github.io/omikuji//user/configuration.html)
+- [Configuration](https://omikuji-launcher.github.io/omikuji/user/configuration.html)
 - [Nix Home Manager options](docs/hm-module.md): Every options available in the Home Manager module
 
 ## Screenshots
@@ -44,15 +44,21 @@ yay -S omikuji-bin
 sudo dnf copr enable reakjra/omikuji
 sudo dnf install omikuji
 ```
-> or manually install with the `.rpm` in the [releases page](https://github.com/reakjra/omikuji/releases).
+> or manually install with the `.rpm` in the [releases page](https://github.com/omikuji-launcher/omikuji/releases).
 
 #### Flatpak 
 
-Until I bother with reading the flathub documentation to submit, you can manually install it yourself:
+Until I bother with reading the flathub documentation to submit, there's a signed repo you can add:
 
-Grab the `.flatpak` file in the [releases page](https://github.com/reakjra/omikuji/releases)
+```sh
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak remote-add --if-not-exists omikuji https://omikuji-launcher.github.io/omikuji/flatpak/index.flatpakrepo
+flatpak install omikuji io.github.reakjra.omikuji
+```
 
-Install the application by running: 
+Flathub is needed too, omikuji builds on the KDE and Wine runtimes hosted over there.
+
+Or grab the `.flatpak` file in the [releases page](https://github.com/omikuji-launcher/omikuji/releases):
 
 ```sh
 flatpak install omikuji.flatpak
@@ -63,7 +69,7 @@ flatpak install omikuji.flatpak
 Requires Rust (2024 edition), Qt 6.7+, plus `pkgconf` and `cmake`.
 
 ```sh
-git clone https://github.com/reakjra/omikuji.git
+git clone https://github.com/omikuji-launcher/omikuji.git
 cd omikuji
 cargo build --release
 ```
@@ -92,7 +98,7 @@ If you're on NixOS and using flakes, add the flake to your inputs:
 		nixpkgs.url = "nixpkgs/nixos-unstable";
 		
 		omikuji = {
-			url = "github:reakjra/omikuji";
+			url = "github:omikuji-launcher/omikuji";
 			inputs.nixpkgs.follows = "nixpkgs";
 		};
 	};
@@ -143,18 +149,18 @@ And restart the nix daemon to apply them, then you can install the package
 
 To run it without installing:
 ```sh
-nix run github:reakjra/omikuji
+nix run github:omikuji-launcher/omikuji
 # Add #omikuji-unwrapped to run the unwrapped package
 ```
 
 Building the package itself:
 ```sh
-nix build github:reakjra/omikuji
+nix build github:omikuji-launcher/omikuji
 ```
 
 If you want to straight up build the app itself (during development for example), the flake also comes with a dev shell:
 ```sh
-git clone https://github.com/reakjra/omikuji
+git clone https://github.com/omikuji-launcher/omikuji
 cd omikuji
 nix develop
 # Then just run the usual commands like cargo build or cargo run
@@ -180,7 +186,7 @@ mhhhhhhhh).
 
 \- **Stores**: import from Steam (locally), install Epic games (via legendary), GOG (via gogdl), ~~Waifu machine slots~~ HoYoverse / Kuro / Gryphline gachas (direct downloads and updates).
 
-\- **Community scripts**: [Community TOML scripts](https://github.com/reakjra/omikuji-scripts) that you can run from the launcher. (Hey, they can do a lot! Install launchers, add games entries, kiss you on the lips)
+\- **Community scripts**: [Community TOML scripts](https://github.com/omikuji-launcher/omikuji-scripts) that you can run from the launcher. (Hey, they can do a lot! Install launchers, add games entries, kiss you on the lips)
 
 \- **Console mode**: controller driven UI. With glsl shaders backgrounds! crazy right?
 
@@ -230,9 +236,9 @@ Bug reports (especially these), requests and PRs welcome. A few notes:
 \- Whatever other 20 reasons people usually list in their contributing section
 
 
-\- Community scripts: [omikuji-scripts](https://github.com/reakjra/omikuji-scripts)
+\- Community scripts: [omikuji-scripts](https://github.com/omikuji-launcher/omikuji-scripts)
 
-\- assets repo: [omikuji-assets](https://github.com/reakjra/omikuji-assets)
+\- assets repo: [omikuji-assets](https://github.com/omikuji-launcher/omikuji-assets)
 
 > See also: [Dev Infos](https://omikuji-launcher.github.io/omikuji/dev/overview.html)
 

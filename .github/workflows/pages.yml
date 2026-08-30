@@ -1,0 +1,112 @@
+name: pages
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  flatpak:
+    name: Flatpak repository
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/andyholmes/flatter/kde:6.10
+      options: --privileged
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Import signing key
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.FLATPAK_GPG_PASSPHRASE }}
+
+      - name: Build and sign
+        uses: andyholmes/flatter@b32437fdafdca87317165f558dbcba78ebb20e1e # v1.0.0
+        with:
+          files: flatpak/io.github.reakjra.omikuji.yaml
+          gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
+          flatpak-builder-args: |
+            --install-deps-from=flathub
+            --skip-if-unchanged
+
+      - name: Write repository description
+        env:
+          FINGERPRINT: ${{ steps.gpg.outputs.fingerprint }}
+        run: |
+          cat > repo/index.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=Omikuji
+          Description=A universal, native game launcher for Linux.
+          Url=https://omikuji-launcher.github.io/omikuji/flatpak/
+          Homepage=https://omikuji-launcher.github.io/omikuji/
+          Icon=https://raw.githubusercontent.com/omikuji-launcher/omikuji/master/packaging/io.github.reakjra.omikuji.png
+          GPGKey=$(gpg2 --export "$FINGERPRINT" | base64 -w0)
+          EOF
+
+      - name: Package repository
+        run: tar -cf flatpak-repo.tar -C repo .
+
+      - name: Upload repository
+        uses: actions/upload-artifact@v7
+        with:
+          name: flatpak-repo
+          path: flatpak-repo.tar
+          retention-days: 1
+
+  deploy:
+    name: Assemble and deploy
+    runs-on: ubuntu-latest
+    needs: flatpak
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up mdBook
+        uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: 'latest'
+
+      - name: Build docs
+        run: mdbook build docs/site
+
+      - name: Download repository
+        uses: actions/download-artifact@v7
+        with:
+          name: flatpak-repo
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site/flatpak
+          cp -r docs/site/book/. _site/
+          tar -xf flatpak-repo.tar -C _site/flatpak
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
