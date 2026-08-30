@@ -75,7 +75,7 @@ hr
 
 printf '\n%sGood job, crazy labour! Now:%s\n' "$B" "$X"
 printf '  %scargo build%s              %s# syncs Cargo.lock or pain will happen%s\n' "$C" "$X" "$D" "$X"
-printf '  %sgit commit -m "bump to v%s"  &&  git tag v%s  &&  git push  &&  git push origin v%s%s\n' "$C" "$VER" "$VER" "$VER" "$X"
+printf '  %sgit add -A  &&  git commit -m "bump to v%s"  &&  git tag v%s  &&  git push origin v%s  &&  git push%s\n' "$C" "$VER" "$VER" "$VER" "$X"
 
 printf '\n%s%sAfter the release CI finishes%s\n' "$B" "$Y" "$X"
 printf '  %srebuild COPR%s  (New Build > SCM, committish master)\n' "$B" "$X"
