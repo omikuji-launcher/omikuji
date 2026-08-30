@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.11.0
+Version:        0.12.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,15 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sun Aug 30 2026 reakjra <reakjra@proton.me> - 0.12.0-1
+- proper fade and chevrons on scrollable items
+- error chip with scroll grab
+- system notification on completed download toggle
+- url regex and registry exe lookup for community scripts
+- ofuda's page restyle
+- proper m3 style checkboxes
+- epic and gog dlc installation flow
+
 * Wed Aug 26 2026 reakjra <reakjra@proton.me> - 0.11.0-1
 - run --notify-gui cli flag or cross-process run state (updates, errors, etc.)
 - settings migrations and layout adjustements (from ui.toml -> app.toml)

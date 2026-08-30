@@ -13,6 +13,18 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.12.0
+Added:
+- Epic and GOG DLCs installation flow
+- Proper Error chip with scroll grab for dialogs
+- Proper fade and chevrons on scrollable items
+- System notification on completed download toggle
+- URL regex and registry exe lookup for community scripts
+
+Changed:
+- Proper m3 style checkboxes
+- Ofuda's settings page restyle (again)
+
 ## 0.11.0
 Added:
 - "run --notify-gui" cli flag for cross-process run state (updates, errors, etc.)

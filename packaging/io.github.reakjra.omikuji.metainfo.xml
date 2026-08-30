@@ -22,6 +22,19 @@
     </p>
   </description>
   <releases>
+    <release version="0.12.0" date="2026-08-30">
+      <description>
+        <ul>
+          <li>proper fade and chevrons on scrollable items</li>
+          <li>error chip with scroll grab</li>
+          <li>system notification on completed download toggle</li>
+          <li>url regex and registry exe lookup for community scripts</li>
+          <li>ofuda's page restyle</li>
+          <li>proper m3 style checkboxes</li>
+          <li>epic and gog dlc installation flow</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.11.0" date="2026-08-26">
       <description>
         <ul>
