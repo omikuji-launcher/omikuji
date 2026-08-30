@@ -5,6 +5,7 @@ import omikuji 1.0
 
 import "."
 import "../controls"
+import "../store"
 
 // these toggles have side-effects beyond toml writes, so refreshConfig instead of updateField
 Item {
@@ -17,6 +18,17 @@ Item {
     property string gameId: ""
 
     implicitHeight: content.height
+
+    property var installedDlcs: []
+
+    function refreshDlcs() {
+        if (!gameModel || gameId === "") { installedDlcs = []; return }
+        try { installedDlcs = JSON.parse(gameModel.installed_dlcs(gameId) || "[]") }
+        catch (e) { installedDlcs = [] }
+    }
+
+    onGameIdChanged: refreshDlcs()
+    Component.onCompleted: refreshDlcs()
 
     Column {
         id: content
@@ -87,6 +99,23 @@ Item {
                     text: root.config["source.save_path"] || ""
                     width: parent.width
                     onTextEdited: (t) => root.updateField("source.save_path", t)
+                }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("DLC")
+            icon: "layers"
+            width: parent.width
+            visible: root.installedDlcs.length > 0
+
+            DlcPicker {
+                width: parent.width
+                readOnly: true
+                removable: true
+                dlcs: root.installedDlcs
+                onRemoveRequested: (id) => {
+                    if (root.gameModel.uninstall_dlc(root.gameId, id)) root.refreshDlcs()
                 }
             }
         }

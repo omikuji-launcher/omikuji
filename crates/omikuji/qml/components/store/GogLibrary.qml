@@ -111,12 +111,11 @@ Item {
                         return "check_circle"
                     }
                     visible: !gogCard.isDownloading
-                    primary: gogCard.cardState !== "imported"
                     onClicked: {
-                        if (gogCard.cardState === "uninstalled") {
-                            root.installRequested(gogCard.index)
-                        } else if (gogCard.cardState === "needs-import") {
+                        if (gogCard.cardState === "needs-import") {
                             root.importRequested(gogCard.index)
+                        } else {
+                            root.installRequested(gogCard.index)
                         }
                     }
                 }
@@ -171,24 +170,10 @@ Item {
         visible: root.isLoggedIn && !root.isRefreshing && cardGrid.count === 0
         z: 90
 
-        Column {
-            anchors.centerIn: parent
-            spacing: 10
-
-            SvgIcon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                name: "gog"
-                size: 48
-                color: Theme.textFaint
-            }
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("No games in this store")
-                color: Theme.textMuted
-                font.pixelSize: Theme.type.title.size
-                font.weight: Font.Medium
-            }
+        EmptyState {
+            anchors.fill: parent
+            icon: "gog"
+            text: qsTr("No games in this store")
         }
     }
 

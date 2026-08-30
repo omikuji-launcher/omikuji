@@ -92,6 +92,7 @@ pub struct DownloadRequest {
     pub kind: DownloadKind,
     pub destructive_cleanup: bool,
     pub start_paused: bool,
+    pub dlcs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +113,8 @@ pub struct DownloadEntry {
     pub kind: DownloadKind,
     #[serde(default = "default_destructive_cleanup")]
     pub destructive_cleanup: bool,
+    #[serde(default)]
+    pub dlcs: Vec<String>,
     pub status: DownloadStatus,
     pub progress: f64,
     pub bytes_downloaded: u64,
@@ -142,9 +145,11 @@ pub enum DownloadEvent {
         install_path: PathBuf,
         prefix_path: Option<PathBuf>,
         runner_version: String,
+        dlcs: Vec<String>,
     },
     Failed(String, String),
     Removed(String),
+    Renamed(String, String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -323,6 +328,7 @@ impl DownloadManager {
             temp_dir: req.temp_dir.map(expand_path),
             kind: req.kind,
             destructive_cleanup: req.destructive_cleanup,
+            dlcs: req.dlcs,
             status: initial_status,
             progress: 0.0,
             bytes_downloaded: 0,
@@ -785,6 +791,21 @@ fn cleanup_source_state(entry: &DownloadEntry) {
     }
 }
 
+pub fn set_display_name(id: &str, name: &str) {
+    let mgr = MANAGER.clone();
+    let mut inner = mgr.inner.lock().unwrap();
+    let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+        return;
+    };
+    if e.display_name == name {
+        return;
+    }
+    e.display_name = name.to_string();
+    inner
+        .events
+        .push_back(DownloadEvent::Renamed(id.to_string(), name.to_string()));
+}
+
 pub fn report_progress(
     id: &str,
     progress: f64,
@@ -912,6 +933,7 @@ fn complete(entry: &DownloadEntry) {
         install_path: entry.install_path.clone(),
         prefix_path: entry.prefix_path.clone(),
         runner_version: entry.runner_version.clone(),
+        dlcs: entry.dlcs.clone(),
     });
     save_queue(&inner.entries);
     drop(inner);

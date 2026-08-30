@@ -44,7 +44,10 @@ impl super::qobject::GameModel {
         omikuji_core::install_sizes::spawn_fetch_ex(rid, move || async move {
             omikuji_core::store::epic::fetch_install_size(&app_name_str)
                 .await
-                .map(|s| (s.download_bytes, s.install_bytes, s.launch_exe))
+                .map(|s| {
+                    let dlcs = serde_json::to_string(&s.dlcs).unwrap_or_else(|_| "[]".to_string());
+                    (s.download_bytes, s.install_bytes, s.launch_exe, dlcs)
+                })
                 .map_err(|e| e.to_string())
         });
     }
@@ -68,6 +71,7 @@ impl super::qobject::GameModel {
         display_name: &QString,
         prefix_path: &QString,
         runner_version: &QString,
+        dlcs: &QString,
     ) -> QString {
         use omikuji_core::library::{
             GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
@@ -110,6 +114,7 @@ impl super::qobject::GameModel {
             source: SourceConfig {
                 kind: "epic".to_string(),
                 app_id: app_name_s.clone(),
+                dlcs: serde_json::from_str(&dlcs.to_string()).unwrap_or_default(),
                 ..SourceConfig::default()
             },
             runner: RunnerConfig {

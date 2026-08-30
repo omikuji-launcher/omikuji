@@ -152,6 +152,7 @@ impl qobject::DownloadModel {
             kind: omikuji_core::downloads::DownloadKind::Install,
             destructive_cleanup: true,
             start_paused: false,
+            dlcs: Vec::new(),
         };
         let id = downloads::manager().enqueue(req);
         QString::from(&id)
@@ -294,6 +295,7 @@ impl qobject::DownloadModel {
                     install_path,
                     prefix_path,
                     runner_version,
+                    dlcs,
                 } => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
                         let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
@@ -319,6 +321,9 @@ impl qobject::DownloadModel {
                         &QString::from(&install_path.to_string_lossy().to_string()),
                         &QString::from(&prefix_str),
                         &QString::from(&runner_version),
+                        &QString::from(
+                            &serde_json::to_string(&dlcs).unwrap_or_else(|_| "[]".to_string()),
+                        ),
                     );
                 }
                 DownloadEvent::Failed(id, err) => {
@@ -329,6 +334,13 @@ impl qobject::DownloadModel {
                     }
                     self.as_mut()
                         .download_failed(&QString::from(&id), &QString::from(&err));
+                }
+                DownloadEvent::Renamed(id, name) => {
+                    if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
+                        let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
+                        entry.display_name = name;
+                        self.as_mut().notify_row_changed(idx as i32);
+                    }
                 }
                 DownloadEvent::Removed(id) => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {

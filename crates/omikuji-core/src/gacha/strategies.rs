@@ -141,6 +141,7 @@ pub fn build_install_request(
         kind: DownloadKind::Install,
         destructive_cleanup: true,
         start_paused: false,
+        dlcs: Vec::new(),
     })
 }
 

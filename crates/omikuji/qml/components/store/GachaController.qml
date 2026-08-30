@@ -37,7 +37,7 @@ Item {
 
     Connections {
         target: ctrl.downloadModel
-        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion) {
+        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs) {
             if (!ctrl.gameModel) return
             if (source === "epic" || source === "gog") return
             let raw = ctrl.gameModel.gacha_manifest_for_app_id(appId)

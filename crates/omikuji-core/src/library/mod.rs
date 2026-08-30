@@ -81,6 +81,9 @@ pub struct SourceConfig {
     // patch wrapper at launch, set at import time.
     #[serde(default)]
     pub patch: String,
+    // store dlc ids the user installed; updates must re-send these or gogdl drops the files apparently? i genuinely dont fully know
+    #[serde(default)]
+    pub dlcs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]

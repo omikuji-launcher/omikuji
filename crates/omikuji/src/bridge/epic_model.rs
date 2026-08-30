@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QByteArray, QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
@@ -78,6 +80,7 @@ pub mod qobject {
             runner_version: &QString,
             is_import: bool,
             import_existing: bool,
+            dlcs: &QString,
         ) -> QString;
 
         #[qinvokable]
@@ -360,6 +363,7 @@ impl qobject::EpicModel {
         runner_version: &QString,
         is_import: bool,
         import_existing: bool,
+        dlcs: &QString,
     ) -> QString {
         let i = index as usize;
         let Some(game) = self.rust().games.get(i).cloned() else {
@@ -392,6 +396,7 @@ impl qobject::EpicModel {
             },
             destructive_cleanup: !is_import && !import_existing,
             start_paused: false,
+            dlcs: serde_json::from_str(&dlcs.to_string()).unwrap_or_default(),
         };
 
         let id = downloads::manager().enqueue(req);

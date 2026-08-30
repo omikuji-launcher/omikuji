@@ -9,6 +9,7 @@ pub struct InstallSizeResult {
     pub download_bytes: u64,
     pub install_bytes: u64,
     pub launch_exe: String,
+    pub dlcs: String,
     pub error: String,
 }
 
@@ -54,22 +55,25 @@ where
     Fut: std::future::Future<Output = Result<(u64, u64), String>>,
 {
     spawn_fetch_ex(request_id, move || async move {
-        fetch().await.map(|(d, i)| (d, i, String::new()))
+        fetch()
+            .await
+            .map(|(d, i)| (d, i, String::new(), String::new()))
     });
 }
 
 pub fn spawn_fetch_ex<F, Fut>(request_id: String, fetch: F)
 where
     F: FnOnce() -> Fut + Send + 'static,
-    Fut: std::future::Future<Output = Result<(u64, u64, String), String>>,
+    Fut: std::future::Future<Output = Result<(u64, u64, String, String), String>>,
 {
     spawn_blocking_fetch(fetch, move |result| {
         let pushed = match result {
-            Ok((download_bytes, install_bytes, launch_exe)) => InstallSizeResult {
+            Ok((download_bytes, install_bytes, launch_exe, dlcs)) => InstallSizeResult {
                 request_id,
                 download_bytes,
                 install_bytes,
                 launch_exe,
+                dlcs,
                 error: String::new(),
             },
             Err(error) => {
@@ -79,6 +83,7 @@ where
                     download_bytes: 0,
                     install_bytes: 0,
                     launch_exe: String::new(),
+                    dlcs: String::new(),
                     error,
                 }
             }

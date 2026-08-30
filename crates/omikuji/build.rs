@@ -259,7 +259,7 @@ fn main() {
         .role_fn("bytes_total", "role_bytes_total")
         .role_fn("error", "role_error")
         .role_fn("kind", "role_kind")
-        .qsignal_raw("fn download_completed(self: Pin<&mut DownloadModel>, id: &QString, source: &QString, app_id: &QString, display_name: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString);")
+        .qsignal_raw("fn download_completed(self: Pin<&mut DownloadModel>, id: &QString, source: &QString, app_id: &QString, display_name: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString, dlcs: &QString);")
         .qsignal_raw("fn download_failed(self: Pin<&mut DownloadModel>, id: &QString, error: &QString);")
         .qsignal_raw("fn state_changed(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw("fn enqueue_epic(self: Pin<&mut DownloadModel>, app_id: &QString, display_name: &QString, banner_url: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString) -> QString;")
@@ -411,6 +411,9 @@ fn main() {
         "qml/components/primitives/LoadingDots.qml",
         "qml/components/controls/M3Button.qml",
         "qml/components/controls/M3Checkbox.qml",
+        "qml/components/store/DlcPicker.qml",
+        "qml/components/primitives/EmptyState.qml",
+        "qml/components/settings/TabGog.qml",
         "qml/components/controls/M3Dropdown.qml",
         "qml/components/controls/NoteChip.qml",
         "qml/components/controls/M3FileField.qml",

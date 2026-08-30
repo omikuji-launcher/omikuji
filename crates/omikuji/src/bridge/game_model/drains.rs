@@ -84,6 +84,7 @@ impl super::qobject::GameModel {
                 "download": r.download_bytes.to_string(),
                 "install": r.install_bytes.to_string(),
                 "launchExe": r.launch_exe,
+                "dlcs": r.dlcs,
                 "error": r.error,
             })
             .to_string();

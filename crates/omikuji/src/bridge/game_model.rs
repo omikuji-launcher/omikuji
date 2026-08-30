@@ -410,6 +410,12 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
+        fn installed_dlcs(self: &GameModel, game_id: &QString) -> QString;
+
+        #[qinvokable]
+        fn uninstall_dlc(self: Pin<&mut GameModel>, game_id: &QString, dlc_id: &QString) -> bool;
+
+        #[qinvokable]
         fn epic_dir_has_game(
             self: &GameModel,
             launch_exe: &QString,
@@ -459,6 +465,7 @@ pub mod qobject {
             display_name: &QString,
             prefix_path: &QString,
             runner_version: &QString,
+            dlcs: &QString,
         ) -> QString;
 
         #[qinvokable]
@@ -492,6 +499,7 @@ pub mod qobject {
             display_name: &QString,
             prefix_path: &QString,
             runner_version: &QString,
+            dlcs: &QString,
         ) -> QString;
 
         #[qinvokable]
@@ -1354,6 +1362,68 @@ impl qobject::GameModel {
             omikuji_core::prefixes::delete_prefix(&p);
         }
         self.as_mut().remove_game(index);
+    }
+
+    fn installed_dlcs(&self, game_id: &QString) -> QString {
+        let gid = game_id.to_string();
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+            return QString::from("[]");
+        };
+        let json = match game.source.kind.as_str() {
+            "epic" => serde_json::to_string(&omikuji_core::store::epic::installed_dlcs(
+                &game.source.app_id,
+            )),
+            "gog" => serde_json::to_string(&omikuji_core::store::gog::installed_dlcs(
+                &game.source.app_id,
+            )),
+            _ => return QString::from("[]"),
+        };
+        QString::from(&json.unwrap_or_else(|_| "[]".to_string()))
+    }
+
+    fn uninstall_dlc(mut self: Pin<&mut Self>, game_id: &QString, dlc_id: &QString) -> bool {
+        let gid = game_id.to_string();
+        let did = dlc_id.to_string();
+        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == gid) else {
+            return false;
+        };
+        if self.library.game[idx].source.kind != "epic" {
+            tracing::warn!("uninstall_dlc: only epic can remove a single dlc");
+            return false;
+        }
+        let Some(bin) = omikuji_core::store::epic::source::find_legendary() else {
+            omikuji_core::notifications::error(
+                "DLC",
+                "Legendary not found - reinstall it from Settings > Components",
+            );
+            return false;
+        };
+        let out = std::process::Command::new(&bin)
+            .arg("-y")
+            .arg("uninstall")
+            .arg(&did)
+            .output();
+        match out {
+            Ok(o) if o.status.success() => {}
+            Ok(o) => {
+                let err = String::from_utf8_lossy(&o.stderr);
+                tracing::error!("legendary uninstall {} failed: {}", did, err.trim());
+                omikuji_core::notifications::error("DLC", "Could not remove the DLC");
+                return false;
+            }
+            Err(e) => {
+                tracing::error!("legendary uninstall {} failed to spawn: {}", did, e);
+                return false;
+            }
+        }
+
+        let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
+        game.source.dlcs.retain(|d| d != &did);
+        let snapshot = game.clone();
+        if let Err(e) = omikuji_core::library::Library::save_game_static(&snapshot) {
+            tracing::error!("failed to persist dlc removal: {}", e);
+        }
+        true
     }
 
     fn game_prefix_info(&self, index: i32) -> QString {

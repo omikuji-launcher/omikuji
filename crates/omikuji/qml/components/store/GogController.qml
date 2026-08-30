@@ -41,9 +41,9 @@ Item {
             try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.gog_state_json()) || ({}) }
             catch (e) { ctrl.activeDownloads = ({}) }
         }
-        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion) {
+        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs) {
             if (source !== "gog" || !ctrl.gameModel) return
-            let newId = ctrl.gameModel.gog_import_after_install(appId, displayName, prefixPath, runnerVersion)
+            let newId = ctrl.gameModel.gog_import_after_install(appId, displayName, prefixPath, runnerVersion, dlcs)
             if (newId && newId.length > 0 && ctrl.gogModel) ctrl.gogModel.refresh()
         }
     }

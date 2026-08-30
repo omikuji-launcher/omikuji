@@ -244,11 +244,95 @@ pub struct InstalledInfo {
     pub title: Option<String>,
 }
 
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct EpicDlc {
+    pub id: String,
+    pub title: String,
+    pub image: String,
+}
+
+fn dlc_art_from_metadata(app_name: &str) -> std::collections::HashMap<String, String> {
+    let mut out = std::collections::HashMap::new();
+    let Some(dir) = dirs::config_dir() else {
+        return out;
+    };
+    let path = dir
+        .join("legendary")
+        .join("metadata")
+        .join(format!("{app_name}.json"));
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return out;
+    };
+    let Ok(meta) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return out;
+    };
+    let Some(list) = meta
+        .pointer("/metadata/dlcItemList")
+        .and_then(|d| d.as_array())
+    else {
+        return out;
+    };
+    for e in list {
+        let Some(id) = e
+            .pointer("/releaseInfo/0/appId")
+            .and_then(|a| a.as_str())
+            .map(|s| s.to_string())
+        else {
+            continue;
+        };
+        let Some(images) = e.get("keyImages").and_then(|i| i.as_array()) else {
+            continue;
+        };
+        let pick = |want: &str| {
+            images
+                .iter()
+                .find(|i| i.get("type").and_then(|t| t.as_str()) == Some(want))
+                .and_then(|i| i.get("url"))
+                .and_then(|u| u.as_str())
+        };
+        if let Some(url) = pick("DieselGameBox")
+            .or_else(|| pick("OfferImageWide"))
+            .or_else(|| pick("DieselGameBoxTall"))
+            .or_else(|| pick("OfferImageTall"))
+        {
+            out.insert(id, url.to_string());
+        }
+    }
+    out
+}
+
 #[derive(Debug, Clone)]
 pub struct InstallSize {
     pub download_bytes: u64,
     pub install_bytes: u64,
     pub launch_exe: String,
+    pub dlcs: Vec<EpicDlc>,
+}
+
+fn extract_dlcs(
+    v: &serde_json::Value,
+    art: &std::collections::HashMap<String, String>,
+) -> Vec<EpicDlc> {
+    let Some(list) = v.pointer("/game/owned_dlc").and_then(|d| d.as_array()) else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter(|d| {
+            d.get("installable")
+                .and_then(|i| i.as_array())
+                .is_some_and(|a| !a.is_empty())
+        })
+        .filter_map(|d| {
+            let id = d.get("app_name")?.as_str()?.to_string();
+            let title = d
+                .get("title")
+                .and_then(|t| t.as_str())
+                .unwrap_or_default()
+                .to_string();
+            let image = art.get(&id).cloned().unwrap_or_default();
+            Some(EpicDlc { id, title, image })
+        })
+        .collect()
 }
 
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
@@ -292,6 +376,7 @@ pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
         download_bytes,
         install_bytes,
         launch_exe,
+        dlcs: extract_dlcs(&v, &dlc_art_from_metadata(app_name)),
     })
 }
 
@@ -330,6 +415,47 @@ pub fn inspect_existing_install(app_name: &str, install_path: &Path) -> (u64, bo
         .unwrap_or(0);
 
     (bytes, has_resume)
+}
+
+pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
+    let Some(dir) = dirs::config_dir() else {
+        return Vec::new();
+    };
+    let installed: serde_json::Value =
+        std::fs::read_to_string(dir.join("legendary/installed.json"))
+            .ok()
+            .and_then(|s| serde_json::from_str(&s).ok())
+            .unwrap_or_default();
+
+    let art = dlc_art_from_metadata(app_name);
+    let meta: serde_json::Value = std::fs::read_to_string(
+        dir.join("legendary/metadata")
+            .join(format!("{app_name}.json")),
+    )
+    .ok()
+    .and_then(|s| serde_json::from_str(&s).ok())
+    .unwrap_or_default();
+
+    let Some(list) = meta
+        .pointer("/metadata/dlcItemList")
+        .and_then(|d| d.as_array())
+    else {
+        return Vec::new();
+    };
+
+    list.iter()
+        .filter_map(|e| {
+            let id = e.pointer("/releaseInfo/0/appId")?.as_str()?.to_string();
+            installed.get(&id)?;
+            let title = e
+                .get("title")
+                .and_then(|t| t.as_str())
+                .unwrap_or(&id)
+                .to_string();
+            let image = art.get(&id).cloned().unwrap_or_default();
+            Some(EpicDlc { id, title, image })
+        })
+        .collect()
 }
 
 pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
@@ -591,6 +717,7 @@ async fn product_slug(client: &reqwest::Client, namespace: &str, title: &str) ->
             "{{ Catalog {{ catalogNs(namespace: \"{namespace}\") {{ mappings (pageType: \"productHome\") {{ pageSlug pageType }} }} }} }}"
         )
     });
+    // i just wanted to say that seeing this again made me angry
     if let Ok(resp) = client
         .post("https://launcher.store.epicgames.com/graphql")
         .header(

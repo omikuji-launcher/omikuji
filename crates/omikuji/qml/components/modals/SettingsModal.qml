@@ -19,6 +19,7 @@ Item {
     property string sizeKey: ""
 
     readonly property alias pageItem: pageLoader.item
+    readonly property real viewportHeight: contentFlick.height
 
     signal closeRequested()
 

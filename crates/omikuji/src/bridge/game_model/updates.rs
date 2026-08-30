@@ -97,6 +97,7 @@ impl super::qobject::GameModel {
             install_path: std::path::PathBuf,
             prefix_path: Option<std::path::PathBuf>,
             runner_version: String,
+            dlcs: Vec<String>,
         }
 
         let candidates: Vec<ScanCandidate> = self
@@ -132,6 +133,7 @@ impl super::qobject::GameModel {
                     install_path,
                     prefix_path,
                     runner_version: g.wine.version.clone(),
+                    dlcs: g.source.dlcs.clone(),
                 }
             })
             .collect();
@@ -189,6 +191,7 @@ impl super::qobject::GameModel {
                     kind: omikuji_core::downloads::DownloadKind::Update { from_version },
                     destructive_cleanup: false,
                     start_paused: true,
+                    dlcs: candidate.dlcs,
                 };
 
                 let _ = omikuji_core::downloads::manager().enqueue(req);
@@ -376,5 +379,6 @@ fn build_download_request(
         // update/repair operate on an existing install, never wipe on cancel
         destructive_cleanup: false,
         start_paused: false,
+        dlcs: game.source.dlcs.clone(),
     }
 }

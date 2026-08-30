@@ -43,8 +43,7 @@ impl GogStore {
         gog_auth_path().exists()
     }
 
-    // standard gog oauth client login url. redirect lands on
-    // embed.gog.com/on_login_success?code=... and the user pastes the code back into our login field.
+    // redirect lands on embed.gog.com/on_login_success?code=... and the user pastes that code back
     pub fn get_login_url() -> String {
         "https://auth.gog.com/auth?client_id=46899977096215655&redirect_uri=https%3A%2F%2Fembed.gog.com%2Fon_login_success%3Forigin%3Dclient&response_type=code&layout=galaxy".to_string()
     }
@@ -81,9 +80,7 @@ impl GogStore {
         Ok(self.display_name.clone())
     }
 
-    // user_id ALWAYS comes from the gogdl token, not userData.json
-    // galaxy-library returns 403 "Wrong user" if the ids dont match, even when both look valid. userData.json's userId is the gog.com
-    // account id, which can differ from the galaxy id the token binds to. (ahhaahahah?!!??!!?)
+    // user_id comes from the gogdl token, never userData.json: that ones the gog.com account id, not the galaxy id the token binds to, and galaxy-library 403s "Wrong user" on a mismatch (ahhaahahah?!!??!!?)
     pub async fn refresh_user_data(&mut self) -> Result<()> {
         if !self.is_logged_in() {
             tracing::warn!("refresh_user_data: not logged in (no auth file)");
@@ -251,8 +248,7 @@ impl GogStore {
             }
         }
 
-        // require teh goggame-*.info marker to confirm a real install, gogdl writes it only after success, so its absence means the
-        // install was interrupted or wiped. without this a stale registry entry shows up as installed even with an empty dir
+        // gogdl writes goggame-*.info only on success, so without this marker a stale registry entry reads as installed over an empty dir
         let installed = list_installed_map().unwrap_or_default();
         for g in &mut games {
             if let Some(p) = installed.get(&g.app_name) {
@@ -428,14 +424,85 @@ pub fn install_wrapper_dir_name(title: &str) -> String {
         .to_string()
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct GogDlc {
+    pub id: String,
+    pub title: String,
+    pub download_bytes: u64,
+    pub install_bytes: u64,
+    pub image: String,
+}
+
+async fn fetch_dlc_art(app_name: &str) -> std::collections::HashMap<String, String> {
+    let mut out = std::collections::HashMap::new();
+    let Ok(resp) = reqwest::Client::new()
+        .get(format!(
+            "https://api.gog.com/products/{app_name}?expand=expanded_dlcs"
+        ))
+        .send()
+        .await
+    else {
+        return out;
+    };
+    let Ok(v) = resp.json::<serde_json::Value>().await else {
+        return out;
+    };
+    let Some(list) = v.get("expanded_dlcs").and_then(|d| d.as_array()) else {
+        return out;
+    };
+    for e in list {
+        let Some(id) = e.get("id").and_then(|i| i.as_i64()) else {
+            continue;
+        };
+        let Some(url) = ["logo2x", "logo", "icon"]
+            .iter()
+            .filter_map(|k| e.pointer(&format!("/images/{k}")).and_then(|u| u.as_str()))
+            .find(|u| !u.is_empty())
+        else {
+            continue;
+        };
+        let url = if let Some(rest) = url.strip_prefix("//") {
+            format!("https://{rest}")
+        } else {
+            url.to_string()
+        };
+        out.insert(id.to_string(), url);
+    }
+    out
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct InstallSize {
     pub download_bytes: u64,
     pub install_bytes: u64,
+    pub dlcs: Vec<GogDlc>,
 }
 
-// windows is the default platform; linux-native games return 0/0 for
-// sizes from gogdl so we'd need a different path; deferrred.
+fn extract_dlcs(v: &serde_json::Value) -> Vec<GogDlc> {
+    let Some(list) = v.get("dlcs").and_then(|d| d.as_array()) else {
+        return Vec::new();
+    };
+    list.iter()
+        .filter_map(|d| {
+            let id = d.get("id")?.as_str()?.to_string();
+            let title = d
+                .get("title")
+                .and_then(|t| t.as_str())
+                .unwrap_or_default()
+                .to_string();
+            let (install_bytes, download_bytes) = extract_sizes(d);
+            Some(GogDlc {
+                id,
+                title,
+                download_bytes,
+                install_bytes,
+                image: String::new(),
+            })
+        })
+        .collect()
+}
+
+// linux-native games return 0/0 sizes from gogdl and would need their own path, deferred
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
     let bin = gogdl_bin()?;
     let auth = gog_auth_path();
@@ -485,9 +552,20 @@ pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
             dump
         );
     }
+    let mut dlcs = extract_dlcs(&v);
+    if !dlcs.is_empty() {
+        let art = fetch_dlc_art(app_name).await;
+        for d in &mut dlcs {
+            if let Some(url) = art.get(&d.id) {
+                d.image = url.clone();
+            }
+        }
+    }
+
     Ok(InstallSize {
         download_bytes,
         install_bytes,
+        dlcs,
     })
 }
 
@@ -520,14 +598,11 @@ async fn fetch_install_size_pinned(app_name: &str, build_id: &str) -> Result<Ins
     Ok(InstallSize {
         download_bytes,
         install_bytes,
+        dlcs: extract_dlcs(&v),
     })
 }
 
-// gogdl info response shape (v1.2.x):
-// { "size": { "*": { disk_size, download_size },
-//             "en-US": { disk_size, download_size }, ... } }
-// older shapes put sizes under manifest.disk_size or top-level.
-// prefer /size/en-US, add teh "*" common payload on top, fall back to any non-star locale, then to legacy manifest paths
+// prefer /size/en-US plus the "*" common payload, then any non-star locale, then the legacy manifest.disk_size shape
 fn extract_sizes(v: &serde_json::Value) -> (u64, u64) {
     if let Some(size) = v.get("size").and_then(|s| s.as_object()) {
         let common_install = size
@@ -635,7 +710,7 @@ mod tests {
     }
 }
 
-// gogdl drops `.gogdl-resume` (and some variants) at the install root during an interrupted dowload
+// gogdl drops `.gogdl-resume` at the install root during an interrupted dowload
 pub fn inspect_existing_install(_app_name: &str, install_path: &Path) -> (u64, bool) {
     if !install_path.exists() {
         return (0, false);
@@ -726,8 +801,7 @@ pub async fn read_credentials() -> Result<GogCredentials> {
         }
     }
 
-    // gogdl's auth.json is keyed by user_id at teh top level:
-    // { "<user_id>": { access_token, refresh_token, ... } }
+    // auth.json is keyed by user_id at teh top level: { "<user_id>": { access_token, .... } }
     if auth.exists() {
         let body = std::fs::read_to_string(&auth)?;
         if let Ok(v) = serde_json::from_str::<serde_json::Value>(&body) {
@@ -815,24 +889,80 @@ pub fn gog_auth_path() -> PathBuf {
     gog_dir().join("auth.json")
 }
 
-// gogdl caches per-game manifests here and consults them on every
-// download/info call. if a stale manifest says "already installed"
-// the download becomes a no-op ("Nothing to do") regardless of what's
-// on disk. we point gogdl at our own dir via GOGDL_CONFIG_PATH so we
-// can wipe it on fresh installs without touching the user's wider env.
+// our own dir via GOGDL_CONFIG_PATH so we can wipe stale manifests (which turn downloads into "Nothing to do") without touching the user's env
 pub fn gogdl_config_dir() -> PathBuf {
     gog_dir().join("gogdl_state")
 }
 
-// wipe gogdl's cached manifests for a given app id so the next install
-// is a full fresh download, not a delta against ghost state. heroic does
-// teh same on buildId change. cheap, only downside is re-fetching a few kb of manifest json.
+pub fn installed_dlcs(app_name: &str) -> Vec<GogDlc> {
+    let root = gogdl_config_dir();
+    if !root.exists() {
+        return Vec::new();
+    }
+    let mut found = None;
+    for dir in walkdir_manifests(&root) {
+        let candidate = dir.join(app_name);
+        if candidate.is_file() {
+            found = Some(candidate);
+            break;
+        }
+    }
+    let Some(path) = found else {
+        return Vec::new();
+    };
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return Vec::new();
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return Vec::new();
+    };
+    let Some(installed) = v.get("HGLdlcs").and_then(|p| p.as_array()) else {
+        return Vec::new();
+    };
+    installed
+        .iter()
+        .filter_map(|p| {
+            let id = p.get("id")?.as_str()?.to_string();
+            let title = p
+                .get("title")
+                .and_then(|n| n.as_str())
+                .unwrap_or(&id)
+                .to_string();
+            Some(GogDlc {
+                id,
+                title,
+                download_bytes: 0,
+                install_bytes: 0,
+                image: String::new(),
+            })
+        })
+        .collect()
+}
+
+fn walkdir_manifests(root: &Path) -> Vec<PathBuf> {
+    let mut out = vec![root.to_path_buf()];
+    let mut i = 0;
+    while i < out.len() {
+        if let Ok(entries) = std::fs::read_dir(&out[i]) {
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.is_dir() {
+                    out.push(p);
+                }
+            }
+        }
+        i += 1;
+    }
+    out
+}
+
+// gogdl deltas against ghost state otherwise, so wipe before a fresh install. heroic does the same on buildid change
 pub fn wipe_gogdl_manifest_for(app_id: &str) {
     let root = gogdl_config_dir();
     if !root.exists() {
         return;
     }
-    // gogdl's on-disk layout varies by version, so walk the tree and delete any path whose basename matches app_id rather than hardcoding a path
+    // layout varies by gogdl version, so match on basename instead of hardcoding a path
     fn walk(dir: &Path, needle: &str) {
         let Ok(entries) = std::fs::read_dir(dir) else {
             return;
@@ -938,8 +1068,7 @@ async fn fetch_game_metadata(
     Ok((title, banner, coverart, icon))
 }
 
-// gog's api returns image urls with {formatter} placeholders; strip them.
-// the plain url already serves a reasonable default for our card slot.
+// gog's image urls carry {formatter} placeholders; the plain url is already fine for our card slot
 fn normalize_image_url(raw: &str) -> String {
     raw.replace("{formatter}", "").replace(".{ext}", ".jpg")
 }
@@ -1094,3 +1223,5 @@ fn extract_windows_reqs(v: &serde_json::Value) -> Vec<serde_json::Value> {
         })
         .collect()
 }
+
+// TODO hide dlcs from the store cards, they're literally useless but i will do this in a year or something

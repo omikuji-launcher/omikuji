@@ -41,6 +41,9 @@ Item {
         if (root.config["source.kind"] === "epic") {
             base.push({ label: "Epic", kind: "epic", icon: "shield_moon" })
         }
+        if (root.config["source.kind"] === "gog") {
+            base.push({ label: "GOG", kind: "gog", icon: "gog" })
+        }
         return base
     }
     property int currentTabIndex: 0
@@ -118,6 +121,8 @@ Item {
         if (idx >= 0) config = gameModel.begin_edit_game(idx)
     }
 
+    property real viewportHeight: 0
+
     implicitHeight: contentCol.implicitHeight
 
     Column {
@@ -177,6 +182,19 @@ Item {
                 item.refreshConfig = root.refreshConfig
                 item.gameModel = Qt.binding(() => root.gameModel)
                 item.gameId = Qt.binding(() => root.gameId)
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "gog"
+            visible: active
+            source: "../settings/TabGog.qml"
+            onLoaded: {
+                item.config = Qt.binding(() => root.config)
+                item.gameModel = Qt.binding(() => root.gameModel)
+                item.gameId = Qt.binding(() => root.gameId)
+                item.viewportHeight = Qt.binding(() => root.viewportHeight)
             }
         }
     }

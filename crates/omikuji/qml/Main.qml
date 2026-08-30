@@ -1387,6 +1387,7 @@ property real cardZoom: appSettings.cardZoom
         pageComponent: Component {
             GameSettingsPage {
                 gameModel: root.gameModelRef
+                viewportHeight: gameSettingsModal.viewportHeight
                 runnersVersion: root.runnersVersion
                 gameIndex: root.settingsGameIndex
                 envSetsDialog: root.envSetsDialogRef

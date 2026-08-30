@@ -29,12 +29,14 @@ impl DownloadSource for GogdlSource {
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         let gogdl = gogdl_bin()?;
 
-        // ghost-state: if the registry still has this app but files are gone
-        // (user wiped the dir, or a prior install didn't finish), drop the stale entry before re-running gogdl, stops a "Completed" flash over an empty dir
+        // drop stale registry entries whose files are gone, else you get a "Completed" flash over an empty dir
+        let mut live_install = false;
         if let Some(info) = crate::store::gog::find_installed_info(&entry.app_id) {
             let has_marker = info.install_path.exists()
                 && dir_has_info_marker(&info.install_path, &entry.app_id);
-            if !has_marker {
+            if has_marker {
+                live_install = true;
+            } else {
                 tracing::warn!(
                     "stale registry entry for {} (path={} marker_missing) - clearing before install",
                     entry.app_id,
@@ -44,9 +46,10 @@ impl DownloadSource for GogdlSource {
             }
         }
 
-        // without this, gogdl reads its cached manifest and can decide "Nothing to do"
-        // against an empty install dir. fresh install = fresh manifest. fuck you gogdl ngl
-        crate::store::gog::wipe_gogdl_manifest_for(&entry.app_id);
+        // fresh install = fresh manifest, else gogdl says "Nothing to do" over an empty dir. fuck you gogdl ngl
+        if !live_install {
+            crate::store::gog::wipe_gogdl_manifest_for(&entry.app_id);
+        }
 
         if let Err(e) = std::fs::create_dir_all(&entry.install_path) {
             return Err(anyhow!(
@@ -58,8 +61,7 @@ impl DownloadSource for GogdlSource {
         let child = spawn_download(&gogdl, entry).await?;
         run_with_progress(child, entry).await?;
 
-        // heroic treats a clean gogdl exit as the install signal, we do too
-        // resolve_install_root BFS handles games where gogdl unpacks into a folder_name subdir of --path, which happens with names containing ™.
+        // clean gogdl exit is the install signal, same as heroic
         let final_root = resolve_install_root(&entry.install_path, &entry.app_id)
             .unwrap_or_else(|| entry.install_path.clone());
         let bytes = dir_size_bytes(&final_root);
@@ -121,6 +123,17 @@ impl DownloadSource for GogdlSource {
     }
 }
 
+fn dlc_args(dlcs: &[String]) -> Vec<String> {
+    if dlcs.is_empty() {
+        return vec!["--skip-dlcs".to_string()];
+    }
+    vec![
+        "--with-dlcs".to_string(),
+        "--dlcs".to_string(),
+        dlcs.join(","),
+    ]
+}
+
 async fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
     let support_dir = crate::store::gog::gog_dir()
         .join("support")
@@ -143,9 +156,9 @@ async fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Resul
         .arg(&entry.install_path)
         .arg("--support")
         .arg(&support_dir)
-        .arg("--skip-dlcs")
         .arg("--lang")
         .arg("en-US")
+        .args(dlc_args(&entry.dlcs))
         .args(StoreLimits::gog().args())
         .envs(proxy::env_vars().await)
         .stdout(Stdio::piped())
@@ -220,7 +233,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     Ok(())
 }
 
-// called post-install when we couldnt find a goggame-*.info marker, to see where gogdl actually dropped teh game. only logs top leevel + immediate subdirs.
+// post-install fallback to find where gogdl actually dropped the game, logs top level + immediate subdirs
 fn log_dir_listing(dir: &std::path::Path) {
     tracing::debug!(
         "listing {} (diagnostic - no info marker found):",
@@ -282,8 +295,7 @@ pub fn dir_has_info_marker(dir: &std::path::Path, app_id: &str) -> bool {
     false
 }
 
-// gogdl sometimes creates a folder_name subdir inside --path (especially when the path has chars gogdl rewrites, like ™)
-// so the marker can land a few levels deep. BFS up to depth 3, past the two-subfolder cases seen so far
+// gogdl can nest a folder_name subdir inside --path (paths with ™ etc), so BFS to depth 3 for the marker
 fn resolve_install_root(dir: &std::path::Path, app_id: &str) -> Option<std::path::PathBuf> {
     let mut queue: std::collections::VecDeque<(std::path::PathBuf, usize)> =
         std::collections::VecDeque::new();
@@ -310,11 +322,7 @@ pub fn find_game_exe_pub(install_path: &std::path::Path, app_id: &str) -> Option
     find_game_exe(install_path, app_id)
 }
 
-// mirrors heroic storeManagers/gog/library.ts::getExecutable:
-//   1. goggame-{app_id}.info in install root
-//   2. playTasks, isPrimary=true (or first FileTask)
-//   3. workingDir/path
-// falls back to scanning a one-level subdir (gogdl subdir rewrite), then any non-installer .exe as a last resort.
+// mirrors heroic's getExecutable: goggame-{app_id}.info -> playTasks isPrimary -> workingDir/path, then a one-level subdir scan, then any non-installer .exe
 fn find_game_exe(install_path: &std::path::Path, app_id: &str) -> Option<String> {
     let preferred = install_path.join(format!("goggame-{}.info", app_id));
     if preferred.exists()
@@ -422,10 +430,8 @@ fn scan_dir_for_exe(dir: &std::path::Path) -> Option<String> {
         .next()
 }
 
-// gogdl's current progress format:
-//   [gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474,
-//     Running for: 00:01:57, ETA: 00:00:53
-// heroic also handles an older "Downloaded: N MiB / Download\t- N MiB" format, kept here so we dont regress when gogld updates.
+// [gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474, Running for: .., ETA: ..
+// the older "Downloaded: N MiB / Downlaod\t- N MiB" form stays so we dont regress when gogld updates
 fn parse_into(
     line: &str,
     pct: &mut f64,

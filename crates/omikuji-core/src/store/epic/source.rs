@@ -1,5 +1,4 @@
-// epic games installs via the legendary cli
-// https://github.com/derrod/legendary
+// epic installs via the legendary cli, https://github.com/derrod/legendary
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
@@ -88,39 +87,36 @@ impl DownloadSource for LegendarySource {
             ));
         }
 
-        let mut cmd = Command::new(&legendary);
-        cmd.arg("install")
-            .arg(&entry.app_id)
-            .arg("-y")
-            .arg("--skip-sdl")
-            .arg("--skip-dlcs")
-            .arg("--platform")
-            .arg("Windows")
-            .arg("--base-path")
-            .arg(&base_path_str)
-            .arg("--game-folder")
-            .arg(&game_folder)
-            .args(StoreLimits::epic().args())
-            .envs(proxy::env_vars().await)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .process_group(0)
-            .kill_on_drop(true);
+        run_install(
+            &legendary,
+            &entry.app_id,
+            &base_path_str,
+            &game_folder,
+            entry,
+        )
+        .await?;
 
-        let child = cmd
-            .spawn()
-            .map_err(|e| anyhow!("failed to spawn legendary: {}", e))?;
-
-        run_with_progress(child, entry).await?;
-
-        // legendary occasionally exits 0 without writing installed.json (stale
-        // lock files, interrupted prior state). without this guard the completion handler tries to import a game that isnt really installed.
+        // legendary can exit 0 without writing installed.json, and then completion imports a game that isnt installed
         if crate::store::epic::find_installed_info(&entry.app_id).is_none() {
             return Err(anyhow!(
                 "legendary exited cleanly but installed.json has no record for {} \u{2014} try cancelling and starting again",
                 entry.app_id
             ));
         }
+
+        let base_label = entry.display_name.clone();
+        for (i, dlc) in entry.dlcs.iter().enumerate() {
+            crate::downloads::set_display_name(
+                &entry.id,
+                &format!("{} · DLC {}/{}", base_label, i + 1, entry.dlcs.len()),
+            );
+            if let Err(e) = run_install(&legendary, dlc, &base_path_str, &game_folder, entry).await
+            {
+                crate::downloads::set_display_name(&entry.id, &base_label);
+                return Err(anyhow!("dlc {} failed to install: {}", dlc, e));
+            }
+        }
+        crate::downloads::set_display_name(&entry.id, &base_label);
 
         Ok(())
     }
@@ -150,7 +146,7 @@ impl DownloadSource for LegendarySource {
     async fn import_existing(&self, entry: &DownloadEntry) -> Result<()> {
         let legendary = require_legendary()?;
 
-        // with this, importing a game thats in a different path from legendary's own installed.json one lets us import it properly with the new path ig
+        // lets a game living somewhere else than installed.json says stilll import at the new path ig
         if crate::store::epic::find_installed_info(&entry.app_id).is_some() {
             let _ = Command::new(&legendary)
                 .arg("-y")
@@ -194,6 +190,39 @@ impl DownloadSource for LegendarySource {
 
         Ok(())
     }
+}
+
+async fn run_install(
+    legendary: &std::path::Path,
+    app_name: &str,
+    base_path: &str,
+    game_folder: &str,
+    entry: &DownloadEntry,
+) -> Result<()> {
+    let mut cmd = Command::new(legendary);
+    cmd.arg("install")
+        .arg(app_name)
+        .arg("-y")
+        .arg("--skip-sdl")
+        .arg("--skip-dlcs")
+        .arg("--platform")
+        .arg("Windows")
+        .arg("--base-path")
+        .arg(base_path)
+        .arg("--game-folder")
+        .arg(game_folder)
+        .args(StoreLimits::epic().args())
+        .envs(proxy::env_vars().await)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .process_group(0)
+        .kill_on_drop(true);
+
+    let child = cmd
+        .spawn()
+        .map_err(|e| anyhow!("failed to spawn legendary: {}", e))?;
+
+    run_with_progress(child, entry).await
 }
 
 async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
@@ -275,10 +304,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     Ok(())
 }
 
-// legendary's progress output looks like:
-//   [DLManager][Progress] - Downloaded: 152 MiB, Written: 128 MiB
-//   [DLManager][Progress] + Download   - 23.45 MiB/s (raw) / 19.23 MiB/s (decompressed)
-//   [DLManager][Progress] - Completed: 1234/5678 chunks (21.74%)
+// [DLManager][Progress] - Downloaded: 152 MiB, Written: 128 MiB / + Download - 23.45 MiB/s (raw) / - Completed: 1234/5678 chunks (21.74%)
 fn parse_into(
     line: &str,
     pct: &mut f64,
@@ -315,7 +341,7 @@ fn parse_into(
     changed
 }
 
-// "Reusable size: A MiB (chunks) / B MiB (unchanged / skipped)", sum both parts, they're all already-done work used as the base offset for resume
+// "Reusable size: A MiB (chunks) / B MiB (unchanged / skipped)", both parts are done work, summed as the resume base offset
 fn parse_reusable(line: &str, reusable_bytes: &mut u64) {
     let marker = "Reusable size:";
     let Some(idx) = line.find(marker) else { return };

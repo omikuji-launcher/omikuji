@@ -38,6 +38,11 @@ DialogCard {
     property string sizeError: ""
     property string _sizeRequestId: ""
 
+    property var dlcs: []
+    property var selectedDlcs: []
+    property var lockedDlcs: []
+    readonly property bool addingDlcsOnly: selectedDlcs.some(d => lockedDlcs.indexOf(d) === -1)
+
     property var gameDetails: null
     property string _detailsRequestId: ""
     property bool detailsExpanded: false
@@ -138,6 +143,7 @@ DialogCard {
                 root.sizeError = ""
                 root.downloadBytes = parseInt(p.download) || 0
                 root.installBytes = parseInt(p.install) || 0
+                try { root.dlcs = JSON.parse(p.dlcs || "[]") } catch (e) { root.dlcs = [] }
             }
         }
         function onGame_details_result(requestId, payload) {
@@ -164,6 +170,9 @@ DialogCard {
         existingInstallBytes = 0
         hasResumeState = false
         _directUntracked = false
+        dlcs = []
+        selectedDlcs = []
+        lockedDlcs = []
         gameDetails = null
         _detailsRequestId = ""
         detailsExpanded = false
@@ -177,6 +186,13 @@ DialogCard {
             let did = "gogd-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8)
             _detailsRequestId = did
             gameModel.fetch_gog_game_details(did, gameData.appName)
+        }
+        if (gameData && gameData.appName && gameModel && gameData.isInstalled === true) {
+            try {
+                let owned = JSON.parse(gameModel.installed_dlcs(gameData.appName) || "[]")
+                lockedDlcs = owned.map(d => d.id)
+                selectedDlcs = lockedDlcs.slice()
+            } catch (e) { lockedDlcs = []; selectedDlcs = [] }
         }
         let gogGameDir = gameData && gameData.installPath ? gameData.installPath : ""
         if (gameData && gameData.isInstalled === true && gogGameDir !== "") {
@@ -357,6 +373,33 @@ DialogCard {
                 }
             }
         }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Theme.space.sm
+            visible: root.dlcs.length > 0
+
+            Text {
+                text: qsTr("DLC")
+                color: Theme.textSubtle
+                font.pixelSize: Theme.type.label.size
+                font.weight: Font.DemiBold
+            }
+
+            DlcPicker {
+                Layout.fillWidth: true
+                dlcs: root.dlcs
+                checkedIds: root.selectedDlcs
+                lockedIds: root.lockedDlcs
+                onToggleRequested: (id) => {
+                    let next = root.selectedDlcs.slice()
+                    let at = next.indexOf(id)
+                    if (at === -1) next.push(id)
+                    else next.splice(at, 1)
+                    root.selectedDlcs = next
+                }
+            }
+        }
     }
 
     Component {
@@ -387,6 +430,7 @@ DialogCard {
         M3Button {
             text: {
                 if (root.gameData && root.gameData.isInstalled) {
+                    if (root.addingDlcsOnly) return qsTr("Install DLC")
                     return root.gameData.hasLibraryEntry ? qsTr("Repair") : qsTr("Import")
                 }
                 if (root.hasResumeState) return qsTr("Resume")
@@ -405,7 +449,8 @@ DialogCard {
                     root.prefixPath,
                     runner,
                     root.isImportMode,
-                    root.importExisting
+                    root.importExisting,
+                    JSON.stringify(root.selectedDlcs)
                 )
                 if (id && id.length > 0) {
                     root.installEnqueued(id)

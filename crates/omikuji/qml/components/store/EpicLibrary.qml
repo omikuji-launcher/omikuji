@@ -110,12 +110,11 @@ Item {
                         return "check_circle"
                     }
                     visible: !epicCard.isDownloading
-                    primary: epicCard.cardState !== "imported"
                     onClicked: {
-                        if (epicCard.cardState === "uninstalled") {
-                            root.installRequested(epicCard.index)
-                        } else if (epicCard.cardState === "needs-import") {
+                        if (epicCard.cardState === "needs-import") {
                             root.importRequested(epicCard.index)
+                        } else {
+                            root.installRequested(epicCard.index)
                         }
                     }
                 }
@@ -170,24 +169,10 @@ Item {
         visible: root.isLoggedIn && !root.isRefreshing && cardGrid.count === 0
         z: 90
 
-        Column {
-            anchors.centerIn: parent
-            spacing: 10
-
-            SvgIcon {
-                anchors.horizontalCenter: parent.horizontalCenter
-                name: "shield_moon"
-                size: 48
-                color: Theme.textFaint
-            }
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("No games in this store")
-                color: Theme.textMuted
-                font.pixelSize: Theme.type.title.size
-                font.weight: Font.Medium
-            }
+        EmptyState {
+            anchors.fill: parent
+            icon: "shield_moon"
+            text: qsTr("No games in this store")
         }
     }
 
