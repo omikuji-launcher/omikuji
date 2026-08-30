@@ -150,11 +150,10 @@ Window {
                         anchors.centerIn: parent
                         spacing: 8
 
-                        SvgIcon {
+                        M3Checkbox {
                             anchors.verticalCenter: parent.verticalCenter
-                            name: logWindow.autoScroll ? "check_box" : "check_box_outline_blank"
-                            size: 18
-                            color: logWindow.autoScroll ? Theme.accent : Theme.textMuted
+                            boxSize: 16
+                            checked: logWindow.autoScroll
                         }
 
                         Text {

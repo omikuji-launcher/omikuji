@@ -234,11 +234,9 @@ DialogCard {
                         anchors.rightMargin: 6
                         spacing: Theme.space.md
 
-                        SvgIcon {
+                        M3Checkbox {
                             visible: !root.manageOnly
-                            name: setRow.selected ? "check_box" : "check_box_outline_blank"
-                            size: 20
-                            color: setRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
+                            checked: setRow.selected
                         }
 
                         Text {

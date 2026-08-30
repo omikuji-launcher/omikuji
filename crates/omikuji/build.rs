@@ -410,6 +410,7 @@ fn main() {
         "qml/components/controls/LabeledSwitch.qml",
         "qml/components/primitives/LoadingDots.qml",
         "qml/components/controls/M3Button.qml",
+        "qml/components/controls/M3Checkbox.qml",
         "qml/components/controls/M3Dropdown.qml",
         "qml/components/controls/NoteChip.qml",
         "qml/components/controls/M3FileField.qml",

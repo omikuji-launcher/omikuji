@@ -137,11 +137,9 @@ DialogCard {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: Theme.space.md
 
-                            SvgIcon {
+                            M3Checkbox {
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: tagRow.selected ? "check_box" : "check_box_outline_blank"
-                                size: 20
-                                color: tagRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
+                                checked: tagRow.selected
                             }
 
                             SvgIcon {

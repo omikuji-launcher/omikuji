@@ -71,20 +71,29 @@ DialogCard {
                 width: parent.width
                 height: 40
 
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.radius.sm
+                    color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
+                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                }
+
                 Row {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
                     spacing: Theme.space.md
 
-                    SvgIcon {
+                    M3Checkbox {
+                        id: rootCheck
                         anchors.verticalCenter: parent.verticalCenter
-                        name: rootRow.selected ? "check_box" : "check_box_outline_blank"
-                        size: 20
-                        color: rootRow.selected ? Theme.accent : Theme.alpha(Theme.text, 0.55)
+                        checked: rootRow.selected
                     }
 
                     Column {
-                        width: parent.width - 20 - Theme.space.md
+                        width: parent.width - rootCheck.width - Theme.space.md
                         spacing: 1
 
                         Text {
@@ -106,7 +115,9 @@ DialogCard {
                 }
 
                 MouseArea {
+                    id: rowArea
                     anchors.fill: parent
+                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         var c = Object.assign({}, root.checkedPaths)
