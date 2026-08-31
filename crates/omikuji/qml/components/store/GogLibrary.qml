@@ -108,7 +108,7 @@ Item {
                     icon: {
                         if (gogCard.cardState === "uninstalled") return "add"
                         if (gogCard.cardState === "needs-import") return "download"
-                        return "check_circle"
+                        return "bookmark_check"
                     }
                     visible: !gogCard.isDownloading
                     onClicked: {

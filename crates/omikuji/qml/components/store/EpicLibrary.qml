@@ -107,7 +107,7 @@ Item {
                     icon: {
                         if (epicCard.cardState === "uninstalled") return "add"
                         if (epicCard.cardState === "needs-import") return "download"
-                        return "check_circle"
+                        return "bookmark_check"
                     }
                     visible: !epicCard.isDownloading
                     onClicked: {
