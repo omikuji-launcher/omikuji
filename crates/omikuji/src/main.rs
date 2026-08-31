@@ -81,7 +81,7 @@ async fn main() {
         unsafe { omikuji_install_translator(lang.as_ptr()) };
     }
 
-    if let Ok(name) = CString::new("omikuji") {
+    if let Ok(name) = CString::new("io.github.reakjra.omikuji") {
         unsafe { omikuji_set_desktop_file_name(name.as_ptr()) };
     }
 
