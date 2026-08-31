@@ -355,6 +355,16 @@ Item {
                 onTextEdited: (t) => root.updateField("launch.alongside", t)
             }
 
+            M3TextField {
+                label: qsTr("Arguments")
+                placeholder: "-b -a -l -L -s"
+                text: root.config["launch.alongside_args"] || ""
+                width: parent.width
+                visible: alongsideField.supported && alongsideField.text !== ""
+                gameModel: root.gameModel
+                onTextEdited: (t) => root.updateField("launch.alongside_args", t)
+            }
+
             SettingsRow {
                 label: qsTr("Start It First")
                 description: qsTr("run it before the game instead of after")

@@ -226,6 +226,8 @@ pub struct LaunchConfig {
     #[serde(default)]
     pub alongside: String,
     #[serde(default)]
+    pub alongside_args: Vec<String>,
+    #[serde(default)]
     pub alongside_when: AlongsideWhen,
     #[serde(default)]
     pub alongside_delay: u32,

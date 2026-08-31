@@ -954,6 +954,7 @@ game_fields! {
     "launch.pre_launch_script" => str, launch.pre_launch_script,
     "launch.post_exit_script" => str, launch.post_exit_script,
     "launch.alongside" => str, launch.alongside,
+    "launch.alongside_args" => args, launch.alongside_args,
     "launch.alongside_when" => choice, launch.alongside_when,
     "launch.alongside_delay" => int, launch.alongside_delay,
     "launch.env" => json, launch.env,

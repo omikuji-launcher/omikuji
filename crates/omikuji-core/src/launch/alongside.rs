@@ -15,11 +15,7 @@ pub fn wine_launcher(game: &Game, exe: &Path, args: &[String]) -> Result<Option<
         return Ok(None);
     };
 
-    let mut game_line = start_line(&exe.to_string_lossy(), None);
-    if !args.is_empty() {
-        game_line.push(' ');
-        game_line.push_str(&escape(&args.join(" ")));
-    }
+    let game_line = start_line(&exe.to_string_lossy(), args, None);
 
     let path = script_path(game);
     write_script(&path, game, game_line, &companion)?;
@@ -37,7 +33,7 @@ pub fn epic_launcher(game: &Game, install_path: &Path, exe: &Path) -> Result<Opt
     };
 
     let working_dir = exe.parent().unwrap_or(install_path).to_string_lossy();
-    let mut game_line = start_line(&exe.to_string_lossy(), Some(&working_dir));
+    let mut game_line = start_line(&exe.to_string_lossy(), &[], Some(&working_dir));
     game_line.push_str(" %*");
 
     write_script(
@@ -50,7 +46,7 @@ pub fn epic_launcher(game: &Game, install_path: &Path, exe: &Path) -> Result<Opt
 }
 
 fn write_script(path: &Path, game: &Game, game_line: String, companion: &str) -> Result<()> {
-    let companion_line = start_line(companion, None);
+    let companion_line = start_line(companion, &game.launch.alongside_args, None);
     let wait = wait_line(game.launch.alongside_delay);
 
     let ordered = match game.launch.alongside_when {
@@ -70,9 +66,13 @@ fn write_script(path: &Path, game: &Game, game_line: String, companion: &str) ->
 }
 
 pub fn start_host(game: &Game, env: &HashMap<String, String>) {
-    let Some(target) = companion_of(game) else {
+    let Some(mut target) = companion_of(game) else {
         return;
     };
+    if !game.launch.alongside_args.is_empty() {
+        target.push(' ');
+        target.push_str(&game.launch.alongside_args.join(" "));
+    }
 
     let delay = match game.launch.alongside_when {
         AlongsideWhen::Before => 0,
@@ -103,15 +103,20 @@ fn script_path(game: &Game) -> PathBuf {
         .join(format!("{}.bat", game.metadata.id))
 }
 
-fn start_line(unix_path: &str, working_dir: Option<&str>) -> String {
-    match working_dir {
+fn start_line(unix_path: &str, args: &[String], working_dir: Option<&str>) -> String {
+    let mut line = match working_dir {
         Some(dir) => format!(
             "start \"\" /b /d \"z:{}\" \"z:{}\"",
             escape(dir),
             escape(unix_path)
         ),
         None => format!("start \"\" /b \"z:{}\"", escape(unix_path)),
+    };
+    if !args.is_empty() {
+        line.push(' ');
+        line.push_str(&escape(&args.join(" ")));
     }
+    line
 }
 
 fn wait_line(delay: u32) -> String {
