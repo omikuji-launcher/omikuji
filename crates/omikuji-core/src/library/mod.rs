@@ -182,6 +182,35 @@ impl Default for WineConfig {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum AlongsideWhen {
+    Before,
+    #[default]
+    After,
+}
+
+impl AlongsideWhen {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Before => "before",
+            Self::After => "after",
+        }
+    }
+}
+
+impl std::str::FromStr for AlongsideWhen {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "before" => Ok(Self::Before),
+            "after" => Ok(Self::After),
+            _ => Err(()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct LaunchConfig {
     #[serde(default)]
@@ -194,6 +223,12 @@ pub struct LaunchConfig {
     pub pre_launch_script: String,
     #[serde(default)]
     pub post_exit_script: String,
+    #[serde(default)]
+    pub alongside: String,
+    #[serde(default)]
+    pub alongside_when: AlongsideWhen,
+    #[serde(default)]
+    pub alongside_delay: u32,
     #[serde(default)]
     pub env: HashMap<String, String>,
     #[serde(default)]

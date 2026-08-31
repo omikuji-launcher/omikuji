@@ -7,6 +7,8 @@ use crate::library::Game;
 
 use crate::template_vars::TemplateVars;
 
+pub mod alongside;
+
 #[derive(Debug)]
 pub struct ComponentMissing {
     pub name: String,
@@ -207,13 +209,24 @@ fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
         let mut cmd = vec![
             legendary.to_string_lossy().to_string(),
             "launch".to_string(),
-            app_id,
+            app_id.clone(),
             "--wine".to_string(),
             wine_exe.to_string_lossy().to_string(),
             "--wine-prefix".to_string(),
             prefix.to_string_lossy().to_string(),
             "--skip-version-check".to_string(),
         ];
+
+        if let Some(info) = crate::store::epic::find_installed_info(&app_id) {
+            match alongside::epic_launcher(game, &info.install_path, &info.executable) {
+                Ok(Some(script)) => {
+                    cmd.push("--override-exe".to_string());
+                    cmd.push(script);
+                }
+                Ok(None) => {}
+                Err(e) => anyhow::bail!("could not write the alongside launcher: {}", e),
+            }
+        }
 
         if !game.launch.args.is_empty() {
             cmd.push("--extra-args".to_string());
@@ -222,11 +235,17 @@ fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
         cmd
     } else {
         let mut cmd = vec![wine_exe.to_string_lossy().to_string()];
-        if !game.metadata.exe.as_os_str().is_empty() {
-            cmd.push(game.metadata.exe.to_string_lossy().to_string());
-        }
-        for arg in &game.launch.args {
-            cmd.push(arg.clone());
+        match alongside::wine_launcher(game, &game.metadata.exe, &game.launch.args) {
+            Ok(Some(script)) => cmd.push(script.to_string_lossy().to_string()),
+            Ok(None) => {
+                if !game.metadata.exe.as_os_str().is_empty() {
+                    cmd.push(game.metadata.exe.to_string_lossy().to_string());
+                }
+                for arg in &game.launch.args {
+                    cmd.push(arg.clone());
+                }
+            }
+            Err(e) => anyhow::bail!("could not write the alongside launcher: {}", e),
         }
         cmd
     };

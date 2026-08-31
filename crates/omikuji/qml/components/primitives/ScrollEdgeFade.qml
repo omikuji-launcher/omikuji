@@ -11,6 +11,7 @@ Item {
     property real extent: Theme.space.xxl
     property bool fade: true
     property bool chevrons: true
+    property real chevronOffset: 0
 
     readonly property real _above: root.flickable ? root.flickable.contentY - root.flickable.originY : 0
     readonly property real _below: root.flickable ? root.flickable.contentHeight - root.flickable.height - root._above : 0
@@ -28,7 +29,7 @@ Item {
         opacity: root._ramp(root._above)
         gradient: Gradient {
             GradientStop { position: 0.0; color: root.surfaceColor }
-            GradientStop { position: 0.45; color: Theme.alpha(root.surfaceColor, 0.72) }
+            GradientStop { position: 0.45; color: Theme.alpha(root.surfaceColor, 0.6) }
             GradientStop { position: 1.0; color: Theme.alpha(root.surfaceColor, 0) }
         }
         Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
@@ -43,7 +44,7 @@ Item {
         opacity: root._ramp(root._below)
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.alpha(root.surfaceColor, 0) }
-            GradientStop { position: 0.55; color: Theme.alpha(root.surfaceColor, 0.72) }
+            GradientStop { position: 0.55; color: Theme.alpha(root.surfaceColor, 0.6) }
             GradientStop { position: 1.0; color: root.surfaceColor }
         }
         Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
@@ -53,6 +54,7 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: Theme.space.xs
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: root.chevronOffset
         visible: root.chevrons
         name: "chevron_left"
         size: 18
@@ -66,6 +68,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Theme.space.xs
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: root.chevronOffset
         visible: root.chevrons
         name: "chevron_left"
         size: 18

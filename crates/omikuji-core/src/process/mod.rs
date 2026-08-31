@@ -6,6 +6,8 @@ use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+pub const GAME_ID_VAR: &str = "OMIKUJI_GAME_ID";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProcessId(pub u64);
 
@@ -126,7 +128,7 @@ impl ProcessManager {
         cmd.current_dir(&config.working_dir);
         cmd.env_clear();
         cmd.envs(&config.env);
-        cmd.env("OMIKUJI_GAME_ID", &config.game_id);
+        cmd.env(GAME_ID_VAR, &config.game_id);
 
         cmd.stdout(Stdio::piped());
         cmd.stderr(Stdio::piped());
@@ -144,6 +146,10 @@ impl ProcessManager {
                         .map_err(|e| std::io::Error::from_raw_os_error(e as i32))
                 });
             }
+        }
+
+        if matches!(game.runner.runner_type.as_str(), "native" | "flatpak") {
+            crate::launch::alongside::start_host(&game, &config.env);
         }
 
         let mut child = cmd.spawn()?;
@@ -695,7 +701,8 @@ fn session_pids(sid: u32) -> Vec<u32> {
 
 #[cfg(target_os = "linux")]
 fn marked_processes() -> Vec<(u32, String)> {
-    const KEY: &[u8] = b"OMIKUJI_GAME_ID=";
+    let key = format!("{GAME_ID_VAR}=");
+    let key = key.as_bytes();
     let my_pid = std::process::id();
     let mut found = Vec::new();
 
@@ -720,7 +727,7 @@ fn marked_processes() -> Vec<(u32, String)> {
         };
         if let Some(id) = environ
             .split(|b| *b == 0)
-            .find_map(|var| var.strip_prefix(KEY))
+            .find_map(|var| var.strip_prefix(key))
         {
             found.push((pid, String::from_utf8_lossy(id).into_owned()));
         }

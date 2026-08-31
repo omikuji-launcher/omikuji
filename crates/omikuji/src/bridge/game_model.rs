@@ -831,6 +831,12 @@ macro_rules! field_get {
             QVariant::from(&QString::from(&*args_to_text(&$v))),
         );
     };
+    (choice, $m:ident, $key:literal, $v:expr) => {
+        $m.insert(
+            QString::from($key),
+            QVariant::from(&QString::from($v.as_str())),
+        );
+    };
 }
 
 macro_rules! field_set {
@@ -870,6 +876,12 @@ macro_rules! field_set {
     (args, $game:ident, $key:ident, $value:ident, $lit:literal, $($path:ident).+) => {
         if $key == $lit {
             $game.$($path).+ = args_from_text($value);
+            return true;
+        }
+    };
+    (choice, $game:ident, $key:ident, $value:ident, $lit:literal, $($path:ident).+) => {
+        if $key == $lit {
+            $game.$($path).+ = $value.parse().unwrap_or_default();
             return true;
         }
     };
@@ -941,6 +953,9 @@ game_fields! {
     "launch.command_prefix" => str, launch.command_prefix,
     "launch.pre_launch_script" => str, launch.pre_launch_script,
     "launch.post_exit_script" => str, launch.post_exit_script,
+    "launch.alongside" => str, launch.alongside,
+    "launch.alongside_when" => choice, launch.alongside_when,
+    "launch.alongside_delay" => int, launch.alongside_delay,
     "launch.env" => json, launch.env,
     "launch.env_sets" => json, launch.env_sets,
 

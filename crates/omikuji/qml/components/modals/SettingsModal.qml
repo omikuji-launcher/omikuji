@@ -225,6 +225,12 @@ Item {
                     sourceComponent: root.pageComponent
                 }
             }
+
+            ScrollEdgeFade {
+                anchors.fill: contentFlick
+                flickable: contentFlick
+                chevronOffset: -75
+            }
         }
 
         ResizeGrips {
