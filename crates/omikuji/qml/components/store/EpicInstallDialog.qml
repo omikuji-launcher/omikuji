@@ -290,6 +290,18 @@ DialogCard {
             }
         }
 
+        ExistingFilesNote {
+            Layout.fillWidth: true
+            bytes: root.existingInstallBytes
+            hasResume: root.hasResumeState
+        }
+
+        NoteChip {
+            Layout.fillWidth: true
+            visible: root.isImportMode
+            text: qsTr("Legendary allows only one install. To reinstall elsewhere, delete the game files first.")
+        }
+
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
@@ -312,12 +324,6 @@ DialogCard {
             Text {
                 text: {
                     let parts = []
-                    if (root.existingInstallBytes > 0 || root.hasResumeState) {
-                        let label = qsTr("Found existing files")
-                        if (root.existingInstallBytes > 0) label += " · " + Format.formatBytesShort(root.existingInstallBytes)
-                        if (root.hasResumeState) label += " · " + qsTr("resume state")
-                        parts.push(label)
-                    }
                     if (!root.isImportMode && !root.hasUntrackedInstall) {
                         if (root.downloadBytes === -2) {
                             parts.push(qsTr("Calculating size…"))
@@ -335,24 +341,12 @@ DialogCard {
                     }
                     return parts.join(" · ")
                 }
-                color: (root.existingInstallBytes > 0 || root.hasResumeState)
-                    ? Theme.accent
-                    : (root.hasEnoughSpace() ? Theme.textFaint : "#e06060")
+                color: root.hasEnoughSpace() ? Theme.textFaint : Theme.error
                 font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
                 visible: text !== ""
-            }
-
-            Text {
-                text: qsTr("Epic Games allows only one install. To reinstall elsewhere, delete the game files first.")
-                color: Theme.accent
-                font.pixelSize: Theme.type.micro.size
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-                Layout.leftMargin: 4
-                visible: root.isImportMode
             }
         }
 

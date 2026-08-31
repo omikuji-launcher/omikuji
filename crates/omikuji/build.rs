@@ -393,6 +393,7 @@ fn main() {
         "qml/components/store/GachaLibrary.qml",
         "qml/components/store/GogLibrary.qml",
         "qml/components/store/EpicController.qml",
+        "qml/components/store/ExistingFilesNote.qml",
         "qml/components/store/GachaController.qml",
         "qml/components/store/GogController.qml",
         "qml/components/store/StorePanel.qml",
