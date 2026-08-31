@@ -131,41 +131,8 @@ fn pipe_lines<R: std::io::Read + Send + 'static>(reader: R, tx: std::sync::mpsc:
 }
 
 fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
-    // steam-imported games need the prefix rewritten to compatdata/{app_id}/pfx;
-    // we must not create our own omikuji prefix dir becuase steam owns the lifetime of that one.
-    // also rewrite wine.version from "steam:{app_id}" to "steam:{proton_dir_name}" using the version stamp in compatdata/version so PROTONPATH resolves correctly.
-    let mut effective: Game;
-    let g: &Game = if game.source.kind == "steam" && !game.source.app_id.is_empty() {
-        let pfx = crate::store::steam::local::find_steam_prefix(&game.source.app_id).ok_or_else(
-            || {
-                anyhow!(
-                    "no Steam prefix for this game yet — launch it through Steam \
-                 at least once so Steam creates compatdata/{}/pfx",
-                    game.source.app_id
-                )
-            },
-        )?;
-
-        let stamped = crate::store::steam::local::find_steam_proton_version(&game.source.app_id);
-        let install = crate::store::steam::local::resolve_or_default_proton(stamped.as_deref())
-            .ok_or_else(|| {
-                anyhow!(
-                    "no Proton install found — install one via Steam or drop \
-                 a GE-Proton build in ~/.local/share/Steam/compatibilitytools.d/"
-                )
-            })?;
-        let dir_name = install
-            .file_name()
-            .map(|s| s.to_string_lossy().into_owned())
-            .unwrap_or_else(|| "Proton".to_string());
-
-        effective = game.clone();
-        effective.wine.version = format!("steam:{}", dir_name);
-        effective.wine.prefix = pfx.to_string_lossy().into_owned();
-        &effective
-    } else {
-        game
-    };
+    let effective = crate::store::steam::local::with_steam_wine(game)?;
+    let g: &Game = effective.as_ref().unwrap_or(game);
 
     let variant = WineVariant::from_version(&g.wine.version);
     let wine_exe = resolve_wine_exe(variant, &g.wine.version)?;

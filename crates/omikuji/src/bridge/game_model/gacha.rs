@@ -170,6 +170,7 @@ impl super::qobject::GameModel {
         install_path: &QString,
         runner_version: &QString,
         prefix_path: &QString,
+        alongside: bool,
     ) -> QString {
         use omikuji_core::library::{
             GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
@@ -239,6 +240,10 @@ impl super::qobject::GameModel {
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };
+        let companion = alongside.then(|| manifest.alongside.clone()).flatten();
+        if let Some(spec) = &companion {
+            spec.apply_to(&mut game.launch);
+        }
         game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
@@ -250,6 +255,15 @@ impl super::qobject::GameModel {
         if !tools.is_empty() {
             tokio::spawn(async move {
                 let _ = omikuji_core::components::ensure(&tools).await;
+            });
+        }
+
+        if let Some(spec) = companion {
+            tokio::spawn(async move {
+                match spec.install().await {
+                    Ok(path) => tracing::info!("fetched {} to {}", spec.name, path.display()),
+                    Err(e) => tracing::error!("couldn't fetch {}: {:#}", spec.name, e),
+                }
             });
         }
 

@@ -343,10 +343,8 @@ Item {
             M3FileField {
                 id: alongsideField
 
-                readonly property bool inPrefix: !["steam", "flatpak", "native"].includes(root.config["runner.type"] || "")
-                readonly property bool supported: (root.config["runner.type"] || "") !== "steam"
+                readonly property bool inPrefix: !["flatpak", "native"].includes(root.config["runner.type"] || "")
 
-                visible: supported
                 label: qsTr("Run Alongside")
                 placeholder: inPrefix ? qsTr("an .exe to run in the prefix while the game runs") : qsTr("a command to run while the game runs")
                 text: root.config["launch.alongside"] || ""
@@ -360,7 +358,7 @@ Item {
                 placeholder: "-b -a -l -L -s"
                 text: root.config["launch.alongside_args"] || ""
                 width: parent.width
-                visible: alongsideField.supported && alongsideField.text !== ""
+                visible: alongsideField.text !== ""
                 gameModel: root.gameModel
                 onTextEdited: (t) => root.updateField("launch.alongside_args", t)
             }
@@ -369,7 +367,7 @@ Item {
                 label: qsTr("Start It First")
                 description: qsTr("run it before the game instead of after")
                 width: parent.width
-                visible: alongsideField.supported && alongsideField.text !== ""
+                visible: alongsideField.text !== ""
                 M3Switch {
                     checked: (root.config["launch.alongside_when"] || "after") === "before"
                     onToggled: (val) => root.updateField("launch.alongside_when", val ? "before" : "after")
@@ -377,12 +375,10 @@ Item {
             }
 
             SettingsRow {
-                readonly property bool gapIsControllable: alongsideField.inPrefix || (root.config["launch.alongside_when"] || "after") === "after"
-
                 label: qsTr("Delay")
                 description: qsTr("seconds to wait between the two, for whichever starts first")
                 width: parent.width
-                visible: alongsideField.supported && alongsideField.text !== "" && gapIsControllable
+                visible: alongsideField.text !== ""
                 contentRightMargin: 74
                 M3SpinBox {
                     from: 0

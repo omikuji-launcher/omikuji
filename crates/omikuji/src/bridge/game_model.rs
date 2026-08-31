@@ -555,6 +555,7 @@ pub mod qobject {
             install_path: &QString,
             runner_version: &QString,
             prefix_path: &QString,
+            alongside: bool,
         ) -> QString;
 
         #[qinvokable]
@@ -1258,6 +1259,7 @@ impl qobject::GameModel {
 
         game.metadata.name = game.metadata.name.trim().to_string();
         game.metadata.added = rfc3339_now();
+        game.launch.prune_alongside();
 
         let game_id = game.metadata.id.clone();
         let game_name = game.metadata.name.clone();
@@ -1310,10 +1312,11 @@ impl qobject::GameModel {
 
     fn commit_edit_game(mut self: Pin<&mut Self>, game_id: &QString) -> bool {
         let id = game_id.to_string();
-        let Some(draft) = self.as_mut().rust_mut().get_mut().draft.take() else {
+        let Some(mut draft) = self.as_mut().rust_mut().get_mut().draft.take() else {
             tracing::warn!("commit_edit_game: no draft");
             return false;
         };
+        draft.launch.prune_alongside();
         let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == id) else {
             tracing::warn!("commit_edit_game: game id '{}' not found", id);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);

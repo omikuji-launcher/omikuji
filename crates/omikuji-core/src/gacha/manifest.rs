@@ -39,6 +39,8 @@ pub struct GachaManifest {
     #[serde(default)]
     pub telemetry_block: Vec<String>,
     #[serde(default)]
+    pub alongside: Option<ManifestAlongside>,
+    #[serde(default)]
     pub env: HashMap<String, String>,
 
     #[serde(default)]
@@ -53,6 +55,61 @@ pub struct GachaManifest {
 
 fn default_true() -> bool {
     true
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ManifestAlongside {
+    pub name: String,
+    #[serde(default)]
+    pub label: String,
+    pub repo: String,
+    pub exe: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub when: crate::library::AlongsideWhen,
+    #[serde(default)]
+    pub delay: u32,
+}
+
+impl ManifestAlongside {
+    pub fn label(&self) -> &str {
+        if self.label.is_empty() {
+            &self.name
+        } else {
+            &self.label
+        }
+    }
+
+    pub fn install_dir(&self) -> std::path::PathBuf {
+        crate::tools_dir().join(&self.name)
+    }
+
+    pub fn exe_path(&self) -> std::path::PathBuf {
+        self.install_dir().join(&self.exe)
+    }
+
+    pub fn apply_to(&self, launch: &mut crate::library::LaunchConfig) {
+        launch.alongside = self.exe_path().to_string_lossy().into_owned();
+        launch.alongside_args = self.args.clone();
+        launch.alongside_when = self.when;
+        launch.alongside_delay = self.delay;
+    }
+
+    pub async fn install(&self) -> anyhow::Result<std::path::PathBuf> {
+        let exe = self.exe_path();
+        if exe.is_file() {
+            return Ok(exe);
+        }
+        let link = crate::archive_source::RepoLink::parse(&self.repo)
+            .ok_or_else(|| anyhow::anyhow!("unusable repo link: {}", self.repo))?;
+        crate::archive_source::install_asset(
+            &link.releases_api_url(),
+            &self.exe,
+            &self.install_dir(),
+        )
+        .await
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

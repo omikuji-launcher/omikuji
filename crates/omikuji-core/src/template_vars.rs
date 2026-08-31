@@ -32,6 +32,7 @@ fn root_paths() -> Vec<(String, String)> {
         ("components_path".to_string(), p(crate::components_dir())),
         ("runners_path".to_string(), p(crate::runners_dir())),
         ("layers_path".to_string(), p(crate::layers_dir())),
+        ("tools_path".to_string(), p(crate::tools_dir())),
         ("prefixes_path".to_string(), p(crate::prefixes_dir())),
         ("cache_path".to_string(), p(crate::cache_dir())),
         ("logs_path".to_string(), p(crate::logs_dir())),

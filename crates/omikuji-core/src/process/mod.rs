@@ -148,9 +148,7 @@ impl ProcessManager {
             }
         }
 
-        if matches!(game.runner.runner_type.as_str(), "native" | "flatpak") {
-            crate::launch::alongside::start_host(&game, &config.env);
-        }
+        crate::launch::alongside::start(&game, &config.env).await;
 
         let mut child = cmd.spawn()?;
         let pid = child.id();

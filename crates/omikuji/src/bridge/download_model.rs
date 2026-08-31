@@ -153,6 +153,7 @@ impl qobject::DownloadModel {
             destructive_cleanup: true,
             start_paused: false,
             dlcs: Vec::new(),
+            alongside: false,
         };
         let id = downloads::manager().enqueue(req);
         QString::from(&id)
@@ -169,6 +170,7 @@ impl qobject::DownloadModel {
         prefix_path: &QString,
         temp_path: &QString,
         import_existing: bool,
+        alongside: bool,
     ) -> QString {
         use omikuji_core::gacha::{manifest as gm, strategies};
 
@@ -211,6 +213,7 @@ impl qobject::DownloadModel {
                 return QString::default();
             }
         };
+        req.alongside = alongside;
         if import_existing {
             req.kind = downloads::DownloadKind::ImportExisting;
             req.destructive_cleanup = false;
@@ -296,6 +299,7 @@ impl qobject::DownloadModel {
                     prefix_path,
                     runner_version,
                     dlcs,
+                    alongside,
                 } => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
                         let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
@@ -324,6 +328,7 @@ impl qobject::DownloadModel {
                         &QString::from(
                             &serde_json::to_string(&dlcs).unwrap_or_else(|_| "[]".to_string()),
                         ),
+                        alongside,
                     );
                 }
                 DownloadEvent::Failed(id, err) => {

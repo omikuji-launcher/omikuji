@@ -567,6 +567,31 @@ pub fn resolve_or_default_proton(name: Option<&str>) -> Option<PathBuf> {
     default_proton_install()
 }
 
+pub fn with_steam_wine(game: &crate::library::Game) -> Result<Option<crate::library::Game>> {
+    if game.source.kind != "steam" || game.source.app_id.is_empty() {
+        return Ok(None);
+    }
+
+    let pfx = find_steam_prefix(&game.source.app_id).with_context(|| {
+        format!(
+            "no Steam prefix yet for {}, launch it through Steam once",
+            game.source.app_id
+        )
+    })?;
+
+    let stamped = find_steam_proton_version(&game.source.app_id);
+    let install = resolve_or_default_proton(stamped.as_deref()).context("no Proton install found")?;
+    let dir_name = install
+        .file_name()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "Proton".to_string());
+
+    let mut effective = game.clone();
+    effective.wine.version = format!("steam:{}", dir_name);
+    effective.wine.prefix = pfx.to_string_lossy().into_owned();
+    Ok(Some(effective))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

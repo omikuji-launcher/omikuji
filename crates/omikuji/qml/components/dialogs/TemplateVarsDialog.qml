@@ -56,6 +56,7 @@ DialogCard {
                 + "${components_path}  " + qsTr("components root") + "\n"
                 + "${runners_path}     " + qsTr("runners root") + "\n"
                 + "${layers_path}      " + qsTr("layers root") + "\n"
+                + "${tools_path}       " + qsTr("tools root") + "\n"
                 + "${logs_path}        " + qsTr("logs root") + "\n"
                     + "${runtime_path}     " + qsTr("runtime root")
                 color: Theme.textMuted

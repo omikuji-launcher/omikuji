@@ -192,6 +192,7 @@ impl super::qobject::GameModel {
                     destructive_cleanup: false,
                     start_paused: true,
                     dlcs: candidate.dlcs,
+                    alongside: false,
                 };
 
                 let _ = omikuji_core::downloads::manager().enqueue(req);
@@ -380,5 +381,6 @@ fn build_download_request(
         destructive_cleanup: false,
         start_paused: false,
         dlcs: game.source.dlcs.clone(),
+        alongside: false,
     }
 }

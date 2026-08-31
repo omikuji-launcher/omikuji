@@ -237,6 +237,17 @@ pub struct LaunchConfig {
     pub env_sets: Vec<String>,
 }
 
+impl LaunchConfig {
+    pub fn prune_alongside(&mut self) {
+        if self.alongside.trim().is_empty() {
+            self.alongside.clear();
+            self.alongside_args.clear();
+            self.alongside_when = AlongsideWhen::default();
+            self.alongside_delay = 0;
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct GraphicsConfig {
     #[serde(default)]

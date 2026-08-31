@@ -31,6 +31,43 @@ pub struct AssetInfo {
 }
 
 #[derive(Debug, Clone)]
+pub struct RepoLink {
+    pub host: String,
+    pub owner: String,
+    pub repo: String,
+}
+
+impl RepoLink {
+    pub fn parse(link: &str) -> Option<Self> {
+        let rest = link.split_once("://").map(|(_, r)| r).unwrap_or(link);
+        let mut parts = rest.trim_end_matches('/').split('/');
+        let host = parts.next()?;
+        let owner = parts.next()?;
+        let repo = parts.next()?;
+        if host.is_empty() || owner.is_empty() || repo.is_empty() {
+            return None;
+        }
+        Some(Self {
+            host: host.to_string(),
+            owner: owner.to_string(),
+            repo: repo.to_string(),
+        })
+    }
+
+    pub fn slug(&self) -> String {
+        format!("{}/{}", self.owner, self.repo)
+    }
+
+    pub fn releases_api_url(&self) -> String {
+        if self.host == "github.com" {
+            format!("https://api.github.com/repos/{}/releases", self.slug())
+        } else {
+            format!("https://{}/api/v1/repos/{}/releases", self.host, self.slug())
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum ArchiveEvent {
     // category: "runners" | "dll_packs", routes to the right QML listener
     Started {
@@ -121,20 +158,26 @@ fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
         .cloned()
 }
 
-pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> {
-    let client = reqwest::Client::builder()
+fn client() -> Result<reqwest::Client> {
+    Ok(reqwest::Client::builder()
         .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client
-        .get(&source.api_url)
+        .build()?)
+}
+
+async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
+    let resp = client()?
+        .get(api_url)
         .query(&[("per_page", "100")])
         .header("Accept", "application/vnd.github+json")
         .send()
         .await?
         .error_for_status()
-        .map_err(|e| anyhow!("release list ({}): {}", source.api_url, e))?;
+        .map_err(|e| anyhow!("release list ({}): {}", api_url, e))?;
+    Ok(resp.json().await?)
+}
 
-    let releases: Vec<serde_json::Value> = resp.json().await?;
+pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> {
+    let releases = fetch_releases(&source.api_url).await?;
 
     let mut out = Vec::new();
     for r in releases {
@@ -174,6 +217,34 @@ pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> 
         });
     }
     Ok(out)
+}
+
+pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> Result<PathBuf> {
+    let releases = fetch_releases(api_url).await?;
+    let asset = releases
+        .iter()
+        .filter_map(|r| r.get("assets").and_then(|v| v.as_array()))
+        .flatten()
+        .find(|a| a.get("name").and_then(|v| v.as_str()) == Some(asset_name))
+        .ok_or_else(|| anyhow!("no asset named {} at {}", asset_name, api_url))?;
+    let url = asset
+        .get("browser_download_url")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| anyhow!("asset {} has no download url", asset_name))?;
+
+    let bytes = client()?
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()
+        .map_err(|e| anyhow!("download {}: {}", url, e))?
+        .bytes()
+        .await?;
+
+    fs::create_dir_all(dest_dir)?;
+    let dest = dest_dir.join(asset_name);
+    fs::write(&dest, &bytes)?;
+    Ok(dest)
 }
 
 pub async fn install_version(
@@ -313,10 +384,7 @@ async fn download_bytes(
     source: &ArchiveSource,
     release: &ReleaseInfo,
 ) -> Result<Vec<u8>> {
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client
+    let resp = client()?
         .get(&release.asset_url)
         .send()
         .await?

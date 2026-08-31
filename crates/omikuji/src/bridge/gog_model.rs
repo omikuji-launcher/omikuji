@@ -393,6 +393,7 @@ impl qobject::GogModel {
             destructive_cleanup: !is_import && !import_existing,
             start_paused: false,
             dlcs: serde_json::from_str(&dlcs.to_string()).unwrap_or_default(),
+            alongside: false,
         };
 
         let id = downloads::manager().enqueue(req);

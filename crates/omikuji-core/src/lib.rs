@@ -58,6 +58,10 @@ pub fn layers_dir() -> PathBuf {
     components_subdir(&settings::get().paths.layers_dir, "layers")
 }
 
+pub fn tools_dir() -> PathBuf {
+    components_subdir(&settings::get().paths.tools_dir, "tools")
+}
+
 fn components_subdir(override_path: &str, sub: &str) -> PathBuf {
     if override_path.is_empty() {
         components_dir().join(sub)

@@ -43,6 +43,9 @@ DialogCard {
     property string manifestId: ""
     property var manifest: null
 
+    readonly property var companion: manifest && manifest.alongside ? manifest.alongside : null
+    property bool companionAccepted: false
+
     signal installEnqueued(string downloadId)
     signal imported(string gameId)
     signal cancelled()
@@ -194,6 +197,7 @@ DialogCard {
         runnerPhase = ""
         runnerPercent = 0
         runnerError = ""
+        companionAccepted = false
         sizeFetchDebounce.stop()
     }
 
@@ -300,7 +304,8 @@ DialogCard {
         let importing = existingInstall
         if (importing && !downloadModel.gacha_supports_import(manifestId)) {
             let gid = gameModel.gacha_import_after_install(
-                manifestId, editionId, displayName, importDir, runner, prefixPath
+                manifestId, editionId, displayName, importDir, runner, prefixPath,
+                companionAccepted
             )
             imported(gid || "")
             close()
@@ -309,7 +314,7 @@ DialogCard {
         let id = downloadModel.enqueue_gacha(
             manifestId, editionId, voicesSelected().join(","),
             displayName, importing ? importDir : effectiveInstallPath,
-            runner, prefixPath, tempPath, importing
+            runner, prefixPath, tempPath, importing, companionAccepted
         )
         if (id && id.length > 0) installEnqueued(id)
         close()
@@ -723,6 +728,54 @@ DialogCard {
                     value: root.runnerPercent / 100
                     fillColor: Theme.accent
                     trackColor: Theme.alpha(Theme.text, 0.16)
+                }
+            }
+        }
+
+        DialogSection {
+            Layout.fillWidth: true
+            label: qsTr("Misc")
+            visible: root.companion !== null
+
+            Item {
+                width: parent.width
+                height: 40
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.radius.sm
+                    color: companionHover.containsMouse
+                        ? Theme.alpha(Theme.text, 0.06)
+                        : "transparent"
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                }
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.right: companionBox.left
+                    anchors.rightMargin: Theme.space.md
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.companion ? (root.companion.label || root.companion.name) : ""
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
+                    elide: Text.ElideRight
+                }
+
+                M3Checkbox {
+                    id: companionBox
+                    anchors.right: parent.right
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    checked: root.companionAccepted
+                }
+
+                MouseArea {
+                    id: companionHover
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.companionAccepted = !root.companionAccepted
                 }
             }
         }

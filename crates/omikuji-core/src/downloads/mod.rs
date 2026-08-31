@@ -93,6 +93,7 @@ pub struct DownloadRequest {
     pub destructive_cleanup: bool,
     pub start_paused: bool,
     pub dlcs: Vec<String>,
+    pub alongside: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -115,6 +116,8 @@ pub struct DownloadEntry {
     pub destructive_cleanup: bool,
     #[serde(default)]
     pub dlcs: Vec<String>,
+    #[serde(default)]
+    pub alongside: bool,
     pub status: DownloadStatus,
     pub progress: f64,
     pub bytes_downloaded: u64,
@@ -146,6 +149,7 @@ pub enum DownloadEvent {
         prefix_path: Option<PathBuf>,
         runner_version: String,
         dlcs: Vec<String>,
+        alongside: bool,
     },
     Failed(String, String),
     Removed(String),
@@ -346,6 +350,7 @@ impl DownloadManager {
             kind: req.kind,
             destructive_cleanup: req.destructive_cleanup,
             dlcs: req.dlcs,
+            alongside: req.alongside,
             status: initial_status,
             progress: 0.0,
             bytes_downloaded: 0,
@@ -951,6 +956,7 @@ fn complete(entry: &DownloadEntry) {
         prefix_path: entry.prefix_path.clone(),
         runner_version: entry.runner_version.clone(),
         dlcs: entry.dlcs.clone(),
+        alongside: entry.alongside,
     });
     save_queue(&inner.entries);
     drop(inner);

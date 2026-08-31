@@ -53,20 +53,18 @@ impl AdvisedRunner {
 }
 
 pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
+    let repo = archive_source::RepoLink::parse(link)?;
     let rest = link.split_once("://").map(|(_, r)| r).unwrap_or(link);
-    let mut parts = rest.trim_end_matches('/').split('/');
-    let host = parts.next()?;
-    let owner = parts.next()?;
-    let repo = parts.next()?;
-    let tag = match (parts.next(), parts.next()) {
-        (Some("releases"), Some("tag")) => parts.next()?.to_string(),
+    let mut tail = rest.trim_end_matches('/').split('/').skip(3);
+    let tag = match (tail.next(), tail.next()) {
+        (Some("releases"), Some("tag")) => tail.next()?.to_string(),
         _ => return None,
     };
-    if host.is_empty() || owner.is_empty() || repo.is_empty() || tag.is_empty() {
+    if tag.is_empty() {
         return None;
     }
 
-    let needle = format!("{}/{}", owner, repo);
+    let needle = repo.slug();
     if let Some(source) = list_sources()
         .into_iter()
         .find(|s| s.api_url.contains(&needle))
@@ -78,16 +76,11 @@ pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
         });
     }
 
-    let api_url = if host == "github.com" {
-        format!("https://api.github.com/repos/{}/releases", needle)
-    } else {
-        format!("https://{}/api/v1/repos/{}/releases", host, needle)
-    };
     Some(AdvisedRunner {
         source: ArchiveSource {
-            name: repo.to_string(),
+            name: repo.repo.clone(),
             kind: "proton".to_string(),
-            api_url,
+            api_url: repo.releases_api_url(),
             desc: String::new(),
         },
         tag,
