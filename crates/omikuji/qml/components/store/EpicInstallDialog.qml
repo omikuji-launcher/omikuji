@@ -408,7 +408,11 @@ DialogCard {
 
     Component {
         id: detailsAboutPanel
-        StoreGameDetails { kind: "about"; details: root.gameDetails }
+        StoreGameDetails {
+            kind: "about"
+            details: root.gameDetails
+            title: root.gameData ? (root.gameData.title || "") : ""
+        }
     }
 
     Component {

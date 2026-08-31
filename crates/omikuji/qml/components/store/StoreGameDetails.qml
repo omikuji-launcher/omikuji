@@ -1,6 +1,7 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
+import "../controls"
 import "../downloads"
 
 ColumnLayout {
@@ -8,6 +9,7 @@ ColumnLayout {
 
     property var details: null
     property string kind: "about"
+    property string title: ""
 
     readonly property var reqs: details && details.reqs ? details.reqs : []
     readonly property string description: details && details.description ? details.description : ""
@@ -22,6 +24,23 @@ ColumnLayout {
 
     CapsLabel {
         text: root.kind === "about" ? qsTr("About") : qsTr("System requirements")
+    }
+
+    NoteChip {
+        visible: root.kind === "about" && root.title !== ""
+        Layout.fillWidth: true
+        icon: "orbit"
+        tone: protonDbHover.containsMouse ? Theme.accent : Theme.textMuted
+        text: qsTr("Look it up on ProtonDB")
+
+        MouseArea {
+            id: protonDbHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: Qt.openUrlExternally(
+                "https://www.protondb.com/search?q=" + encodeURIComponent(root.title))
+        }
     }
 
     Text {
@@ -103,4 +122,5 @@ ColumnLayout {
             }
         }
     }
+
 }
