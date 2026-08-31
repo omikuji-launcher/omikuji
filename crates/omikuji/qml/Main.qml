@@ -1211,7 +1211,7 @@ property real cardZoom: appSettings.cardZoom
         onManageRequested: (category, source, kind) => {
             root.welcomeResumePending = true
             welcomeDialog.close()
-            archiveManageDialog.show(category, source, kind)
+            archiveManageDialog.show(category, source, kind, true)
         }
     }
 

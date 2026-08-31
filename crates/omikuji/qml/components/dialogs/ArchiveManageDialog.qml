@@ -31,21 +31,46 @@ DialogCard {
     signal removeSourceRequested(string category, string sourceName)
     signal moveToSteamRequested(string sourceName, string tag)
 
-    maxWidth: 720
+    maxWidth: 840
+    preferredHeight: 650
     scrollable: false
     fillHeight: true
     title: ""
 
-    function show(cat, name, kind) {
-        category = cat
+    property var sources: []
+    property bool showSources: false
+
+    function loadSources() {
+        if (!archiveManager || !showSources) {
+            sources = []
+            return
+        }
+        try {
+            let raw = category === "dll_packs"
+                ? archiveManager.listDllPacks()
+                : archiveManager.listRunners()
+            sources = JSON.parse(raw) || []
+        } catch (e) {
+            sources = []
+        }
+    }
+
+    function selectSource(name, kind) {
         sourceName = name
         sourceKind = kind
         versions = []
         installedDirs = ({})
         errorMessage = ""
         refreshInstalled()
-        open()
         fetchVersionsNow()
+    }
+
+    function show(cat, name, kind, withSources) {
+        category = cat
+        showSources = withSources === true
+        loadSources()
+        selectSource(name, kind)
+        open()
     }
 
     function hide() {
@@ -125,9 +150,110 @@ DialogCard {
         height: parent.height
 
         Item {
-            id: bodyHeader
+            id: sourceList
             anchors.top: parent.top
             anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            visible: root.showSources
+            width: root.showSources ? 196 : 0
+            clip: true
+
+            readonly property int rowHeight: 42
+            readonly property int rowGap: 2
+            readonly property int topPad: Theme.space.sm
+            readonly property int currentIndex: {
+                for (let i = 0; i < root.sources.length; i++) {
+                    if (root.sources[i].name === root.sourceName) return i
+                }
+                return -1
+            }
+
+            Squircle {
+                readonly property int inset: 3
+
+                x: inset
+                width: parent.width - inset * 2
+                height: sourceList.rowHeight - inset * 2
+                radius: Theme.radius.md
+                fillColor: Theme.alpha(Theme.accent, 0.16)
+                visible: sourceList.currentIndex >= 0
+                y: sourceList.topPad
+                    + sourceList.currentIndex * (sourceList.rowHeight + sourceList.rowGap)
+                    + inset
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: Theme.dur.med
+                        easing.type: Theme.ease.emphasized
+                        easing.overshoot: Theme.ease.overshoot
+                    }
+                }
+            }
+
+            Column {
+                anchors.top: parent.top
+                anchors.topMargin: sourceList.topPad
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: sourceList.rowGap
+
+                Repeater {
+                    model: root.sources
+
+                    delegate: Item {
+                        id: sourceRow
+                        required property var modelData
+
+                        readonly property bool current: root.sourceName === sourceRow.modelData.name
+
+                        width: parent.width
+                        height: sourceList.rowHeight
+
+                        Squircle {
+                            anchors.fill: parent
+                            anchors.margins: 3
+                            radius: Theme.radius.md
+                            fillColor: (!sourceRow.current && sourceHover.containsMouse)
+                                ? Theme.alpha(Theme.text, 0.06)
+                                : "transparent"
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.leftMargin: Theme.space.md
+                            anchors.right: parent.right
+                            anchors.rightMargin: Theme.space.sm
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: sourceRow.modelData.name
+                            color: sourceRow.current ? Theme.accent : Theme.text
+                            font.pixelSize: Theme.type.label.size
+                            font.weight: sourceRow.current ? Font.DemiBold : Font.Normal
+                            elide: Text.ElideRight
+
+                            Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                        }
+
+                        MouseArea {
+                            id: sourceHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (!sourceRow.current) {
+                                    root.selectSource(sourceRow.modelData.name, sourceRow.modelData.kind)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: bodyHeader
+            anchors.top: parent.top
+            anchors.left: sourceList.right
+            anchors.leftMargin: root.showSources ? Theme.space.lg : 0
             anchors.right: parent.right
             height: 64
 
@@ -178,7 +304,8 @@ DialogCard {
         Rectangle {
             id: bodyDivider
             anchors.top: bodyHeader.bottom
-            anchors.left: parent.left
+            anchors.left: sourceList.right
+            anchors.leftMargin: root.showSources ? Theme.space.lg : 0
             anchors.right: parent.right
             height: 1
             color: Theme.separator
@@ -187,7 +314,8 @@ DialogCard {
         ListView {
             id: list
             anchors.top: bodyDivider.bottom
-            anchors.left: parent.left
+            anchors.left: sourceList.right
+            anchors.leftMargin: root.showSources ? Theme.space.lg : 0
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             clip: true

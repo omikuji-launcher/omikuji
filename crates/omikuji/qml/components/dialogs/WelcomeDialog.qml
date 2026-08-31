@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import omikuji 1.0
 import "../controls"
 import "../primitives"
-import "../settings"
 
 
 DialogCard {
@@ -19,6 +18,13 @@ DialogCard {
 
     property var runners: []
     property bool installUmu: true
+
+    readonly property string recommendedRunner: {
+        for (let i = 0; i < runners.length; i++) {
+            if (runners[i].name.toLowerCase().indexOf("cachyos") >= 0) return runners[i].name
+        }
+        return runners.length > 0 ? runners[0].name : ""
+    }
 
     signal manageRequested(string category, string source, string kind)
     signal umuInstallRequested()
@@ -95,22 +101,68 @@ DialogCard {
 
             Text {
                 width: parent.width
-                text: qsTr("Games run through a Wine or Proton build. Pick a source to fetch one now, or skip and do it later.")
+                text: qsTr("Games run through a Wine or Proton build, you'll need at least one.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap
             }
 
-            Repeater {
-                model: root.runners
+            Item {
+                width: parent.width
+                height: 40
+                visible: root.recommendedRunner !== ""
 
-                delegate: ArchiveSourceRow {
-                    id: runnerRow
-                    required property var modelData
-                    width: parent.width
-                    sourceName: modelData.name
-                    sourceKind: modelData.kind
-                    onManageClicked: root.manageRequested("runners", runnerRow.sourceName, runnerRow.sourceKind)
+                Text {
+                    anchors.left: parent.left
+                    anchors.right: openRunners.left
+                    anchors.rightMargin: Theme.space.md
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: qsTr("Install a runner")
+                    color: Theme.text
+                    font.pixelSize: Theme.type.body.size
+                    elide: Text.ElideRight
+                }
+
+                Item {
+                    id: openRunners
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 36
+                    height: 36
+
+                    Squircle {
+                        anchors.fill: parent
+                        radius: Theme.radius.md
+                        fillColor: openHover.containsPress
+                            ? Theme.alpha(Theme.accent, 0.28)
+                            : openHover.containsMouse
+                                ? Theme.alpha(Theme.accent, 0.20)
+                                : Theme.alpha(Theme.accent, 0.13)
+
+                        Behavior on fillColor { ColorAnimation { duration: Theme.dur.fast } }
+                    }
+
+                    SvgIcon {
+                        anchors.centerIn: parent
+                        name: "open_in_new"
+                        size: 18
+                        color: Theme.accent
+                    }
+
+                    MouseArea {
+                        id: openHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            for (let i = 0; i < root.runners.length; i++) {
+                                if (root.runners[i].name === root.recommendedRunner) {
+                                    root.manageRequested("runners", root.runners[i].name, root.runners[i].kind)
+                                    return
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -126,32 +178,11 @@ DialogCard {
 
         DialogSection {
             Layout.fillWidth: true
+            visible: !root.umuPresent
             label: qsTr("Proton support")
-
-            Text {
-                width: parent.width
-                visible: root.umuPresent
-                text: root.umuFromSystem
-                    ? qsTr("umu-run is already provided by your system, omikuji will use it as is.")
-                    : qsTr("umu-run is already installed, nothing to do here.")
-                color: Theme.textSubtle
-                font.pixelSize: Theme.type.caption.size
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                width: parent.width
-                visible: root.umuPresent && text !== ""
-                text: root.umuStatus.path || ""
-                color: Theme.accent
-                font.family: "monospace"
-                font.pixelSize: Theme.type.caption.size
-                wrapMode: Text.WrapAnywhere
-            }
 
             LabeledSwitch {
                 width: parent.width
-                visible: !root.umuPresent
                 label: qsTr("Install umu-run")
                 description: qsTr("Proton runners launch through it")
                 checked: root.installUmu
@@ -161,7 +192,7 @@ DialogCard {
     }
 
     actions: M3Button {
-        text: qsTr("Done")
+        text: qsTr("Get started")
         variant: "filled"
         onClicked: root.finish()
     }
