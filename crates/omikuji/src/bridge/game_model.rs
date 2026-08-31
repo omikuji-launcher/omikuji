@@ -87,7 +87,12 @@ pub mod qobject {
         fn gacha_manifests_ready(self: Pin<&mut GameModel>, fetched: i32);
 
         #[qsignal]
-        fn updates_queued(self: Pin<&mut GameModel>, epic_count: i32, gog_count: i32);
+        fn updates_queued(
+            self: Pin<&mut GameModel>,
+            epic_count: i32,
+            gog_count: i32,
+            gacha_count: i32,
+        );
 
         #[qsignal]
         #[cxx_name = "gameLogAppended"]

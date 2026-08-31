@@ -282,12 +282,13 @@ ApplicationWindow {
             if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
         }
 
-        onUpdates_queued: (epicCount, gogCount) => {
-            let total = epicCount + gogCount
+        onUpdates_queued: (epicCount, gogCount, gachaCount) => {
+            let total = epicCount + gogCount + gachaCount
             if (total <= 0) return
             let bits = []
             if (epicCount > 0) bits.push(epicCount + " Epic")
             if (gogCount > 0) bits.push(gogCount + " GOG")
+            if (gachaCount > 0) bits.push(gachaCount + qsTr(" gacha"))
             toastManager.show("info", qsTr("Updates available"), qsTr("%1 queued in Downloads").arg(bits.join(" + ")))
         }
 

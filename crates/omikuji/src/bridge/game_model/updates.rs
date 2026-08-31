@@ -138,7 +138,15 @@ impl super::qobject::GameModel {
             })
             .collect();
 
-        if candidates.is_empty() {
+        let gacha_candidates: Vec<omikuji_core::library::Game> = self
+            .library
+            .game
+            .iter()
+            .filter(|g| g.source.kind == "gacha" && !g.source.app_id.is_empty())
+            .cloned()
+            .collect();
+
+        if candidates.is_empty() && gacha_candidates.is_empty() {
             return;
         }
 
@@ -203,8 +211,58 @@ impl super::qobject::GameModel {
                 }
             }
 
+            let mut gacha_count: i32 = 0;
+            if !gacha_candidates.is_empty() {
+                match tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                {
+                    Ok(rt) => {
+                        for game in gacha_candidates {
+                            if existing_app_ids.contains(&game.source.app_id) {
+                                continue;
+                            }
+                            let Some((manifest, edition_id, _voices)) =
+                                omikuji_core::gacha::strategies::find_for_app_id(
+                                    &game.source.app_id,
+                                )
+                            else {
+                                continue;
+                            };
+                            let info = rt.block_on(
+                                omikuji_core::gacha::strategies::check_for_update(
+                                    &manifest,
+                                    &edition_id,
+                                ),
+                            );
+                            let Some(info) = info else {
+                                continue;
+                            };
+                            let Some((source_key, banner_url)) =
+                                resolve_gacha_source(&game.source.app_id)
+                            else {
+                                continue;
+                            };
+                            let mut req = build_download_request(
+                                &game,
+                                source_key,
+                                banner_url,
+                                omikuji_core::downloads::DownloadKind::Update {
+                                    from_version: info.from_version,
+                                },
+                                "update",
+                            );
+                            req.start_paused = true;
+                            let _ = omikuji_core::downloads::manager().enqueue(req);
+                            gacha_count += 1;
+                        }
+                    }
+                    Err(e) => tracing::error!("gacha update scan: runtime build failed: {}", e),
+                }
+            }
+
             let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
-                m.as_mut().updates_queued(epic_count, gog_count);
+                m.as_mut().updates_queued(epic_count, gog_count, gacha_count);
             });
         });
     }
