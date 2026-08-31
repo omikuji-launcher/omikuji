@@ -52,6 +52,7 @@ Item {
 
     property Component actionComponent: null
     property Component overlayComponent: null
+    readonly property alias bannerArea: bannerClip
 
     signal clicked()
     signal doubleClicked()

@@ -305,7 +305,24 @@ impl DownloadManager {
         inner.sources.get(key).is_some_and(|s| s.supports_repair())
     }
 
+    fn active_for(&self, source: &str, app_id: &str) -> Option<String> {
+        if app_id.is_empty() {
+            return None;
+        }
+        let inner = self.inner.lock().unwrap();
+        inner
+            .entries
+            .iter()
+            .find(|e| e.status.is_active() && e.source == source && e.app_id == app_id)
+            .map(|e| e.id.clone())
+    }
+
     pub fn enqueue(&self, req: DownloadRequest) -> String {
+        if let Some(existing) = self.active_for(&req.source, &req.app_id) {
+            self.resume(&existing);
+            return existing;
+        }
+
         let id = Self::next_id();
         let start_paused = req.start_paused;
         let initial_status = if start_paused {

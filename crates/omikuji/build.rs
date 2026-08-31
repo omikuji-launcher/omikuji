@@ -401,6 +401,7 @@ fn main() {
         // widgets
         "qml/components/cards/BaseCard.qml",
         "qml/components/cards/CardGrid.qml",
+        "qml/components/cards/CardProgressOverlay.qml",
         "qml/components/popups/DisplayOptionsPopup.qml",
         "qml/components/controls/FieldSurface.qml",
         "qml/components/controls/FilePicker.qml",

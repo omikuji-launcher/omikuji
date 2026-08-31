@@ -16,6 +16,18 @@ Item {
 
     signal installEnqueued()
 
+    function syncDownloads() {
+        if (!ctrl.downloadModel) {
+            ctrl.activeDownloads = ({})
+            return
+        }
+        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.epic_state_json()) || ({}) }
+        catch (e) { ctrl.activeDownloads = ({}) }
+    }
+
+    Component.onCompleted: syncDownloads()
+    onDownloadModelChanged: syncDownloads()
+
     function showInstall(index) {
         dialog.gameIndex = index
         dialog.show()
@@ -37,10 +49,7 @@ Item {
 
     Connections {
         target: ctrl.downloadModel
-        function onState_changed() {
-            try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.epic_state_json()) || ({}) }
-            catch (e) { ctrl.activeDownloads = ({}) }
-        }
+        function onState_changed() { ctrl.syncDownloads() }
         function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs) {
             if (source !== "epic" || !ctrl.gameModel) return
             let newId = ctrl.gameModel.epic_import_after_install(appId, displayName, prefixPath, runnerVersion, dlcs)

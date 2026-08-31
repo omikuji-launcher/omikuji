@@ -121,30 +121,12 @@ Item {
             }
 
             overlayComponent: Component {
-                Item {
-                    Rectangle {
-                        anchors.bottom: parent.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: 4
-                        height: 24
-                        radius: 10
-                        color: Theme.alpha(Theme.accent, 0.9)
-                        visible: epicCard.isDownloading
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: {
-                                let dl = root.activeDownloads[epicCard.modelData.appName]
-                                if (!dl) return ""
-                                if (dl.status === "Downloading") return dl.progress.toFixed(0) + "%"
-                                return dl.status
-                            }
-                            color: Theme.accentOn
-                            font.pixelSize: Theme.type.micro.size
-                            font.weight: Font.Bold
-                        }
-                    }
+                CardProgressOverlay {
+                    readonly property var download: root.activeDownloads[epicCard.modelData.appName]
+                    visible: epicCard.isDownloading && download !== undefined
+                    bannerArea: epicCard.bannerArea
+                    status: download ? download.status : ""
+                    progress: download ? download.progress : 0
                 }
             }
         }
