@@ -177,6 +177,7 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
     game: &crate::library::Game,
     mut on_line: F,
 ) -> anyhow::Result<()> {
+    crate::runners::ensure_latest_blocking(&game.wine.version)?;
     let variant = crate::launch::WineVariant::from_version(&game.wine.version);
     let wine_exe = crate::launch::resolve_wine_exe(variant, &game.wine.version)?;
     let env = crate::launch::build_env(game, variant, &wine_exe, crate::launch::EnvPurpose::Tool);

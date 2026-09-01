@@ -58,7 +58,7 @@ pub mod qobject {
 
         #[qinvokable]
         #[cxx_name = "runTool"]
-        fn run_tool(self: &OfudaBridge, path: &QString, tool: &QString, runner: &QString) -> bool;
+        fn run_tool(self: &OfudaBridge, path: &QString, tool: &QString, runner: &QString);
 
         #[qinvokable]
         #[cxx_name = "runCommand"]
@@ -138,20 +138,19 @@ impl qobject::OfudaBridge {
         prefixes_json(core_prefixes::list_steam_prefixes(), "steam")
     }
 
-    fn run_tool(&self, path: &QString, tool: &QString, runner: &QString) -> bool {
+    fn run_tool(&self, path: &QString, tool: &QString, runner: &QString) {
         use omikuji_core::wine_tools::WineTool;
         let name = tool.to_string();
         let Some(tool) = WineTool::from_name(&name) else {
             tracing::warn!("unknown ofuda tool: {name}");
-            return false;
+            return;
         };
-        match omikuji_core::wine_tools::run(&prefix_game(path, runner), tool) {
-            Ok(_) => true,
-            Err(e) => {
+        let game = prefix_game(path, runner);
+        std::thread::spawn(move || {
+            if let Err(e) = omikuji_core::wine_tools::run(&game, tool) {
                 tracing::error!("ofuda run_tool failed: {e}");
-                false
             }
-        }
+        });
     }
 
     fn run_command(mut self: Pin<&mut Self>, path: &QString, runner: &QString, command: &QString) {

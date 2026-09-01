@@ -19,11 +19,22 @@ function compareDesc(a, b) {
     return a.value < b.value ? 1 : (a.value > b.value ? -1 : 0)
 }
 
+var LATEST_SUFFIX = "-Latest"
+
+function isLatest(value) {
+    return String(value).slice(-LATEST_SUFFIX.length) === LATEST_SUFFIX
+}
+
+function compareLabelAsc(a, b) {
+    return a.label < b.label ? -1 : (a.label > b.label ? 1 : 0)
+}
+
 function displayLabel(value, name) {
     if (value === "system") return name ? "System Wine " + name : "System Wine"
     if (value.indexOf("system:") === 0)
         return value.substring(7) + (name ? " " + name : "") + " (System)"
     if (value.indexOf("steam:") === 0) return (name || value.substring(6)) + " (Steam)"
+    if (isLatest(value)) return value.slice(0, -LATEST_SUFFIX.length) + " (Latest)"
     return name || value
 }
 
@@ -33,6 +44,7 @@ function isProton(name) {
 
 function groupRunners(rawList, opts) {
     opts = opts || {}
+    var latest = []
     var proton = []
     var wine = []
     for (var i = 0; i < rawList.length; i++) {
@@ -41,9 +53,11 @@ function groupRunners(rawList, opts) {
         var name = Array.isArray(raw) ? raw[1] : ""
         var kind = Array.isArray(raw) && raw.length > 2 ? raw[2] : ""
         var entry = { label: displayLabel(value, name), value: value }
-        if (kind === "proton" || (kind === "" && isProton(value))) proton.push(entry)
+        if (isLatest(value)) latest.push(entry)
+        else if (kind === "proton" || (kind === "" && isProton(value))) proton.push(entry)
         else wine.push(entry)
     }
+    latest.sort(compareLabelAsc)
     proton.sort(compareDesc)
     wine.sort(compareDesc)
 
@@ -51,13 +65,15 @@ function groupRunners(rawList, opts) {
     if (opts.includeSystemDefault) {
         out.push({ label: opts.defaultLabel || "System default", value: "" })
     }
-    if (proton.length > 0) {
-        out.push({ header: true, label: "Proton" })
-        for (var j = 0; j < proton.length; j++) out.push(proton[j])
-    }
-    if (wine.length > 0) {
-        out.push({ header: true, label: "Wine" })
-        for (var k = 0; k < wine.length; k++) out.push(wine[k])
+    var groups = [
+        { label: "Proton", entries: proton },
+        { label: "Wine", entries: wine },
+        { label: "Latest", entries: latest }
+    ]
+    for (var g = 0; g < groups.length; g++) {
+        if (groups[g].entries.length === 0) continue
+        out.push({ header: true, label: groups[g].label })
+        for (var j = 0; j < groups[g].entries.length; j++) out.push(groups[g].entries[j])
     }
     return out
 }

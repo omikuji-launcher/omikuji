@@ -13,6 +13,7 @@ Item {
     property var selectedGame: null
     property bool hasSelection: false
     property bool isRunning: false
+    property bool runnerUpdating: false
     property bool isLaunching: false
     property int launchShowDelay: 120
 
@@ -51,6 +52,7 @@ Item {
     property var displayedGame: null
     property bool displayedIsRunning: false
     property bool displayedIsLaunching: false
+    property bool displayedRunnerUpdating: false
     property var displayedActivity: null
     readonly property bool displayedHasActivity:
         displayedActivity !== null && displayedActivity !== undefined
@@ -124,6 +126,7 @@ Item {
             _suppressButtonAnim = true
             displayedGame = selectedGame
             displayedIsRunning = isRunning
+            displayedRunnerUpdating = runnerUpdating
             _adoptLaunchState()
             displayedActivity = downloadActivity
             barContent.opacity = 1
@@ -154,8 +157,12 @@ Item {
     function _syncActivity() {
         if (_canSync()) displayedActivity = downloadActivity
     }
+    function _syncRunnerUpdating() {
+        if (_canSync()) displayedRunnerUpdating = runnerUpdating
+    }
     onIsRunningChanged: Qt.callLater(_syncIsRunning)
     onDownloadActivityChanged: Qt.callLater(_syncActivity)
+    onRunnerUpdatingChanged: Qt.callLater(_syncRunnerUpdating)
 
     onIsLaunchingChanged: {
         if (isLaunching) {
@@ -182,6 +189,7 @@ Item {
         onTriggered: {
             root.displayedGame = root.selectedGame
             root.displayedIsRunning = root.isRunning
+            root.displayedRunnerUpdating = root.runnerUpdating
             root._adoptLaunchState()
             root.displayedActivity = root.downloadActivity
             barContent.opacity = 1
@@ -398,6 +406,7 @@ Item {
                     M3Button {
                         anchors.fill: parent
                         variant: "filled"
+                        enabled: !root.displayedRunnerUpdating
                         text: qsTr("Play")
                         onClicked: root.playClicked()
                     }

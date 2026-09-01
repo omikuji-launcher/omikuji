@@ -18,15 +18,46 @@ Item {
     property int nextId: 0
 
     function show(level, title, message) {
+        return insert(level, title, message, false, -1)
+    }
+
+    function showProgress(level, title, message) {
+        return insert(level, title, message, true, 0)
+    }
+
+    function update(id, message, progress) {
+        let i = indexOfToast(id)
+        if (i < 0) return
+        toastModel.setProperty(i, "message", String(message || ""))
+        if (progress !== undefined) toastModel.setProperty(i, "progress", progress)
+    }
+
+    function dismiss(id) {
+        let i = indexOfToast(id)
+        if (i >= 0) toastModel.remove(i)
+    }
+
+    function insert(level, title, message, sticky, progress) {
         while (toastModel.count >= root.maxVisible) {
             toastModel.remove(toastModel.count - 1)
         }
+        let id = root.nextId++
         toastModel.insert(0, {
-            toastId: root.nextId++,
+            toastId: id,
             level: String(level || "info"),
             title: String(title || ""),
-            message: String(message || "")
+            message: String(message || ""),
+            sticky: sticky === true,
+            progress: progress
         })
+        return id
+    }
+
+    function indexOfToast(id) {
+        for (let i = 0; i < toastModel.count; i++) {
+            if (toastModel.get(i).toastId === id) return i
+        }
+        return -1
     }
 
     ListModel { id: toastModel }
@@ -94,6 +125,8 @@ Item {
             required property string level
             required property string title
             required property string message
+            required property bool sticky
+            required property real progress
 
             readonly property color levelColor: {
                 switch (level) {
@@ -153,6 +186,20 @@ Item {
                     wrapMode: Text.WordWrap
                     visible: text.length > 0
                 }
+
+                WavyProgressBar {
+                    width: parent.width
+                    visible: toast.progress >= 0
+                    value: toast.progress
+                    wavy: false
+                    trackWidth: 3
+                    handleWidth: 3
+                    handleHeight: 12
+                    handleMargins: 2
+                    fillColor: toast.levelColor
+                    handleColor: fillColor
+                    trackColor: Theme.alpha(Theme.text, 0.18)
+                }
             }
 
             IconButton {
@@ -170,7 +217,7 @@ Item {
             Timer {
                 id: dismissTimer
                 interval: root.dismissMs
-                running: !hoverArea.containsMouse
+                running: !hoverArea.containsMouse && !toast.sticky
                 repeat: false
                 onTriggered: toastModel.remove(toast.index)
             }

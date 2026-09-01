@@ -134,6 +134,7 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     let effective = crate::store::steam::local::with_steam_wine(game)?;
     let g: &Game = effective.as_ref().unwrap_or(game);
 
+    crate::runners::ensure_latest_blocking(&g.wine.version)?;
     let variant = WineVariant::from_version(&g.wine.version);
     let wine_exe = resolve_wine_exe(variant, &g.wine.version)?;
     let mut env = build_env(g, variant, &wine_exe, EnvPurpose::Tool);
@@ -264,6 +265,7 @@ fn staged_ca_bundle() -> Option<PathBuf> {
         return Some(src);
     }
     let dst = dir.join("ca-bundle.crt");
+    let _ = std::fs::remove_file(&dst);
     match std::fs::copy(&src, &dst) {
         Ok(_) => Some(dst),
         Err(_) => Some(src),

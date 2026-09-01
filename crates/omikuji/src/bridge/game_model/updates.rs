@@ -82,6 +82,76 @@ impl super::qobject::GameModel {
         true
     }
 
+    pub fn refresh_latest_runners(mut self: Pin<&mut Self>) {
+        let selections: Vec<String> = self
+            .library
+            .game
+            .iter()
+            .filter(|g| g.uses_wine_prefix())
+            .map(|g| g.wine.version.clone())
+            .chain(omikuji_core::defaults::Defaults::load().wine.version)
+            .collect();
+
+        let sources = omikuji_core::runners::latest_sources_for(&selections);
+        if sources.is_empty() {
+            return;
+        }
+
+        let sender = self.as_mut().qt_thread();
+        std::thread::spawn(move || {
+            let rt = match tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+            {
+                Ok(rt) => rt,
+                Err(e) => {
+                    tracing::error!("latest runner refresh: runtime build failed: {}", e);
+                    return;
+                }
+            };
+
+            let mut pending = Vec::new();
+            for source in sources {
+                match rt.block_on(omikuji_core::runners::latest_update(&source)) {
+                    Ok(Some(release)) => pending.push((source, release)),
+                    Ok(None) => {}
+                    Err(e) => tracing::warn!(
+                        "couldn't check {}: {}",
+                        omikuji_core::runners::latest_dir_name(&source),
+                        e
+                    ),
+                }
+            }
+
+            if pending.is_empty() {
+                return;
+            }
+
+            let names: Vec<&str> = pending.iter().map(|(s, _)| s.name.as_str()).collect();
+            if let Ok(json) = serde_json::to_string(&names) {
+                let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
+                    m.as_mut().latest_refresh_queued(&QString::from(&json));
+                });
+            }
+
+            for (source, release) in pending {
+                if let Err(e) = rt.block_on(omikuji_core::runners::install_latest_release(
+                    &source, &release,
+                )) {
+                    tracing::warn!(
+                        "couldn't refresh {}: {}",
+                        omikuji_core::runners::latest_dir_name(&source),
+                        e
+                    );
+                }
+                let name = source.name.clone();
+                let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
+                    m.as_mut().latest_refresh_done(&QString::from(&name));
+                });
+            }
+        });
+    }
+
     pub fn scan_all_for_updates(mut self: Pin<&mut Self>) {
         let settings = omikuji_core::app_settings::AppSettings::load();
         if !settings.behavior.auto_check_updates_on_boot {

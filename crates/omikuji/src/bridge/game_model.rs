@@ -223,6 +223,18 @@ pub mod qobject {
         fn scan_all_for_updates(self: Pin<&mut GameModel>);
 
         #[qinvokable]
+        #[cxx_name = "refreshLatestRunners"]
+        fn refresh_latest_runners(self: Pin<&mut GameModel>);
+
+        #[qsignal]
+        #[cxx_name = "latestRefreshQueued"]
+        fn latest_refresh_queued(self: Pin<&mut GameModel>, sources: &QString);
+
+        #[qsignal]
+        #[cxx_name = "latestRefreshDone"]
+        fn latest_refresh_done(self: Pin<&mut GameModel>, source: &QString);
+
+        #[qinvokable]
         fn is_running(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
@@ -1797,7 +1809,7 @@ impl qobject::GameModel {
     }
 
     fn list_runners(&self) -> QString {
-        let runners = omikuji_core::runners::list_installed_runners();
+        let runners = omikuji_core::runners::list_runner_options();
         match serde_json::to_string(&runners) {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[]"),

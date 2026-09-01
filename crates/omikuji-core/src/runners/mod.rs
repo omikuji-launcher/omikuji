@@ -1,8 +1,8 @@
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{LazyLock, Mutex};
@@ -34,6 +34,143 @@ pub async fn install_version(
 
 pub fn list_installed(source: &ArchiveSource) -> Vec<String> {
     archive_source::list_installed(source, &source_root(source))
+}
+
+pub const LATEST_SUFFIX: &str = "-Latest";
+pub const LATEST_CATEGORY: &str = "runners_latest";
+
+pub fn latest_dir_name(source: &ArchiveSource) -> String {
+    format!("{}{}", source.name, LATEST_SUFFIX)
+}
+
+pub fn latest_dir(source: &ArchiveSource) -> PathBuf {
+    source_root(source).join(latest_dir_name(source))
+}
+
+pub fn latest_source(version: &str) -> Option<ArchiveSource> {
+    let name = version.strip_suffix(LATEST_SUFFIX)?;
+    list_sources().into_iter().find(|s| s.name == name)
+}
+
+async fn latest_release(source: &ArchiveSource) -> Result<archive_source::ReleaseInfo> {
+    fetch_versions(source)
+        .await?
+        .into_iter()
+        .next()
+        .ok_or_else(|| anyhow!("{} has no installable release", source.name))
+}
+
+static UPDATING_LATEST: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
+
+struct UpdatingGuard(String);
+
+impl Drop for UpdatingGuard {
+    fn drop(&mut self) {
+        if let Ok(mut set) = UPDATING_LATEST.lock() {
+            set.remove(&self.0);
+        }
+    }
+}
+
+pub fn is_latest_updating(version: &str) -> bool {
+    let Some(name) = version.strip_suffix(LATEST_SUFFIX) else {
+        return false;
+    };
+    UPDATING_LATEST
+        .lock()
+        .map(|set| set.contains(name))
+        .unwrap_or(false)
+}
+
+pub async fn install_latest_release(
+    source: &ArchiveSource,
+    release: &archive_source::ReleaseInfo,
+) -> Result<PathBuf> {
+    if let Ok(mut set) = UPDATING_LATEST.lock() {
+        set.insert(source.name.clone());
+    }
+    let _guard = UpdatingGuard(source.name.clone());
+
+    archive_source::install_version_named(
+        LATEST_CATEGORY,
+        source,
+        release,
+        &source_root(source),
+        &latest_dir_name(source),
+    )
+    .await
+}
+
+pub async fn ensure_latest(source: &ArchiveSource) -> Result<PathBuf> {
+    let dir = latest_dir(source);
+    if dir.exists() {
+        return Ok(dir);
+    }
+    let release = latest_release(source).await?;
+    install_latest_release(source, &release).await
+}
+
+pub fn latest_sources_for<I, S>(selections: I) -> Vec<ArchiveSource>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut names: Vec<String> = selections
+        .into_iter()
+        .filter_map(|s| s.as_ref().strip_suffix(LATEST_SUFFIX).map(str::to_string))
+        .collect();
+    names.sort();
+    names.dedup();
+
+    let sources = list_sources();
+    names
+        .into_iter()
+        .filter_map(|n| sources.iter().find(|s| s.name == n).cloned())
+        .collect()
+}
+
+pub fn ensure_latest_blocking(version: &str) -> Result<()> {
+    let Some(source) = latest_source(version) else {
+        return Ok(());
+    };
+    if is_latest_updating(version) {
+        anyhow::bail!("{version} is being updated right now, try again once it finishes");
+    }
+    if latest_dir(&source).exists() {
+        return Ok(());
+    }
+
+    std::thread::spawn(move || {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()?
+            .block_on(ensure_latest(&source))
+    })
+    .join()
+    .map_err(|_| anyhow!("runner install thread panicked"))?
+    .map(|_| ())
+}
+
+pub fn latest_options() -> Vec<(String, String, String)> {
+    list_sources()
+        .into_iter()
+        .map(|s| (latest_dir_name(&s), String::new(), s.kind))
+        .collect()
+}
+
+pub fn list_runner_options() -> Vec<(String, String, String)> {
+    let mut out: Vec<_> = list_installed_runners()
+        .into_iter()
+        .filter(|(value, _, _)| !value.ends_with(LATEST_SUFFIX))
+        .collect();
+    out.extend(latest_options());
+    out
+}
+
+pub async fn latest_update(source: &ArchiveSource) -> Result<Option<archive_source::ReleaseInfo>> {
+    let release = latest_release(source).await?;
+    let installed = archive_source::installed_source_tag(&latest_dir(source)).map(|(_, tag)| tag);
+    Ok((installed.as_deref() != Some(release.tag.as_str())).then_some(release))
 }
 
 pub struct AdvisedRunner {

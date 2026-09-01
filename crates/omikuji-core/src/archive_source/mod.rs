@@ -253,13 +253,33 @@ pub async fn install_version(
     release: &ReleaseInfo,
     dest_root: &Path,
 ) -> Result<PathBuf> {
+    install_named(category, source, release, dest_root, None).await
+}
+
+pub async fn install_version_named(
+    category: &str,
+    source: &ArchiveSource,
+    release: &ReleaseInfo,
+    dest_root: &Path,
+    dir_name: &str,
+) -> Result<PathBuf> {
+    install_named(category, source, release, dest_root, Some(dir_name)).await
+}
+
+async fn install_named(
+    category: &str,
+    source: &ArchiveSource,
+    release: &ReleaseInfo,
+    dest_root: &Path,
+    dir_name: Option<&str>,
+) -> Result<PathBuf> {
     push(ArchiveEvent::Started {
         category: category.into(),
         source: source.name.clone(),
         tag: release.tag.clone(),
     });
 
-    match install_inner(category, source, release, dest_root).await {
+    match install_inner(category, source, release, dest_root, dir_name).await {
         Ok(dir) => {
             push(ArchiveEvent::Completed {
                 category: category.into(),
@@ -282,11 +302,58 @@ pub async fn install_version(
     }
 }
 
+struct ExtractProgress<'a> {
+    inner: std::io::Cursor<&'a [u8]>,
+    total: u64,
+    read: u64,
+    last_pct: f64,
+    category: String,
+    source: String,
+    tag: String,
+}
+
+impl<'a> ExtractProgress<'a> {
+    fn new(bytes: &'a [u8], category: &str, source: &ArchiveSource, release: &ReleaseInfo) -> Self {
+        Self {
+            inner: std::io::Cursor::new(bytes),
+            total: bytes.len() as u64,
+            read: 0,
+            last_pct: -1.0,
+            category: category.to_string(),
+            source: source.name.clone(),
+            tag: release.tag.clone(),
+        }
+    }
+}
+
+impl std::io::Read for ExtractProgress<'_> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = self.inner.read(buf)?;
+        if self.total == 0 {
+            return Ok(n);
+        }
+        self.read += n as u64;
+        let pct = (self.read as f64 / self.total as f64) * 100.0;
+        if pct - self.last_pct >= 1.0 {
+            push(ArchiveEvent::Progress {
+                category: self.category.clone(),
+                source: self.source.clone(),
+                tag: self.tag.clone(),
+                phase: "extracting".into(),
+                percent: pct,
+            });
+            self.last_pct = pct;
+        }
+        Ok(n)
+    }
+}
+
 async fn install_inner(
     category: &str,
     source: &ArchiveSource,
     release: &ReleaseInfo,
     dest_root: &Path,
+    dir_name: Option<&str>,
 ) -> Result<PathBuf> {
     fs::create_dir_all(dest_root)?;
 
@@ -306,16 +373,16 @@ async fn install_inner(
 
     match extract_strategy(&release.asset_name).unwrap_or_default() {
         "tar_gz" => {
-            let reader = flate2::read::GzDecoder::new(std::io::Cursor::new(&bytes));
-            tar::Archive::new(reader).unpack(&staging)?;
+            let src = ExtractProgress::new(&bytes, category, source, release);
+            tar::Archive::new(flate2::read::GzDecoder::new(src)).unpack(&staging)?;
         }
         "tar_xz" => {
-            let reader = xz2::read::XzDecoder::new(std::io::Cursor::new(&bytes));
-            tar::Archive::new(reader).unpack(&staging)?;
+            let src = ExtractProgress::new(&bytes, category, source, release);
+            tar::Archive::new(xz2::read::XzDecoder::new(src)).unpack(&staging)?;
         }
         "tar_zst" => {
-            let reader = zstd::stream::read::Decoder::new(std::io::Cursor::new(&bytes))?;
-            tar::Archive::new(reader).unpack(&staging)?;
+            let src = ExtractProgress::new(&bytes, category, source, release);
+            tar::Archive::new(zstd::stream::read::Decoder::new(src)?).unpack(&staging)?;
         }
         "zip" => {
             zip::ZipArchive::new(std::io::Cursor::new(&bytes))?.extract(&staging)?;
@@ -327,7 +394,12 @@ async fn install_inner(
     }
 
     let stem = asset_stem(&release.asset_name);
-    let final_dir = dest_root.join(if stem.is_empty() { &release.tag } else { stem });
+    let default_name = if stem.is_empty() {
+        release.tag.as_str()
+    } else {
+        stem
+    };
+    let final_dir = dest_root.join(dir_name.unwrap_or(default_name));
     if let Some(old) = installed_dir(&source.name, dest_root, &release.tag)
         && old.file_name().and_then(|n| n.to_str()) == Some(release.tag.as_str())
     {

@@ -176,32 +176,77 @@ ApplicationWindow {
         openLogs = openLogs.filter(w => w.gameId !== gameId)
     }
 
+    readonly property string latestCategory: "runners_latest"
+    property var latestToasts: ({})
+
+    readonly property var updatingRunners: {
+        let out = {}
+        for (let source in root.latestToasts) out[source + "-Latest"] = true
+        return out
+    }
+
+    readonly property bool isSelectedRunnerUpdating:
+        root.selectedGame !== null && root.updatingRunners[root.selectedGame.runner] === true
+
+    function beginLatestToast(source, message) {
+        if (root.latestToasts[source] !== undefined) return
+        let next = Object.assign({}, root.latestToasts)
+        next[source] = toastManager.showProgress("info", qsTr("Updating %1").arg(source), message)
+        root.latestToasts = next
+    }
+
+    function endLatestToast(source) {
+        let id = root.latestToasts[source]
+        if (id === undefined) return
+        toastManager.dismiss(id)
+        let next = Object.assign({}, root.latestToasts)
+        delete next[source]
+        root.latestToasts = next
+    }
+
+    function installKey(category, source, tag) {
+        return category + "/" + source + "/" + tag
+    }
+
+    function setInstallPhase(key, phase) {
+        let next = Object.assign({}, root.archiveActiveInstalls)
+        if (phase) next[key] = phase
+        else delete next[key]
+        root.archiveActiveInstalls = next
+    }
+
+    function isRunnerCategory(category) {
+        return category === "runners" || category === root.latestCategory
+    }
+
     Connections {
         target: archiveManager
         function onInstallStarted(category, source, tag) {
-            let k = category + "/" + source + "/" + tag
-            let next = Object.assign({}, root.archiveActiveInstalls)
-            next[k] = "starting"
-            root.archiveActiveInstalls = next
+            root.setInstallPhase(root.installKey(category, source, tag), "starting")
+            if (category !== root.latestCategory) return
+            root.beginLatestToast(source, qsTr("Starting download"))
         }
         function onInstallProgress(category, source, tag, phase, percent) {
-            let k = category + "/" + source + "/" + tag
-            let next = Object.assign({}, root.archiveActiveInstalls)
-            next[k] = phase
-            root.archiveActiveInstalls = next
+            root.setInstallPhase(root.installKey(category, source, tag), phase)
+            if (category !== root.latestCategory) return
+            let id = root.latestToasts[source]
+            if (id === undefined) return
+            toastManager.update(id, phase === "extracting"
+                ? qsTr("Extracting %1").arg(tag)
+                : qsTr("Downloading %1").arg(tag), percent / 100.0)
         }
         function onInstallCompleted(category, source, tag, dir) {
-            let k = category + "/" + source + "/" + tag
-            let next = Object.assign({}, root.archiveActiveInstalls)
-            delete next[k]
-            root.archiveActiveInstalls = next
-            if (category === "runners") root.runnersVersion++
+            root.setInstallPhase(root.installKey(category, source, tag), "")
+            if (root.isRunnerCategory(category)) root.runnersVersion++
+            if (category !== root.latestCategory) return
+            root.endLatestToast(source)
+            toastManager.show("success", qsTr("%1 updated").arg(source), tag)
         }
         function onInstallFailed(category, source, tag, err) {
-            let k = category + "/" + source + "/" + tag
-            let next = Object.assign({}, root.archiveActiveInstalls)
-            delete next[k]
-            root.archiveActiveInstalls = next
+            root.setInstallPhase(root.installKey(category, source, tag), "")
+            if (category !== root.latestCategory) return
+            root.endLatestToast(source)
+            toastManager.show("error", qsTr("Couldn't update %1").arg(source), err)
         }
     }
 
@@ -292,8 +337,23 @@ ApplicationWindow {
             toastManager.show("info", qsTr("Updates available"), qsTr("%1 queued in Downloads").arg(bits.join(" + ")))
         }
 
+        onLatestRefreshQueued: (sources) => {
+            let names = []
+            try {
+                names = JSON.parse(sources)
+            } catch (e) {
+                return
+            }
+            for (let i = 0; i < names.length; i++) {
+                root.beginLatestToast(names[i], qsTr("Queued"))
+            }
+        }
+
+        onLatestRefreshDone: (source) => root.endLatestToast(source)
+
         Component.onCompleted: {
             gameModel.scan_all_for_updates()
+            gameModel.refreshLatestRunners()
             root.pushTrayRecent()
         }
     }
@@ -780,6 +840,7 @@ property real cardZoom: appSettings.cardZoom
                 hasSelection: root.hasSelection
                 isRunning: root.isSelectedGameRunning
                 isLaunching: root.isSelectedLaunching
+                runnerUpdating: root.isSelectedRunnerUpdating
                 downloadActivity: root.selectedDownloadActivity
                 onSettingsClicked: {
                     root.settingsGameIndex = root.selectedGameIndex
@@ -1479,7 +1540,7 @@ property real cardZoom: appSettings.cardZoom
     ToastManager {
         id: toastManager
         anchors.fill: parent
-        z: 1000
+        z: 99999
     }
 
     }

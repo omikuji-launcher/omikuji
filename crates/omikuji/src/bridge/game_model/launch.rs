@@ -2,6 +2,7 @@ use std::pin::Pin;
 
 use cxx_qt_lib::QString;
 
+use omikuji_core::components_config::ArchiveSource;
 use omikuji_core::library::Game;
 
 impl super::qobject::GameModel {
@@ -403,7 +404,48 @@ pub(crate) fn pre_launch_update_check(
     }
 }
 
+fn pending_latest_runner(game: &Game) -> Option<ArchiveSource> {
+    if !game.uses_wine_prefix() {
+        return None;
+    }
+    let source = omikuji_core::runners::latest_source(&game.wine.version)?;
+    (!omikuji_core::runners::latest_dir(&source).exists()).then_some(source)
+}
+
+fn blocking_ensure_latest(source: &ArchiveSource) -> omikuji_core::anyhow::Result<()> {
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()?
+        .block_on(omikuji_core::runners::ensure_latest(source))?;
+    Ok(())
+}
+
 fn do_spawn_launch(game: &Game) -> bool {
+    if omikuji_core::runners::is_latest_updating(&game.wine.version) {
+        notify_launch_failed(
+            game.metadata.id.clone(),
+            &omikuji_core::anyhow::anyhow!(
+                "{} is being updated right now, try again once it finishes",
+                game.wine.version
+            ),
+        );
+        return false;
+    }
+
+    if let Some(source) = pending_latest_runner(game) {
+        let game = game.clone();
+        std::thread::spawn(move || match blocking_ensure_latest(&source) {
+            Ok(()) => {
+                do_spawn_launch(&game);
+            }
+            Err(e) => {
+                tracing::error!("failed to install {}: {}", source.name, e);
+                notify_launch_failed(game.metadata.id.clone(), &e);
+            }
+        });
+        return true;
+    }
+
     if game.runner.runner_type == "steam" {
         omikuji_core::notifications::info(
             &game.metadata.name,
