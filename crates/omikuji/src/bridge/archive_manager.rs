@@ -162,6 +162,15 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
+        #[cxx_name = "updateSource"]
+        fn update_source(
+            self: Pin<&mut ArchiveManagerBridge>,
+            category: QString,
+            name: QString,
+            source_json: QString,
+        ) -> QString;
+
+        #[qinvokable]
         #[cxx_name = "removeSource"]
         fn remove_source(
             self: Pin<&mut ArchiveManagerBridge>,
@@ -499,6 +508,29 @@ impl qobject::ArchiveManagerBridge {
             Err(e) => return QString::from(&format!("source parse: {}", e)),
         };
         match components_config::add_source(core_category(&category.to_string()), source) {
+            Ok(_) => {
+                self.as_mut().sources_changed();
+                QString::from("")
+            }
+            Err(e) => QString::from(&format!("{:#}", e)),
+        }
+    }
+
+    fn update_source(
+        mut self: Pin<&mut Self>,
+        category: QString,
+        name: QString,
+        source_json: QString,
+    ) -> QString {
+        let source: ArchiveSource = match serde_json::from_str(&source_json.to_string()) {
+            Ok(s) => s,
+            Err(e) => return QString::from(&format!("source parse: {}", e)),
+        };
+        match components_config::update_source(
+            core_category(&category.to_string()),
+            &name.to_string(),
+            source,
+        ) {
             Ok(_) => {
                 self.as_mut().sources_changed();
                 QString::from("")

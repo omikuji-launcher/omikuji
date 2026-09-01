@@ -1158,6 +1158,21 @@ property real cardZoom: appSettings.cardZoom
         onVersionDeleted: (category, sourceName, tag) => {
             if (category === "runners") root.runnersVersion++
         }
+        onEditSourceRequested: (category, sourceName) => {
+            let list = []
+            try {
+                list = JSON.parse(category === "runners"
+                    ? archiveManager.listRunners()
+                    : archiveManager.listDllPacks()) || []
+            } catch (e) {
+                return
+            }
+            let source = list.find(s => s.name === sourceName)
+            if (!source) return
+            archiveManageDialog.escEnabled = false
+            archiveSourceDialog.showEdit(category, source)
+        }
+
         onRemoveSourceRequested: (category, sourceName) => {
             removeSourceConfirm.message = qsTr("Removes \"%1\" from your sources. Installed versions stay on disk and keep working; adding a source with the same name picks them up again.").arg(sourceName)
             archiveManageDialog.escEnabled = false
@@ -1175,6 +1190,7 @@ property real cardZoom: appSettings.cardZoom
         id: archiveSourceDialog
         anchors.fill: parent
         archiveManager: archiveManager
+        onShownChanged: if (!shown) archiveManageDialog.escEnabled = true
     }
 
     FoundRunnersDialog {

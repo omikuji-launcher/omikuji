@@ -10,6 +10,8 @@ pub struct ArchiveSource {
     pub api_url: String,
     #[serde(default)]
     pub desc: String,
+    #[serde(default)]
+    pub asset_priority: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -36,6 +38,7 @@ fn src(name: &str, kind: &str, api_url: &str) -> ArchiveSource {
         kind: kind.into(),
         api_url: api_url.into(),
         desc: String::new(),
+        asset_priority: Vec::new(),
     }
 }
 
@@ -174,6 +177,25 @@ pub fn add_source(category: &str, source: ArchiveSource) -> anyhow::Result<()> {
             anyhow::bail!("a source named \"{}\" already exists", source.name);
         }
         list.push(source);
+        Ok(())
+    })
+}
+
+pub fn update_source(category: &str, name: &str, source: ArchiveSource) -> anyhow::Result<()> {
+    mutate(|config| {
+        let list = list_mut(config, category)
+            .ok_or_else(|| anyhow::anyhow!("unknown source category: {}", category))?;
+        if source.api_url.trim().is_empty() {
+            anyhow::bail!("source url can't be empty");
+        }
+        let existing = list
+            .iter_mut()
+            .find(|s| s.name == name)
+            .ok_or_else(|| anyhow::anyhow!("no source named \"{}\"", name))?;
+        *existing = ArchiveSource {
+            name: existing.name.clone(),
+            ..source
+        };
         Ok(())
     })
 }

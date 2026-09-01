@@ -29,6 +29,7 @@ DialogCard {
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
     signal removeSourceRequested(string category, string sourceName)
+    signal editSourceRequested(string category, string sourceName)
     signal moveToSteamRequested(string sourceName, string tag)
 
     maxWidth: 840
@@ -101,11 +102,22 @@ DialogCard {
 
     onCloseRequested: { root.closed(); root.close() }
 
-    footerLeft: M3Button {
-        text: qsTr("Remove source")
-        variant: "tonal"
-        danger: true
-        onClicked: root.removeSourceRequested(root.category, root.sourceName)
+    footerLeft: Row {
+        spacing: Theme.space.sm
+
+        M3Button {
+            text: qsTr("Remove source")
+            variant: "tonal"
+            danger: true
+            onClicked: root.removeSourceRequested(root.category, root.sourceName)
+        }
+
+        IconButton {
+            icon: "tune"
+            size: 40
+            anchors.verticalCenter: parent.verticalCenter
+            onClicked: root.editSourceRequested(root.category, root.sourceName)
+        }
     }
 
     actions: Row {

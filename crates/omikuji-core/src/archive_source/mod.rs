@@ -149,6 +149,18 @@ fn installable_assets(assets: &[serde_json::Value]) -> Vec<AssetInfo> {
         .collect()
 }
 
+fn pick_asset(assets: &[AssetInfo], priority: &[String]) -> Option<AssetInfo> {
+    priority
+        .iter()
+        .find_map(|want| {
+            assets
+                .iter()
+                .find(|a| a.name.contains(want.as_str()))
+                .cloned()
+        })
+        .or_else(|| default_asset(assets))
+}
+
 fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
     let native = |a: &&AssetInfo| !a.name.contains("arm64") && !a.name.contains("aarch64");
     assets
@@ -199,7 +211,7 @@ pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> 
             .unwrap_or(&empty_assets);
 
         let assets = installable_assets(assets);
-        let Some(default) = default_asset(&assets) else {
+        let Some(default) = pick_asset(&assets, &source.asset_priority) else {
             continue;
         };
 

@@ -15,6 +15,9 @@ DialogCard {
     property string descValue: ""
     property string kindValue: ""
     property string urlValue: ""
+    property string priorityValue: ""
+
+    property bool editing: false
 
     readonly property var kindOptions: category === "runners"
         ? [
@@ -29,13 +32,31 @@ DialogCard {
         ]
 
     maxWidth: 480
-    title: category === "runners" ? qsTr("Add runner source") : qsTr("Add translation layer source")
+    title: {
+        if (editing) return qsTr("Edit %1").arg(nameValue)
+        return category === "runners" ? qsTr("Add runner source") : qsTr("Add translation layer source")
+    }
 
     function show(cat) {
         category = cat
+        editing = false
         nameValue = ""
         descValue = ""
         urlValue = ""
+        priorityValue = ""
+        kindValue = kindOptions[0].value
+        root.errorText = ""
+        open()
+    }
+
+    function showEdit(cat, source) {
+        category = cat
+        editing = true
+        nameValue = source.name || ""
+        descValue = source.desc || ""
+        kindValue = source.kind || ""
+        urlValue = source.api_url || ""
+        priorityValue = (source.asset_priority || []).join(" ")
         root.errorText = ""
         open()
     }
@@ -52,12 +73,16 @@ DialogCard {
     }
 
     function submit() {
-        const err = archiveManager.addSource(category, JSON.stringify({
+        const payload = JSON.stringify({
             name: nameValue.trim(),
             kind: kindValue,
             api_url: normalizedUrl(),
-            desc: descValue.trim()
-        }))
+            desc: descValue.trim(),
+            asset_priority: priorityValue.trim().split(/\s+/).filter(p => p.length > 0)
+        })
+        const err = editing
+            ? archiveManager.updateSource(category, nameValue.trim(), payload)
+            : archiveManager.addSource(category, payload)
         if (err && err.length > 0) root.errorText = err
         else close()
     }
@@ -71,7 +96,17 @@ DialogCard {
             placeholder: root.category === "runners" ? "Wine-GE" : "DXVK-gplasync"
             width: parent.width
             text: root.nameValue
+            readOnly: root.editing
             onTextEdited: (t) => root.nameValue = t
+        }
+
+        Text {
+            width: parent.width
+            visible: root.editing
+            text: qsTr("The name identifies installed versions on disk, so it can't be changed here.")
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
+            wrapMode: Text.WordWrap
         }
 
         M3TextField {
@@ -86,8 +121,8 @@ DialogCard {
             label: qsTr("Kind")
             width: parent.width
             options: root.kindOptions
+            currentIndex: Math.max(0, root.kindOptions.findIndex(o => o.value === root.kindValue))
             onSelected: (v) => root.kindValue = v
-            Component.onCompleted: root.kindValue = currentValue
         }
 
         M3TextField {
@@ -116,6 +151,23 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
+        M3TextField {
+            visible: root.category === "runners"
+            label: qsTr("Latest build priority")
+            placeholder: "_v3 _x86_64_v3"
+            width: parent.width
+            text: root.priorityValue
+            onTextEdited: (t) => root.priorityValue = t
+        }
+
+        Text {
+            width: parent.width
+            visible: root.category === "runners"
+            text: qsTr("Space separated. When a release has several builds, the first one that matches is used, so entries further right have lower priority. If none match, the normal pick is used.")
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.caption.size
+            wrapMode: Text.WordWrap
+        }
     }
 
     actions: Row {
@@ -127,7 +179,7 @@ DialogCard {
             onClicked: root.close()
         }
         M3Button {
-            text: qsTr("Add")
+            text: root.editing ? qsTr("Save") : qsTr("Add")
             variant: "filled"
             enabled: root.nameValue.trim() !== "" && root.urlValue.trim() !== ""
             onClicked: root.submit()

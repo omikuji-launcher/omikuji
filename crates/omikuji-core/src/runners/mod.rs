@@ -219,6 +219,7 @@ pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
             kind: "proton".to_string(),
             api_url: repo.releases_api_url(),
             desc: String::new(),
+            asset_priority: Vec::new(),
         },
         tag,
         registered: false,
