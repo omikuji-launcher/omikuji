@@ -13,6 +13,31 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.13.0
+Added:
+- '-Latest' runner builds system
+- Steam exposure for '-Latest' runners, with compatibilitytools.vdf naming so Steam
+  doesn't deselect them on update
+- Release filter for runner sources
+- 'Run alongside' field for games with its own args field and gacha manifest support
+- 'Check for updates on app launch' toggle working for gacha games too
+- 'Look it up on ProtonDB' button for GOG and Epic games (behind `show details`)
+- Art preview button in game settings
+- Note chips for existing files in install dialogs
+- Toggle to ignore Steam-provided runners
+
+Changed:
+- Bookmark symbol for games already in the library (GOG and Epic)
+- Cuter download chip on cards, and proper resuming from dialog
+- Welcome page tweaks
+- Minor UI tweaks
+- Flatter flatpak repo
+- Documentation site rewritten around a full usage guide
+
+Fixes:
+- Zoom shortcuts doing nothing
+- Portal name
+
 ## 0.12.0
 Added:
 - Epic and GOG DLCs installation flow

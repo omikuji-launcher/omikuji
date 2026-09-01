@@ -22,6 +22,20 @@
     </p>
   </description>
   <releases>
+    <release version="0.13.0" date="2026-09-01">
+      <description>
+        <ul>
+          <li>'-Latest' runner builds system</li>
+          <li>Release filter and build priority for runner sources</li>
+          <li>'Run alongside' field for games</li>
+          <li>'Check for updates on app launch' now for gacha games</li>
+          <li>Art preview button in game settings</li>
+          <li>ProtonDB lookup button for Epic and GOG games</li>
+          <li>New Documentation site with a full usage guide</li>
+          <li>Fixed the zoom shortcuts</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.12.0" date="2026-08-30">
       <description>
         <ul>

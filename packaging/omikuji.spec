@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.12.0
+Version:        0.13.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,16 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Tue Sep 01 2026 reakjra <reakjra@proton.me> - 0.13.0-1
+- '-Latest' runner builds system
+- Release filter and build priority for runner sources
+- 'Run alongside' field for games
+- 'Check for updates on app launch' now for gacha games
+- Art preview button in game settings
+- ProtonDB lookup button for Epic and GOG games
+- New Documentation site with a full usage guide
+- Fixed the zoom shortcuts
+
 * Sun Aug 30 2026 reakjra <reakjra@proton.me> - 0.12.0-1
 - proper fade and chevrons on scrollable items
 - error chip with scroll grab
