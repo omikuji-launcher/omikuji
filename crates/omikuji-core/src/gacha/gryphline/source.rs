@@ -1,9 +1,7 @@
-// update order: per-file resource diffs, then the overlay bundle, then give up.
-// the top-level patch field claims a 46GB reinstall where the diffs cost ~160MB
-
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use md5::{Digest, Md5};
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -14,6 +12,9 @@ use crate::downloads::{
     report_progress, set_status,
 };
 use crate::gacha::manifest::GachaManifest;
+
+const PATCH_STAGING: &str = ".omikuji-patch";
+const PATCH_SCRATCH: &str = ".hpatchz";
 
 pub struct GryphlineSource;
 
@@ -62,7 +63,7 @@ impl DownloadSource for GryphlineSource {
             ));
         }
 
-        download_and_extract(entry, packs, "pack").await?;
+        download_and_extract(entry, packs, "pack", &entry.install_path, None).await?;
 
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
@@ -101,61 +102,35 @@ impl DownloadSource for GryphlineSource {
             return Ok(());
         }
 
-        let rand = api::rand_str_from(&resp);
-        let game_version = major_minor(&target_version);
-        let mut tried_v2 = false;
-
-        if !rand.is_empty() && !game_version.is_empty() {
-            tried_v2 = true;
-            match apply_resource_patches(entry, &parsed.cfg, &game_version, &target_version, &rand)
-                .await
-            {
-                Ok(true) => {
-                    super::set_installed_version(
-                        &parsed.manifest.game_slug,
-                        &parsed.edition_id,
-                        &target_version,
-                    );
-                    tracing::info!(
-                        "update complete via resource patches: {} -> {}",
+        match resp.patch.as_ref().filter(|p| !p.patches.is_empty()) {
+            Some(patch) => apply_patch_bundle(entry, patch).await?,
+            None => {
+                let rand = api::rand_str_from(&resp);
+                let game_version = major_minor(&target_version);
+                if rand.is_empty() || game_version.is_empty() {
+                    return Err(anyhow!(
+                        "no patch bundle and no resource index for {} -> {}, full reinstall required",
                         from_version,
                         target_version
-                    );
-                    return Ok(());
+                    ));
                 }
-                Ok(false) => {
-                    tracing::warn!(
-                        "resource patch.json had no variants applicable to installed state, falling back"
-                    );
-                }
-                Err(e) => {
-                    tracing::warn!(
-                        "resource patch path failed: {} - falling back to overlay bundle",
-                        e
-                    );
+                let applied = apply_resource_patches(
+                    entry,
+                    &parsed.cfg,
+                    &game_version,
+                    &target_version,
+                    &rand,
+                )
+                .await?;
+                if !applied {
+                    return Err(anyhow!(
+                        "no applicable resource patches for {} -> {}, full reinstall required",
+                        from_version,
+                        target_version
+                    ));
                 }
             }
         }
-
-        if check_control(&entry.id) != ControlSignal::None {
-            return Ok(());
-        }
-
-        let patches = api::patches_from(&resp);
-        if patches.is_empty() {
-            if tried_v2 {
-                return Err(anyhow!(
-                    "update failed: no applicable resource-level patches and no overlay bundle offered (full reinstall required)"
-                ));
-            }
-            return Err(anyhow!(
-                "no overlay patch path from {} to {} — full reinstall required",
-                from_version,
-                target_version
-            ));
-        }
-
-        download_and_extract(entry, patches, "patch").await?;
 
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
@@ -166,12 +141,229 @@ impl DownloadSource for GryphlineSource {
             &parsed.edition_id,
             &target_version,
         );
-        tracing::info!(
-            "update complete via overlay: {} -> {}",
-            from_version,
-            target_version
-        );
+        tracing::info!("update complete: {} -> {}", from_version, target_version);
         Ok(())
+    }
+}
+
+async fn apply_patch_bundle(entry: &DownloadEntry, patch: &api::PatchInfo) -> Result<()> {
+    let staging = entry.install_path.join(PATCH_STAGING);
+    let _ = std::fs::remove_dir_all(&staging);
+    std::fs::create_dir_all(&staging)?;
+
+    let password = (!patch.cd_key.is_empty()).then_some(patch.cd_key.as_str());
+    download_and_extract(entry, &patch.patches, "patch", &staging, password).await?;
+
+    if check_control(&entry.id) != ControlSignal::None {
+        return Ok(());
+    }
+
+    let delete_list_path = staging.join("delete_files.txt");
+    let mut obsolete = read_delete_list(&delete_list_path);
+
+    let manifest_path = staging.join("patch.json");
+    if let Some(manifest) = read_bundle_manifest(&manifest_path)? {
+        let vfs_files = staging.join("vfs_files");
+        let whole_files = vfs_files.join("files");
+        if whole_files.is_dir() {
+            crate::fs_util::move_dir_all(&whole_files, &staging)?;
+        }
+        apply_bundle_diffs(
+            entry,
+            &manifest,
+            &staging,
+            &vfs_files.join("vfs_patch"),
+            &mut obsolete,
+        )?;
+        let _ = std::fs::remove_dir_all(&vfs_files);
+        let _ = std::fs::remove_file(&manifest_path);
+    }
+
+    if check_control(&entry.id) != ControlSignal::None {
+        return Ok(());
+    }
+
+    for rel in &obsolete {
+        let _ = std::fs::remove_file(entry.install_path.join(rel));
+    }
+    let _ = std::fs::remove_file(&delete_list_path);
+
+    set_status(&entry.id, DownloadStatus::Extracting);
+    crate::fs_util::move_dir_all(&staging, &entry.install_path)?;
+    let _ = std::fs::remove_dir_all(&staging);
+    Ok(())
+}
+
+fn read_bundle_manifest(path: &Path) -> Result<Option<api::ResourcePatchManifest>> {
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let body =
+        std::fs::read_to_string(path).map_err(|e| anyhow!("read {}: {}", path.display(), e))?;
+    serde_json::from_str(&body)
+        .map(Some)
+        .map_err(|e| anyhow!("bundle patch.json is malformed: {}", e))
+}
+
+fn apply_bundle_diffs(
+    entry: &DownloadEntry,
+    manifest: &api::ResourcePatchManifest,
+    staging: &Path,
+    patch_root: &Path,
+    obsolete: &mut HashSet<String>,
+) -> Result<()> {
+    let pending: Vec<&api::ResourcePatchFile> = manifest
+        .files
+        .iter()
+        .filter(|f| !f.patch.is_empty())
+        .collect();
+    if pending.is_empty() {
+        return Ok(());
+    }
+
+    set_status(&entry.id, DownloadStatus::Patching);
+    let vfs_root = entry.install_path.join(&manifest.vfs_base_path);
+    let scratch = staging.join(PATCH_SCRATCH);
+    std::fs::create_dir_all(&scratch)?;
+
+    let mut base_refs: HashMap<&str, usize> = HashMap::new();
+    for file in &pending {
+        for variant in &file.patch {
+            *base_refs.entry(variant.base_file.as_str()).or_default() += 1;
+        }
+    }
+
+    let mut patched: u64 = 0;
+    let mut skipped: u64 = 0;
+    let mut reclaimed: u64 = 0;
+    let mut failed: Vec<String> = Vec::new();
+
+    for (done, file) in pending.iter().enumerate() {
+        if check_control(&entry.id) != ControlSignal::None {
+            return Ok(());
+        }
+        match patch_bundle_file(&vfs_root, &scratch, patch_root, file) {
+            Ok(true) => patched += 1,
+            Ok(false) => skipped += 1,
+            Err(e) => {
+                tracing::warn!("patch {}: {}", file.name, e);
+                failed.push(file.name.clone());
+            }
+        }
+
+        for variant in &file.patch {
+            let remaining = base_refs
+                .get_mut(variant.base_file.as_str())
+                .map(|n| {
+                    *n = n.saturating_sub(1);
+                    *n
+                })
+                .unwrap_or(1);
+            if remaining > 0 {
+                continue;
+            }
+            let rel = join_rel(&manifest.vfs_base_path, &variant.base_file);
+            if obsolete.remove(&rel) {
+                let _ = std::fs::remove_file(entry.install_path.join(&rel));
+                reclaimed += 1;
+            }
+        }
+
+        let pct = ((done + 1) as f64 / pending.len() as f64) * 100.0;
+        report_progress(&entry.id, pct, 0, 0, 0);
+    }
+
+    let _ = std::fs::remove_dir_all(&scratch);
+
+    tracing::info!(
+        "bundle diffs: {} patched, {} skipped (base not installed), {} failed (of {}), {} bases reclaimed during the pass",
+        patched,
+        skipped,
+        failed.len(),
+        pending.len(),
+        reclaimed
+    );
+
+    match failed.first() {
+        Some(first) => Err(anyhow!(
+            "{} file(s) failed to patch, first was {}",
+            failed.len(),
+            first
+        )),
+        None => Ok(()),
+    }
+}
+
+fn patch_bundle_file(
+    vfs_root: &Path,
+    scratch: &Path,
+    patch_root: &Path,
+    file: &api::ResourcePatchFile,
+) -> Result<bool> {
+    let target = vfs_root.join(&file.name);
+    let want = file.md5.to_ascii_lowercase();
+
+    if matches!(std::fs::metadata(&target), Ok(m) if m.len() == file.size)
+        && md5_of_file(&target)? == want
+    {
+        return Ok(true);
+    }
+
+    let mut last_err: Option<anyhow::Error> = None;
+    let out = scratch.join(&want);
+
+    for variant in &file.patch {
+        let base = vfs_root.join(&variant.base_file);
+        let blob = patch_root.join(&variant.patch_rel);
+        if !base.is_file() || !blob.is_file() {
+            continue;
+        }
+        if variant.base_size != 0
+            && std::fs::metadata(&base).map(|m| m.len()).unwrap_or(0) != variant.base_size
+        {
+            continue;
+        }
+
+        match crate::external::hpatchz::patch(&base, &blob, &out) {
+            Ok(()) => {
+                let got = md5_of_file(&out)?;
+                if got == want {
+                    crate::fs_util::move_file(&out, &target)?;
+                    return Ok(true);
+                }
+                let _ = std::fs::remove_file(&out);
+                last_err = Some(anyhow!("md5 mismatch: expected {} got {}", file.md5, got));
+            }
+            Err(e) => {
+                let _ = std::fs::remove_file(&out);
+                last_err = Some(anyhow!("hpatchz: {}", e));
+            }
+        }
+    }
+
+    match last_err {
+        Some(e) => Err(e),
+        None => Ok(false),
+    }
+}
+
+fn read_delete_list(list: &Path) -> HashSet<String> {
+    let Ok(body) = std::fs::read_to_string(list) else {
+        return HashSet::new();
+    };
+    body.lines()
+        .map(|line| line.trim().replace('\\', "/"))
+        .filter(|rel| {
+            !rel.is_empty() && !rel.starts_with('/') && !rel.split('/').any(|part| part == "..")
+        })
+        .collect()
+}
+
+fn join_rel(base: &str, name: &str) -> String {
+    if base.is_empty() {
+        name.replace('\\', "/")
+    } else {
+        format!("{}/{}", base.trim_end_matches('/'), name).replace('\\', "/")
     }
 }
 
@@ -271,8 +463,8 @@ async fn apply_resource_patches(
         total_files
     );
 
-    // lazy bundle assets are fine, the game refetches them on first access
-    let success = unpatchable == 0;
+    let index_matches_install = not_materialized < total_files;
+    let success = unpatchable == 0 && index_matches_install;
     if success {
         let _ = std::fs::remove_dir_all(&scratch_root);
     }
@@ -383,10 +575,10 @@ async fn apply_variant(
     let url = format!(
         "{}/Patch/{}",
         resource_path_base.trim_end_matches('/'),
-        variant.patch_path
+        variant.patch_rel
     );
     let blob_name = variant
-        .patch_path
+        .patch_rel
         .rsplit('/')
         .next()
         .unwrap_or("patch.hdiff");
@@ -513,6 +705,8 @@ async fn download_and_extract(
     entry: &DownloadEntry,
     files: &[api::PackFile],
     label: &str,
+    dest: &Path,
+    password: Option<&str>,
 ) -> Result<()> {
     let safe_id = entry.app_id.replace(':', "-");
     let scratch_parent = match entry.temp_dir.as_deref() {
@@ -569,7 +763,7 @@ async fn download_and_extract(
     }
 
     if let Some(first) = &first_segment {
-        tracing::info!("extracting {} to {}", label, entry.install_path.display());
+        tracing::info!("extracting {} to {}", label, dest.display());
         crate::notifications::info(
             &entry.display_name,
             if label == "patch" {
@@ -579,7 +773,12 @@ async fn download_and_extract(
             },
         );
         set_status(&entry.id, DownloadStatus::Extracting);
-        crate::gacha::hoyo::source::extract_archive(first, &entry.install_path, Some(&entry.id))?;
+        crate::gacha::hoyo::source::extract_archive_with_password(
+            first,
+            dest,
+            Some(&entry.id),
+            password,
+        )?;
 
         for f in files {
             let fname = f.url.rsplit('/').next().unwrap_or("endfield.zip");
@@ -599,6 +798,7 @@ pub fn cleanup_gryphline_state(app_id: &str, install_path: &Path, temp_dir: Opti
         candidates.push(t.join(&dirname));
     }
     candidates.push(install_path.parent().unwrap_or(install_path).join(&dirname));
+    candidates.push(install_path.join(PATCH_STAGING));
     for dir in candidates {
         if dir.exists()
             && let Err(e) = std::fs::remove_dir_all(&dir)
@@ -655,5 +855,43 @@ fn format_bytes(n: u64) -> String {
         format!("{:.1} MiB", n as f64 / 1_048_576.0)
     } else {
         format!("{:.0} KiB", n as f64 / 1024.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn list_from(body: &str) -> HashSet<String> {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("delete_files.txt");
+        std::fs::write(&path, body).unwrap();
+        read_delete_list(&path)
+    }
+
+    #[test]
+    fn delete_list_rejects_escapes() {
+        let set = list_from(
+            "Endfield_Data/a.chk\r\n  \n../../etc/passwd\n/etc/shadow\nb\\c.chk\ndir/../x.chk\n",
+        );
+        assert_eq!(
+            set,
+            HashSet::from(["Endfield_Data/a.chk".to_string(), "b/c.chk".to_string()])
+        );
+    }
+
+    #[test]
+    fn delete_list_missing_file_is_empty() {
+        assert!(read_delete_list(Path::new("/nonexistent/delete_files.txt")).is_empty());
+    }
+
+    #[test]
+    fn join_rel_matches_delete_list_keys() {
+        assert_eq!(
+            join_rel("Endfield_Data/StreamingAssets/VFS", "0CE8FA57/a.chk"),
+            "Endfield_Data/StreamingAssets/VFS/0CE8FA57/a.chk"
+        );
+        assert_eq!(join_rel("VFS/", "a.chk"), "VFS/a.chk");
+        assert_eq!(join_rel("", "a.chk"), "a.chk");
     }
 }

@@ -65,15 +65,9 @@ pub struct GetLatestData {
     #[serde(default)]
     pub version: String,
     #[serde(default)]
-    pub request_version: String,
-    #[serde(default)]
     pub pkg: Option<PkgInfo>,
     #[serde(default)]
     pub patch: Option<PatchInfo>,
-    #[serde(default)]
-    pub state: i32,
-    #[serde(default)]
-    pub launcher_action: i32,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -84,8 +78,6 @@ pub struct PkgInfo {
     pub packs: Vec<PackFile>,
     #[serde(default)]
     pub file_path: String,
-    #[serde(default)]
-    pub game_files_md5: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -100,21 +92,9 @@ pub struct PackFile {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct PatchInfo {
     #[serde(default)]
-    pub url: String,
-    #[serde(default)]
-    pub md5: String,
-    #[serde(default, deserialize_with = "str_to_u64_opt")]
-    pub package_size: u64,
-    #[serde(default, deserialize_with = "str_to_u64_opt")]
-    pub total_size: u64,
-    #[serde(default)]
     pub patches: Vec<PackFile>,
     #[serde(default)]
-    pub v2_patch_info_url: String,
-    #[serde(default, deserialize_with = "str_to_u64_opt")]
-    pub v2_patch_info_size: u64,
-    #[serde(default)]
-    pub v2_patch_info_md5: String,
+    pub cd_key: String,
 }
 
 fn encode(s: &str) -> String {
@@ -192,14 +172,6 @@ pub fn rand_str_from(resp: &GetLatestData) -> String {
 pub struct ResourceList {
     #[serde(default)]
     pub resources: Vec<ResourceRef>,
-    #[serde(default)]
-    pub configs: String,
-    #[serde(default)]
-    pub res_version: String,
-    #[serde(default)]
-    pub patch_index_path: String,
-    #[serde(default)]
-    pub domain: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -258,6 +230,8 @@ pub struct ResourcePatchManifest {
     #[serde(default)]
     pub version: String,
     #[serde(default)]
+    pub vfs_base_path: String,
+    #[serde(default)]
     pub files: Vec<ResourcePatchFile>,
 }
 
@@ -267,11 +241,8 @@ pub struct ResourcePatchFile {
     pub md5: String,
     #[serde(default)]
     pub size: u64,
-    // diffType 1 is the only shape endfield ships; arknights uses 2 and is unsupported
     #[serde(default, rename = "diffType")]
     pub diff_type: u32,
-    #[serde(default)]
-    pub local_path: String,
     #[serde(default)]
     pub patch: Vec<ResourcePatchVariant>,
 }
@@ -283,7 +254,7 @@ pub struct ResourcePatchVariant {
     #[serde(default)]
     pub base_size: u64,
     #[serde(rename = "patch")]
-    pub patch_path: String,
+    pub patch_rel: String,
     #[serde(default)]
     pub patch_size: u64,
 }

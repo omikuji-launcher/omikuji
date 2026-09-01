@@ -217,6 +217,7 @@ mod tests {
             anti_cheat: String::new(),
             runner: String::new(),
             telemetry_block: vec![],
+            alongside: None,
             env: HashMap::new(),
             letter_fallback: "T".into(),
             uses_temp_dir: true,

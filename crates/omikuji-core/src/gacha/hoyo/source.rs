@@ -623,6 +623,15 @@ async fn download_file_simple(
 }
 
 pub fn extract_archive(archive_path: &Path, dest: &Path, entry_id: Option<&str>) -> Result<()> {
+    extract_archive_with_password(archive_path, dest, entry_id, None)
+}
+
+pub fn extract_archive_with_password(
+    archive_path: &Path,
+    dest: &Path,
+    entry_id: Option<&str>,
+    password: Option<&str>,
+) -> Result<()> {
     std::fs::create_dir_all(dest)?;
 
     let ext = archive_path
@@ -633,12 +642,16 @@ pub fn extract_archive(archive_path: &Path, dest: &Path, entry_id: Option<&str>)
     if ext == "zip"
         && let Ok(bin) = which::which("unzip")
     {
-        let output = std::process::Command::new(&bin)
-            .arg("-o")
-            .arg("-q")
+        let mut cmd = std::process::Command::new(&bin);
+        cmd.arg("-o").arg("-q");
+        if let Some(pw) = password {
+            cmd.arg("-P").arg(pw);
+        }
+        let output = cmd
             .arg(archive_path)
             .arg("-d")
             .arg(dest)
+            .stdin(std::process::Stdio::null())
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
             .output()
@@ -657,13 +670,18 @@ pub fn extract_archive(archive_path: &Path, dest: &Path, entry_id: Option<&str>)
             anyhow!("7z not found — install p7zip-full (apt), 7zip (pacman), or p7zip (dnf)")
         })?;
 
-    let mut child = std::process::Command::new(&bin)
-        .arg("x")
+    let mut cmd = std::process::Command::new(&bin);
+    cmd.arg("x")
         .arg(archive_path)
         .arg(format!("-o{}", dest.display()))
         .arg("-aoa")
         .arg("-bso0") // suppress file listing
-        .arg("-bsp1") // enable progress to stdout
+        .arg("-bsp1"); // enable progress to stdout
+    if let Some(pw) = password {
+        cmd.arg(format!("-p{}", pw));
+    }
+    let mut child = cmd
+        .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
         .spawn()

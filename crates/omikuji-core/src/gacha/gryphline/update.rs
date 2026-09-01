@@ -28,19 +28,17 @@ pub async fn check_for_update(
         return Ok(None);
     }
 
-    let patches = super::api::patches_from(&resp);
-    let overlay_size: u64 = patches.iter().map(|p| p.package_size).sum();
-
-    // the top-level patch field is null on minor bumps but patch.json usually has entries, so stay optimistic <3333
-    let can_diff = true;
-    let download_size = overlay_size;
+    let download_size: u64 = super::api::patches_from(&resp)
+        .iter()
+        .map(|p| p.package_size)
+        .sum();
 
     Ok(Some(UpdateInfo {
         edition_id: edition_id.to_string(),
         from_version,
         to_version,
         download_size,
-        can_diff,
+        can_diff: true,
         delta_supported: true,
     }))
 }

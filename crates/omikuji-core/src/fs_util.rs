@@ -33,6 +33,33 @@ pub fn dir_size(path: &Path) -> u64 {
     total
 }
 
+pub fn move_file(src: &Path, dst: &Path) -> std::io::Result<()> {
+    if let Some(parent) = dst.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if std::fs::rename(src, dst).is_ok() {
+        return Ok(());
+    }
+    std::fs::copy(src, dst)?;
+    std::fs::remove_file(src)
+}
+
+pub fn move_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            move_dir_all(&from, &to)?;
+            let _ = std::fs::remove_dir(&from);
+        } else {
+            move_file(&from, &to)?;
+        }
+    }
+    Ok(())
+}
+
 pub fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(dst)?;
     for entry in std::fs::read_dir(src)? {
