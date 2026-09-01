@@ -8,3 +8,60 @@
 body, .sidebar, .menu-title {
     font-family: "Quicksand", sans-serif;
 }
+
+:root {
+    --content-max-width: 900px;
+}
+
+body {
+    font-size: 1.95rem;
+}
+
+.content p,
+.content ol,
+.content ul {
+    line-height: 1.6em;
+}
+
+.content img {
+    border-radius: 12px;
+}
+
+.ayu {
+    --bg: hsl(255, 10%, 8%);
+    --fg: #EBEBEB;
+
+    --sidebar-bg: hsl(255, 10%, 8%);
+    --sidebar-fg: #EBEBEB;
+    --sidebar-active: #9E9AF5;
+    --sidebar-spacer: hsl(265, 20%, 18%);
+    --sidebar-non-existant: #6b6180;
+    --sidebar-header-border-color: #9E9AF5;
+
+    --links: #b98cff;
+
+    --icons: #E6E1EB;
+    --icons-hover: #c9a7ff;
+
+    --theme-popup-bg: hsl(265, 24%, 10%);
+    --theme-popup-border: #4a3f63;
+    --theme-hover: hsl(265, 22%, 15%);
+
+    --quote-bg: hsl(265, 20%, 13%);
+    --quote-border: hsl(265, 20%, 20%);
+
+    --table-border-color: hsl(265, 22%, 14%);
+    --table-header-bg: hsl(265, 22%, 22%);
+    --table-alternate-bg: hsl(265, 22%, 10%);
+
+    --searchbar-bg: hsl(240, 13%, 11%);
+    --searchbar-fg: #ffff;
+    --searchbar-border-color: #181820;
+    --searchbar-shadow-color: #181820;
+    --searchresults-li-bg: hsl(265, 22%, 12%);
+    --searchresults-border-color: #9E9AF5;
+    --searchresults-header-fg: #9E9AF5;
+    --search-mark-bg: #7d5bb0;
+
+    --overlay-bg: hsla(265, 30%, 6%, 0.55);
+}

@@ -6,8 +6,8 @@ language = "en"
 src = "src"
 
 [output.html]
-default-theme = "navy"
-preferred-dark-theme = "navy"
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
 additional-css = ["custom.css"]
 git-repository-url = "https://github.com/omikuji-launcher/omikuji"
 edit-url-template = "https://github.com/omikuji-launcher/omikuji/edit/master/docs/site/src/{path}"

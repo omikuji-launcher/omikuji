@@ -26,9 +26,7 @@ DialogCard {
     ]
 
     function defaultFor(key) {
-        return key === "pill"
-            ? Theme.radiusDefaults[key]
-            : Math.round(Theme.radiusDefaults[key] * Theme.radiusScale)
+        return Theme.radiusDefaults[key]
     }
 
     function applyRadius(key, px) {

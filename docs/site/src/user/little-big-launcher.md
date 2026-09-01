@@ -1,3 +1,5 @@
+This is just for fun. i was bored when i wrote it ok? also its cute.
+
 # Little Big Launcher
 
 Oh, hello there. Are you lost? Don't you fret.
@@ -29,7 +31,7 @@ You needn't touch most of them. Three deserve a glance:
 
 \- **Prefix**: the little fake `C:` drive your game will call home. Leave it empty and omikuji quietly conjures a fresh one just for this game, which is exactly what you want.
 
-Should your goose demand finer graphics, the **Translation Layers** section holds toggles like DXVK and VKD3D. Flick them on if it asks. Every last knob in here is catalogued, calmly and exhaustively, over in [Game settings](game-settings.md). For now, we keep things simple.
+Should your goose demand finer graphics, the **Translation Layers** section holds toggles like DXVK and VKD3D. Flick them on if it asks. Every last knob in here is catalogued, calmly and exhaustively, over in [Game Settings](guide.md#game-settings). For now, we keep things simple.
 
 ## The first flight
 

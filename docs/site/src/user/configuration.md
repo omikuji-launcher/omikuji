@@ -1,29 +1,36 @@
-# Configuration
+# Configuration files
 
-Main config lives at `~/.local/share/omikuji/settings.toml`, auto-generated on first run. Edit it and restart to apply (only `app.toml` is live-watched).
+Main config lives at `~/.local/share/omikuji/settings.toml`. Edit it and restart to apply (`app.toml` and the others are live-watched).
 
-Most sections rarely need touching. The two worth knowing are `[[runners]]` and `[[dll_packs]]`, which let you add your own wine/proton/DXVK sources without touching code.
+Most sections rarely need touching. However older installs may be missing some keys added in later versions. The app fallbacks internally, but if you need to override one that misses in your `settings.toml` just check down here.
 
-## `[paths]`
+## `settings.toml`
 
-Where omikuji keeps its data. leave them unless you have a reason.
+### `[paths]`
+
+Where omikuji keeps its data.
 
 ```toml
+# !! data_dir is not changeable! Even if editing the line, it won't actually change it. It's to avoid handling ugly behaviours.
+
 [paths]
-data_dir = "~/.local/share/omikuji"
-library_dir = "~/.local/share/omikuji/library"
-gachas_dir = "~/.local/share/omikuji/gachas"
-runners_dir = "~/.local/share/omikuji/runners"
-dll_packs_dir = "~/.local/share/omikuji/components"
-prefixes_dir = "~/.local/share/omikuji/prefixes"
-cache_dir = "~/.local/share/omikuji/cache"
-logs_dir = "~/.local/share/omikuji/logs"
-runtime_dir = "~/.local/share/omikuji/runtime"
+data_dir = "/home/reakjra/.local/share/omikuji"
+library_dir = "/home/reakjra/.local/share/omikuji/library"
+gachas_dir = "/home/reakjra/.local/share/omikuji/gachas"
+components_dir = "/home/reakjra/.local/share/omikuji/components"
+runners_dir = "/home/reakjra/.local/share/omikuji/components/runners"
+layers_dir = "/home/reakjra/.local/share/omikuji/components/layers"
+tools_dir = "/home/reakjra/.local/share/omikuji/components/tools"
+prefixes_dir = "/home/reakjra/.local/share/omikuji/prefixes"
+cache_dir = "/home/reakjra/.local/share/omikuji/cache"
+logs_dir = "/home/reakjra/.local/share/omikuji/logs"
+runtime_dir = "/home/reakjra/.local/share/omikuji/runtime"
+scripts_dir = "/home/reakjra/.local/share/omikuji/scripts"
 ```
 
 A leading `~` is expanded to `$HOME` on read (crazy right?).
 
-## `[assets]`
+### `[assets]`
 
 Where gacha manifests and artwork are fetched from.
 
@@ -32,11 +39,18 @@ Where gacha manifests and artwork are fetched from.
 fetch_url = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main"
 ```
 
-Point it at a fork to add your own gachas. hmph. 
+### `[scripts]`
 
-## `[components]`
+Where the community scripts registry is fetched from. Point it elsewhere to use your own registry instead.
 
-Download URLs for the runtime tools (umu, hpatchz, legendary, gogdl, EGL dummy). They're fetched when first needed, like a store login or a game install.
+```toml
+[scripts]
+fetch_url = "https://raw.githubusercontent.com/reakjra/omikuji-scripts/master"
+```
+
+### `[components]`
+
+Download URLs for the runtime tools (`umu`, `hpatchz`, `legendary`, `gogdl`, `EGL dummy`). They're fetched when first needed, like a store login. `umu` is never fetched on its own, it'll always prompt.
 
 ```toml
 [components]
@@ -47,53 +61,133 @@ gogdl = "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/release
 egl_dummy = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe"
 ```
 
-Leave them unless an upstream tool moves repos.
-
-## `[steam]`
+### `[steam]`
 
 ```toml
 [steam]
 api_key = ""
 ```
 
-Optional Steam Web API key ([get one here](https://steamcommunity.com/dev/apikey)). Without it, Steam library listing still works (read locally from ACF files), only remote playtime sync is off. Playtime for games launched through omikuji is tracked either way.
+Optional Steam Web API key ([get one here](https://steamcommunity.com/dev/apikey)). Without it, Steam library listing still works (read locally from ACF files), only remote playtime sync is off.
 
-## `[[runners]]`
 
-The sources the runner manager pulls wine/proton from. Each entry points at a releases API plus a pattern to match the right asset.
+## `app.toml`
 
-| field | meaning |
-|-------|---------|
-| `name` | display name in the runner manager. arbitrary. |
-| `kind` | `"wine"` or `"proton"`. drives variant detection at launch. |
-| `api_url` | a GitHub releases API (`https://api.github.com/repos/{owner}/{repo}/releases`). Gitea/Codeberg instances work too if they expose the same JSON. |
-| `asset_pattern` | substring matched against each asset filename, first match wins. specific enough to skip `.sha256sum` and the like. |
-| `extract` | `tar_gz` / `tar_xz` / `tar_zst` / `zip`. |
+UI preferences and app behaviour live in `~/.local/share/omikuji/app.toml`: categories, nav rail, tab visibility, zoom, theme, bandwidth limit, threads, etc. Almost all of it is set through the app, and the file is live-watched, so edits apply without a restart.
 
-Ships with Proton-Spritz, Proton-GE, Dawn Winery Proton, and Proton-Cachyos. To add one, e.g. wine-tkg:
+The only option that isn't in the GUI is this one, makes the fields like the older version. (equals making them ugly)
+
+```toml
+[theme]
+fill_fields = true
+```
+
+## `components.toml`
+
+file that holds all the runners and layers sources. Plus, layers' state (active)
+
+example one: 
 
 ```toml
 [[runners]]
-name = "Wine-TkG"
+name = "Proton-Spritz"
+kind = "proton"
+api_url = "https://api.github.com/repos/NelloKudo/proton-cachyos/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[runners]]
+name = "Proton-GE"
+kind = "proton"
+api_url = "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[runners]]
+name = "Dawn Winery Proton"
+kind = "proton"
+api_url = "https://dawn.wine/api/v1/repos/dawn-winery/dwproton/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[runners]]
+name = "Proton-Cachyos"
+kind = "proton"
+api_url = "https://api.github.com/repos/CachyOS/proton-cachyos/releases"
+desc = ""
+asset_priority = ["_v3"]
+require_asset_match = false
+
+[[runners]]
+name = "Wine-Spritz"
 kind = "wine"
-api_url = "https://api.github.com/repos/Frogging-Family/wine-tkg-git/releases"
-asset_pattern = "-x86_64.tar.zst"
-extract = "tar_zst"
+api_url = "https://api.github.com/repos/NelloKudo/spritz-wine/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[layers]]
+name = "DXVK"
+kind = "dxvk"
+api_url = "https://api.github.com/repos/doitsujin/dxvk/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[layers]]
+name = "VKD3D-Proton"
+kind = "vkd3d"
+api_url = "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[[layers]]
+name = "DXVK-NVAPI"
+kind = "dxvk_nvapi"
+api_url = "https://api.github.com/repos/jp7677/dxvk-nvapi/releases"
+desc = ""
+asset_priority = []
+require_asset_match = false
+
+[active]
+DXVK-NVAPI = "v0.9.2"
+DXVK = "dxvk-3.0.2"
+VKD3D-Proton = "vkd3d-proton-3.0.1"
 ```
 
-Restart, then Settings => Components lists the new source with its installable versions. A pattern that matches nothing is skipped.
+## `defaults.toml`
 
-## `[[dll_packs]]`
+file that holds the global defaults for games (`Settings -> Defaults`).
 
-Same shape as `[[runners]]`, for DXVK / VKD3D-Proton / DXVK-NVAPI. Installed under `components/{name}/{tag}/` so colliding tags don't clobber each other. Ships with DXVK, VKD3D-Proton, and DXVK-NVAPI. `kind` is a free string, used only for grouping in the UI.
-
-Which version of each pack gets auto-injected lives in `components_state.toml`, next to `settings.toml`:
+example:
 
 ```toml
-[dll_packs]
-DXVK = "v2.4"
-VKD3D-Proton = "v2.13"
-DXVK-NVAPI = ""  # empty = disabled
-```
+[wine]
+version = "Proton-Cachyos-Latest"
+prefix = "${prefixes_path}/PrefixGE"
+esync = true
+fsync = true
+ntsync = true
+vkd3d = false
+dxvk_nvapi = false
+battleye = false
 
-The UI manages this, no need to hand-edit unless something's off.
+[launch.env]
+PROTON_USE_NTSYNC = "1"
+ENABLE_VKSUMI = "1"
+VKMIRU = "1"
+OBS_VKCAPTURE = "1"
+
+[graphics]
+gpu = "00000000-0300-0000-0000-000000000000"
+
+[graphics.gamescope]
+
+[system]
+gamemode = false
+cpu_limit = 0
+```

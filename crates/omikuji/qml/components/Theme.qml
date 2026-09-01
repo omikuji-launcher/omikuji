@@ -80,8 +80,6 @@ QtObject {
 
     property bool fillFields: true
 
-    property real radiusScale: 1.0
-
     property var fontSizes: ({})
     readonly property var fontDefaults: ({ micro: 12, caption: 12, label: 14, body: 14, subtitle: 16, title: 16, headline: 18, display: 22 })
     function _fontPx(role) {
@@ -94,8 +92,7 @@ QtObject {
     function _radPx(role) {
         var v = radiusOverrides[role]
         if (v !== undefined) return v
-        var d = radiusDefaults[role]
-        return role === "pill" ? d : Math.round(d * radiusScale)
+        return radiusDefaults[role]
     }
 
     readonly property QtObject radius: QtObject {

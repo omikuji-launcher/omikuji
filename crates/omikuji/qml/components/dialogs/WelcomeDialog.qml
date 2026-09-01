@@ -191,6 +191,12 @@ DialogCard {
         }
     }
 
+    footerLeft: M3Button {
+        text: qsTr("Docs")
+        variant: "tonal"
+        onClicked: Qt.openUrlExternally("https://omikuji-launcher.github.io/omikuji/")
+    }
+
     actions: M3Button {
         text: qsTr("Get started")
         variant: "filled"

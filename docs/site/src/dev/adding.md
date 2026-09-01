@@ -16,7 +16,7 @@ The last argument is the field's path inside `AppSettings`. The generated names 
 
 3. In QML, read `appSettings.showClock` and write through `appSettings.applyShowClock(value)`.
 
-The property, the apply invokable, persistence, and hot reload are all generated. When the setter needs logic (clamping, a side effect, a signal), declare it with `.prop_custom_apply(...)` instead and write `apply_show_clock` by hand in `src/bridge/app_settings.rs`; `apply_ui_scale` and `apply_discord_rpc` are the existing examples. `.prop_readonly(...)` declares a property with no setter (`fill_fields`, `radius_scale`). List-shaped settings that cross as JSON use `.json_accessor(...)`; `categories` is the model.
+The property, the apply invokable, persistence, and hot reload are all generated. When the setter needs logic (clamping, a side effect, a signal), declare it with `.prop_custom_apply(...)` instead and write `apply_show_clock` by hand in `src/bridge/app_settings.rs`; `apply_ui_scale` and `apply_discord_rpc` are the existing examples. `.prop_readonly(...)` declares a property with no setter (`fill_fields`). List-shaped settings that cross as JSON use `.json_accessor(...)`; `categories` is the model.
 
 ## A per-game setting
 

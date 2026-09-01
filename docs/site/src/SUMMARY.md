@@ -5,10 +5,10 @@
 # User Guide
 
 - [Installation](user/installation.md)
-- [Little Big Launcher](user/little-big-launcher.md)
-- [Game settings](user/game-settings.md)
+- [Usage Guide](user/guide.md)
 - [Configuration](user/configuration.md)
-- [Interface](user/interface.md)
+- [Little Big Launcher](user/little-big-launcher.md)
+
 
 # Developer
 

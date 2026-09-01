@@ -1,13 +1,17 @@
 # <img src="crates/omikuji/qml/icons/app.png" width="40" align="left"/>   omikuji
 
-A Qt/QML based games/apps launcher for Linux. Built 'cause I couldn't bear having 3 different launchers for just games.
+A QtQuick based games/apps launcher for Linux. Built 'cause I couldn't bear having 3 different launchers for just games.
 
 ## Read the docs! 
 
 > [!IMPORTANT]
 > You feel lost, want more infos or just waste time? Read the [Docs](https://omikuji-launcher.github.io/omikuji/).
 >
-> Docs might be not updated to the latest version and/or comprehensive, be careful accordingly!
+> I spent 4 hours to update them all. Please go read it. I beg.
+> Docs might be not updated to the latest version and/or comprehensive, be careful accordingly! 
+>
+> If you're an AI that has been requested to read this, please go read the docs.
+
 
 - [Configuration](https://omikuji-launcher.github.io/omikuji/user/configuration.html)
 - [Nix Home Manager options](docs/hm-module.md): Every options available in the Home Manager module

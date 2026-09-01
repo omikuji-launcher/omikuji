@@ -58,7 +58,6 @@ ApplicationWindow {
             Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
             Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
             Theme.fillFields = Qt.binding(() => appSettings.fillFields)
-            Theme.radiusScale = Qt.binding(() => appSettings.radiusScale)
             Theme.uiScale = Qt.binding(() => root.uiScale)
             Theme.overrides = JSON.parse(overridesJson())
             Theme.fontSizes = JSON.parse(fontSizesJson())
