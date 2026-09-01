@@ -187,9 +187,11 @@ pub fn latest_options() -> Vec<(String, String, String)> {
 }
 
 pub fn list_runner_options() -> Vec<(String, String, String)> {
+    let ignore_steam = steam_runners_ignored();
     let mut out: Vec<_> = list_installed_runners()
         .into_iter()
         .filter(|(value, _, _)| !value.ends_with(LATEST_SUFFIX))
+        .filter(|(value, _, _)| !(ignore_steam && value.starts_with("steam:")))
         .collect();
     out.extend(latest_options());
     out
@@ -394,11 +396,18 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
         .find(|p| p.is_dir())
 }
 
+pub fn steam_runners_ignored() -> bool {
+    crate::app_settings::AppSettings::load()
+        .behavior
+        .ignore_steam_runners
+}
+
 pub fn runner_dir(version: &str) -> Option<PathBuf> {
     if version.is_empty() || version == "system" {
         return None;
     }
     match version.strip_prefix("steam:") {
+        Some(_) if steam_runners_ignored() => None,
         Some(rest) => crate::store::steam::local::find_proton_install(rest),
         None => installed_runner_dir(version),
     }

@@ -72,6 +72,22 @@ Item {
         }
 
         SettingsSection {
+            label: qsTr("Runners")
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Ignore Steam runners")
+                description: qsTr("Runners found in Steam's folders")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.ignoreSteamRunners : false
+                    onToggled: (val) => appSettings.applyIgnoreSteamRunners(val)
+                }
+            }
+        }
+
+        SettingsSection {
             label: qsTr("Updates")
             width: parent.width
 

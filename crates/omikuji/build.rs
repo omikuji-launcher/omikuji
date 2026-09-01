@@ -189,6 +189,7 @@ fn main() {
         .prop_at("show_tray_icon", kushi::Kind::Bool, "behavior.show_tray_icon")
         .prop_at("discord_show_launcher", kushi::Kind::Bool, "behavior.discord_show_launcher")
         .prop_at("notify_on_download_complete", kushi::Kind::Bool, "behavior.notify_on_download_complete")
+        .prop_at("ignore_steam_runners", kushi::Kind::Bool, "behavior.ignore_steam_runners")
         .prop_at("bandwidth_mb_per_sec", kushi::Kind::F64, "download.bandwidth_mb_per_sec")
         .prop_at("epic_workers", kushi::Kind::I32, "download.epic.workers")
         .prop_at("epic_shared_memory_mb", kushi::Kind::I32, "download.epic.shared_memory_mb")

@@ -758,6 +758,9 @@ pub fn missing_component(game: &Game) -> Option<String> {
 }
 
 fn resolve_steam_runner(version: &str) -> Result<PathBuf> {
+    if crate::runners::steam_runners_ignored() {
+        anyhow::bail!("Runner `{}` not found.", version);
+    }
     crate::store::steam::local::find_proton_install(version)
         .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version))?;
     find_umu_run().ok_or_else(|| {
