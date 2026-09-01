@@ -1,0 +1,19 @@
+name: Question
+description: Ask how something works
+title: "[question] "
+labels: ["question"]
+body:
+  - type: checkboxes
+    id: checked-docs
+    attributes:
+      label: Before asking
+      options:
+        - label: I've read the [docs](https://omikuji-launcher.github.io/omikuji/user/guide.html) and consulted the [Q&A](https://omikuji-launcher.github.io/omikuji/user/guide.html#qa)
+          required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What's your question, mh?
+    validations:
+      required: true

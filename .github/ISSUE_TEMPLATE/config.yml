@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://omikuji-launcher.github.io/omikuji/user/guide.html
+    about: Most questions are answered here, including a full usage guide and Q&A.
