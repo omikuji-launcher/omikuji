@@ -12,8 +12,12 @@ Item {
     property var config: ({})
     property var updateField: function(key, value) {}
     property var gameModel: null
+    property string gameId: ""
+
+    readonly property bool canRefetchMedia: gameId !== ""
 
     signal refetchMediaRequested()
+    signal previewImageRequested(string source, string caption)
 
     implicitHeight: content.height
 
@@ -83,34 +87,25 @@ Item {
             icon: "image"
             width: parent.width
 
-            M3FileField {
-                label: qsTr("Banner Override")
-                placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: root.config["meta.banner"] || ""
-                width: parent.width
-                gameModel: root.gameModel
-                expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => root.updateField("meta.banner", t)
-            }
+            Repeater {
+                model: [
+                    { kind: "banner",   label: qsTr("Banner Override") },
+                    { kind: "coverart", label: qsTr("Cover Art Override") },
+                    { kind: "icon",     label: qsTr("Icon Override") }
+                ]
 
-            M3FileField {
-                label: qsTr("Cover Art Override")
-                placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: root.config["meta.coverart"] || ""
-                width: parent.width
-                gameModel: root.gameModel
-                expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => root.updateField("meta.coverart", t)
-            }
+                ImageOverrideField {
+                    required property var modelData
 
-            M3FileField {
-                label: qsTr("Icon Override")
-                placeholder: qsTr("empty = auto-fetch from SGDB")
-                text: root.config["meta.icon"] || ""
-                width: parent.width
-                gameModel: root.gameModel
-                expandWith: root.gameModel ? (t) => root.gameModel.expandGlobalVars(t) : null
-                onTextEdited: (t) => root.updateField("meta.icon", t)
+                    kind: modelData.kind
+                    label: modelData.label
+                    width: root.width
+                    gameId: root.gameId
+                    gameModel: root.gameModel
+                    config: root.config
+                    updateField: root.updateField
+                    onPreviewRequested: (src, caption) => root.previewImageRequested(src, caption)
+                }
             }
 
             M3Button {
@@ -118,6 +113,7 @@ Item {
                 variant: "tonal"
                 icon: "sync"
                 text: qsTr("Refetch art")
+                enabled: root.canRefetchMedia
                 onClicked: root.refetchMediaRequested()
             }
 

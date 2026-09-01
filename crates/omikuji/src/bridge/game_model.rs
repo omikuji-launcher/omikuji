@@ -99,6 +99,10 @@ pub mod qobject {
         fn game_log_appended(self: Pin<&mut GameModel>, game_id: &QString);
 
         #[qsignal]
+        #[cxx_name = "mediaChanged"]
+        fn media_changed(self: Pin<&mut GameModel>, game_id: &QString);
+
+        #[qsignal]
         #[cxx_name = "prepareOutput"]
         fn prepare_output(self: Pin<&mut GameModel>, line: &QString);
 
@@ -260,6 +264,14 @@ pub mod qobject {
 
         #[qinvokable]
         fn refetch_media(self: Pin<&mut GameModel>, game_id: &QString);
+
+        #[qinvokable]
+        fn resolve_media(
+            self: &GameModel,
+            game_id: &QString,
+            manual_override: &QString,
+            kind: &QString,
+        ) -> QString;
 
         #[qinvokable]
         #[cxx_name = "applyDefaultsToExistingGames"]
@@ -1035,6 +1047,7 @@ fn media_changed_notifier(
                 .model_index(row as i32, 0, &QModelIndex::default());
             let roles = cxx_qt_lib::QList::<i32>::default();
             obj.as_mut().data_changed(&idx, &idx, &roles);
+            obj.as_mut().media_changed(&QString::from(&id_inner));
         });
     }
 }
@@ -1773,6 +1786,22 @@ impl qobject::GameModel {
                 let _ = media::fetch_media_blocking_with(&id, &name, on_asset);
             }
         });
+    }
+
+    fn resolve_media(
+        &self,
+        game_id: &QString,
+        manual_override: &QString,
+        kind: &QString,
+    ) -> QString {
+        let Some(media_type) = MediaType::from_suffix(&kind.to_string()) else {
+            return QString::default();
+        };
+        QString::from(&*media::resolve_image(
+            &game_id.to_string(),
+            &manual_override.to_string(),
+            &media_type,
+        ))
     }
 
     fn apply_defaults_to_existing_games(

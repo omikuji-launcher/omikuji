@@ -1095,6 +1095,12 @@ property real cardZoom: appSettings.cardZoom
         onConfirmed: (id) => { if (id && gameModel) gameModel.refetch_media(id) }
     }
 
+    ImagePreviewDialog {
+        id: imagePreviewDialog
+        anchors.fill: parent
+        title: qsTr("Art preview")
+    }
+
     DefaultsApplyDialog {
         id: defaultsApplyDialog
         anchors.fill: parent
@@ -1508,6 +1514,7 @@ property real cardZoom: appSettings.cardZoom
                     root.tryPlay(idx)
                 }
                 onRefetchMediaRequested: (gid) => refetchMediaConfirm.show(gid)
+                onPreviewImageRequested: (src, caption) => imagePreviewDialog.show(src, caption)
             }
         }
     }
@@ -1523,6 +1530,7 @@ property real cardZoom: appSettings.cardZoom
                 runnersVersion: root.runnersVersion
                 envSetsDialog: root.envSetsDialogRef
                 dllSetsDialog: root.dllSetsDialogRef
+                onPreviewImageRequested: (src, caption) => imagePreviewDialog.show(src, caption)
                 onGameCreated: (gameId) => {
                     root.activeModal = ""
                     for (let i = 0; i < gameModel.count; i++) {

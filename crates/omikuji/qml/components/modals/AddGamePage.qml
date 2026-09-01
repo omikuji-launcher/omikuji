@@ -26,6 +26,7 @@ Item {
 
     signal gameCreated(string gameId)
     signal gameCreatedAndPlay(string gameId)
+    signal previewImageRequested(string source, string caption)
 
     property var tabs: {
         let base = [
@@ -111,6 +112,7 @@ Item {
                 item.config = Qt.binding(() => root.config)
                 item.updateField = root.updateField
                 item.gameModel = Qt.binding(() => root.gameModel)
+                item.previewImageRequested.connect(root.previewImageRequested)
             }
         }
 

@@ -25,6 +25,10 @@ impl MediaType {
             _ => "jpg",
         }
     }
+
+    pub fn from_suffix(suffix: &str) -> Option<Self> {
+        ALL_TYPES.into_iter().find(|t| t.suffix() == suffix)
+    }
 }
 
 pub const ALL_TYPES: [MediaType; 3] = [MediaType::Banner, MediaType::Coverart, MediaType::Icon];

@@ -1,6 +1,5 @@
 import QtQuick
 import omikuji 1.0
-import "../primitives"
 
 Item {
     id: root
@@ -15,6 +14,7 @@ Item {
     property var gameModel: null
     property bool expandHint: true
     property var expandWith: expandHint && gameModel ? (t) => gameModel.expandVars(t) : null
+    property alias trailingActions: trailing.data
 
     readonly property real boxCenterY: fieldRow.y + fieldRow.height / 2
 
@@ -52,6 +52,7 @@ Item {
         FieldSurface {
             id: inputBg
             width: parent.width - folderBtn.width - parent.spacing
+                   - (trailing.visible ? trailing.width + parent.spacing : 0)
             height: parent.height
             focused: inputArea.activeFocus
 
@@ -105,43 +106,18 @@ Item {
             }
         }
 
-        FieldSurface {
+        FieldButton {
             id: folderBtn
-            width: 44
-            height: 44
-            opacity: root.readOnly ? 0.4 : 1.0
+            icon: "folder"
+            blocked: root.readOnly
+            onClicked: picker.open()
+        }
 
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: folderMouse.containsPress ? Theme.statePressed
-                      : folderMouse.containsMouse ? Theme.stateHover
-                      : "transparent"
-
-                Behavior on color {
-                    ColorAnimation { duration: Theme.dur.fast }
-                }
-            }
-
-            SvgIcon {
-                anchors.centerIn: parent
-                name: "folder"
-                size: 20
-                color: folderMouse.containsMouse ? Theme.iconHover : Theme.icon
-
-                Behavior on color {
-                    ColorAnimation { duration: 100 }
-                }
-            }
-
-            MouseArea {
-                id: folderMouse
-                anchors.fill: parent
-                hoverEnabled: !root.readOnly
-                enabled: !root.readOnly
-                cursorShape: root.readOnly ? Qt.ArrowCursor : Qt.PointingHandCursor
-                onClicked: picker.open()
-            }
+        Row {
+            id: trailing
+            height: parent.height
+            spacing: parent.spacing
+            visible: children.length > 0
         }
     }
 
