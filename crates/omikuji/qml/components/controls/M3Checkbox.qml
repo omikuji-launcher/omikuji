@@ -7,7 +7,7 @@ Item {
 
     property bool checked: false
     property bool indeterminate: false
-    property int boxSize: 18
+    property int boxSize: 20
 
     readonly property bool _on: checked || indeterminate
     readonly property color _outlineOff: Theme.alpha(Theme.text, 0.5)

@@ -425,6 +425,7 @@ fn main() {
         "qml/components/controls/M3TextField.qml",
         "qml/components/controls/OutputLog.qml",
         "qml/components/controls/ResizeGrips.qml",
+        "qml/components/controls/SwitchField.qml",
         "qml/components/controls/ThemedLogHighlighter.qml",
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",

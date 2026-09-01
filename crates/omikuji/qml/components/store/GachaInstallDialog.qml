@@ -118,6 +118,12 @@ DialogCard {
         return out
     }
 
+    function toggleVoice(index) {
+        let copy = voiceChecks.slice()
+        copy[index] = !copy[index]
+        voiceChecks = copy
+    }
+
     function hasEnoughSpace() {
         if (existingInstall) return true
         if (installFreeBytes < 0) return false
@@ -522,28 +528,37 @@ DialogCard {
                 Repeater {
                     model: root.voiceLocales
 
-                    RowLayout {
+                    Item {
                         id: localeRow
                         required property var modelData
                         required property int index
 
                         Layout.fillWidth: true
-                        spacing: Theme.space.sm
+                        implicitHeight: Math.max(localeBox.implicitHeight, localeLabel.implicitHeight)
 
-                        M3Switch {
+                        M3Checkbox {
+                            id: localeBox
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
                             checked: root.voiceChecks[localeRow.index] === true
-                            onToggled: {
-                                let copy = root.voiceChecks.slice()
-                                copy[localeRow.index] = !copy[localeRow.index]
-                                root.voiceChecks = copy
-                            }
                         }
 
                         Text {
+                            id: localeLabel
+                            anchors.left: localeBox.right
+                            anchors.leftMargin: Theme.space.sm
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
                             text: localeRow.modelData.label
                             color: Theme.text
-                            font.pixelSize: Theme.type.label.size
-                            Layout.fillWidth: true
+                            font.pixelSize: Theme.type.subtitle.size
+                            elide: Text.ElideRight
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.toggleVoice(localeRow.index)
                         }
                     }
                 }
@@ -737,46 +752,14 @@ DialogCard {
             label: qsTr("Misc")
             visible: root.companion !== null
 
-            Item {
+            SwitchField {
                 width: parent.width
-                height: 40
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Theme.radius.sm
-                    color: companionHover.containsMouse
-                        ? Theme.alpha(Theme.text, 0.06)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                }
-
-                Text {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.right: companionBox.left
-                    anchors.rightMargin: Theme.space.md
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.companion ? (root.companion.label || root.companion.name) : ""
-                    color: Theme.text
-                    font.pixelSize: Theme.type.label.size
-                    elide: Text.ElideRight
-                }
-
-                M3Checkbox {
-                    id: companionBox
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: root.companionAccepted
-                }
-
-                MouseArea {
-                    id: companionHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.companionAccepted = !root.companionAccepted
-                }
+                label: root.companion ? (root.companion.label || root.companion.name) : ""
+                description: root.companion
+                    ? (root.companion.repo || "").replace(/^https?:\/\//, "")
+                    : ""
+                checked: root.companionAccepted
+                onToggled: (val) => root.companionAccepted = val
             }
         }
     }

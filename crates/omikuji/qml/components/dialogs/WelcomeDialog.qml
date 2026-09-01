@@ -181,7 +181,7 @@ DialogCard {
             visible: !root.umuPresent
             label: qsTr("Proton support")
 
-            LabeledSwitch {
+            SwitchField {
                 width: parent.width
                 label: qsTr("Install umu-run")
                 description: qsTr("Proton runners launch through it")
