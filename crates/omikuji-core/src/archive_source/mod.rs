@@ -149,6 +149,10 @@ fn installable_assets(assets: &[serde_json::Value]) -> Vec<AssetInfo> {
         .collect()
 }
 
+pub fn matches_priority(asset_name: &str, priority: &[String]) -> bool {
+    priority.iter().any(|want| asset_name.contains(want.as_str()))
+}
+
 fn pick_asset(assets: &[AssetInfo], priority: &[String]) -> Option<AssetInfo> {
     priority
         .iter()

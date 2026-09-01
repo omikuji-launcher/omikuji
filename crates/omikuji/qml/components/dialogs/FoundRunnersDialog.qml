@@ -14,6 +14,7 @@ DialogCard {
     property var runners: []
 
     signal deleteRunnerRequested(string name, string dir)
+    signal steamActionRequested(string name, string dir, string action)
 
     maxWidth: 720
     scrollable: false
@@ -94,6 +95,39 @@ DialogCard {
 
             ScrollBar.vertical: ThinScrollBar {}
 
+            section.property: "origin"
+            section.criteria: ViewSection.FullString
+            section.delegate: Item {
+                id: originHeader
+                required property string section
+
+                width: ListView.view.width
+                height: 36
+
+                Text {
+                    id: originLabel
+                    anchors.left: parent.left
+                    anchors.leftMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: originHeader.section
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.micro.size
+                    font.weight: Font.DemiBold
+                    font.capitalization: Font.AllUppercase
+                    font.letterSpacing: 0.6
+                }
+
+                Rectangle {
+                    anchors.left: originLabel.right
+                    anchors.leftMargin: Theme.space.sm
+                    anchors.right: parent.right
+                    anchors.rightMargin: 24
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 1
+                    color: Theme.separator
+                }
+            }
+
             Text {
                 anchors.centerIn: parent
                 visible: list.count === 0
@@ -108,7 +142,7 @@ DialogCard {
                 required property var modelData
 
                 width: ListView.view.width
-                height: 64
+                height: 48
 
                 Rectangle {
                     anchors.fill: parent
@@ -130,31 +164,18 @@ DialogCard {
                     acceptedButtons: Qt.NoButton
                 }
 
-                Column {
+                Text {
                     anchors.left: parent.left
                     anchors.leftMargin: 24
                     anchors.right: actionSlot.left
                     anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 3
-
-                    Text {
-                        width: parent.width
-                        text: rr.modelData.name
-                        color: Theme.text
-                        font.pixelSize: Theme.type.label.size
-                        font.weight: Font.Medium
-                        font.family: "monospace"
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        width: parent.width
-                        text: rr.modelData.origin
-                        color: Theme.textSubtle
-                        font.pixelSize: Theme.type.caption.size
-                        elide: Text.ElideRight
-                    }
+                    text: rr.modelData.name
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
+                    font.weight: Font.Medium
+                    font.family: "monospace"
+                    elide: Text.ElideRight
                 }
 
                 Row {
@@ -163,6 +184,18 @@ DialogCard {
                     anchors.rightMargin: 20
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 10
+
+                    IconButton {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: rr.modelData.steam_action !== "none"
+                        icon: "steam"
+                        size: 32
+                        tonal: true
+                        squircle: true
+                        onClicked: root.steamActionRequested(rr.modelData.name,
+                                                            rr.modelData.path,
+                                                            rr.modelData.steam_action)
+                    }
 
                     IconButton {
                         anchors.verticalCenter: parent.verticalCenter
@@ -181,6 +214,7 @@ DialogCard {
                     height: 1
                     color: Theme.separator
                     visible: rr.index < (list.count - 1)
+                        && root.runners[rr.index + 1].origin === rr.modelData.origin
                 }
             }
         }

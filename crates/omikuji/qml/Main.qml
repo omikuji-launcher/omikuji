@@ -219,11 +219,21 @@ ApplicationWindow {
         return category === "runners" || category === root.latestCategory
     }
 
+    property var latestToastMuted: ({})
+
+    function latestToastMutedFor(source) {
+        return root.latestToastMuted[source] === true
+    }
+
+    function unmuteLatestToast(source) {
+        delete root.latestToastMuted[source]
+    }
+
     Connections {
         target: archiveManager
         function onInstallStarted(category, source, tag) {
             root.setInstallPhase(root.installKey(category, source, tag), "starting")
-            if (category !== root.latestCategory) return
+            if (category !== root.latestCategory || root.latestToastMutedFor(source)) return
             root.beginLatestToast(source, qsTr("Starting download"))
         }
         function onInstallProgress(category, source, tag, phase, percent) {
@@ -240,13 +250,17 @@ ApplicationWindow {
             if (root.isRunnerCategory(category)) root.runnersVersion++
             if (category !== root.latestCategory) return
             root.endLatestToast(source)
-            toastManager.show("success", qsTr("%1 updated").arg(source), tag)
+            if (!root.latestToastMutedFor(source))
+                toastManager.show("success", qsTr("%1 updated").arg(source), tag)
+            root.unmuteLatestToast(source)
         }
         function onInstallFailed(category, source, tag, err) {
             root.setInstallPhase(root.installKey(category, source, tag), "")
             if (category !== root.latestCategory) return
             root.endLatestToast(source)
-            toastManager.show("error", qsTr("Couldn't update %1").arg(source), err)
+            if (!root.latestToastMutedFor(source))
+                toastManager.show("error", qsTr("Couldn't update %1").arg(source), err)
+            root.unmuteLatestToast(source)
         }
     }
 
@@ -1155,6 +1169,11 @@ property real cardZoom: appSettings.cardZoom
         anchors.fill: parent
         archiveManager: archiveManager
         activeInstalls: root.archiveActiveInstalls
+        latestCategory: root.latestCategory
+        onLatestInstallRequested: (sourceName) => {
+            root.latestToastMuted[sourceName] = true
+            archiveManager.installLatest(sourceName)
+        }
         onVersionDeleted: (category, sourceName, tag) => {
             if (category === "runners") root.runnersVersion++
         }
@@ -1178,7 +1197,10 @@ property real cardZoom: appSettings.cardZoom
             archiveManageDialog.escEnabled = false
             removeSourceConfirm.show({ category: category, source: sourceName })
         }
-        onMoveToSteamRequested: (sourceName, tag) => steamMoveDialog.show(archiveManager.installedRunnerPath(sourceName, tag), tag)
+        onMoveToSteamRequested: (sourceName, tag) => {
+            const dir = archiveManager.installedRunnerPath(sourceName, tag)
+            steamMoveDialog.show(dir, tag, archiveManager.steamActionFor(dir))
+        }
         onClosed: {
             if (!root.welcomeResumePending) return
             root.welcomeResumePending = false
@@ -1204,12 +1226,22 @@ property real cardZoom: appSettings.cardZoom
             foundRunnersDialog.refresh()
             root.runnersVersion++
         }
+        onSteamActionRequested: (name, dir, action) => steamMoveDialog.show(dir, name, action)
     }
 
     SteamMoveDialog {
         id: steamMoveDialog
         anchors.fill: parent
         archiveManager: archiveManager
+        onLinksApplied: (name, error) => {
+            if (error !== "") {
+                toastManager.show("error", qsTr("Couldn't update Steam links"), error)
+                return
+            }
+            foundRunnersDialog.refresh()
+            root.runnersVersion++
+            toastManager.show("success", qsTr("Steam links updated for %1").arg(name), qsTr("Restart Steam to see it."))
+        }
     }
 
     Connections {

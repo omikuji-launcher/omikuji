@@ -12,6 +12,8 @@ pub struct ArchiveSource {
     pub desc: String,
     #[serde(default)]
     pub asset_priority: Vec<String>,
+    #[serde(default)]
+    pub require_asset_match: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -39,6 +41,7 @@ fn src(name: &str, kind: &str, api_url: &str) -> ArchiveSource {
         api_url: api_url.into(),
         desc: String::new(),
         asset_priority: Vec::new(),
+        require_asset_match: false,
     }
 }
 

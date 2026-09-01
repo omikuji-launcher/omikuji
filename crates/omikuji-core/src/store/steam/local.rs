@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -200,6 +200,34 @@ impl VdfValue {
             _ => None,
         }
     }
+
+    pub fn as_object_mut(&mut self) -> Option<&mut HashMap<String, VdfValue>> {
+        match self {
+            VdfValue::Object(o) => Some(o),
+            _ => None,
+        }
+    }
+}
+
+pub fn write_vdf(map: &HashMap<String, VdfValue>) -> String {
+    fn emit(map: &HashMap<String, VdfValue>, depth: usize, out: &mut String) {
+        let pad = "\t".repeat(depth);
+        let mut keys: Vec<&String> = map.keys().collect();
+        keys.sort();
+        for key in keys {
+            match &map[key] {
+                VdfValue::String(v) => out.push_str(&format!("{pad}\"{key}\"\t\t\"{v}\"\n")),
+                VdfValue::Object(o) => {
+                    out.push_str(&format!("{pad}\"{key}\"\n{pad}{{\n"));
+                    emit(o, depth + 1, out);
+                    out.push_str(&format!("{pad}}}\n"));
+                }
+            }
+        }
+    }
+    let mut out = String::new();
+    emit(map, 0, &mut out);
+    out
 }
 
 fn read_library_folders(steam_dir: &Path) -> Result<HashMap<String, HashMap<String, String>>> {
@@ -511,6 +539,35 @@ pub fn proton_display_name(dir: &Path) -> Option<String> {
         .get("display_name")?
         .as_str()
         .map(str::to_string)
+}
+
+pub fn set_compat_tool_name(dir: &Path, name: &str) -> Result<()> {
+    let path = dir.join("compatibilitytool.vdf");
+    let content =
+        fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let mut vdf = parse_vdf(&content);
+
+    let tools = vdf
+        .get_mut("compatibilitytools")
+        .and_then(VdfValue::as_object_mut)
+        .and_then(|o| o.get_mut("compat_tools"))
+        .and_then(VdfValue::as_object_mut)
+        .ok_or_else(|| anyhow!("{} has no compat_tools block", path.display()))?;
+
+    let old_key = tools
+        .keys()
+        .next()
+        .cloned()
+        .ok_or_else(|| anyhow!("{} lists no compat tool", path.display()))?;
+    let mut tool = tools
+        .remove(&old_key)
+        .unwrap_or_else(|| VdfValue::Object(HashMap::new()));
+    if let Some(fields) = tool.as_object_mut() {
+        fields.insert("display_name".into(), VdfValue::String(name.into()));
+    }
+    tools.insert(name.to_string(), tool);
+
+    fs::write(&path, write_vdf(&vdf)).with_context(|| format!("writing {}", path.display()))
 }
 
 pub fn under_steamapps_common(dir: &Path) -> bool {

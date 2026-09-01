@@ -22,15 +22,24 @@ DialogCard {
 
     property var versions: []
     property var installedDirs: ({})
-
-    property string errorMessage: ""
     property bool fetching: false
+    property string latestCategory: "runners_latest"
+
+    readonly property string latestName: sourceName + "-Latest"
+    readonly property bool latestInstalled: installedDirs[latestName] === true
+    readonly property bool latestBusy: {
+        const prefix = latestCategory + "/" + sourceName + "/"
+        for (const key in activeInstalls)
+            if (key.indexOf(prefix) === 0) return true
+        return false
+    }
 
     signal closed()
     signal versionDeleted(string category, string sourceName, string tag)
     signal removeSourceRequested(string category, string sourceName)
     signal editSourceRequested(string category, string sourceName)
     signal moveToSteamRequested(string sourceName, string tag)
+    signal latestInstallRequested(string sourceName)
 
     maxWidth: 840
     preferredHeight: 650
@@ -61,7 +70,7 @@ DialogCard {
         sourceKind = kind
         versions = []
         installedDirs = ({})
-        errorMessage = ""
+        root.errorText = ""
         refreshInstalled()
         fetchVersionsNow()
     }
@@ -93,10 +102,20 @@ DialogCard {
         }
     }
 
+    function ownsInstall(cat, name) {
+        return name === sourceName && (cat === category || cat === latestCategory)
+    }
+
+    function deleteInstalled(dirName) {
+        archiveManager.deleteVersion(category, sourceName, dirName)
+        refreshInstalled()
+        root.versionDeleted(category, sourceName, dirName)
+    }
+
     function fetchVersionsNow() {
         if (!archiveManager || sourceName === "") return
         fetching = true
-        errorMessage = ""
+        root.errorText = ""
         archiveManager.fetchVersions(category, sourceName)
     }
 
@@ -139,21 +158,21 @@ DialogCard {
                 root.versions = JSON.parse(json) || []
             } catch (e) {
                 root.versions = []
-                root.errorMessage = qsTr("Couldn't parse versions response.")
+                root.errorText = qsTr("Couldn't parse versions response.")
             }
         }
         function onVersionsFailed(cat, name, err) {
             if (cat !== root.category || name !== root.sourceName) return
             root.fetching = false
-            root.errorMessage = err
+            root.errorText = err
         }
         function onInstallCompleted(cat, name, tag, installDir) {
-            if (cat !== root.category || name !== root.sourceName) return
+            if (!root.ownsInstall(cat, name)) return
             root.refreshInstalled()
         }
         function onInstallFailed(cat, name, tag, err) {
-            if (cat !== root.category || name !== root.sourceName) return
-            root.errorMessage = err
+            if (!root.ownsInstall(cat, name)) return
+            root.errorText = err
         }
     }
 
@@ -305,9 +324,8 @@ DialogCard {
                 Text {
                     text: root.fetching ? qsTr("Fetching versions…")
                         : root.versions.length > 0 ? qsTr("%1 versions available").arg(root.versions.length)
-                        : root.errorMessage !== "" ? root.errorMessage
                         : qsTr("No versions loaded yet")
-                    color: root.errorMessage !== "" ? Theme.error : Theme.textSubtle
+                    color: Theme.textSubtle
                     font.pixelSize: Theme.type.caption.size
                 }
             }
@@ -341,10 +359,96 @@ DialogCard {
                 anchors.centerIn: parent
                 visible: list.count === 0
                 text: root.fetching ? qsTr("Loading…")
-                    : root.errorMessage !== "" ? qsTr("Couldn't load versions.")
+                    : root.errorText !== "" ? qsTr("Installed runners are still listed under Found runners.")
                     : qsTr("No versions available.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.label.size
+            }
+
+            header: Item {
+                id: latestRow
+                width: list.width
+                visible: root.category === "runners"
+                height: visible ? 64 : 0
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.space.sm
+                    anchors.rightMargin: Theme.space.sm
+                    anchors.topMargin: 3
+                    anchors.bottomMargin: 3
+                    radius: Theme.radius.sm
+                    color: Theme.alpha(Theme.accent, latestMouse.containsMouse ? 0.12 : 0.07)
+                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                }
+
+                MouseArea {
+                    id: latestMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                }
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 24
+                    anchors.right: latestActions.left
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 3
+
+                    Text {
+                        width: parent.width
+                        text: root.latestName
+                        color: Theme.accent
+                        font.pixelSize: Theme.type.label.size
+                        font.weight: Font.DemiBold
+                        font.family: "monospace"
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: qsTr("Always updates itself to the newest release")
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.caption.size
+                        elide: Text.ElideRight
+                    }
+                }
+
+                Row {
+                    id: latestActions
+                    anchors.right: parent.right
+                    anchors.rightMargin: 20
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 14
+
+                    IconButton {
+                        visible: root.latestInstalled && root.sourceKind === "proton"
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: "steam"
+                        size: 32
+                        tonal: true
+                        squircle: true
+                        onClicked: root.moveToSteamRequested(root.sourceName, root.latestName)
+                    }
+
+                    InstallActions {
+                        anchors.verticalCenter: parent.verticalCenter
+                        installed: root.latestInstalled
+                        busy: root.latestBusy
+                        onInstallRequested: root.latestInstallRequested(root.sourceName)
+                        onDeleteRequested: root.deleteInstalled(root.latestName)
+                    }
+                }
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: 1
+                    color: Theme.separator
+                }
             }
 
             delegate: Item {
@@ -435,8 +539,9 @@ DialogCard {
                         visible: versionRow.installed && root.category === "runners" && root.sourceKind === "proton"
                         anchors.verticalCenter: parent.verticalCenter
                         icon: "steam"
-                        size: 28
-                        rounded: true
+                        size: 32
+                        tonal: true
+                        squircle: true
                         onClicked: root.moveToSteamRequested(root.sourceName, versionRow.assetStems[versionRow.assetIndex])
                     }
 
@@ -456,65 +561,24 @@ DialogCard {
                         }
                     }
 
-                    Item {
-                        width: 132
-                        height: 30
+                    InstallActions {
                         anchors.verticalCenter: parent.verticalCenter
-
-                        M3Button {
-                            anchors.centerIn: parent
-                            visible: !versionRow.installed && !versionRow.busy
-                            text: qsTr("Install")
-                            variant: "filled"
-                            onClicked: {
-                                var payload = JSON.parse(JSON.stringify(versionRow.modelData))
-                                if (versionRow.chosenAsset) {
-                                    payload.asset_name = versionRow.chosenAsset.name
-                                    payload.asset_url = versionRow.chosenAsset.url
-                                    payload.asset_size = versionRow.chosenAsset.size
-                                }
-                                root.archiveManager.installVersion(
-                                    root.category,
-                                    root.sourceName,
-                                    JSON.stringify(payload)
-                                )
+                        installed: versionRow.installed
+                        busy: versionRow.busy
+                        onInstallRequested: {
+                            var payload = JSON.parse(JSON.stringify(versionRow.modelData))
+                            if (versionRow.chosenAsset) {
+                                payload.asset_name = versionRow.chosenAsset.name
+                                payload.asset_url = versionRow.chosenAsset.url
+                                payload.asset_size = versionRow.chosenAsset.size
                             }
+                            root.archiveManager.installVersion(
+                                root.category,
+                                root.sourceName,
+                                JSON.stringify(payload)
+                            )
                         }
-
-                        Row {
-                            anchors.centerIn: parent
-                            visible: versionRow.installed && !versionRow.busy
-                            spacing: 8
-
-                            M3Button {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: qsTr("Installed")
-                                variant: "tonal"
-                                enabled: false
-                                opacity: 0.75
-                            }
-
-                            IconButton {
-                                anchors.verticalCenter: parent.verticalCenter
-                                icon: "close"
-                                size: 28
-                                rounded: false
-                                danger: true
-                                onClicked: {
-                                    root.archiveManager.deleteVersion(root.category, root.sourceName, versionRow.assetStems[versionRow.assetIndex])
-                                    root.refreshInstalled()
-                                    root.versionDeleted(root.category, root.sourceName, versionRow.assetStems[versionRow.assetIndex])
-                                }
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            visible: versionRow.busy
-                            text: qsTr("Working…")
-                            color: Theme.textMuted
-                            font.pixelSize: Theme.type.caption.size
-                        }
+                        onDeleteRequested: root.deleteInstalled(versionRow.assetStems[versionRow.assetIndex])
                     }
                 }
 

@@ -53,11 +53,21 @@ pub fn latest_source(version: &str) -> Option<ArchiveSource> {
 }
 
 async fn latest_release(source: &ArchiveSource) -> Result<archive_source::ReleaseInfo> {
-    fetch_versions(source)
-        .await?
-        .into_iter()
-        .next()
-        .ok_or_else(|| anyhow!("{} has no installable release", source.name))
+    let mut versions = fetch_versions(source).await?.into_iter();
+    if !source.require_asset_match || source.asset_priority.is_empty() {
+        return versions
+            .next()
+            .ok_or_else(|| anyhow!("{} has no installable release", source.name));
+    }
+    versions
+        .find(|r| archive_source::matches_priority(&r.asset_name, &source.asset_priority))
+        .ok_or_else(|| {
+            anyhow!(
+                "no {} release has a build matching {}",
+                source.name,
+                source.asset_priority.join(" ")
+            )
+        })
 }
 
 static UPDATING_LATEST: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
@@ -91,14 +101,32 @@ pub async fn install_latest_release(
     }
     let _guard = UpdatingGuard(source.name.clone());
 
-    archive_source::install_version_named(
+    let dir = archive_source::install_version_named(
         LATEST_CATEGORY,
         source,
         release,
         &source_root(source),
         &latest_dir_name(source),
     )
-    .await
+    .await?;
+
+    if !steam_links(&dir).is_empty()
+        && let Err(e) = stamp_steam_identity(&dir)
+    {
+        tracing::warn!("{} keeps its upstream Steam name: {:#}", dir.display(), e);
+    }
+    Ok(dir)
+}
+
+fn stamp_steam_identity(dir: &Path) -> Result<()> {
+    if !dir.join("compatibilitytool.vdf").exists() {
+        return Ok(());
+    }
+    let name = dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow!("bad runner path: {}", dir.display()))?;
+    crate::store::steam::local::set_compat_tool_name(dir, name)
 }
 
 pub async fn ensure_latest(source: &ArchiveSource) -> Result<PathBuf> {
@@ -220,6 +248,7 @@ pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
             api_url: repo.releases_api_url(),
             desc: String::new(),
             asset_priority: Vec::new(),
+            require_asset_match: false,
         },
         tag,
         registered: false,
@@ -227,7 +256,9 @@ pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
 }
 
 pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
-    archive_source::delete_version(source, &source_root(source), tag)
+    let root = source_root(source);
+    unlink_from_steam(&root.join(tag))?;
+    archive_source::delete_version(source, &root, tag)
 }
 
 pub fn is_proton_dir(path: &Path) -> bool {
@@ -267,6 +298,76 @@ pub fn move_to_steam_dir(src: &Path, roots: &[PathBuf]) -> Result<()> {
     Ok(())
 }
 
+fn clear_compat_entry(dest: &Path) -> Result<()> {
+    let Ok(meta) = dest.symlink_metadata() else {
+        return Ok(());
+    };
+    if meta.is_symlink() {
+        std::fs::remove_file(dest)?;
+    } else {
+        std::fs::remove_dir_all(dest)?;
+    }
+    Ok(())
+}
+
+pub fn steam_links(src: &Path) -> Vec<PathBuf> {
+    let mut out: Vec<PathBuf> = crate::store::steam::local::iter_compat_tools_dirs()
+        .into_iter()
+        .flat_map(|ctd| std::fs::read_dir(ctd).into_iter().flatten().flatten())
+        .map(|e| e.path())
+        .filter(|p| std::fs::read_link(p).is_ok_and(|t| t == src))
+        .filter_map(|p| {
+            let ctd = std::fs::canonicalize(p.parent()?).ok()?;
+            Some(ctd.join(p.file_name()?))
+        })
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
+pub fn steam_link_roots(src: &Path) -> Vec<PathBuf> {
+    steam_links(src)
+        .iter()
+        .filter_map(|p| Some(p.parent()?.parent()?.to_path_buf()))
+        .collect()
+}
+
+pub fn set_steam_links(src: &Path, roots: &[PathBuf]) -> Result<()> {
+    let name = src
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow!("bad runner path: {}", src.display()))?;
+    if !roots.is_empty() && !src.join("compatibilitytool.vdf").exists() {
+        anyhow::bail!("{name} ships no compatibilitytool.vdf, Steam would not list it");
+    }
+
+    let wanted: Vec<PathBuf> = roots
+        .iter()
+        .map(|r| r.join("compatibilitytools.d").join(name))
+        .collect();
+    for stale in steam_links(src).iter().filter(|p| !wanted.contains(p)) {
+        clear_compat_entry(stale)?;
+    }
+    for dest in &wanted {
+        if let Some(ctd) = dest.parent() {
+            std::fs::create_dir_all(ctd)?;
+        }
+        clear_compat_entry(dest)?;
+        std::os::unix::fs::symlink(src, dest)?;
+    }
+
+    if wanted.is_empty() {
+        Ok(())
+    } else {
+        stamp_steam_identity(src)
+    }
+}
+
+pub fn unlink_from_steam(src: &Path) -> Result<()> {
+    set_steam_links(src, &[])
+}
+
 fn is_runner_dir(path: &Path) -> bool {
     path.join("bin/wine").exists() || path.join("files/bin/wine64").exists() || is_proton_dir(path)
 }
@@ -275,6 +376,7 @@ pub fn delete_found_runner(path: &Path) -> Result<()> {
     if !is_runner_dir(path) {
         anyhow::bail!("not a runner directory: {}", path.display());
     }
+    unlink_from_steam(path)?;
     std::fs::remove_dir_all(path)?;
     Ok(())
 }
@@ -335,12 +437,46 @@ fn runner_kind(path: &Path) -> &'static str {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum SteamAction {
+    None,
+    Move,
+    Link,
+}
+
+impl SteamAction {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Move => "move",
+            Self::Link => "link",
+        }
+    }
+}
+
+impl Serialize for SteamAction {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(self.as_str())
+    }
+}
+
+pub fn steam_action(path: &Path) -> SteamAction {
+    if !path.starts_with(runners_dir()) || !path.join("compatibilitytool.vdf").exists() {
+        return SteamAction::None;
+    }
+    match path.file_name().and_then(|n| n.to_str()) {
+        Some(name) if name.ends_with(LATEST_SUFFIX) => SteamAction::Link,
+        _ => SteamAction::Move,
+    }
+}
+
 #[derive(Serialize)]
 pub struct FoundRunner {
     pub name: String,
     pub kind: String,
     pub origin: String,
     pub path: String,
+    pub steam_action: SteamAction,
 }
 
 pub fn found_runners() -> Vec<FoundRunner> {
@@ -352,6 +488,7 @@ pub fn found_runners() -> Vec<FoundRunner> {
                 kind: runner_kind(path).to_string(),
                 origin: origin.to_string(),
                 path: path.to_string_lossy().into_owned(),
+                steam_action: steam_action(path),
             });
         }
     };

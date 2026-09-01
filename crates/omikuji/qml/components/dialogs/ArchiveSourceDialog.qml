@@ -16,6 +16,7 @@ DialogCard {
     property string kindValue: ""
     property string urlValue: ""
     property string priorityValue: ""
+    property bool requireMatchValue: false
 
     property bool editing: false
 
@@ -44,6 +45,7 @@ DialogCard {
         descValue = ""
         urlValue = ""
         priorityValue = ""
+        requireMatchValue = false
         kindValue = kindOptions[0].value
         root.errorText = ""
         open()
@@ -57,6 +59,7 @@ DialogCard {
         kindValue = source.kind || ""
         urlValue = source.api_url || ""
         priorityValue = (source.asset_priority || []).join(" ")
+        requireMatchValue = source.require_asset_match === true
         root.errorText = ""
         open()
     }
@@ -78,7 +81,8 @@ DialogCard {
             kind: kindValue,
             api_url: normalizedUrl(),
             desc: descValue.trim(),
-            asset_priority: priorityValue.trim().split(/\s+/).filter(p => p.length > 0)
+            asset_priority: priorityValue.trim().split(/\s+/).filter(p => p.length > 0),
+            require_asset_match: requireMatchValue
         })
         const err = editing
             ? archiveManager.updateSource(category, nameValue.trim(), payload)
@@ -167,6 +171,15 @@ DialogCard {
             color: Theme.textSubtle
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
+        }
+
+        SwitchField {
+            width: parent.width
+            visible: root.category === "runners" && root.priorityValue.trim() !== ""
+            label: qsTr("Skip releases with no match")
+            description: qsTr("-Latest picks the newest matching release instead")
+            checked: root.requireMatchValue
+            onToggled: (val) => root.requireMatchValue = val
         }
     }
 

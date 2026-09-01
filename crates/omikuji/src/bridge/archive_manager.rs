@@ -195,6 +195,26 @@ pub mod qobject {
         );
 
         #[qinvokable]
+        #[cxx_name = "installLatest"]
+        fn install_latest(self: Pin<&mut ArchiveManagerBridge>, source: QString);
+
+        #[qinvokable]
+        #[cxx_name = "steamActionFor"]
+        fn steam_action_for(self: &ArchiveManagerBridge, runner_dir: QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "steamLinkedRoots"]
+        fn steam_linked_roots(self: &ArchiveManagerBridge, runner_dir: QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "setSteamLinks"]
+        fn set_steam_links(
+            self: &ArchiveManagerBridge,
+            runner_dir: QString,
+            roots_json: QString,
+        ) -> QString;
+
+        #[qinvokable]
         #[cxx_name = "dllPackActiveVersion"]
         fn dll_pack_active_version(self: &ArchiveManagerBridge, source: QString) -> QString;
 
@@ -558,6 +578,67 @@ impl qobject::ArchiveManagerBridge {
             .map(|(label, path)| (label, path.to_string_lossy().into_owned()))
             .collect();
         QString::from(&serde_json::to_string(&roots).unwrap_or_else(|_| "[]".into()))
+    }
+
+    fn install_latest(mut self: Pin<&mut Self>, source: QString) {
+        let name = source.to_string();
+        let fail = |bridge: Pin<&mut qobject::ArchiveManagerBridge>, name: &str, err: &str| {
+            bridge.install_failed(
+                QString::from(runners::LATEST_CATEGORY),
+                QString::from(name),
+                QString::from(""),
+                QString::from(err),
+            );
+        };
+        let Some(src) = source_lookup("runners", &name) else {
+            fail(self.as_mut(), &name, &format!("unknown source: {}", name));
+            return;
+        };
+        let qt_thread = self.as_mut().qt_thread();
+        thread::spawn(move || {
+            let result = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .map_err(|e| format!("{}", e))
+                .and_then(|rt| {
+                    rt.block_on(runners::ensure_latest(&src))
+                        .map_err(|e| format!("{:#}", e))
+                });
+            let Err(err) = result else {
+                return;
+            };
+            let _ = qt_thread.queue(move |mut this: Pin<&mut qobject::ArchiveManagerBridge>| {
+                fail(this.as_mut(), &name, &err);
+            });
+        });
+    }
+
+    fn steam_action_for(&self, runner_dir: QString) -> QString {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        QString::from(runners::steam_action(&dir).as_str())
+    }
+
+    fn steam_linked_roots(&self, runner_dir: QString) -> QString {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        let roots: Vec<String> = runners::steam_link_roots(&dir)
+            .into_iter()
+            .map(|p| p.to_string_lossy().into_owned())
+            .collect();
+        QString::from(&serde_json::to_string(&roots).unwrap_or_else(|_| "[]".into()))
+    }
+
+    fn set_steam_links(&self, runner_dir: QString, roots_json: QString) -> QString {
+        let dir = std::path::PathBuf::from(runner_dir.to_string());
+        let roots: Vec<std::path::PathBuf> =
+            serde_json::from_str::<Vec<String>>(&roots_json.to_string())
+                .unwrap_or_default()
+                .into_iter()
+                .map(std::path::PathBuf::from)
+                .collect();
+        match runners::set_steam_links(&dir, &roots) {
+            Ok(()) => QString::from(""),
+            Err(e) => QString::from(&format!("{:#}", e)),
+        }
     }
 
     fn move_to_steam_at(mut self: Pin<&mut Self>, runner_dir: QString, roots_json: QString) {

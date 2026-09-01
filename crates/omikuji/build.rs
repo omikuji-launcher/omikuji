@@ -407,6 +407,7 @@ fn main() {
         "qml/components/controls/FieldSurface.qml",
         "qml/components/controls/FilePicker.qml",
         "qml/components/controls/IconButton.qml",
+        "qml/components/controls/InstallActions.qml",
         "qml/components/dialogs/IconPickerDialog.qml",
         "qml/components/controls/KeyValueTable.qml",
         "qml/components/controls/LabeledSwitch.qml",
