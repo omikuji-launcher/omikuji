@@ -612,13 +612,12 @@ property real cardZoom: appSettings.cardZoom
 
     property real uiScale: appSettings.uiScale > 0 ? appSettings.uiScale : 1.0
 
-    // Ctrl+Plus (named key) because "Ctrl++" doesnt work. i mean not that this works for me but i guess whatever the fuck this thing wants.
     Shortcut {
-        sequences: ["Ctrl+Plus", "Ctrl+Shift+=", "Ctrl+=", "Ctrl+Up", StandardKey.ZoomIn]
+        sequences: ["Ctrl+Plus", "Ctrl+Shift+=", "Ctrl+=", "Ctrl+Up"]
         onActivated: appSettings.applyUiScale(root.uiScale + 0.1)
     }
     Shortcut {
-        sequences: ["Ctrl+-", "Ctrl+Down", StandardKey.ZoomOut]
+        sequences: ["Ctrl+-", "Ctrl+Shift+-", "Ctrl+Down"]
         onActivated: appSettings.applyUiScale(root.uiScale - 0.1)
     }
     Shortcut {
