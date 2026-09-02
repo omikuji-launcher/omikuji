@@ -7,8 +7,8 @@ edition = "2024"
 
 [dependencies]
 cxx = "1.0"
-cxx-qt = "0.8"
-cxx-qt-lib = { version = "0.8", features = ["qt_full"] }
+cxx-qt = "0.10"
+cxx-qt-lib = { version = "0.10", features = ["qt_full"] }
 
 # core logic
 omikuji-core = { path = "../omikuji-core" }
@@ -26,7 +26,7 @@ clap = { version = "4", features = ["derive"] }
 gilrs = "0.11"
 
 [build-dependencies]
-cxx-qt-build = { version = "0.8", features = ["link_qt_object_files"] }
+cxx-qt-build = { version = "0.10", features = ["link_qt_object_files"] }
 kushi = "0.1"
 cc = { version = "1", features = ["parallel"] }
 

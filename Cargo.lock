@@ -431,9 +431,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-qt"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fdf26e5ee4375a85799d0fe436662e5a8ef099bd0964b84bce8812c35c7daea"
+checksum = "af6a52cbe33f8a23c6cc7dafb628819b89af6536102c3976f5efc33a038d4a82"
 dependencies = [
  "cxx",
  "cxx-qt-build",
@@ -445,9 +445,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-qt-build"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9a88c7f8241bfe4dfd19d27397a5845f0f275735a34ee7fb219045da81945e3"
+checksum = "7bb2bb9e19b427e79ec5db1d88cde2f44f2d4190e5a0177e2d599ceb9277b670"
 dependencies = [
  "cc",
  "codespan-reporting 0.11.1",
@@ -462,9 +462,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-qt-gen"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b1917c90b10117890e3794f4a0dc764a24704de40711d688ae128b0704490b8"
+checksum = "a6de19cacc58672a9fb70fad66e3d62b6aeb4b2f323b6251aeb99b50c6b6aa0c"
 dependencies = [
  "clang-format",
  "convert_case",
@@ -477,9 +477,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-qt-lib"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7b3de184cff59ad29d657021f933380e584d9b70265247f6a96098bef964211"
+checksum = "1e3c9fea8106d4bbe438d15c1242acd38f4869ca4f6d2a0b19e1f0dbbf23a50e"
 dependencies = [
  "cxx",
  "cxx-qt",
@@ -489,9 +489,9 @@ dependencies = [
 
 [[package]]
 name = "cxx-qt-macro"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "230b0d8b20d3d02a85885742be4fabc0382fead4e382dd8c9c9ff1827f221e8c"
+checksum = "cb794f10a4d27bfbd810eb8bf7fd7d9a0b0b5cefcd86a4c7b13ae3f8d4fa0169"
 dependencies = [
  "cxx-qt-gen",
  "proc-macro2",
@@ -1625,7 +1625,7 @@ dependencies = [
  "toml",
  "tracing",
  "unicode-normalization",
- "which",
+ "which 7.0.3",
  "xz2",
  "zip",
  "zstd",
@@ -1838,15 +1838,16 @@ dependencies = [
 
 [[package]]
 name = "qt-build-utils"
-version = "0.8.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d074750fd3baba12fdb47388d591ad9ed043e23864a79d129dcf3a1ef6fc8d9"
+checksum = "7c97911f105c362cbc035f631be7b43e44d9bca3a3aed2434260ba896f23d6b4"
 dependencies = [
  "anyhow",
  "cc",
  "semver",
  "serde",
  "thiserror 1.0.69",
+ "which 8.0.6",
 ]
 
 [[package]]
@@ -2944,6 +2945,15 @@ dependencies = [
  "env_home",
  "rustix",
  "winsafe",
+]
+
+[[package]]
+name = "which"
+version = "8.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bae2f2b2b816647a1cab1acc91f5bd20812d53cb344382635ec2181940c8034f"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

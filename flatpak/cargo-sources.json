@@ -613,66 +613,66 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cxx-qt/cxx-qt-0.8.1.crate",
-        "sha256": "3fdf26e5ee4375a85799d0fe436662e5a8ef099bd0964b84bce8812c35c7daea",
-        "dest": "cargo/vendor/cxx-qt-0.8.1"
+        "url": "https://static.crates.io/crates/cxx-qt/cxx-qt-0.10.0.crate",
+        "sha256": "af6a52cbe33f8a23c6cc7dafb628819b89af6536102c3976f5efc33a038d4a82",
+        "dest": "cargo/vendor/cxx-qt-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3fdf26e5ee4375a85799d0fe436662e5a8ef099bd0964b84bce8812c35c7daea\", \"files\": {}}",
-        "dest": "cargo/vendor/cxx-qt-0.8.1",
+        "contents": "{\"package\": \"af6a52cbe33f8a23c6cc7dafb628819b89af6536102c3976f5efc33a038d4a82\", \"files\": {}}",
+        "dest": "cargo/vendor/cxx-qt-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cxx-qt-build/cxx-qt-build-0.8.1.crate",
-        "sha256": "f9a88c7f8241bfe4dfd19d27397a5845f0f275735a34ee7fb219045da81945e3",
-        "dest": "cargo/vendor/cxx-qt-build-0.8.1"
+        "url": "https://static.crates.io/crates/cxx-qt-build/cxx-qt-build-0.10.0.crate",
+        "sha256": "7bb2bb9e19b427e79ec5db1d88cde2f44f2d4190e5a0177e2d599ceb9277b670",
+        "dest": "cargo/vendor/cxx-qt-build-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"f9a88c7f8241bfe4dfd19d27397a5845f0f275735a34ee7fb219045da81945e3\", \"files\": {}}",
-        "dest": "cargo/vendor/cxx-qt-build-0.8.1",
+        "contents": "{\"package\": \"7bb2bb9e19b427e79ec5db1d88cde2f44f2d4190e5a0177e2d599ceb9277b670\", \"files\": {}}",
+        "dest": "cargo/vendor/cxx-qt-build-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cxx-qt-gen/cxx-qt-gen-0.8.1.crate",
-        "sha256": "9b1917c90b10117890e3794f4a0dc764a24704de40711d688ae128b0704490b8",
-        "dest": "cargo/vendor/cxx-qt-gen-0.8.1"
+        "url": "https://static.crates.io/crates/cxx-qt-gen/cxx-qt-gen-0.10.0.crate",
+        "sha256": "a6de19cacc58672a9fb70fad66e3d62b6aeb4b2f323b6251aeb99b50c6b6aa0c",
+        "dest": "cargo/vendor/cxx-qt-gen-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"9b1917c90b10117890e3794f4a0dc764a24704de40711d688ae128b0704490b8\", \"files\": {}}",
-        "dest": "cargo/vendor/cxx-qt-gen-0.8.1",
+        "contents": "{\"package\": \"a6de19cacc58672a9fb70fad66e3d62b6aeb4b2f323b6251aeb99b50c6b6aa0c\", \"files\": {}}",
+        "dest": "cargo/vendor/cxx-qt-gen-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cxx-qt-lib/cxx-qt-lib-0.8.1.crate",
-        "sha256": "d7b3de184cff59ad29d657021f933380e584d9b70265247f6a96098bef964211",
-        "dest": "cargo/vendor/cxx-qt-lib-0.8.1"
+        "url": "https://static.crates.io/crates/cxx-qt-lib/cxx-qt-lib-0.10.0.crate",
+        "sha256": "1e3c9fea8106d4bbe438d15c1242acd38f4869ca4f6d2a0b19e1f0dbbf23a50e",
+        "dest": "cargo/vendor/cxx-qt-lib-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"d7b3de184cff59ad29d657021f933380e584d9b70265247f6a96098bef964211\", \"files\": {}}",
-        "dest": "cargo/vendor/cxx-qt-lib-0.8.1",
+        "contents": "{\"package\": \"1e3c9fea8106d4bbe438d15c1242acd38f4869ca4f6d2a0b19e1f0dbbf23a50e\", \"files\": {}}",
+        "dest": "cargo/vendor/cxx-qt-lib-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/cxx-qt-macro/cxx-qt-macro-0.8.1.crate",
-        "sha256": "230b0d8b20d3d02a85885742be4fabc0382fead4e382dd8c9c9ff1827f221e8c",
-        "dest": "cargo/vendor/cxx-qt-macro-0.8.1"
+        "url": "https://static.crates.io/crates/cxx-qt-macro/cxx-qt-macro-0.10.0.crate",
+        "sha256": "cb794f10a4d27bfbd810eb8bf7fd7d9a0b0b5cefcd86a4c7b13ae3f8d4fa0169",
+        "dest": "cargo/vendor/cxx-qt-macro-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"230b0d8b20d3d02a85885742be4fabc0382fead4e382dd8c9c9ff1827f221e8c\", \"files\": {}}",
-        "dest": "cargo/vendor/cxx-qt-macro-0.8.1",
+        "contents": "{\"package\": \"cb794f10a4d27bfbd810eb8bf7fd7d9a0b0b5cefcd86a4c7b13ae3f8d4fa0169\", \"files\": {}}",
+        "dest": "cargo/vendor/cxx-qt-macro-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2368,14 +2368,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/qt-build-utils/qt-build-utils-0.8.1.crate",
-        "sha256": "4d074750fd3baba12fdb47388d591ad9ed043e23864a79d129dcf3a1ef6fc8d9",
-        "dest": "cargo/vendor/qt-build-utils-0.8.1"
+        "url": "https://static.crates.io/crates/qt-build-utils/qt-build-utils-0.10.0.crate",
+        "sha256": "7c97911f105c362cbc035f631be7b43e44d9bca3a3aed2434260ba896f23d6b4",
+        "dest": "cargo/vendor/qt-build-utils-0.10.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"4d074750fd3baba12fdb47388d591ad9ed043e23864a79d129dcf3a1ef6fc8d9\", \"files\": {}}",
-        "dest": "cargo/vendor/qt-build-utils-0.8.1",
+        "contents": "{\"package\": \"7c97911f105c362cbc035f631be7b43e44d9bca3a3aed2434260ba896f23d6b4\", \"files\": {}}",
+        "dest": "cargo/vendor/qt-build-utils-0.10.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -3845,6 +3845,19 @@
         "type": "inline",
         "contents": "{\"package\": \"24d643ce3fd3e5b54854602a080f34fb10ab75e0b813ee32d00ca2b44fa74762\", \"files\": {}}",
         "dest": "cargo/vendor/which-7.0.3",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/which/which-8.0.6.crate",
+        "sha256": "bae2f2b2b816647a1cab1acc91f5bd20812d53cb344382635ec2181940c8034f",
+        "dest": "cargo/vendor/which-8.0.6"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"bae2f2b2b816647a1cab1acc91f5bd20812d53cb344382635ec2181940c8034f\", \"files\": {}}",
+        "dest": "cargo/vendor/which-8.0.6",
         "dest-filename": ".cargo-checksum.json"
     },
     {
