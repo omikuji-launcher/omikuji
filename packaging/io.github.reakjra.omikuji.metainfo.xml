@@ -22,6 +22,14 @@
     </p>
   </description>
   <releases>
+    <release version="0.13.1" date="2026-09-02">
+      <description>
+        <ul>
+          <li>Fix Arknights Endfield updates</li>
+          <li>SGDB 512x512 icon art priority + fallback and temp refetch</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.13.0" date="2026-09-01">
       <description>
         <ul>

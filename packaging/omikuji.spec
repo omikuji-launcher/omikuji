@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.13.0
+Version:        0.13.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -53,6 +53,10 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Wed Sep 02 2026 reakjra <reakjra@proton.me> - 0.13.1-1
+- Fix Arknights Endfield updates
+- SGDB 512x512 icon art priority + fallback and temp refetch
+
 * Tue Sep 01 2026 reakjra <reakjra@proton.me> - 0.13.0-1
 - '-Latest' runner builds system
 - Release filter and build priority for runner sources

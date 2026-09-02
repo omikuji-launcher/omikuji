@@ -13,6 +13,14 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.13.1
+Changed:
+- SGBD icon art 512x512 priority, fallbacks and temp fetching
+
+Fixes:
+- Arknights Endfield updates
+
+
 ## 0.13.0
 Added:
 - '-Latest' runner builds system
