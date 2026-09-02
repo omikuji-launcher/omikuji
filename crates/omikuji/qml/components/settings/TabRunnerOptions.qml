@@ -290,15 +290,19 @@ Item {
                     onToggled: (val) => root.updateField("wine.dpi_scaling", val)
                 }
 
-                M3Slider {
+                SettingsRow {
                     label: qsTr("DPI")
-                    from: 72
-                    to: 288
-                    stepSize: 12
-                    value: root.config["wine.dpi"] || 96
                     width: parent.width
+                    contentRightMargin: 0
                     visible: root.config["wine.dpi_scaling"] === true
-                    onMoved: (val) => root.updateField("wine.dpi", Math.round(val))
+
+                    M3SpinBox {
+                        from: 72
+                        to: 288
+                        stepSize: 12
+                        value: root.config["wine.dpi"] || 96
+                        onMoved: (val) => root.updateField("wine.dpi", val)
+                    }
                 }
             }
 

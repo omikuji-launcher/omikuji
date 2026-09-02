@@ -234,18 +234,20 @@ Item {
                 width: parent.width
                 spacing: 8
                 visible: root.cfg["wine.dpi_scaling"] === true
-                M3Slider {
-                    id: dpiSlider
+                SettingsRow {
                     label: qsTr("DPI")
-                    from: 72
-                    to: 288
-                    stepSize: 12
-                    value: root.cfg["wine.dpi"] || 96
                     width: parent.width - 32
-                    onMoved: (val) => root.update("wine.dpi", Math.round(val))
+                    contentRightMargin: 78
+                    M3SpinBox {
+                        from: 72
+                        to: 288
+                        stepSize: 12
+                        value: root.cfg["wine.dpi"] || 96
+                        onMoved: (val) => root.update("wine.dpi", val)
+                    }
                 }
                 ResetBadge {
-                    y: dpiSlider.boxCenterY - height / 2
+                    anchors.verticalCenter: parent.verticalCenter
                     fieldKey: "wine.dpi"
                 }
             }

@@ -141,16 +141,14 @@ Item {
                 label: qsTr("Card size")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
-                M3Slider {
-                    width: 220
-                    valueText: appSettings ? Math.round(appSettings.cardZoom * 100) + "%" : "100%"
-                    from: 0.6
-                    to: 1.5
-                    stepSize: 0.05
-                    value: appSettings ? appSettings.cardZoom : 1.0
-                    onMoved: (val) => appSettings.applyCardZoom(val)
-                    anchors.verticalCenter: parent.verticalCenter
+                M3SpinBox {
+                    from: 25
+                    to: 400
+                    stepSize: 5
+                    value: appSettings ? Math.round(appSettings.cardZoom * 100) : 100
+                    onMoved: (val) => appSettings.applyCardZoom(val / 100)
                 }
             }
 
@@ -158,16 +156,14 @@ Item {
                 label: qsTr("Card spacing")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
-                M3Slider {
-                    width: 220
-                    valueText: appSettings ? appSettings.cardSpacing + "px" : "16px"
-                    from: 4
-                    to: 40
+                M3SpinBox {
+                    from: 0
+                    to: 200
                     stepSize: 2
                     value: appSettings ? appSettings.cardSpacing : 16
-                    onMoved: (val) => appSettings.applyCardSpacing(Math.round(val))
-                    anchors.verticalCenter: parent.verticalCenter
+                    onMoved: (val) => appSettings.applyCardSpacing(val)
                 }
             }
 

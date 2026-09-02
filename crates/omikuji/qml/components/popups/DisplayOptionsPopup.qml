@@ -8,13 +8,13 @@ Popup {
     id: root
 
     property real zoomValue: 1.0
-    property real zoomFrom: 0.6
-    property real zoomTo: 1.5
+    property real zoomFrom: Math.min(0.6, root.zoomValue)
+    property real zoomTo: Math.max(1.5, root.zoomValue)
     property real zoomStep: 0.05
 
     property int spacingValue: 16
-    property int spacingFrom: 4
-    property int spacingTo: 40
+    property int spacingFrom: Math.min(4, root.spacingValue)
+    property int spacingTo: Math.max(40, root.spacingValue)
     property int spacingStep: 2
 
     property string sortValue: "default"
