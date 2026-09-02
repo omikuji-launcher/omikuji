@@ -1,8 +1,10 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
+import omikuji 1.0
 import "../lib/RunnerGrouping.js" as RG
 import "."
 import "../cards"
+import "../primitives"
 
 Item {
     id: root
@@ -76,6 +78,17 @@ Item {
             }
             default: return true
         }
+    }
+
+    EmptyState {
+        anchors.fill: parent
+        visible: root.gameModel && root.gameModel.count === 0
+        art: "qrc:/qt/qml/omikuji/qml/icons/dino.png"
+        artSize: Math.round(Math.min(root.width * 0.5, 480))
+        textSize: Theme.type.display.size
+        hintSize: Theme.type.subtitle.size
+        text: qsTr("nothing here yet")
+        hint: qsTr("pick a store on the left to install games, or add one yourself with the + button up top")
     }
 
     CardGrid {

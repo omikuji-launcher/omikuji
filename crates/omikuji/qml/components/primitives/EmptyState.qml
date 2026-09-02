@@ -10,6 +10,9 @@ Item {
     property string icon: ""
     property url art
     property string text: ""
+    property string hint: ""
+    property int textSize: Theme.type.title.size
+    property int hintSize: Theme.type.body.size
     property int artSize: 48
     property color tint: Theme.textFaint
 
@@ -53,8 +56,20 @@ Item {
             visible: root.text !== ""
             text: root.text
             color: Theme.textMuted
-            font.pixelSize: Theme.type.title.size
+            font.pixelSize: root.textSize
             font.weight: Font.Medium
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: root.hint !== ""
+            text: root.hint
+            width: Math.min(root.width - 48, 420)
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            color: Theme.textFaint
+            font.pixelSize: root.hintSize
+            font.weight: Theme.type.body.weight
         }
     }
 }
