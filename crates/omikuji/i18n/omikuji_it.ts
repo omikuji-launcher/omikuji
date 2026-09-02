@@ -6,32 +6,32 @@
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="20"/>
         <source>New Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuovo Gioco</translation>
     </message>
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="22"/>
         <source>Create &amp; Play</source>
-        <translation type="unfinished"></translation>
+        <translation>Crea e Gioca</translation>
     </message>
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="23"/>
         <source>Create</source>
-        <translation type="unfinished"></translation>
+        <translation>Crea</translation>
     </message>
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="33"/>
         <source>Game Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Informazioni del gioco</translation>
     </message>
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="34"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Runner</translation>
     </message>
     <message>
         <location filename="../qml/components/modals/AddGamePage.qml" line="39"/>
         <source>System</source>
-        <translation type="unfinished"></translation>
+        <translation>Sistema</translation>
     </message>
 </context>
 <context>
@@ -39,22 +39,22 @@
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="128"/>
         <source>Remove source</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimuovi fonte</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="144"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Chiudi</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="161"/>
         <source>Couldn&apos;t parse versions response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossibile interpretare la risposta delle versioni</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="325"/>
         <source>Fetching versions…</source>
-        <translation type="unfinished"></translation>
+        <translation>Recupero delle versioni…</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="326"/>
