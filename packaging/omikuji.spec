@@ -22,6 +22,7 @@ BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtdeclarative-devel
 BuildRequires:  qt6-qtsvg-devel
 BuildRequires:  qt6-qtshadertools
+BuildRequires:  qt6-qttools-devel
 
 Requires:       qt6-qtbase
 Requires:       qt6-qtdeclarative

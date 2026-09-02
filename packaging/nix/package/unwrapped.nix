@@ -19,6 +19,7 @@ let
     qtsvg
     qtshadertools
     qt5compat
+    qttools
   ];
 
   qtEnv = with qt6; env "qt-custom-${qtbase.version}" qtDeps;
@@ -54,7 +55,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   
   prePatch = ''
     substituteInPlace ./crates/omikuji/build.rs \
-      --replace-fail '"/usr/lib/qt6/bin/qsb"' '"${qtEnv}/bin/qsb"'
+      --replace-fail '"/usr/lib/qt6/bin"' '"${qtEnv}/bin"'
   '';
 
   preBuild = ''

@@ -45,7 +45,7 @@ fn compile_translations() -> Vec<String> {
         .filter(|p| p.file_stem().and_then(|s| s.to_str()) != Some(SOURCE_TRANSLATION))
         .collect();
 
-    let lrelease = find_qt_tool(&["lrelease6", "lrelease"]);
+    let lrelease = find_qt_tool(&["lrelease6", "lrelease-qt6", "lrelease"]);
     if lrelease.is_none() && !sources.is_empty() {
         println!(
             "cargo:warning=lrelease not found, building without translations (install qt6-tools)"
