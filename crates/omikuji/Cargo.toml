@@ -28,6 +28,7 @@ gilrs = "0.11"
 [build-dependencies]
 cxx-qt-build = { version = "0.8", features = ["link_qt_object_files"] }
 kushi = "0.1"
+cc = { version = "1", features = ["parallel"] }
 
 [package.metadata.generate-rpm]
 auto-req = "no"

@@ -1573,6 +1573,7 @@ dependencies = [
 name = "omikuji"
 version = "0.13.1"
 dependencies = [
+ "cc",
  "clap",
  "cxx",
  "cxx-qt",
