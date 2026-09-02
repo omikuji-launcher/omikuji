@@ -225,7 +225,7 @@ Not implemented/WIP/Planning to add:
 
 Bug reports (especially these), requests and PRs welcome. A few notes:
 
-\- For translations contributions, check the [translation guide](https://omikuji-launcher.github.io/omikuji/dev/translations.html)
+\- Translations run on [Weblate](https://hosted.weblate.org/projects/omikuji/omikuji/). See the [translation guide](https://omikuji-launcher.github.io/omikuji/dev/translations.html)
 
 \- To get debug logs, in your terminal: RUST_LOG=debug omikuji 
 

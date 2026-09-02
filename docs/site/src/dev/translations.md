@@ -1,32 +1,36 @@
 # Translations
 
-omikuji's UI strings are wrapped in Qt's `qsTr()`. A `QTranslator` loads a compiled `.qm` at startup and resolves them; an unwrapped or untranslated string falls back to its English source. Translations live in `crates/omikuji/i18n/`, one editable `.ts` and one compiled `.qm` per language. The scope is the QML UI: the CLI and the Rust backend stay in English (aint doing allat).
+omikuji's UI strings are wrapped in Qt's `qsTr()`. A `QTranslator` loads a compiled `.qm` at startup and resolves them; an unwrapped or untranslated string falls back to its English source. Translations live in `crates/omikuji/i18n/`, one `.ts` per language. `build.rs` compiles each `.ts` to a `.qm` and embeds it, so only the `.ts` is committed. The scope is the QML UI: the CLI and the Rust backend stay in English (aint doing allat).
+
+`omikuji_en.ts` is the English source catalog. It is the template new languages are created from, and it is not compiled or shipped.
+
+## Weblate
+
+Translations are hosted on [Weblate](https://hosted.weblate.org/projects/omikuji/omikuji/). Pick a language or start a new one, translate in the browser, and Weblate opens a pull request against `master`. No local setup, no Qt tools.
 
 ## Prerequisites
 
-The Qt Linguist tools, `lupdate` and `lrelease`. On Arch they ship in `qt6-tools` (as `lupdate6` / `lrelease6`), idk other distros. `scripts/update-translations.sh` accepts either the suffixed or the plain name.
+For working on the catalogs locally: the Qt Linguist tools, `lupdate` and `lrelease`. On Arch they ship in `qt6-tools` (as `lupdate6` / `lrelease6`), idk other distros. `scripts/update-translations.sh` accepts either the suffixed or the plain name. Without them the build still works and ships English only.
 
-## Adding a language
+## Adding a language locally
 
 As an example, for Italian (`it`):
 
-1. `./scripts/update-translations.sh it` harvests every `qsTr`/`tr` string into `crates/omikuji/i18n/omikuji_it.ts` and compiles a first `omikuji_it.qm`.
+1. `./scripts/update-translations.sh it` harvests every `qsTr`/`tr` string into `crates/omikuji/i18n/omikuji_it.ts`. The file name carries the locale code Qt expects (`omikuji_it.ts`, `omikuji_pt_BR.ts`, `omikuji_ja.ts`).
 
-2. Then, you translate `omikuji_it.ts`, in either any text editor, by filling the `<translation>` elements, or `QtLinguistic` if you're sane. The file name carries the locale code Qt expects (`omikuji_it.ts`, `omikuji_pt_BR.ts`, `omikuji_ja.ts`).
+2. Translate `omikuji_it.ts`, in either any text editor, by filling the `<translation>` elements, or `QtLinguistic` if you're sane.
 
-3. Once done translating, run `./scripts/update-translations.sh it` again to recompile `omikuji_it.qm` from the finished strings.
+3. Build. The language appears in the picker at Settings > Interface under its own native name.
 
-4. Build. `build.rs` embeds the `.qm` into the binary, and the language appears in the picker at Settings > Interface under its own native name.
-
-5. Commit both `omikuji_it.ts` and `omikuji_it.qm`.
+4. Commit `omikuji_it.ts`.
 
 ## Updating a language
 
 After UI strings change, refresh the catalogs:
 
-`./scripts/update-translations.sh` with no arguments re-harvests and recompiles every language already in `i18n/`. New strings land in the `.ts` marked unfinished; translate them and run it again. Commit the updated `.ts` and `.qm`.
+`./scripts/update-translations.sh` with no arguments re-harvests every language already in `i18n/`. New strings land in the `.ts` marked unfinished. Commit the updated `.ts`.
 
-The build embeds the committed `.qm` and never runs `lrelease`, so both files are committed. The script produces both.
+Weblate picks the new strings up on its next pull and marks them for translation. Changed source strings mark the existing translation as needing update.
 
 ## Wrapping a new UI string
 
