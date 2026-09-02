@@ -29,6 +29,8 @@ fn collect_icons() -> (Vec<String>, Vec<String>) {
     (paths, names)
 }
 
+const SOURCE_TRANSLATION: &str = "omikuji_en";
+
 fn compile_translations() -> Vec<String> {
     let dir = Path::new("i18n");
     let _ = fs::create_dir_all(dir);
@@ -40,6 +42,7 @@ fn compile_translations() -> Vec<String> {
         .flatten()
         .map(|entry| entry.path())
         .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("ts"))
+        .filter(|p| p.file_stem().and_then(|s| s.to_str()) != Some(SOURCE_TRANSLATION))
         .collect();
 
     let lrelease = find_qt_tool(&["lrelease6", "lrelease"]);
