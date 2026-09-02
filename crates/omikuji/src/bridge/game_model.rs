@@ -1052,7 +1052,23 @@ fn media_changed_notifier(
     }
 }
 
+fn ok_bool<T, E: std::fmt::Display>(op: &str, result: Result<T, E>) -> bool {
+    match result {
+        Ok(_) => true,
+        Err(e) => {
+            tracing::error!("{}: {}", op, e);
+            false
+        }
+    }
+}
+
 impl qobject::GameModel {
+    pub(crate) fn game_at(&self, index: i32) -> Option<&Game> {
+        usize::try_from(index)
+            .ok()
+            .and_then(|i| self.library.game.get(i))
+    }
+
     fn row_count(&self, _parent: &QModelIndex) -> i32 {
         self.library.game.len() as i32
     }

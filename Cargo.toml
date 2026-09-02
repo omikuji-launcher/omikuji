@@ -5,6 +5,9 @@ members = [
     "crates/omikuji-core",
 ]
 
+[profile.dev]
+debug = "line-tables-only"
+
 [profile.release]
 strip = true
 lto = true

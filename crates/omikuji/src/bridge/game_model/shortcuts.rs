@@ -1,159 +1,81 @@
+use omikuji_core::desktop;
+use omikuji_core::store::steam::shortcuts as steam;
+
+use super::ok_bool;
+
 impl super::qobject::GameModel {
     pub fn browse_files(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            tracing::warn!("browse_files: invalid index {}", index);
-            return false;
-        };
-
-        let Some(dir) = omikuji_core::desktop::get_game_browse_dir(game) else {
-            tracing::warn!(
-                "browse_files: no directory for game '{}'",
-                game.metadata.name
-            );
-            return false;
-        };
-
-        match omikuji_core::desktop::browse_files(&dir) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("browse_files failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index)
+            .and_then(desktop::get_game_browse_dir)
+            .is_some_and(|dir| ok_bool("browse_files", desktop::browse_files(&dir)))
     }
 
     pub fn create_desktop_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            tracing::warn!("create_desktop_shortcut: invalid index {}", index);
-            return false;
-        };
-
-        match omikuji_core::desktop::create_desktop_shortcut(game) {
-            Ok(path) => {
-                tracing::info!("created desktop shortcut: {}", path.display());
-                true
-            }
-            Err(e) => {
-                tracing::error!("create_desktop_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index).is_some_and(|game| {
+            ok_bool(
+                "create_desktop_shortcut",
+                desktop::create_desktop_shortcut(game)
+                    .inspect(|p| tracing::info!("created desktop shortcut: {}", p.display())),
+            )
+        })
     }
 
     pub fn create_menu_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            tracing::warn!("create_menu_shortcut: invalid index {}", index);
-            return false;
-        };
-
-        match omikuji_core::desktop::create_menu_shortcut(game) {
-            Ok(path) => {
-                tracing::info!("created menu shortcut: {}", path.display());
-                true
-            }
-            Err(e) => {
-                tracing::error!("create_menu_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index).is_some_and(|game| {
+            ok_bool(
+                "create_menu_shortcut",
+                desktop::create_menu_shortcut(game)
+                    .inspect(|p| tracing::info!("created menu shortcut: {}", p.display())),
+            )
+        })
     }
 
     pub fn remove_desktop_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-
-        match omikuji_core::desktop::remove_desktop_shortcut(game) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("remove_desktop_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index).is_some_and(|game| {
+            ok_bool(
+                "remove_desktop_shortcut",
+                desktop::remove_desktop_shortcut(game),
+            )
+        })
     }
 
     pub fn remove_menu_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-
-        match omikuji_core::desktop::remove_menu_shortcut(game) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("remove_menu_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index).is_some_and(|game| {
+            ok_bool("remove_menu_shortcut", desktop::remove_menu_shortcut(game))
+        })
     }
 
     pub fn has_desktop_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-        omikuji_core::desktop::desktop_shortcut_exists(game)
+        self.game_at(index)
+            .is_some_and(desktop::desktop_shortcut_exists)
     }
 
     pub fn has_menu_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-        omikuji_core::desktop::menu_shortcut_exists(game)
+        self.game_at(index)
+            .is_some_and(desktop::menu_shortcut_exists)
     }
 
     pub fn create_steam_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            tracing::warn!("create_steam_shortcut: invalid index {}", index);
-            return false;
-        };
-
-        match omikuji_core::store::steam::shortcuts::create_shortcut(game) {
-            Ok(path) => {
-                tracing::info!("created steam shortcut in {}", path.display());
-                true
-            }
-            Err(e) => {
-                tracing::error!("create_steam_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index).is_some_and(|game| {
+            ok_bool(
+                "create_steam_shortcut",
+                steam::create_shortcut(game)
+                    .inspect(|p| tracing::info!("created steam shortcut in {}", p.display())),
+            )
+        })
     }
 
     pub fn remove_steam_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-
-        match omikuji_core::store::steam::shortcuts::remove_shortcut(game) {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("remove_steam_shortcut failed: {}", e);
-                false
-            }
-        }
+        self.game_at(index)
+            .is_some_and(|game| ok_bool("remove_steam_shortcut", steam::remove_shortcut(game)))
     }
 
     pub fn has_steam_shortcut(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-        omikuji_core::store::steam::shortcuts::shortcut_exists(game)
+        self.game_at(index).is_some_and(steam::shortcut_exists)
     }
 
     pub fn steam_shortcut_available(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
-            return false;
-        };
-        game.runner.runner_type != "steam" && omikuji_core::store::steam::shortcuts::available()
+        self.game_at(index)
+            .is_some_and(|game| game.runner.runner_type != "steam" && steam::available())
     }
 }
