@@ -29,17 +29,45 @@ fn collect_icons() -> (Vec<String>, Vec<String>) {
     (paths, names)
 }
 
-fn collect_translations() -> Vec<String> {
+fn compile_translations() -> Vec<String> {
     let dir = Path::new("i18n");
     let _ = fs::create_dir_all(dir);
     let Ok(entries) = fs::read_dir(dir) else {
         return vec![];
     };
+
+    let sources: Vec<PathBuf> = entries
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|p| p.extension().and_then(|s| s.to_str()) == Some("ts"))
+        .collect();
+
+    let lrelease = find_qt_tool(&["lrelease6", "lrelease"]);
+    if lrelease.is_none() && !sources.is_empty() {
+        println!(
+            "cargo:warning=lrelease not found, building without translations (install qt6-tools)"
+        );
+    }
+
     let mut paths: Vec<String> = vec![];
-    for entry in entries.flatten() {
-        let p = entry.path();
-        if p.extension().and_then(|s| s.to_str()) == Some("qm") {
-            let filename = p.file_name().unwrap().to_string_lossy().into_owned();
+    for ts in sources {
+        let qm = ts.with_extension("qm");
+        if let Some(lrelease) = &lrelease
+            && needs_recompile(&ts, &qm)
+        {
+            let status = Command::new(lrelease)
+                .arg("-silent")
+                .arg(&ts)
+                .arg("-qm")
+                .arg(&qm)
+                .status()
+                .expect("invoke lrelease");
+            if !status.success() {
+                panic!("lrelease failed for {}", ts.display());
+            }
+        }
+        if qm.exists() {
+            let filename = qm.file_name().unwrap().to_string_lossy().into_owned();
             paths.push(format!("i18n/{filename}"));
         }
     }
@@ -47,27 +75,33 @@ fn collect_translations() -> Vec<String> {
     paths
 }
 
+fn find_qt_tool(names: &[&str]) -> Option<PathBuf> {
+    for name in names {
+        if let Ok(out) = Command::new("which").arg(name).output()
+            && out.status.success()
+        {
+            let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !path.is_empty() {
+                return Some(PathBuf::from(path));
+            }
+        }
+        for dir in [
+            "/usr/lib/qt6/bin",
+            "/usr/lib64/qt6/bin",
+            "/usr/lib/x86_64-linux-gnu/qt6/bin",
+            "/usr/libexec/qt6",
+        ] {
+            let p = Path::new(dir).join(name);
+            if p.exists() {
+                return Some(p);
+            }
+        }
+    }
+    None
+}
+
 fn find_qsb() -> PathBuf {
-    if let Ok(out) = Command::new("which").arg("qsb").output()
-        && out.status.success()
-    {
-        let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !path.is_empty() {
-            return PathBuf::from(path);
-        }
-    }
-    for candidate in [
-        "/usr/lib/qt6/bin/qsb",
-        "/usr/lib64/qt6/bin/qsb",
-        "/usr/lib/x86_64-linux-gnu/qt6/bin/qsb",
-        "/usr/libexec/qt6/qsb",
-    ] {
-        let p = PathBuf::from(candidate);
-        if p.exists() {
-            return p;
-        }
-    }
-    panic!("qsb not found; install qt6-shadertools");
+    find_qt_tool(&["qsb"]).expect("qsb not found; install qt6-shadertools")
 }
 
 fn compile_shaders() -> Vec<String> {
@@ -108,15 +142,15 @@ fn compile_shaders() -> Vec<String> {
     out_paths
 }
 
-fn needs_recompile(source: &Path, qsb: &Path) -> bool {
-    let Ok(qsb_meta) = fs::metadata(qsb) else {
+fn needs_recompile(source: &Path, artifact: &Path) -> bool {
+    let Ok(artifact_meta) = fs::metadata(artifact) else {
         return true;
     };
     let Ok(src_meta) = fs::metadata(source) else {
         return true;
     };
-    match (qsb_meta.modified(), src_meta.modified()) {
-        (Ok(q), Ok(s)) => s > q,
+    match (artifact_meta.modified(), src_meta.modified()) {
+        (Ok(a), Ok(s)) => s > a,
         _ => true,
     }
 }
@@ -156,7 +190,7 @@ fn main() {
     let shader_paths = compile_shaders();
     println!("cargo:rerun-if-changed=qml/components/consolemode/shaders");
 
-    let translation_paths = collect_translations();
+    let translation_paths = compile_translations();
     println!("cargo:rerun-if-changed=i18n");
 
     let mut qrc_paths = icon_paths;

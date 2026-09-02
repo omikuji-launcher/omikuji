@@ -21,6 +21,7 @@ qrc_*.cpp
 ui_*.h
 qmlcache_generated/
 qmlcache_loader.cpp
+crates/omikuji/i18n/*.qm
 .qt/
 /.qmake.stash
 
