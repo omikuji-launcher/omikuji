@@ -56,10 +56,13 @@
         <source>Fetching versions…</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
+    <message numerus="yes">
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="326"/>
-        <source>%1 versions available</source>
-        <translation type="unfinished"></translation>
+        <source>%n version(s) available</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="327"/>
@@ -187,29 +190,27 @@
         <source>No versions installed</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="81"/>
-        <source>1 version installed</source>
-        <translation type="unfinished"></translation>
+    <message numerus="yes">
+        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="80"/>
+        <source>%n version(s) installed</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="82"/>
-        <source>%1 versions installed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="94"/>
+        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="92"/>
         <source>Manage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="124"/>
+        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="122"/>
         <source>Auto install on prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="136"/>
-        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="154"/>
+        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="134"/>
+        <location filename="../qml/components/settings/ArchiveSourceRow.qml" line="152"/>
         <source>Disabled</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2013,7 +2014,7 @@
     </message>
     <message>
         <location filename="../qml/Main.qml" line="1092"/>
-        <location filename="../qml/Main.qml" line="1417"/>
+        <location filename="../qml/Main.qml" line="1415"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2118,68 +2119,66 @@
         <source>Game added</source>
         <translation type="unfinished"></translation>
     </message>
+    <message numerus="yes">
+        <location filename="../qml/Main.qml" line="1398"/>
+        <source>This deletes the prefix and everything in it. %n game(s) use it, and it won&apos;t be recoverable.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
     <message>
         <location filename="../qml/Main.qml" line="1399"/>
-        <source>This deletes the prefix and everything in it. 1 game uses it, and it won&apos;t be recoverable.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/Main.qml" line="1400"/>
-        <source>This deletes the prefix and everything in it. %1 games use it, and it won&apos;t be recoverable.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/Main.qml" line="1401"/>
         <source>This deletes the prefix and everything in it. It won&apos;t be recoverable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1415"/>
+        <location filename="../qml/Main.qml" line="1413"/>
         <source>Delete prefix?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1416"/>
+        <location filename="../qml/Main.qml" line="1414"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1461"/>
+        <location filename="../qml/Main.qml" line="1459"/>
         <source>Configure (winecfg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1463"/>
+        <location filename="../qml/Main.qml" line="1461"/>
         <source>Registry (regedit)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1464"/>
+        <location filename="../qml/Main.qml" line="1462"/>
         <source>Command Prompt (cmd)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1465"/>
+        <location filename="../qml/Main.qml" line="1463"/>
         <source>File Explorer (explorer)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1466"/>
+        <location filename="../qml/Main.qml" line="1464"/>
         <source>Run EXE in prefix…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1467"/>
+        <location filename="../qml/Main.qml" line="1465"/>
         <source>Run wine command…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1468"/>
+        <location filename="../qml/Main.qml" line="1466"/>
         <source>Kill wineserver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1486"/>
+        <location filename="../qml/Main.qml" line="1484"/>
         <source>Select EXE to run in prefix</source>
         <translation type="unfinished"></translation>
     </message>

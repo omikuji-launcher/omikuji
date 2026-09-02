@@ -323,7 +323,7 @@ DialogCard {
 
                 Text {
                     text: root.fetching ? qsTr("Fetching versions…")
-                        : root.versions.length > 0 ? qsTr("%1 versions available").arg(root.versions.length)
+                        : root.versions.length > 0 ? qsTr("%n version(s) available", "", root.versions.length)
                         : qsTr("No versions loaded yet")
                     color: Theme.textSubtle
                     font.pixelSize: Theme.type.caption.size

@@ -77,9 +77,7 @@ Item {
                 Text {
                     text: root.installedCount === 0
                         ? qsTr("No versions installed")
-                        : root.installedCount === 1
-                            ? qsTr("1 version installed")
-                            : qsTr("%1 versions installed").arg(root.installedCount)
+                        : qsTr("%n version(s) installed", "", root.installedCount)
                     color: root.installedCount > 0 ? Theme.success : Theme.textSubtle
                     font.pixelSize: Theme.type.caption.size
                 }

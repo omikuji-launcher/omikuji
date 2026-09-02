@@ -1395,9 +1395,7 @@ property real cardZoom: appSettings.cardZoom
         onDeleteRequested: (p) => {
             const n = (p.games || []).length
             deletePrefixConfirm.message = n > 0
-                ? (n === 1
-                    ? qsTr("This deletes the prefix and everything in it. 1 game uses it, and it won't be recoverable.")
-                    : qsTr("This deletes the prefix and everything in it. %1 games use it, and it won't be recoverable.").arg(n))
+                ? qsTr("This deletes the prefix and everything in it. %n game(s) use it, and it won't be recoverable.", "", n)
                 : qsTr("This deletes the prefix and everything in it. It won't be recoverable.")
             prefixDetailDialog.escEnabled = false
             deletePrefixConfirm.show(p)
