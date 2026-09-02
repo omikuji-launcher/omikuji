@@ -33,7 +33,26 @@ impl MediaType {
 
 pub const ALL_TYPES: [MediaType; 3] = [MediaType::Banner, MediaType::Coverart, MediaType::Icon];
 
+#[derive(Debug, Clone, Copy)]
+pub enum MediaSlot {
+    Live,
+    Pending,
+}
+
+impl MediaSlot {
+    fn infix(&self) -> &str {
+        match self {
+            MediaSlot::Live => "",
+            MediaSlot::Pending => ".pending",
+        }
+    }
+}
+
 const SGDB_BASE: &str = "https://www.steamgriddb.com/api/v2";
+const ICON_ENDPOINT: &str = "icons";
+const ICON_DIMENSION: &str = "512";
+const ICON_QUERY: [(&str, &str); 1] = [("dimensions", ICON_DIMENSION)];
+const ICO_MIME: &str = "image/vnd.microsoft.icon";
 const SGDB_API_KEY: &str = "b0e57477a2e9665d6e1789d72cf0f334";
 
 #[derive(Debug, Deserialize)]
@@ -53,6 +72,29 @@ struct SgdbGame {
 #[derive(Debug, Deserialize)]
 struct SgdbAsset {
     url: String,
+    #[serde(default)]
+    mime: String,
+    #[serde(default)]
+    width: u32,
+    #[serde(default)]
+    height: u32,
+}
+
+impl SgdbAsset {
+    fn is_ico(&self) -> bool {
+        self.mime == ICO_MIME
+    }
+
+    fn rank(&self) -> (bool, u64) {
+        (!self.is_ico(), self.width as u64 * self.height as u64)
+    }
+}
+
+fn best_icon(assets: impl IntoIterator<Item = SgdbAsset>) -> Option<String> {
+    assets
+        .into_iter()
+        .reduce(|best, a| if a.rank() > best.rank() { a } else { best })
+        .map(|a| a.url)
 }
 
 pub fn slugify(name: &str) -> String {
@@ -93,13 +135,36 @@ fn cache_dir() -> PathBuf {
     crate::cache_dir().join("images")
 }
 
-pub fn media_path(game_id: &str, media_type: &MediaType) -> PathBuf {
+pub fn media_path_in(slot: MediaSlot, game_id: &str, media_type: &MediaType) -> PathBuf {
     cache_dir().join(format!(
-        "{}_{}.{}",
+        "{}_{}{}.{}",
         game_id,
         media_type.suffix(),
+        slot.infix(),
         media_type.extension()
     ))
+}
+
+pub fn media_path(game_id: &str, media_type: &MediaType) -> PathBuf {
+    media_path_in(MediaSlot::Live, game_id, media_type)
+}
+
+pub fn commit_pending(game_id: &str) {
+    for media_type in ALL_TYPES {
+        let pending = media_path_in(MediaSlot::Pending, game_id, &media_type);
+        if pending.is_file() {
+            let live = media_path_in(MediaSlot::Live, game_id, &media_type);
+            if let Err(e) = fs::rename(&pending, &live) {
+                tracing::error!("committing {}: {}", pending.display(), e);
+            }
+        }
+    }
+}
+
+pub fn discard_pending(game_id: &str) {
+    for media_type in ALL_TYPES {
+        let _ = fs::remove_file(media_path_in(MediaSlot::Pending, game_id, &media_type));
+    }
 }
 
 pub fn resolve_image(game_id: &str, manual_override: &str, media_type: &MediaType) -> String {
@@ -107,9 +172,11 @@ pub fn resolve_image(game_id: &str, manual_override: &str, media_type: &MediaTyp
         return to_qml_url(&crate::template_vars::TemplateVars::global().expand(manual_override));
     }
 
-    let path = media_path(game_id, media_type);
-    if path.exists() {
-        return format!("file://{}", path.to_string_lossy());
+    for slot in [MediaSlot::Pending, MediaSlot::Live] {
+        let path = media_path_in(slot, game_id, media_type);
+        if path.exists() {
+            return format!("file://{}", path.to_string_lossy());
+        }
     }
 
     String::new()
@@ -124,7 +191,12 @@ fn to_qml_url(s: &str) -> String {
         s.to_string()
     }
 }
-pub fn fetch_media_blocking_with<F>(game_id: &str, game_name: &str, mut on_asset: F) -> FetchResult
+pub fn fetch_media_blocking_with<F>(
+    slot: MediaSlot,
+    game_id: &str,
+    game_name: &str,
+    mut on_asset: F,
+) -> FetchResult
 where
     F: FnMut(&MediaType),
 {
@@ -156,11 +228,15 @@ where
             vec![("dimensions", "600x900")],
         ),
         (MediaType::Banner, "heroes", vec![]),
-        (MediaType::Icon, "icons", vec![]),
+        (MediaType::Icon, ICON_ENDPOINT, vec![]),
     ];
 
     for (media_type, endpoint, query) in tasks {
-        let url = match sgdb_first_asset(endpoint, sgdb_id, &query) {
+        let resolved = match media_type {
+            MediaType::Icon => sgdb_icon_assets(sgdb_id).map(best_icon),
+            _ => sgdb_first_asset(endpoint, sgdb_id, &query),
+        };
+        let url = match resolved {
             Ok(Some(u)) => u,
             Ok(None) => {
                 tracing::debug!("sgdb {} no data for game {}", endpoint, sgdb_id);
@@ -172,7 +248,7 @@ where
             }
         };
         tracing::debug!("sgdb {} -> {}", endpoint, url);
-        let dest = media_path(game_id, &media_type);
+        let dest = media_path_in(slot, game_id, &media_type);
         match download_blocking(&url, &dest) {
             Ok(n) => {
                 tracing::debug!("sgdb {} wrote {} bytes -> {}", endpoint, n, dest.display());
@@ -214,26 +290,8 @@ pub fn sgdb_icon_url(name: &str) -> Result<Option<String>> {
     let Some(id) = sgdb_search(name)? else {
         return Ok(None);
     };
-    let mut url = reqwest::Url::parse(SGDB_BASE).unwrap();
-    url.path_segments_mut()
-        .unwrap()
-        .extend(["icons", "game", &id.to_string()]);
-    let resp: SgdbResponse<Vec<SgdbAsset>> = sgdb_get(url)?;
-    if !resp.success {
-        anyhow::bail!("sgdb icons api reported failure for game {}", id);
-    }
-    let Some(assets) = resp.data else {
-        return Ok(None);
-    };
-    let pick = assets.into_iter().find(|a| {
-        let lower = a.url.to_lowercase();
-        lower.ends_with(".png")
-            || lower.ends_with(".jpg")
-            || lower.ends_with(".jpeg")
-            || lower.ends_with(".webp")
-            || lower.ends_with(".gif")
-    });
-    Ok(pick.map(|a| a.url))
+    let web_safe = sgdb_icon_assets(id)?.into_iter().filter(|a| !a.is_ico());
+    Ok(best_icon(web_safe))
 }
 
 fn sgdb_search(name: &str) -> Result<Option<u64>> {
@@ -270,11 +328,7 @@ fn sgdb_search(name: &str) -> Result<Option<u64>> {
     Ok(Some(pick.id))
 }
 
-fn sgdb_first_asset(
-    endpoint: &str,
-    game_id: u64,
-    query: &[(&str, &str)],
-) -> Result<Option<String>> {
+fn sgdb_assets(endpoint: &str, game_id: u64, query: &[(&str, &str)]) -> Result<Vec<SgdbAsset>> {
     let mut url = reqwest::Url::parse(SGDB_BASE).unwrap();
     url.path_segments_mut()
         .unwrap()
@@ -290,7 +344,31 @@ fn sgdb_first_asset(
             game_id
         );
     }
-    Ok(resp.data.and_then(|v| v.into_iter().next().map(|a| a.url)))
+    Ok(resp.data.unwrap_or_default())
+}
+
+fn sgdb_first_asset(
+    endpoint: &str,
+    game_id: u64,
+    query: &[(&str, &str)],
+) -> Result<Option<String>> {
+    Ok(sgdb_assets(endpoint, game_id, query)?
+        .into_iter()
+        .next()
+        .map(|a| a.url))
+}
+
+fn sgdb_icon_assets(game_id: u64) -> Result<Vec<SgdbAsset>> {
+    let preferred = sgdb_assets(ICON_ENDPOINT, game_id, &ICON_QUERY)?;
+    if !preferred.is_empty() {
+        return Ok(preferred);
+    }
+    tracing::debug!(
+        "sgdb icons: no {}px asset for game {}, retrying unfiltered",
+        ICON_DIMENSION,
+        game_id
+    );
+    sgdb_assets(ICON_ENDPOINT, game_id, &[])
 }
 
 fn download_blocking(url: &str, dest: &PathBuf) -> Result<usize> {
@@ -316,7 +394,11 @@ pub struct FetchResult {
     pub icon: Option<PathBuf>,
 }
 
-pub fn fetch_steam_media_blocking_with<F>(appid: &str, mut on_asset: F) -> FetchResult
+pub fn fetch_steam_media_blocking_with<F>(
+    slot: MediaSlot,
+    appid: &str,
+    mut on_asset: F,
+) -> FetchResult
 where
     F: FnMut(&MediaType),
 {
@@ -346,7 +428,7 @@ where
     ];
 
     for (media_type, url) in tasks {
-        let dest = media_path(appid, &media_type);
+        let dest = media_path_in(slot, appid, &media_type);
 
         match download_blocking(&url, &dest) {
             Ok(_) => {

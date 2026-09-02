@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
+use omikuji_core::app_settings::AppSettings;
 use omikuji_core::library::{Game, Library};
 use omikuji_core::process::{ErrorAction, ErrorNotification};
-use omikuji_core::app_settings::AppSettings;
 use omikuji_core::{desktop, launch, process};
 use std::io::{self, IsTerminal, Write};
 

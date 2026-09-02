@@ -637,7 +637,8 @@ pub fn with_steam_wine(game: &crate::library::Game) -> Result<Option<crate::libr
     })?;
 
     let stamped = find_steam_proton_version(&game.source.app_id);
-    let install = resolve_or_default_proton(stamped.as_deref()).context("no Proton install found")?;
+    let install =
+        resolve_or_default_proton(stamped.as_deref()).context("no Proton install found")?;
     let dir_name = install
         .file_name()
         .map(|s| s.to_string_lossy().into_owned())

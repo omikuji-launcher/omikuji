@@ -684,9 +684,9 @@ use cxx_qt_lib::{
     QString, QVariant,
 };
 
+use omikuji_core::app_settings::AppSettings;
 use omikuji_core::library::{Game, Library, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
-use omikuji_core::app_settings::AppSettings;
 
 const ROLE_ID: i32 = 0x0100;
 const ROLE_NAME: i32 = 0x0101;
@@ -1306,7 +1306,12 @@ impl qobject::GameModel {
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = media_changed_notifier(qt_thread, game_id.clone());
         std::thread::spawn(move || {
-            let result = media::fetch_media_blocking_with(&game_id, &game_name, on_asset);
+            let result = media::fetch_media_blocking_with(
+                media::MediaSlot::Live,
+                &game_id,
+                &game_name,
+                on_asset,
+            );
             let fetched: Vec<&str> = [
                 result.banner.as_ref().map(|_| "banner"),
                 result.coverart.as_ref().map(|_| "coverart"),
@@ -1326,14 +1331,19 @@ impl qobject::GameModel {
     }
 
     fn discard_draft(mut self: Pin<&mut Self>) {
-        self.as_mut().rust_mut().get_mut().draft = None;
+        if let Some(draft) = self.as_mut().rust_mut().get_mut().draft.take() {
+            media::discard_pending(&draft.metadata.id);
+        }
     }
 
     fn begin_edit_game(mut self: Pin<&mut Self>, index: i32) -> QMap<QMapPair_QString_QVariant> {
         let idx = index as usize;
         let cloned = self.library.game.get(idx).cloned();
         let m = match &cloned {
-            Some(game) => config_map(game),
+            Some(game) => {
+                media::discard_pending(&game.metadata.id);
+                config_map(game)
+            }
             None => QMap::<QMapPair_QString_QVariant>::default(),
         };
         self.as_mut().rust_mut().get_mut().draft = cloned;
@@ -1358,6 +1368,7 @@ impl qobject::GameModel {
             return false;
         }
         self.as_mut().rust_mut().get_mut().library.game[idx] = draft;
+        media::commit_pending(&id);
         let model_idx = self
             .as_ref()
             .model_index(idx as i32, 0, &QModelIndex::default());
@@ -1777,13 +1788,16 @@ impl qobject::GameModel {
 
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = media_changed_notifier(qt_thread, id.clone());
+        let slot = media::MediaSlot::Pending;
         std::thread::spawn(move || match (gacha_manifest, steam_appid) {
-            (Some(m), _) => omikuji_core::gacha::art::fetch_into_library_cache(&m, &id, on_asset),
+            (Some(m), _) => {
+                omikuji_core::gacha::art::fetch_into_library_cache(slot, &m, &id, on_asset)
+            }
             (_, Some(appid)) => {
-                let _ = media::fetch_steam_media_blocking_with(&appid, on_asset);
+                let _ = media::fetch_steam_media_blocking_with(slot, &appid, on_asset);
             }
             _ => {
-                let _ = media::fetch_media_blocking_with(&id, &name, on_asset);
+                let _ = media::fetch_media_blocking_with(slot, &id, &name, on_asset);
             }
         });
     }

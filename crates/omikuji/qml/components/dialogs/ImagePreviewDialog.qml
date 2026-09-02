@@ -14,6 +14,7 @@ DialogCard {
     scrollable: false
 
     function show(source_, caption_) {
+        source = ""
         source = source_
         caption = caption_ === undefined ? "" : caption_
         open()

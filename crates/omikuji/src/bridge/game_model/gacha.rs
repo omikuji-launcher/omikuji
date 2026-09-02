@@ -313,6 +313,7 @@ impl super::qobject::GameModel {
         let on_asset = super::media_changed_notifier(qt_thread, id_for_media.clone());
         std::thread::spawn(move || {
             omikuji_core::gacha::art::fetch_into_library_cache(
+                omikuji_core::media::MediaSlot::Live,
                 &manifest_for_media,
                 &id_for_media,
                 on_asset,

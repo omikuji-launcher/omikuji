@@ -311,7 +311,11 @@ fn install_dir(values: &crate::registry::Values) -> Option<String> {
     ["DisplayIcon", "UninstallString"]
         .iter()
         .filter_map(|k| values.get(*k))
-        .find_map(|raw| first_path(raw).rsplit_once('\\').map(|(dir, _)| dir.to_string()))
+        .find_map(|raw| {
+            first_path(raw)
+                .rsplit_once('\\')
+                .map(|(dir, _)| dir.to_string())
+        })
 }
 
 fn first_path(raw: &str) -> &str {

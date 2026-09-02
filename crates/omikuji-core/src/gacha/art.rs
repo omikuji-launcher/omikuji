@@ -28,6 +28,7 @@ pub fn resolve_art(manifest: &GachaManifest, kind: &str) -> String {
 }
 
 pub fn fetch_into_library_cache(
+    slot: crate::media::MediaSlot,
     manifest: &GachaManifest,
     game_id: &str,
     mut on_asset: impl FnMut(&MediaType),
@@ -50,7 +51,11 @@ pub fn fetch_into_library_cache(
             tracing::error!("assets.fetch_url is empty");
             return;
         }
-        match download_to(&client, &url, &crate::media::media_path(game_id, lib_type)) {
+        match download_to(
+            &client,
+            &url,
+            &crate::media::media_path_in(slot, game_id, lib_type),
+        ) {
             Ok(()) => on_asset(lib_type),
             Err(e) => tracing::error!("{} fetch failed: {}", kind, e),
         }

@@ -82,7 +82,11 @@ impl super::qobject::GameModel {
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = super::media_changed_notifier(qt_thread, appid_str.clone());
         std::thread::spawn(move || {
-            let result = media::fetch_steam_media_blocking_with(&appid_for_media, on_asset);
+            let result = media::fetch_steam_media_blocking_with(
+                media::MediaSlot::Live,
+                &appid_for_media,
+                on_asset,
+            );
             if result.banner.is_none() && result.coverart.is_none() {
                 tracing::warn!("no steam media found for appid {}", appid_for_media);
             }

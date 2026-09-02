@@ -140,7 +140,12 @@ impl super::qobject::GameModel {
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = super::media_changed_notifier(qt_thread, id_for_media.clone());
         std::thread::spawn(move || {
-            media::fetch_media_blocking_with(&id_for_media, &name_for_media, on_asset);
+            media::fetch_media_blocking_with(
+                media::MediaSlot::Live,
+                &id_for_media,
+                &name_for_media,
+                on_asset,
+            );
         });
 
         self.as_mut().insert_game_sorted(game);

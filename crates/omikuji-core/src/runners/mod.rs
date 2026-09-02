@@ -621,7 +621,10 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
     let primary = which::which("wine")
         .ok()
         .and_then(|p| std::fs::canonicalize(p).ok());
-    for dir in std::env::var_os("PATH").iter().flat_map(std::env::split_paths) {
+    for dir in std::env::var_os("PATH")
+        .iter()
+        .flat_map(std::env::split_paths)
+    {
         let bin = dir.join("wine");
         if !bin.is_file() {
             continue;

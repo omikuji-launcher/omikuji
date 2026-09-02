@@ -62,7 +62,11 @@ impl RepoLink {
         if self.host == "github.com" {
             format!("https://api.github.com/repos/{}/releases", self.slug())
         } else {
-            format!("https://{}/api/v1/repos/{}/releases", self.host, self.slug())
+            format!(
+                "https://{}/api/v1/repos/{}/releases",
+                self.host,
+                self.slug()
+            )
         }
     }
 }
@@ -150,7 +154,9 @@ fn installable_assets(assets: &[serde_json::Value]) -> Vec<AssetInfo> {
 }
 
 pub fn matches_priority(asset_name: &str, priority: &[String]) -> bool {
-    priority.iter().any(|want| asset_name.contains(want.as_str()))
+    priority
+        .iter()
+        .any(|want| asset_name.contains(want.as_str()))
 }
 
 fn pick_asset(assets: &[AssetInfo], priority: &[String]) -> Option<AssetInfo> {

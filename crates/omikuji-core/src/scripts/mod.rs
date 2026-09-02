@@ -214,7 +214,9 @@ impl Script {
             ) {
                 (true, true) => bail!("game needs exe or exe_from_registry"),
                 (false, false) if game.exe.starts_with('/') || game.exe.contains("${") => {
-                    bail!("exe must be relative to the install folder when exe_from_registry is set")
+                    bail!(
+                        "exe must be relative to the install folder when exe_from_registry is set"
+                    )
                 }
                 _ => {}
             }
@@ -250,7 +252,9 @@ impl Script {
                     Regex::new(url_match)
                         .with_context(|| format!("invalid url_match \"{url_match}\""))?;
                     if !sha256.trim().is_empty() {
-                        bail!("sha256 cannot be used with url_from, the target changes per release");
+                        bail!(
+                            "sha256 cannot be used with url_from, the target changes per release"
+                        );
                     }
                 }
                 _ => {}
@@ -341,7 +345,10 @@ impl Script {
             match &step.action {
                 StepAction::InitPrefix | StepAction::Winetricks { .. } => {}
                 StepAction::Download {
-                    url, url_from, dest, ..
+                    url,
+                    url_from,
+                    dest,
+                    ..
                 } => {
                     out.push(url);
                     out.push(url_from);

@@ -299,12 +299,11 @@ impl super::qobject::GameModel {
                             else {
                                 continue;
                             };
-                            let info = rt.block_on(
-                                omikuji_core::gacha::strategies::check_for_update(
+                            let info =
+                                rt.block_on(omikuji_core::gacha::strategies::check_for_update(
                                     &manifest,
                                     &edition_id,
-                                ),
-                            );
+                                ));
                             let Some(info) = info else {
                                 continue;
                             };
@@ -332,7 +331,8 @@ impl super::qobject::GameModel {
             }
 
             let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
-                m.as_mut().updates_queued(epic_count, gog_count, gacha_count);
+                m.as_mut()
+                    .updates_queued(epic_count, gog_count, gacha_count);
             });
         });
     }

@@ -1,3 +1,4 @@
+pub mod app_settings;
 pub mod archive_manager;
 pub mod components;
 pub mod defaults;
@@ -12,4 +13,3 @@ pub mod migration;
 pub mod ofuda;
 pub mod scripts;
 pub mod tray;
-pub mod app_settings;

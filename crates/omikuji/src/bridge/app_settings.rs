@@ -4,8 +4,8 @@
 // keeps only the parts with actual decisions: persist window, custom applies, json accessors, watcher
 
 use cxx_qt::Threading;
+use omikuji_core::app_settings::{AppSettings, CategoryEntry, KvSet, LogRule, app_settings_path};
 use omikuji_core::fs_watcher::FileWatcher;
-use omikuji_core::app_settings::{CategoryEntry, KvSet, LogRule, AppSettings, app_settings_path};
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
 
