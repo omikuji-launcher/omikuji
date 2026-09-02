@@ -73,7 +73,7 @@ The `Prefix path` field is the prefix you want the game to use when installed an
 
 `Runner` dropdown is where you can select the runner to use for the game. (Along with the prefix path, these two will just seed the game settings after the download is finished and the entry in library gets created, you can of course change them later in the game settings)
 
-`DLC` checkboxes are where you can select the DLCs to install with the game. You can select multiple DLCs at once or select none at all.
+`DLC` checkboxes are where you can select the DLCs to install with the game. You can select multiple DLCs at once or select none at all. You can also install DLCs separately after the game is installed, just re-open the game's store card and checks the DLCs you want and press the `Install DLC` button.
 
 All this applies to GOG installations too, they're the same.
 
@@ -453,6 +453,10 @@ See [Steam](#steam).
 ### How do I add a game that doesn't come from a store?
 
 See [Manually](#manually).
+
+### Can I install a DLC (Epic Games / GOG) for a game already installed?
+
+See [Installing DLC (Epic Games / GOG)](#epic-games--gog).
 
 ### How do I run a random `.exe` inside a game's prefix?
 
