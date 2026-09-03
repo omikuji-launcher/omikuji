@@ -524,6 +524,7 @@ fn main() {
             cc.file("src/i18n.cpp");
             cc.file("src/hot_reload.cpp");
             cc.file("src/notify.cpp");
+            cc.file("src/inhibit.cpp");
         })
     };
     println!("cargo:rerun-if-changed=src/app_icon.cpp");
@@ -532,6 +533,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/i18n.cpp");
     println!("cargo:rerun-if-changed=src/hot_reload.cpp");
     println!("cargo:rerun-if-changed=src/notify.cpp");
+    println!("cargo:rerun-if-changed=src/inhibit.cpp");
 
     builder.build();
 }

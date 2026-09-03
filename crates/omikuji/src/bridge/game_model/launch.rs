@@ -286,6 +286,7 @@ impl super::qobject::GameModel {
 
     pub fn check_exited_games(mut self: Pin<&mut Self>) {
         for game_id in omikuji_core::process::take_exited_games() {
+            crate::inhibit::release(&game_id);
             self.as_mut().game_stopped(&QString::from(&game_id));
         }
     }
@@ -450,6 +451,13 @@ fn do_spawn_launch(game: &Game) -> bool {
         omikuji_core::notifications::info(
             &game.metadata.name,
             "Launching through Steam... any errors will show in Steam itself",
+        );
+    }
+
+    if game.system.prevent_sleep {
+        crate::inhibit::acquire(
+            &game.metadata.id,
+            &format!("Playing {}", game.metadata.name),
         );
     }
 

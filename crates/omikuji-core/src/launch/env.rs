@@ -11,6 +11,9 @@ pub enum EnvPurpose {
     Tool,
 }
 
+const BATTLEYE_RUNTIME_APPID: &str = "1161040";
+const EAC_RUNTIME_APPID: &str = "1826330";
+
 pub fn build_env(
     game: &Game,
     variant: WineVariant,
@@ -101,11 +104,17 @@ pub fn build_env(
         append_dll_override(&mut env, "nvapi,nvapi64=n,b");
     }
 
-    if game.wine.battleye {
-        env.insert("PROTON_BATTLEYE_RUNTIME".to_string(), "1".to_string());
-    }
-    if game.wine.easyanticheat {
-        env.insert("PROTON_EAC_RUNTIME".to_string(), "1".to_string());
+    if variant == WineVariant::Proton {
+        if game.wine.battleye
+            && let Some(dir) = anticheat_runtime(BATTLEYE_RUNTIME_APPID)
+        {
+            env.insert("PROTON_BATTLEYE_RUNTIME".to_string(), dir);
+        }
+        if game.wine.easyanticheat
+            && let Some(dir) = anticheat_runtime(EAC_RUNTIME_APPID)
+        {
+            env.insert("PROTON_EAC_RUNTIME".to_string(), dir);
+        }
     }
 
     if game.wine.fsr {
@@ -189,6 +198,16 @@ pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
     pairs
 }
 
+// a depot husk keeps the dir but loses the v* payload proton's ntdll loads from
+fn anticheat_runtime(appid: &str) -> Option<String> {
+    let dir = crate::store::steam::local::get_game_install_dir(appid)?;
+    let has_payload = std::fs::read_dir(&dir)
+        .ok()?
+        .flatten()
+        .any(|entry| entry.file_name().to_string_lossy().starts_with('v') && entry.path().is_dir());
+    has_payload.then(|| dir.to_string_lossy().into_owned())
+}
+
 fn append_dll_override(env: &mut HashMap<String, String>, entry: &str) {
     let existing = env
         .get("WINEDLLOVERRIDES")
@@ -263,6 +282,28 @@ mod tests {
         }
         if !inherited_no {
             assert!(!env.contains_key("PROTON_NO_NTSYNC"));
+        }
+    }
+
+    #[test]
+    fn test_anticheat_env_not_added_for_non_proton() {
+        let inherited_be = std::env::var_os("PROTON_BATTLEYE_RUNTIME").is_some();
+        let inherited_eac = std::env::var_os("PROTON_EAC_RUNTIME").is_some();
+        let mut game = game("wine-ge-9-5", false);
+        game.wine.battleye = true;
+        game.wine.easyanticheat = true;
+        let env = build_env(
+            &game,
+            WineVariant::Runner,
+            Path::new("wine"),
+            EnvPurpose::Session,
+        );
+
+        if !inherited_be {
+            assert!(!env.contains_key("PROTON_BATTLEYE_RUNTIME"));
+        }
+        if !inherited_eac {
+            assert!(!env.contains_key("PROTON_EAC_RUNTIME"));
         }
     }
 }

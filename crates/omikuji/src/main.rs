@@ -1,5 +1,6 @@
 mod bridge;
 mod cli;
+mod inhibit;
 mod log_fmt;
 mod notify;
 mod single_instance;
