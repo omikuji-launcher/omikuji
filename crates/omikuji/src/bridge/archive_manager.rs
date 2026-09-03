@@ -385,11 +385,17 @@ impl qobject::ArchiveManagerBridge {
                 Err(e) => return emit(String::new(), e),
             };
             let installed = archive_source::list_installed(&advised.source, &advised.dest_root());
+            let stems: Vec<String> = release
+                .assets
+                .iter()
+                .map(|a| archive_source::asset_stem(&a.name).to_string())
+                .collect();
             emit(
                 serde_json::json!({
                     "tag": advised.tag,
                     "assets": release.assets,
                     "installedDirs": installed,
+                    "steamProtonDirs": runners::steam_proton_dirs_by_name(&stems),
                 })
                 .to_string(),
                 String::new(),

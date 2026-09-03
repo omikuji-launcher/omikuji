@@ -115,7 +115,7 @@ const ARCHIVE_EXTS: &[(&str, &str)] = &[
     (".zip", "zip"),
 ];
 
-fn asset_stem(name: &str) -> &str {
+pub fn asset_stem(name: &str) -> &str {
     ARCHIVE_EXTS
         .iter()
         .find_map(|(ext, _)| name.strip_suffix(ext))

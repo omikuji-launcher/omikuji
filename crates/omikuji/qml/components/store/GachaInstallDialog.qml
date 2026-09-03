@@ -30,8 +30,12 @@ DialogCard {
     readonly property var advisedStems: AA.stems(advisedAssets)
     readonly property var advisedLabels: AA.labels(advisedAssets)
     readonly property string chosenStem: advisedStems[assetIndex] || ""
+    readonly property string advisedSteamDir:
+        hasAdvised && chosenStem !== "" && advised.steamProtonDirs
+            ? (advised.steamProtonDirs[chosenStem] || "") : ""
     readonly property bool advisedInstalled:
-        hasAdvised && chosenStem !== "" && advised.installedDirs.indexOf(chosenStem) >= 0
+        hasAdvised && chosenStem !== ""
+        && (advised.installedDirs.indexOf(chosenStem) >= 0 || advisedSteamDir !== "")
     readonly property bool advisedSelected:
         hasAdvised && runnerOptions.length > 0
         && runnerOptions[runnerIndex] && runnerOptions[runnerIndex].isAdvisedEntry === true
@@ -287,7 +291,10 @@ DialogCard {
     }
 
     function selectedRunner() {
-        if (advisedSelected && chosenStem !== "") return chosenStem
+        if (advisedSelected && chosenStem !== "") {
+            if (advised.installedDirs.indexOf(chosenStem) >= 0) return chosenStem
+            return advisedSteamDir !== "" ? "steam:" + advisedSteamDir : chosenStem
+        }
         return runnerOptions.length > 0 ? runnerOptions[runnerIndex].value : "system"
     }
 

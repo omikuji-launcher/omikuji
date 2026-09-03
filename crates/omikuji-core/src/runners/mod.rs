@@ -2,7 +2,7 @@ use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
 use anyhow::{Result, anyhow};
 use serde::Serialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{LazyLock, Mutex};
@@ -265,6 +265,28 @@ pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
 
 pub fn is_proton_dir(path: &Path) -> bool {
     path.join("proton").exists()
+}
+
+pub fn steam_proton_dirs_by_name(names: &[String]) -> BTreeMap<String, String> {
+    let ours = runners_dir();
+    let mut out = BTreeMap::new();
+    for (dir_name, path) in crate::store::steam::local::iter_steam_protons() {
+        if path
+            .canonicalize()
+            .unwrap_or_else(|_| path.clone())
+            .starts_with(&ours)
+        {
+            continue;
+        }
+        let display = crate::store::steam::local::proton_display_name(&path);
+        if let Some(name) = names
+            .iter()
+            .find(|n| **n == dir_name || Some(n.as_str()) == display.as_deref())
+        {
+            out.insert(name.clone(), dir_name);
+        }
+    }
+    out
 }
 
 pub fn move_to_steam_dir(src: &Path, roots: &[PathBuf]) -> Result<()> {
