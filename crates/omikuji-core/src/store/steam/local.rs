@@ -16,9 +16,21 @@ const STEAM_DATA_DIRS: &[&str] = &[
     "/usr/local/share/steam",
 ];
 
+// configured dirs come first because every lookup below takes the first hit
+pub fn steam_data_dirs() -> Vec<String> {
+    crate::settings::get()
+        .steam
+        .install_dirs
+        .iter()
+        .filter(|d| !d.trim().is_empty())
+        .cloned()
+        .chain(STEAM_DATA_DIRS.iter().map(|d| d.to_string()))
+        .collect()
+}
+
 pub fn find_steam_dir() -> Option<PathBuf> {
-    for dir in STEAM_DATA_DIRS {
-        let expanded = shellexpand::tilde(dir);
+    for dir in steam_data_dirs() {
+        let expanded = shellexpand::tilde(&dir);
         let path = Path::new(expanded.as_ref());
         if path.join("steamapps").exists() {
             return Some(path.to_path_buf());
@@ -29,11 +41,11 @@ pub fn find_steam_dir() -> Option<PathBuf> {
 
 pub fn steam_install_roots() -> Vec<(String, PathBuf)> {
     let mut roots: Vec<(String, PathBuf)> = vec![];
-    for dir in STEAM_DATA_DIRS {
+    for dir in steam_data_dirs() {
         if dir.starts_with("/usr") {
             continue;
         }
-        let expanded = shellexpand::tilde(dir);
+        let expanded = shellexpand::tilde(&dir);
         let path = Path::new(expanded.as_ref());
         if !path.join("steamapps").exists() {
             continue;
@@ -56,14 +68,30 @@ pub fn steam_install_roots() -> Vec<(String, PathBuf)> {
 
 pub fn iter_compat_tools_dirs() -> Vec<PathBuf> {
     let mut dirs = vec![];
-    for dir in STEAM_DATA_DIRS {
-        let expanded = shellexpand::tilde(dir);
+    for dir in steam_data_dirs() {
+        let expanded = shellexpand::tilde(&dir);
         let ctd = Path::new(expanded.as_ref()).join("compatibilitytools.d");
         if ctd.is_dir() {
             dirs.push(ctd);
         }
     }
     dirs
+}
+
+pub fn find_native_steam() -> Option<String> {
+    let scripts: Vec<String> = steam_data_dirs()
+        .iter()
+        .map(|d| format!("{}/steam.sh", d.trim_end_matches('/')))
+        .collect();
+    let refs: Vec<&str> = scripts.iter().map(String::as_str).collect();
+    crate::fs_util::find_executable_in_paths(&["steam", "steam.sh"], &refs)
+        .map(|p| p.to_string_lossy().to_string())
+}
+
+pub fn flatpak_steam_installed() -> bool {
+    dirs::home_dir()
+        .map(|h| h.join(".var/app/com.valvesoftware.Steam").exists())
+        .unwrap_or(false)
 }
 
 pub fn get_steamapps_dirs() -> Vec<PathBuf> {

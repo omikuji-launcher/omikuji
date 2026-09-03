@@ -6,8 +6,9 @@ use std::process::Command;
 use super::ComponentMissing;
 use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
-use super::wine::{WineVariant, find_executable_in_paths, resolve_wine_exe};
+use super::wine::{WineVariant, resolve_wine_exe};
 use crate::library::Game;
+use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::template_vars::TemplateVars;
 
 pub struct LaunchConfig {
@@ -314,22 +315,6 @@ fn build_gamescope_args(game: &Game) -> Vec<String> {
     }
 
     args
-}
-
-fn find_native_steam() -> Option<String> {
-    const STEAM_PATHS: &[&str] = &[
-        "~/.steam/steam.sh",
-        "~/.steam/steam/steam.sh",
-        "~/.local/share/Steam/steam.sh",
-    ];
-    find_executable_in_paths(&["steam", "steam.sh"], STEAM_PATHS)
-        .map(|p| p.to_string_lossy().to_string())
-}
-
-fn flatpak_steam_installed() -> bool {
-    dirs::home_dir()
-        .map(|h| h.join(".var/app/com.valvesoftware.Steam").exists())
-        .unwrap_or(false)
 }
 
 fn build_steam_command(appid: &str, args: &[String]) -> Vec<String> {

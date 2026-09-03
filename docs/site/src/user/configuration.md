@@ -66,9 +66,12 @@ egl_dummy = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runti
 ```toml
 [steam]
 api_key = ""
+install_dirs = [""]
 ```
 
 Optional Steam Web API key ([get one here](https://steamcommunity.com/dev/apikey)). Without it, Steam library listing still works (read locally from ACF files), only remote playtime sync is off.
+
+`install_dirs` points omikuji at Steam installations outside the checked locations (`~/.steam`, `~/.local/share/Steam`, the Flatpak and Snap paths, `/usr/share/steam`), for example `install_dirs = ["/mnt/games/Steam"]`. Entries are read before the built-in locations and in the order given, so they also decide which install is used when more than one exists, and they cover library listing, Proton detection and compatibility tool links. Library folders on other drives are read from `libraryfolders.vdf` and do not need listing here.
 
 
 ## `app.toml`

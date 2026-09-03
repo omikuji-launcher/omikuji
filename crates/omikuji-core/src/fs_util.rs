@@ -1,4 +1,41 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+#[cfg(unix)]
+pub fn is_executable(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    if let Ok(metadata) = std::fs::metadata(path) {
+        let mode = metadata.permissions().mode();
+        mode & 0o111 != 0
+    } else {
+        false
+    }
+}
+
+#[cfg(not(unix))]
+pub fn is_executable(_path: &Path) -> bool {
+    true
+}
+
+pub fn find_executable_in_paths(names: &[&str], extra_paths: &[&str]) -> Option<PathBuf> {
+    if let Ok(path_var) = std::env::var("PATH") {
+        for dir in path_var.split(':') {
+            for name in names {
+                let full_path = Path::new(dir).join(name);
+                if full_path.exists() && is_executable(&full_path) {
+                    return Some(full_path);
+                }
+            }
+        }
+    }
+    for path in extra_paths {
+        let expanded = shellexpand::tilde(path);
+        let p = Path::new(expanded.as_ref());
+        if p.exists() && is_executable(p) {
+            return Some(p.to_path_buf());
+        }
+    }
+    None
+}
 
 pub fn write_atomic(path: &Path, body: impl AsRef<[u8]>) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {

@@ -1,6 +1,7 @@
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
+use crate::fs_util::is_executable;
 use crate::library::Game;
 use crate::template_vars::TemplateVars;
 
@@ -108,22 +109,6 @@ fn validate_exe(game: &Game) -> Result<()> {
             Ok(())
         }
     }
-}
-
-#[cfg(unix)]
-fn is_executable(path: &Path) -> bool {
-    use std::os::unix::fs::PermissionsExt;
-    if let Ok(metadata) = std::fs::metadata(path) {
-        let mode = metadata.permissions().mode();
-        mode & 0o111 != 0
-    } else {
-        false
-    }
-}
-
-#[cfg(not(unix))]
-fn is_executable(_path: &Path) -> bool {
-    true
 }
 
 fn runtime_dir() -> PathBuf {

@@ -1,7 +1,8 @@
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
-use super::{ComponentMissing, is_executable, runtime_dir};
+use super::{ComponentMissing, runtime_dir};
+use crate::fs_util::{find_executable_in_paths, is_executable};
 use crate::library::Game;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -116,27 +117,6 @@ fn resolve_steam_runner(version: &str) -> Result<PathBuf> {
             name: "umu-run".to_string(),
         })
     })
-}
-
-pub(super) fn find_executable_in_paths(names: &[&str], extra_paths: &[&str]) -> Option<PathBuf> {
-    if let Ok(path_var) = std::env::var("PATH") {
-        for dir in path_var.split(':') {
-            for name in names {
-                let full_path = Path::new(dir).join(name);
-                if full_path.exists() && is_executable(&full_path) {
-                    return Some(full_path);
-                }
-            }
-        }
-    }
-    for path in extra_paths {
-        let expanded = shellexpand::tilde(path);
-        let p = Path::new(expanded.as_ref());
-        if p.exists() && is_executable(p) {
-            return Some(p.to_path_buf());
-        }
-    }
-    None
 }
 
 pub fn umu_system_path() -> Option<PathBuf> {

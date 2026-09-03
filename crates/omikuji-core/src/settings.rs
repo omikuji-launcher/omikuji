@@ -35,11 +35,12 @@ impl Default for ScriptsSettings {
     }
 }
 
-// empty api_key disables remote playtime sync; local process-tracking still works
+// install_dirs is for steam installs the built-ins miss (appimage users smh)
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct SteamSettings {
     pub api_key: String,
+    pub install_dirs: Vec<String>,
 }
 
 // paths are stored as strings so a leading `~` survives TOML round-trips;
