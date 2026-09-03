@@ -158,7 +158,9 @@ struct ApiResponse<T> {
 }
 
 async fn get_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let resp: ApiResponse<T> = reqwest::get(url)
+    let resp: ApiResponse<T> = crate::http::client()
+        .get(url)
+        .send()
         .await
         .map_err(|e| anyhow!("sophon GET {} failed: {}", url, e))?
         .json()
@@ -176,8 +178,7 @@ async fn get_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
 }
 
 async fn post_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let client = reqwest::Client::new();
-    let resp: ApiResponse<T> = client
+    let resp: ApiResponse<T> = crate::http::client()
         .post(url)
         .send()
         .await

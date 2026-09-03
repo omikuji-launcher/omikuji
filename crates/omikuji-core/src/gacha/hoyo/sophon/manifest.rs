@@ -9,7 +9,9 @@ pub async fn fetch_patch_manifest(diff: &SophonDiff) -> Result<SophonPatchProto>
     let url = diff.manifest_download.url_for(&diff.manifest.id);
     let compressed = diff.manifest_download.compression == 1;
 
-    let bytes = reqwest::get(&url)
+    let bytes = crate::http::client()
+        .get(&url)
+        .send()
         .await
         .map_err(|e| anyhow!("fetch manifest {} failed: {}", url, e))?
         .error_for_status()
@@ -32,7 +34,9 @@ pub async fn fetch_build_manifest(entry: &SophonManifestEntry) -> Result<SophonM
     let url = entry.manifest_download.url_for(&entry.manifest.id);
     let compressed = entry.manifest_download.compression == 1;
 
-    let bytes = reqwest::get(&url)
+    let bytes = crate::http::client()
+        .get(&url)
+        .send()
         .await
         .map_err(|e| anyhow!("fetch manifest {} failed: {}", url, e))?
         .error_for_status()

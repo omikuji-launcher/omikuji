@@ -124,7 +124,7 @@ fn build_get_latest_url(cfg: &EditionConfig, version: &str) -> String {
 
 pub async fn fetch_latest(cfg: &EditionConfig, installed_version: &str) -> Result<GetLatestData> {
     let url = build_get_latest_url(cfg, installed_version);
-    let body = reqwest::Client::new()
+    let body = crate::http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()
@@ -205,7 +205,7 @@ pub async fn fetch_resources(
     rand_str: &str,
 ) -> Result<ResourceList> {
     let url = build_get_latest_resources_url(cfg, game_version, version, rand_str);
-    let body = reqwest::Client::new()
+    let body = crate::http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()
@@ -261,7 +261,7 @@ pub struct ResourcePatchVariant {
 
 pub async fn fetch_resource_patch(resource_path: &str) -> Result<ResourcePatchManifest> {
     let url = format!("{}/patch.json", resource_path.trim_end_matches('/'));
-    let body = reqwest::Client::new()
+    let body = crate::http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()

@@ -99,7 +99,7 @@ impl GogStore {
             self.user_id = token_user_id.clone();
         }
 
-        let resp = reqwest::Client::new()
+        let resp = crate::http::client()
             .get("https://embed.gog.com/userData.json")
             .bearer_auth(&creds.access_token)
             .header(
@@ -167,7 +167,7 @@ impl GogStore {
             self.user_id,
             creds.access_token.len()
         );
-        let client = reqwest::Client::new();
+        let client = crate::http::client();
         let mut games = Vec::new();
         let mut page_token: Option<String> = None;
 
@@ -216,7 +216,7 @@ impl GogStore {
                     if external_id.is_empty() {
                         continue;
                     }
-                    match fetch_game_metadata(&client, &external_id).await {
+                    match fetch_game_metadata(client, &external_id).await {
                         Ok((title, banner, coverart, icon)) => {
                             let banner_r =
                                 resolve_gog_image(&external_id, "banner", banner.as_deref());
@@ -398,7 +398,7 @@ pub struct GogDlc {
 
 async fn fetch_dlc_art(app_name: &str) -> std::collections::HashMap<String, String> {
     let mut out = std::collections::HashMap::new();
-    let Ok(resp) = reqwest::Client::new()
+    let Ok(resp) = crate::http::client()
         .get(format!(
             "https://api.gog.com/products/{app_name}?expand=expanded_dlcs"
         ))
@@ -1030,7 +1030,7 @@ fn resolve_gog_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Optio
 }
 
 pub async fn fetch_game_details(app_name: &str) -> Result<String> {
-    let client = reqwest::Client::new();
+    let client = crate::http::client();
 
     // summary comes from gamesdb because v2's own description field is promo html with inline css. genuinely why
     let mut description = String::new();

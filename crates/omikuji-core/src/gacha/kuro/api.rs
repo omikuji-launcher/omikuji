@@ -38,7 +38,9 @@ pub async fn fetch_resource_info(
 ) -> Result<ResourceInfo> {
     let url = super::index_url_from_manifest(manifest, edition_id)?;
 
-    let resp = reqwest::get(&url)
+    let resp = crate::http::client()
+        .get(&url)
+        .send()
         .await
         .map_err(|e| anyhow!("fetch {}: {}", url, e))?;
     if !resp.status().is_success() {
@@ -227,7 +229,9 @@ pub async fn fetch_patch_index(index_file_url: &str) -> Result<PatchIndexFile> {
 }
 
 async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let resp = reqwest::get(url)
+    let resp = crate::http::client()
+        .get(url)
+        .send()
         .await
         .map_err(|e| anyhow!("fetch indexFile: {}", e))?;
     if !resp.status().is_success() {

@@ -574,8 +574,8 @@ pub async fn fetch_game_details(app_name: &str) -> Result<String> {
     let mut reqs = Vec::new();
 
     if !namespace.is_empty() {
-        let client = reqwest::Client::new();
-        let slug = product_slug(&client, &namespace, &title).await;
+        let client = crate::http::client();
+        let slug = product_slug(client, &namespace, &title).await;
         if let Ok(resp) = client
             .get(format!(
                 "https://store-content.ak.epicgames.com/api/en-US/content/products/{slug}"

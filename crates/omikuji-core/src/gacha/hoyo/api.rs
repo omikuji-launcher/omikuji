@@ -77,7 +77,9 @@ pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePa
         edition.launcher_id()
     );
 
-    let resp: ApiResponse<GamePackagesData> = reqwest::get(&url)
+    let resp: ApiResponse<GamePackagesData> = crate::http::client()
+        .get(&url)
+        .send()
         .await
         .map_err(|e| anyhow!("failed to reach hoyo api: {}", e))?
         .json()

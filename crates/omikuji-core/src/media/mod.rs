@@ -482,7 +482,7 @@ pub fn fetch_cached_image(cache_path: &std::path::Path, url: &str, key: String) 
     let path = cache_path.to_path_buf();
     let fetch_url = url.to_string();
     tokio::spawn(async move {
-        match reqwest::get(&fetch_url).await {
+        match crate::http::client().get(&fetch_url).send().await {
             Ok(resp) if resp.status().is_success() => {
                 if let Ok(bytes) = resp.bytes().await
                     && let Err(e) = crate::fs_util::write_atomic(&path, &bytes)

@@ -80,7 +80,9 @@ pub async fn fetch_file_index(api: &EditionApi, config: &GameConfig) -> Result<F
     )?;
     let located: RawUrl = auth::get(api, url.as_str()).await?;
 
-    let resp = reqwest::get(&located.url)
+    let resp = crate::http::client()
+        .get(&located.url)
+        .send()
         .await
         .map_err(|e| anyhow!("GET {}: {}", located.url, e))?;
     if !resp.status().is_success() {
