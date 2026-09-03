@@ -21,7 +21,7 @@ Item {
             ctrl.activeDownloads = ({})
             return
         }
-        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.epic_state_json()) || ({}) }
+        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.source_state_json("epic")) || ({}) }
         catch (e) { ctrl.activeDownloads = ({}) }
     }
 

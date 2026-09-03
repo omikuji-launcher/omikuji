@@ -904,7 +904,7 @@ property real cardZoom: appSettings.cardZoom
             unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             sourceComponent: EpicLibrary {
-                epicModel: root.epicModelRef
+                storeModel: root.epicModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
                 cardSpacing: appSettings.cardSpacing
@@ -929,7 +929,7 @@ property real cardZoom: appSettings.cardZoom
             unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             sourceComponent: GogLibrary {
-                gogModel: root.gogModelRef
+                storeModel: root.gogModelRef
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
                 cardSpacing: appSettings.cardSpacing

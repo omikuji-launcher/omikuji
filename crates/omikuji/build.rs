@@ -308,8 +308,9 @@ fn main() {
         .custom_invokable_raw("fn retry(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn dismiss(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn drain_events(self: Pin<&mut DownloadModel>);")
-        .custom_invokable_raw("fn epic_state_json(self: &DownloadModel) -> QString;")
-        .custom_invokable_raw("fn gog_state_json(self: &DownloadModel) -> QString;")
+        .custom_invokable_raw(
+            "fn source_state_json(self: &DownloadModel, source: &QString) -> QString;",
+        )
         .custom_invokable_raw("fn active_for_game_id(self: &DownloadModel, game_id: &QString) -> QString;")
         .custom_invokable("speedHistoryJson", "fn speed_history_json(self: &DownloadModel) -> QString;")
         .row_ops()
@@ -426,6 +427,7 @@ fn main() {
         "qml/components/settings/TabRunnerOptions.qml",
         "qml/components/settings/TabSystem.qml",
         // store
+        "qml/components/store/StoreLibraryBase.qml",
         "qml/components/store/EpicLibrary.qml",
         "qml/components/store/StoreGameDetails.qml",
         "qml/components/store/GachaLibrary.qml",

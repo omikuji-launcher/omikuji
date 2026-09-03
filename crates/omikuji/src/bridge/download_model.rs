@@ -372,15 +372,8 @@ impl qobject::DownloadModel {
         self.as_mut().state_changed();
     }
 
-    fn epic_state_json(&self) -> QString {
-        self.source_state_json("epic")
-    }
-
-    fn gog_state_json(&self) -> QString {
-        self.source_state_json("gog")
-    }
-
-    fn source_state_json(&self, source: &str) -> QString {
+    fn source_state_json(&self, source: &QString) -> QString {
+        let source = source.to_string();
         let mut map = serde_json::Map::new();
         for e in self.entries.iter().filter(|e| e.source == source) {
             if e.status.is_active() {

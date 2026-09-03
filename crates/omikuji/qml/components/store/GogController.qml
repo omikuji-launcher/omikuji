@@ -21,7 +21,7 @@ Item {
             ctrl.activeDownloads = ({})
             return
         }
-        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.gog_state_json()) || ({}) }
+        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.source_state_json("gog")) || ({}) }
         catch (e) { ctrl.activeDownloads = ({}) }
     }
 
