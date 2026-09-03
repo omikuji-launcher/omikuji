@@ -1,3 +1,5 @@
+pub mod registry;
+
 use crate::launch::prefix_path_for;
 use crate::library::Library;
 use std::collections::BTreeMap;

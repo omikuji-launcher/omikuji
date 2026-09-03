@@ -286,7 +286,7 @@ fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
 }
 
 fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {
-    let values = crate::registry::read_key(
+    let values = crate::prefixes::registry::read_key(
         prefix,
         &format!("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{key}"),
     )?;
@@ -301,7 +301,7 @@ fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {
     Some(crate::prefixes::wine_path_to_host(prefix, &dir)?.join(relative))
 }
 
-fn install_dir(values: &crate::registry::Values) -> Option<String> {
+fn install_dir(values: &crate::prefixes::registry::Values) -> Option<String> {
     if let Some(location) = values
         .get("InstallLocation")
         .filter(|v| !v.trim().is_empty())
