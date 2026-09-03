@@ -84,7 +84,7 @@ impl EpicStore {
             let _ = std::fs::remove_file(&path);
         }
         // drop cache so next login starts with an empty library, not the previous user's
-        let _ = std::fs::remove_file(cached_library_path());
+        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
         self.display_name.clear();
         Ok(())
     }
@@ -394,27 +394,7 @@ pub fn inspect_existing_install(app_name: &str, install_path: &Path) -> (u64, bo
         })
         .unwrap_or(false);
 
-    let bytes = std::process::Command::new("du")
-        .args(["-sb"])
-        .arg(install_path)
-        .output()
-        .ok()
-        .and_then(|o| {
-            if o.status.success() {
-                Some(o.stdout)
-            } else {
-                None
-            }
-        })
-        .and_then(|stdout| {
-            let s = String::from_utf8_lossy(&stdout);
-            s.split_whitespace()
-                .next()
-                .and_then(|n| n.parse::<u64>().ok())
-        })
-        .unwrap_or(0);
-
-    (bytes, has_resume)
+    (crate::fs_util::dir_size(install_path), has_resume)
 }
 
 pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
@@ -569,17 +549,7 @@ pub fn sync_saves_upload(app_name: &str, save_path: &str) -> Result<()> {
     Ok(())
 }
 
-fn epic_cache_dir() -> PathBuf {
-    crate::cache_dir().join("epic")
-}
-
-fn cached_image_path(app_name: &str, kind: &str) -> PathBuf {
-    epic_cache_dir().join(format!("{}_{}.img", app_name, kind))
-}
-
-fn cached_library_path() -> PathBuf {
-    epic_cache_dir().join("library.json")
-}
+const STORE: &str = "epic";
 
 fn thumbnail_url(url: &str) -> String {
     let sep = if url.contains('?') { '&' } else { '?' };
@@ -590,7 +560,7 @@ fn migrate_image_cache_once() {
     use std::sync::OnceLock;
     static MIGRATED: OnceLock<()> = OnceLock::new();
     MIGRATED.get_or_init(|| {
-        let dir = epic_cache_dir();
+        let dir = crate::store::cache::cache_dir(STORE);
         let marker = dir.join(".thumb-v1");
         if marker.exists() {
             return;
@@ -604,7 +574,7 @@ fn migrate_image_cache_once() {
                 }
             }
         }
-        let _ = std::fs::remove_file(cached_library_path());
+        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
         let _ = std::fs::create_dir_all(&dir);
         let _ = std::fs::write(&marker, "v1");
     });
@@ -612,43 +582,15 @@ fn migrate_image_cache_once() {
 
 pub fn load_cached_library() -> Vec<EpicGame> {
     migrate_image_cache_once();
-    let path = cached_library_path();
-    let Ok(data) = std::fs::read_to_string(&path) else {
-        return Vec::new();
-    };
-    match serde_json::from_str::<Vec<EpicGame>>(&data) {
-        Ok(v) => v,
-        Err(e) => {
-            tracing::warn!("library cache parse failed: {}", e);
-            Vec::new()
-        }
-    }
+    crate::store::cache::load_library(STORE)
 }
 
 pub fn save_cached_library(games: &[EpicGame]) {
-    let path = cached_library_path();
-    let body = match serde_json::to_string(games) {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!("library cache serialize failed: {}", e);
-            return;
-        }
-    };
-    if let Err(e) = crate::fs_util::write_atomic(&path, body) {
-        tracing::error!("library cache write failed: {}", e);
-    }
+    crate::store::cache::save_library(STORE, games);
 }
 
 fn resolve_epic_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Option<String> {
-    let url = cdn_url?;
-    if url.is_empty() {
-        return None;
-    }
-    crate::media::fetch_cached_image(
-        &cached_image_path(app_name, kind),
-        &thumbnail_url(url),
-        format!("epic_{}_{}", app_name, kind),
-    )
+    crate::store::cache::resolve_image(STORE, app_name, kind, cdn_url, thumbnail_url)
 }
 
 pub async fn fetch_game_details(app_name: &str) -> Result<String> {

@@ -64,7 +64,7 @@ impl DownloadSource for GogdlSource {
         // clean gogdl exit is the install signal, same as heroic
         let final_root = resolve_install_root(&entry.install_path, &entry.app_id)
             .unwrap_or_else(|| entry.install_path.clone());
-        let bytes = dir_size_bytes(&final_root);
+        let bytes = crate::fs_util::dir_size(&final_root);
         tracing::info!(
             "install recorded at {} ({} MB on disk)",
             final_root.display(),
@@ -256,28 +256,6 @@ fn log_dir_listing(dir: &std::path::Path) {
             }
         }
     }
-}
-
-fn dir_size_bytes(dir: &std::path::Path) -> u64 {
-    fn walk(dir: &std::path::Path, depth: usize) -> u64 {
-        if depth == 0 {
-            return 0;
-        }
-        let Ok(entries) = std::fs::read_dir(dir) else {
-            return 0;
-        };
-        let mut total = 0u64;
-        for e in entries.flatten() {
-            let Ok(md) = e.metadata() else { continue };
-            if md.is_dir() {
-                total = total.saturating_add(walk(&e.path(), depth - 1));
-            } else if md.is_file() {
-                total = total.saturating_add(md.len());
-            }
-        }
-        total
-    }
-    walk(dir, 8)
 }
 
 pub fn dir_has_info_marker(dir: &std::path::Path, app_id: &str) -> bool {
