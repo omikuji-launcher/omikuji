@@ -179,10 +179,7 @@ struct GhAsset {
 }
 
 async fn fetch_latest_release(api_url: &str) -> Result<GhRelease> {
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client
+    let resp = crate::http::client()
         .get(api_url)
         .header("Accept", "application/vnd.github+json")
         .send()
@@ -331,37 +328,14 @@ async fn install_one_inner(spec: &ComponentSpec) -> Result<String> {
 }
 
 async fn download_bytes(url: &str, name: &str) -> Result<Vec<u8>> {
-    use futures_util::StreamExt;
-
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client.get(url).send().await?.error_for_status()?;
-    let total = resp.content_length().unwrap_or(0);
-    let mut buf: Vec<u8> = if total > 0 {
-        Vec::with_capacity(total as usize)
-    } else {
-        Vec::new()
-    };
-
-    let mut stream = resp.bytes_stream();
-    let mut last_pct = -1.0_f64;
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk?;
-        buf.extend_from_slice(&chunk);
-        if total > 0 {
-            let pct = (buf.len() as f64 / total as f64) * 100.0;
-            if pct - last_pct >= 1.0 {
-                push(ComponentEvent::Progress {
-                    name: name.to_string(),
-                    phase: "downloading".into(),
-                    percent: pct,
-                });
-                last_pct = pct;
-            }
-        }
-    }
-    Ok(buf)
+    crate::http::download_with_progress(url, 0, |pct| {
+        push(ComponentEvent::Progress {
+            name: name.to_string(),
+            phase: "downloading".into(),
+            percent: pct,
+        });
+    })
+    .await
 }
 
 fn install_bytes(spec: &ComponentSpec, bytes: &[u8]) -> Result<()> {

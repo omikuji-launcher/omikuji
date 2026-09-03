@@ -26,10 +26,7 @@ struct Envelope<T> {
 }
 
 pub async fn get<T: DeserializeOwned>(api: &EditionApi, url: &str) -> Result<T> {
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-    let resp = client
+    let resp = crate::http::client()
         .get(url)
         .header("Authorization", header(api))
         .send()

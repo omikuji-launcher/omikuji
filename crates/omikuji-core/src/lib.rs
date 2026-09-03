@@ -15,6 +15,7 @@ pub mod fs_util;
 pub mod fs_watcher;
 pub mod gacha;
 pub mod game_logs;
+pub mod http;
 pub mod install_sizes;
 pub mod launch;
 pub mod library;

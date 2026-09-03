@@ -23,15 +23,12 @@ pub async fn ensure_all_fetched() -> Result<u32> {
         ));
     }
 
-    let client = reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?;
-
-    let index = fetch_index(&client, &base).await?;
+    let client = crate::http::client();
+    let index = fetch_index(client, &base).await?;
 
     let mut written: u32 = 0;
     for entry in &index.gachas {
-        match fetch_one(&client, &base, &entry.publisher, &entry.game).await {
+        match fetch_one(client, &base, &entry.publisher, &entry.game).await {
             Ok(()) => written += 1,
             Err(e) => tracing::error!("{}/{}: {}", entry.publisher, entry.game, e),
         }

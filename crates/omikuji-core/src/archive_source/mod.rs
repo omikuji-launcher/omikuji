@@ -3,7 +3,6 @@
 // adding a new source is a 5-line paste in settings.rs, no code change here. yayyyy =m=
 
 use anyhow::{Result, anyhow};
-use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::fs;
@@ -180,14 +179,8 @@ fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
         .cloned()
 }
 
-fn client() -> Result<reqwest::Client> {
-    Ok(reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
-        .build()?)
-}
-
 async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
-    let resp = client()?
+    let resp = crate::http::client()
         .get(api_url)
         .query(&[("per_page", "100")])
         .header("Accept", "application/vnd.github+json")
@@ -254,7 +247,7 @@ pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> 
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow!("asset {} has no download url", asset_name))?;
 
-    let bytes = client()?
+    let bytes = crate::http::client()
         .get(url)
         .send()
         .await?
@@ -478,40 +471,16 @@ async fn download_bytes(
     source: &ArchiveSource,
     release: &ReleaseInfo,
 ) -> Result<Vec<u8>> {
-    let resp = client()?
-        .get(&release.asset_url)
-        .send()
-        .await?
-        .error_for_status()
-        .map_err(|e| anyhow!("download {}: {}", release.asset_url, e))?;
-
-    let total = resp.content_length().unwrap_or(release.asset_size);
-    let mut buf: Vec<u8> = if total > 0 {
-        Vec::with_capacity(total as usize)
-    } else {
-        Vec::new()
-    };
-
-    let mut stream = resp.bytes_stream();
-    let mut last_pct = -1.0_f64;
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk?;
-        buf.extend_from_slice(&chunk);
-        if total > 0 {
-            let pct = (buf.len() as f64 / total as f64) * 100.0;
-            if pct - last_pct >= 1.0 {
-                push(ArchiveEvent::Progress {
-                    category: category.into(),
-                    source: source.name.clone(),
-                    tag: release.tag.clone(),
-                    phase: "downloading".into(),
-                    percent: pct,
-                });
-                last_pct = pct;
-            }
-        }
-    }
-    Ok(buf)
+    crate::http::download_with_progress(&release.asset_url, release.asset_size, |pct| {
+        push(ArchiveEvent::Progress {
+            category: category.into(),
+            source: source.name.clone(),
+            tag: release.tag.clone(),
+            phase: "downloading".into(),
+            percent: pct,
+        });
+    })
+    .await
 }
 
 pub fn list_installed(source: &ArchiveSource, dest_root: &Path) -> Vec<String> {
