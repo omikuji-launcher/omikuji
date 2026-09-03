@@ -207,42 +207,23 @@ fn read_display_name() -> Option<String> {
         .map(String::from)
 }
 
-// only include entreies with BOTH install_path AND executable; partial installs (killed mid-download) would otherwise show up as "installed" in the ui
-fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    let path = dirs::config_dir()
+fn installed_json() -> PathBuf {
+    dirs::config_dir()
         .unwrap_or_default()
         .join("legendary")
-        .join("installed.json");
-    if !path.exists() {
-        return Ok(HashMap::new());
-    }
-    let content = std::fs::read_to_string(path)?;
-    let v: serde_json::Value = serde_json::from_str(&content)?;
-    let mut map = HashMap::new();
-    if let Some(obj) = v.as_object() {
-        for (app_name, data) in obj {
-            let has_exe = data
-                .get("executable")
-                .and_then(|p| p.as_str())
-                .map(|s| !s.is_empty())
-                .unwrap_or(false);
-            if !has_exe {
-                continue;
-            }
-            if let Some(path) = data.get("install_path").and_then(|p| p.as_str()) {
-                map.insert(app_name.clone(), PathBuf::from(path));
-            }
-        }
-    }
-    Ok(map)
+        .join("installed.json")
 }
 
-#[derive(Debug, Clone)]
-pub struct InstalledInfo {
-    pub install_path: PathBuf,
-    pub executable: PathBuf,
-    pub title: Option<String>,
+// only entries with BOTH install_path AND executable; partial installs (killed mid-download) would otherwise show up as "installed" in the ui
+fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
+    Ok(crate::store::registry::read(&installed_json())
+        .into_iter()
+        .filter(|(_, e)| e.has_executable())
+        .map(|(app_name, e)| (app_name, e.install_path))
+        .collect())
 }
+
+pub use crate::store::registry::InstalledInfo;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct EpicDlc {
@@ -439,32 +420,9 @@ pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
 }
 
 pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
-    let installed_json = dirs::config_dir()?.join("legendary").join("installed.json");
-    if !installed_json.exists() {
-        return None;
-    }
-    let content = std::fs::read_to_string(installed_json).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    let entry = v.get(app_name)?;
-    let install_path = PathBuf::from(entry.get("install_path")?.as_str()?);
-    let exe_rel = entry
-        .get("executable")
-        .and_then(|e| e.as_str())
-        .unwrap_or("");
-    let executable = if exe_rel.is_empty() {
-        PathBuf::new()
-    } else {
-        install_path.join(exe_rel)
-    };
-    let title = entry
-        .get("title")
-        .and_then(|t| t.as_str())
-        .map(String::from);
-    Some(InstalledInfo {
-        install_path,
-        executable,
-        title,
-    })
+    let entry = crate::store::registry::entry(&installed_json(), app_name)?;
+    let exe_rel = Some(entry.executable.clone());
+    Some(entry.resolved(exe_rel))
 }
 
 fn installed_save_path(app_name: &str) -> Option<String> {

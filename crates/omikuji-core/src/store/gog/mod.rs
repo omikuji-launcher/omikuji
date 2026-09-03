@@ -318,61 +318,23 @@ fn has_install_marker(dir: &Path) -> bool {
 }
 
 fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    let path = registry_path();
-    if !path.exists() {
-        return Ok(HashMap::new());
-    }
-    let content = std::fs::read_to_string(path)?;
-    let v: serde_json::Value = serde_json::from_str(&content)?;
-    let mut map = HashMap::new();
-    if let Some(obj) = v.as_object() {
-        for (app_name, data) in obj {
-            if let Some(path) = data.get("install_path").and_then(|p| p.as_str()) {
-                map.insert(app_name.clone(), PathBuf::from(path));
-            }
-        }
-    }
-    Ok(map)
+    Ok(crate::store::registry::read(&registry_path())
+        .into_iter()
+        .map(|(app_name, e)| (app_name, e.install_path))
+        .collect())
 }
 
-#[derive(Debug, Clone)]
-pub struct InstalledInfo {
-    pub install_path: PathBuf,
-    pub executable: PathBuf,
-    pub title: Option<String>,
-}
+pub use crate::store::registry::InstalledInfo;
 
 pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
-    let registry = registry_path();
-    if !registry.exists() {
-        return None;
-    }
-    let content = std::fs::read_to_string(&registry).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    let entry = v.get(app_name)?;
-    let install_path = PathBuf::from(entry.get("install_path")?.as_str()?);
-    let exe_rel = entry
-        .get("executable")
-        .and_then(|e| e.as_str())
-        .unwrap_or("");
-    let resolved = if exe_rel.is_empty() {
-        crate::store::gog::source::find_game_exe_pub(&install_path, app_name)
+    let entry = crate::store::registry::entry(&registry_path(), app_name)?;
+    // gogdl leaves executable blank on some titles, so go looking inside the install
+    let exe_rel = if entry.has_executable() {
+        Some(entry.executable.clone())
     } else {
-        Some(exe_rel.to_string())
+        source::find_game_exe_pub(&entry.install_path, app_name)
     };
-    let executable = match resolved {
-        Some(p) if !p.is_empty() => install_path.join(&p),
-        _ => PathBuf::new(),
-    };
-    let title = entry
-        .get("title")
-        .and_then(|t| t.as_str())
-        .map(String::from);
-    Some(InstalledInfo {
-        install_path,
-        executable,
-        title,
-    })
+    Some(entry.resolved(exe_rel))
 }
 
 pub fn record_install(
