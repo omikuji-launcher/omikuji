@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
+use super::{ProtonVerb, WineVariant, build_launch};
 use crate::library::{AlongsideWhen, Game};
 use crate::template_vars::TemplateVars;
 
@@ -42,7 +43,7 @@ fn spawn_logged(game: &Game, host_env: &HashMap<String, String>, target: &str) {
 fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Result<u32> {
     let mut cmd = match game.runner.runner_type.as_str() {
         "native" | "flatpak" => host_command(game, host_env, target),
-        _ => wine_command(game, target)?,
+        _ => prefix_command(game, target)?,
     };
     cmd.env(crate::process::GAME_ID_VAR, &game.metadata.id);
     cmd.stdin(Stdio::null());
@@ -79,7 +80,7 @@ fn host_command(game: &Game, env: &HashMap<String, String>, target: &str) -> Com
     cmd
 }
 
-fn wine_command(game: &Game, target: &str) -> Result<Command> {
+fn prefix_command(game: &Game, target: &str) -> Result<Command> {
     let steam = crate::store::steam::local::with_steam_wine(game)?;
     let source = steam.as_ref().unwrap_or(game);
 
@@ -99,17 +100,10 @@ fn wine_command(game: &Game, target: &str) -> Result<Command> {
     );
     tool.launch.args = game.launch.alongside_args.clone();
 
-    let config = super::build_launch(&tool)?;
-    if config.command.is_empty() {
-        anyhow::bail!("no launch command for {}", target);
+    let mut cmd = build_launch(&tool)?.to_command()?;
+    if WineVariant::from_version(&tool.wine.version) == WineVariant::Proton {
+        cmd.env("PROTON_VERB", ProtonVerb::RunInPrefix.as_str());
     }
-
-    let mut cmd = Command::new(&config.command[0]);
-    cmd.args(&config.command[1..]);
-    cmd.current_dir(&config.working_dir);
-    cmd.env_clear();
-    cmd.envs(&config.env);
-    cmd.env("PROTON_VERB", super::ProtonVerb::RunInPrefix.as_str());
     Ok(cmd)
 }
 

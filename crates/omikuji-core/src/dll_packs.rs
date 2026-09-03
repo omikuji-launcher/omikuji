@@ -1,12 +1,12 @@
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
-use crate::launch::{ProtonVerb, WineVariant};
+use crate::launch::{ProtonVerb, WineVariant, wine_command};
 use crate::library::Game;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::process::Stdio;
 
 pub fn list_sources() -> Vec<ArchiveSource> {
     components_config::get().layers
@@ -236,14 +236,14 @@ fn ensure_prefix_bootstrapped(
     env: &HashMap<String, String>,
 ) -> Result<()> {
     tracing::info!("bootstrapping prefix via wineboot: {}", prefix.display());
-    let mut cmd = Command::new(wine_exe);
-    cmd.arg("wineboot").arg("-u");
-    cmd.env_clear();
-    cmd.envs(env);
-    if variant == WineVariant::Proton {
-        // umu-run synchronous verb, waits for the wineboot child to exit before tearing down
-        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
-    }
+    // waitforexitandrun so umu-run waits for the wineboot child before tearing the session down
+    let mut cmd = wine_command(
+        wine_exe,
+        env,
+        variant,
+        Some(ProtonVerb::WaitForExitAndRun),
+        ["wineboot", "-u"],
+    );
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::null());
     cmd.stderr(Stdio::null());
@@ -279,22 +279,22 @@ fn set_ngx_registry(
     variant: WineVariant,
     env: &HashMap<String, String>,
 ) -> Result<()> {
-    let mut cmd = Command::new(wine_exe);
-    cmd.args([
-        "reg",
-        "add",
-        r"HKEY_LOCAL_MACHINE\SOFTWARE\NVIDIA Corporation\Global\NGXCore",
-        "/v",
-        "FullPath",
-        "/d",
-        r"C:\windows\system32",
-        "/f",
-    ]);
-    cmd.env_clear();
-    cmd.envs(env);
-    if variant == WineVariant::Proton {
-        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
-    }
+    let mut cmd = wine_command(
+        wine_exe,
+        env,
+        variant,
+        Some(ProtonVerb::WaitForExitAndRun),
+        [
+            "reg",
+            "add",
+            r"HKEY_LOCAL_MACHINE\SOFTWARE\NVIDIA Corporation\Global\NGXCore",
+            "/v",
+            "FullPath",
+            "/d",
+            r"C:\windows\system32",
+            "/f",
+        ],
+    );
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::null());
     cmd.stderr(Stdio::null());

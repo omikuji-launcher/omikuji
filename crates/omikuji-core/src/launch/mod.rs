@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -8,6 +8,9 @@ use crate::library::Game;
 use crate::template_vars::TemplateVars;
 
 pub mod alongside;
+mod command;
+
+pub use command::wine_command;
 
 #[derive(Debug)]
 pub struct ComponentMissing {
@@ -47,6 +50,19 @@ impl LaunchConfig {
             game_name: game.metadata.name.clone(),
             post_exit_script: vars.expand(&game.launch.post_exit_script),
         }
+    }
+
+    pub fn to_command(&self) -> Result<Command> {
+        let (program, args) = self
+            .command
+            .split_first()
+            .ok_or_else(|| anyhow::anyhow!("no launch command for {}", self.game_name))?;
+        let mut cmd = Command::new(program);
+        cmd.args(args);
+        cmd.current_dir(&self.working_dir);
+        cmd.env_clear();
+        cmd.envs(&self.env);
+        Ok(cmd)
     }
 }
 
@@ -439,29 +455,6 @@ fn build_gamescope_args(game: &Game) -> Vec<String> {
     args
 }
 
-pub fn spawn(config: &LaunchConfig) -> Result<std::process::Child> {
-    let mut cmd = Command::new(&config.command[0]);
-
-    if config.command.len() > 1 {
-        cmd.args(&config.command[1..]);
-    }
-
-    cmd.current_dir(&config.working_dir);
-    cmd.env_clear();
-    cmd.envs(&config.env);
-
-    // detach from parent so the game keeps running if omikuji closes
-    cmd.stdin(Stdio::null());
-    cmd.stdout(Stdio::null());
-    cmd.stderr(Stdio::null());
-
-    let child = cmd
-        .spawn()
-        .with_context(|| format!("failed to spawn: {}", config.command[0]))?;
-
-    Ok(child)
-}
-
 fn apply_kv_sets(
     sets: &[crate::app_settings::KvSet],
     ids: &[String],
@@ -667,18 +660,18 @@ pub fn prepare_epic_prefix(
     let prefix = resolve_prefix(game);
 
     // spoof the epic launcher registry key so games that check for it dont bail early
-    let mut cmd = Command::new(wine_exe);
-    cmd.env_clear();
-    cmd.envs(env);
-    if WineVariant::from_version(&game.wine.version) == WineVariant::Proton {
-        cmd.env("PROTON_VERB", ProtonVerb::WaitForExitAndRun.as_str());
-    }
-    cmd.args([
-        "reg",
-        "add",
-        "HKEY_CLASSES_ROOT\\com.epicgames.launcher",
-        "/f",
-    ]);
+    let mut cmd = wine_command(
+        wine_exe,
+        env,
+        WineVariant::from_version(&game.wine.version),
+        Some(ProtonVerb::WaitForExitAndRun),
+        [
+            "reg",
+            "add",
+            "HKEY_CLASSES_ROOT\\com.epicgames.launcher",
+            "/f",
+        ],
+    );
     cmd.stdout(Stdio::null());
     cmd.stderr(Stdio::null());
 

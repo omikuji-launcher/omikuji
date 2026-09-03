@@ -121,13 +121,7 @@ impl ProcessManager {
             crate::game_logs::append_line(&config.game_id, line.to_string());
         }
 
-        let mut cmd = std::process::Command::new(&config.command[0]);
-        if config.command.len() > 1 {
-            cmd.args(&config.command[1..]);
-        }
-        cmd.current_dir(&config.working_dir);
-        cmd.env_clear();
-        cmd.envs(&config.env);
+        let mut cmd = config.to_command()?;
         cmd.env(GAME_ID_VAR, &config.game_id);
 
         cmd.stdout(Stdio::piped());

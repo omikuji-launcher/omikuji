@@ -175,14 +175,9 @@ pub fn prefix_needs_bootstrap(game: &crate::library::Game) -> bool {
 
 pub fn bootstrap_prefix<F: FnMut(&str)>(
     game: &crate::library::Game,
-    mut on_line: F,
+    on_line: F,
 ) -> anyhow::Result<()> {
-    crate::runners::ensure_latest_blocking(&game.wine.version)?;
-    let variant = crate::launch::WineVariant::from_version(&game.wine.version);
-    let wine_exe = crate::launch::resolve_wine_exe(variant, &game.wine.version)?;
-    let env = crate::launch::build_env(game, variant, &wine_exe, crate::launch::EnvPurpose::Tool);
     let prefix = crate::launch::resolve_prefix(game);
-
     if prefix
         .join("drive_c")
         .join("windows")
@@ -192,35 +187,7 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
         return Ok(());
     }
 
-    let mut cmd = std::process::Command::new(&wine_exe);
-    cmd.arg("wineboot").arg("-u");
-    cmd.env_clear();
-    cmd.envs(&env);
-    if variant == crate::launch::WineVariant::Proton {
-        cmd.env(
-            "PROTON_VERB",
-            crate::launch::ProtonVerb::WaitForExitAndRun.as_str(),
-        );
-    }
-    cmd.stdin(std::process::Stdio::null());
-    cmd.stdout(std::process::Stdio::null());
-    cmd.stderr(std::process::Stdio::piped());
-
-    let mut child = cmd.spawn()?;
-    if let Some(stderr) = child.stderr.take() {
-        use std::io::BufRead;
-        for line in std::io::BufReader::new(stderr)
-            .lines()
-            .map_while(Result::ok)
-        {
-            on_line(&line);
-        }
-    }
-    let status = child.wait()?;
-    if !status.success() {
-        anyhow::bail!("wineboot -u exited with {}", status);
-    }
-    Ok(())
+    crate::wine_tools::run_streamed(game, crate::wine_tools::WineTool::Wineboot, on_line)
 }
 
 pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {

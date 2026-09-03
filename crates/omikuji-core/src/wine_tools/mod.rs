@@ -1,4 +1,6 @@
-use crate::launch::{EnvPurpose, ProtonVerb, WineVariant, build_env, resolve_wine_exe};
+use crate::launch::{
+    EnvPurpose, ProtonVerb, WineVariant, build_env, resolve_wine_exe, wine_command,
+};
 use crate::library::Game;
 use anyhow::{Result, anyhow};
 use std::collections::HashSet;
@@ -40,6 +42,7 @@ pub enum WineTool {
     Cmd,
     Explorer,
     RunExe(PathBuf),
+    Wineboot,
     // wineserver -k (or wineboot -k for proton). useful when a crashed game leaves wineserver running (took it from lutris).
     KillWineserver,
     Custom(Vec<String>),
@@ -154,20 +157,15 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     let env = vars.expand_env(env);
     let args: Vec<String> = args.into_iter().map(|a| vars.expand(&a)).collect();
 
-    let mut cmd = Command::new(&program);
-    cmd.args(&args);
-    // replace rather than extend so WINEPREFIX etc. from build_env win over anything inherited from the launcher's env
-    cmd.env_clear();
-    cmd.envs(&env);
-
-    if variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver) {
-        let verb = if crate::process::is_game_running(&g.metadata.id) {
-            ProtonVerb::Run
-        } else {
-            ProtonVerb::WaitForExitAndRun
-        };
-        cmd.env("PROTON_VERB", verb.as_str());
-    }
+    let verb =
+        (variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver)).then(|| {
+            if crate::process::is_game_running(&g.metadata.id) {
+                ProtonVerb::Run
+            } else {
+                ProtonVerb::WaitForExitAndRun
+            }
+        });
+    let cmd = wine_command(&program, &env, variant, verb, &args);
 
     tracing::debug!("{:?} :: {} {}", tool, program.display(), args.join(" "));
     Ok(cmd)
@@ -187,6 +185,7 @@ fn build_command(
             wine_exe.to_path_buf(),
             vec![path.to_string_lossy().into_owned()],
         )),
+        WineTool::Wineboot => Ok((wine_exe.to_path_buf(), vec!["wineboot".into(), "-u".into()])),
         WineTool::Winetricks => {
             if variant == WineVariant::Proton {
                 // umu-run ships its own winetricks verb apparently
