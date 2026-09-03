@@ -12,7 +12,7 @@ mod env;
 mod prefix;
 mod wine;
 
-pub use assemble::LaunchConfig;
+pub use assemble::ResolvedLaunch;
 pub use command::wine_command;
 pub use env::{EnvPurpose, build_env};
 pub use prefix::{effective_prefix, prefix_path_for, prepare_epic_prefix, resolve_prefix};
@@ -35,7 +35,7 @@ impl std::fmt::Display for ComponentMissing {
 
 impl std::error::Error for ComponentMissing {}
 
-pub fn prepare_launch(game: &Game) -> Result<LaunchConfig> {
+pub fn prepare_launch(game: &Game) -> Result<ResolvedLaunch> {
     let config = assemble_launch(game)?;
     reject_slop_env(&config)?;
     run_pre_launch_script(game, &config);
@@ -43,14 +43,14 @@ pub fn prepare_launch(game: &Game) -> Result<LaunchConfig> {
     Ok(config)
 }
 
-pub fn build_launch(game: &Game) -> Result<LaunchConfig> {
+pub fn build_launch(game: &Game) -> Result<ResolvedLaunch> {
     let config = assemble_launch(game)?;
     reject_slop_env(&config)?;
     validate_exe(game)?;
     Ok(config)
 }
 
-fn reject_slop_env(config: &LaunchConfig) -> Result<()> {
+fn reject_slop_env(config: &ResolvedLaunch) -> Result<()> {
     if config.env.contains_key("WINE_CANONICAL_HOLE") {
         anyhow::bail!(
             "WINE_CANONICAL_HOLE detected in the launch environment. bro remove this shit pls. this variable is not real, wine has no canonical hole, and whatever slop config it came from probably broke other things too :xdd:"
@@ -59,7 +59,7 @@ fn reject_slop_env(config: &LaunchConfig) -> Result<()> {
     Ok(())
 }
 
-fn run_pre_launch_script(game: &Game, config: &LaunchConfig) {
+fn run_pre_launch_script(game: &Game, config: &ResolvedLaunch) {
     let script = &TemplateVars::for_game(game).expand(&game.launch.pre_launch_script);
     if script.is_empty() {
         return;

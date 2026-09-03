@@ -11,7 +11,7 @@ use crate::library::Game;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::template_vars::TemplateVars;
 
-pub struct LaunchConfig {
+pub struct ResolvedLaunch {
     pub command: Vec<String>,
     pub env: HashMap<String, String>,
     pub working_dir: PathBuf,
@@ -20,7 +20,7 @@ pub struct LaunchConfig {
     pub post_exit_script: String,
 }
 
-impl LaunchConfig {
+impl ResolvedLaunch {
     fn from_game(
         game: &Game,
         command: Vec<String>,
@@ -52,7 +52,7 @@ impl LaunchConfig {
     }
 }
 
-pub(super) fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
+pub(super) fn assemble_launch(game: &Game) -> Result<ResolvedLaunch> {
     let working_dir = resolve_working_dir(game);
 
     match game.runner.runner_type.as_str() {
@@ -115,7 +115,7 @@ pub(super) fn assemble_launch(game: &Game) -> Result<LaunchConfig> {
 
     apply_wrapping(&mut command, &mut env, game, true);
 
-    Ok(LaunchConfig::from_game(game, command, env, working_dir))
+    Ok(ResolvedLaunch::from_game(game, command, env, working_dir))
 }
 
 fn apply_wrapping(
@@ -180,7 +180,7 @@ fn effective_app_id(game: &Game) -> String {
     }
 }
 
-fn build_steam_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig> {
+fn build_steam_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
     let appid = effective_app_id(game);
     if appid.is_empty() {
         anyhow::bail!("Steam runner requires an Application ID");
@@ -193,10 +193,10 @@ fn build_steam_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig>
 
     apply_wrapping(&mut command, &mut env, game, true);
 
-    Ok(LaunchConfig::from_game(game, command, env, working_dir))
+    Ok(ResolvedLaunch::from_game(game, command, env, working_dir))
 }
 
-fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig> {
+fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
     let appid = effective_app_id(game);
     if appid.is_empty() {
         anyhow::bail!("Flatpak runner requires an Application ID (e.g. org.foo.App)");
@@ -232,10 +232,10 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfi
     // mangohud is injected via --env above so the outer wrapper would double-set + leak into flatpak host process
     apply_wrapping(&mut command, &mut env, game, false);
 
-    Ok(LaunchConfig::from_game(game, command, env, working_dir))
+    Ok(ResolvedLaunch::from_game(game, command, env, working_dir))
 }
 
-fn build_native_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig> {
+fn build_native_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
     let exe = &game.metadata.exe;
     let mut command = vec![relative_exe(exe, &working_dir)];
     for arg in &game.launch.args {
@@ -247,7 +247,7 @@ fn build_native_launch(game: &Game, working_dir: PathBuf) -> Result<LaunchConfig
 
     apply_wrapping(&mut command, &mut env, game, true);
 
-    Ok(LaunchConfig::from_game(game, command, env, working_dir))
+    Ok(ResolvedLaunch::from_game(game, command, env, working_dir))
 }
 
 // we trust lutris with this one guys

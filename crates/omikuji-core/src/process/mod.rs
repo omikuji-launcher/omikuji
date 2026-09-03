@@ -51,7 +51,7 @@ impl ProcessManager {
         }
     }
 
-    pub async fn launch(&self, config: &crate::launch::LaunchConfig) -> Result<ProcessId> {
+    pub async fn launch(&self, config: &crate::launch::ResolvedLaunch) -> Result<ProcessId> {
         let game = crate::library::Library::load_game_by_id(&config.game_id)?
             .ok_or_else(|| anyhow::anyhow!("game not found in library"))?;
 
@@ -574,7 +574,7 @@ pub fn manager() -> &'static ProcessManager {
     &MANAGER
 }
 
-pub async fn launch_game(config: &crate::launch::LaunchConfig) -> Result<ProcessId> {
+pub async fn launch_game(config: &crate::launch::ResolvedLaunch) -> Result<ProcessId> {
     manager().launch(config).await
 }
 

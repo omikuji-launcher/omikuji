@@ -522,7 +522,7 @@ fn blocking_check_gacha_update(app_id: &str) -> Option<GachaUpdateInfo> {
     .flatten()
 }
 
-fn spawn_launch_thread(config: omikuji_core::launch::LaunchConfig) {
+fn spawn_launch_thread(config: omikuji_core::launch::ResolvedLaunch) {
     tracing::info!("launching '{}': {:?}", config.game_name, config.command);
     let logs_dir = omikuji_core::logs_dir();
     std::thread::spawn(move || {
