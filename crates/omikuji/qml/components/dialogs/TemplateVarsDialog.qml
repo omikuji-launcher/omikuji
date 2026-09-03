@@ -42,11 +42,12 @@ DialogCard {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.leftMargin: Theme.space.md
                 anchors.rightMargin: Theme.space.md
-                text: "${exe}              " + qsTr("game executable") + "\n"
+                text: "${game_exe}         " + qsTr("game executable") + "\n"
                 + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
                 + "${game_prefix}      " + qsTr("the game's resolved prefix") + "\n"
                 + "${game_id}          " + qsTr("internal game id") + "\n"
                 + "${game_name}        " + qsTr("game name") + "\n"
+                + "${game_slug}        " + qsTr("url-safe game name, as used by omikuji run") + "\n"
                 + "${home}             " + qsTr("home folder") + "\n"
                 + "${prefixes_path}    " + qsTr("prefixes root") + "\n"
                 + "${cache_path}       " + qsTr("cache root") + "\n"

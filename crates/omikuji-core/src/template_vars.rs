@@ -5,17 +5,19 @@ use std::time::SystemTime;
 use crate::library::Game;
 
 const RESERVED: &[&str] = &[
-    "exe",
+    "game_exe",
     "game_dir",
     "game_prefix",
     "game_id",
     "game_name",
+    "game_slug",
     "home",
     "data_path",
     "gachas_path",
     "components_path",
     "runners_path",
     "layers_path",
+    "tools_path",
     "prefixes_path",
     "cache_path",
     "logs_path",
@@ -84,13 +86,14 @@ impl TemplateVars {
         let mut vars = Vec::new();
         let exe = &game.metadata.exe;
         if !exe.as_os_str().is_empty() {
-            vars.push(("exe".to_string(), exe.to_string_lossy().into_owned()));
+            vars.push(("game_exe".to_string(), exe.to_string_lossy().into_owned()));
             if let Some(dir) = exe.parent() {
                 vars.push(("game_dir".to_string(), dir.to_string_lossy().into_owned()));
             }
         }
         vars.push(("game_id".to_string(), game.metadata.id.clone()));
         vars.push(("game_name".to_string(), game.metadata.name.clone()));
+        vars.push(("game_slug".to_string(), crate::desktop::game_slug(game)));
         vars.extend(root_paths());
         Self::finish(vars)
     }
