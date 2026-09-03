@@ -110,7 +110,3 @@ fn validate_exe(game: &Game) -> Result<()> {
         }
     }
 }
-
-fn runtime_dir() -> PathBuf {
-    crate::runtime_dir()
-}

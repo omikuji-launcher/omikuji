@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::Stdio;
 
 use super::wine::{ProtonVerb, WineVariant};
-use super::{runtime_dir, wine_command};
+use super::wine_command;
 use crate::library::Game;
 use crate::template_vars::TemplateVars;
 
@@ -13,7 +13,7 @@ pub fn prefix_path_for(game: &Game) -> PathBuf {
         return PathBuf::from(TemplateVars::base(game).expand(&game.wine.prefix));
     }
 
-    let dir = prefixes_dir();
+    let dir = crate::prefixes_dir();
 
     // layout: prefixes/{slug}-{id}. if the name slugifies to nothing (e.g. non-ascii title) fall back to just the id so the dir is unique.
     let slug = if !game.metadata.slug.is_empty() {
@@ -81,7 +81,7 @@ pub fn prepare_epic_prefix(
         tracing::error!("epic registry spoof failed: {}", e);
     }
 
-    let dummy_src = runtime_dir().join("EpicGamesLauncher.exe");
+    let dummy_src = crate::runtime_dir().join("EpicGamesLauncher.exe");
     if dummy_src.exists() {
         let dest_dir = prefix.join("drive_c").join("windows").join("command");
         if let Err(e) = std::fs::create_dir_all(&dest_dir) {
@@ -97,8 +97,4 @@ pub fn prepare_epic_prefix(
     }
 
     Ok(())
-}
-
-fn prefixes_dir() -> PathBuf {
-    crate::prefixes_dir()
 }

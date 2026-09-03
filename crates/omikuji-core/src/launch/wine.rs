@@ -1,7 +1,7 @@
 use anyhow::Result;
 use std::path::PathBuf;
 
-use super::{ComponentMissing, runtime_dir};
+use super::ComponentMissing;
 use crate::fs_util::{find_executable_in_paths, is_executable};
 use crate::library::Game;
 
@@ -133,7 +133,7 @@ pub fn find_umu_run() -> Option<PathBuf> {
     if let Some(p) = umu_system_path() {
         return Some(p);
     }
-    let our_runtime = runtime_dir().join("umu-run");
+    let our_runtime = crate::runtime_dir().join("umu-run");
     (our_runtime.exists() && is_executable(&our_runtime)).then_some(our_runtime)
 }
 
