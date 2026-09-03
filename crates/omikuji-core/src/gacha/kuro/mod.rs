@@ -108,10 +108,3 @@ fn read_package_version_json(install_path: &std::path::Path) -> Option<String> {
         Some(v.to_string())
     }
 }
-
-pub fn cleanup_kuro_state(
-    _app_id: &str,
-    _install_path: &std::path::Path,
-    _temp_dir: Option<&std::path::Path>,
-) {
-}

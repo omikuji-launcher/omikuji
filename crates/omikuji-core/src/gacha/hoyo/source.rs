@@ -27,6 +27,19 @@ pub struct HoyoSource;
 
 #[async_trait]
 impl DownloadSource for HoyoSource {
+    fn cleanup_state(&self, entry: &DownloadEntry) {
+        cleanup_hoyo_state(
+            &entry.app_id,
+            &entry.install_path,
+            entry.temp_dir.as_deref(),
+        );
+    }
+
+    // segments are suspect after a failure, dont re-extract the same corrupt archive
+    fn reset_for_retry(&self, entry: &DownloadEntry) {
+        self.cleanup_state(entry);
+    }
+
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
         let from_version = match &entry.kind {
             DownloadKind::Update { from_version } => from_version.clone(),

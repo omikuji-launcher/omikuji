@@ -26,6 +26,16 @@ fn gogdl_bin() -> Result<PathBuf> {
 
 #[async_trait]
 impl DownloadSource for GogdlSource {
+    // destructive_cleanup on Install already rm -rf's install_path, so this is a no-op there
+    fn cleanup_state(&self, entry: &DownloadEntry) {
+        let support = crate::store::gog::gog_dir()
+            .join("support")
+            .join(&entry.app_id);
+        if support.exists() {
+            let _ = std::fs::remove_dir_all(&support);
+        }
+    }
+
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         let gogdl = gogdl_bin()?;
 

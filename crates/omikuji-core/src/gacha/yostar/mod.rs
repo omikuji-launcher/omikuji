@@ -117,10 +117,3 @@ pub fn set_installed_version(game_slug: &str, edition: &str, version: &str) {
 pub fn read_install_version(install_path: &std::path::Path, _data_folder: &str) -> Option<String> {
     crate::gacha::state::read_install_dotversion(install_path)
 }
-
-pub fn cleanup_yostar_state(
-    _app_id: &str,
-    _install_path: &std::path::Path,
-    _temp_dir: Option<&std::path::Path>,
-) {
-}

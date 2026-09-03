@@ -45,6 +45,14 @@ fn parse_app_id(app_id: &str) -> Result<ParsedGryphlineApp> {
 
 #[async_trait]
 impl DownloadSource for GryphlineSource {
+    fn cleanup_state(&self, entry: &DownloadEntry) {
+        cleanup_gryphline_state(
+            &entry.app_id,
+            &entry.install_path,
+            entry.temp_dir.as_deref(),
+        );
+    }
+
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         let parsed = parse_app_id(&entry.app_id)?;
         tracing::info!("install: {} ({})", entry.display_name, parsed.edition_label);

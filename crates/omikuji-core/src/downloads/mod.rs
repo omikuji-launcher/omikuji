@@ -463,6 +463,11 @@ impl DownloadManager {
         }
     }
 
+    fn source_for(&self, entry: &DownloadEntry) -> Option<Arc<dyn DownloadSource>> {
+        let inner = self.inner.lock().unwrap();
+        inner.sources.get(&entry.source).cloned()
+    }
+
     pub fn retry(&self, id: &str) {
         let entry_copy = {
             let inner = self.inner.lock().unwrap();
@@ -473,14 +478,8 @@ impl DownloadManager {
             return;
         }
 
-        // hoyo keeps segments + a per-piece journal in a temp dir
-        // if extraction failed those bytes are suspect and we want a truly fresh attempt rather than silently re-extracting teh same corrupt archive.
-        if entry.source == "hoyo" {
-            crate::gacha::hoyo::source::cleanup_hoyo_state(
-                &entry.app_id,
-                &entry.install_path,
-                entry.temp_dir.as_deref(),
-            );
+        if let Some(source) = self.source_for(&entry) {
+            source.reset_for_retry(&entry);
         }
 
         let need = {
@@ -752,64 +751,9 @@ fn is_safe_to_wipe(path: &std::path::Path) -> bool {
     true
 }
 
-// epic: clear legendary's .resume chunk manifest
-// hoyo: wipe the scratch dir (segments + .parts journals); otherwise a cancel leaves ~60 GB of dead split archives behind)
 fn cleanup_source_state(entry: &DownloadEntry) {
-    match entry.source.as_str() {
-        "epic" => {
-            if let Some(cfg) = dirs::config_dir() {
-                let resume = cfg
-                    .join("legendary")
-                    .join("tmp")
-                    .join(format!("{}.resume", entry.app_id));
-                if resume.exists() {
-                    if let Err(e) = std::fs::remove_file(&resume) {
-                        tracing::error!("failed to clear resume state {}: {}", resume.display(), e);
-                    } else {
-                        tracing::debug!("cleared resume state for {}", entry.app_id);
-                    }
-                }
-            }
-        }
-        "gog" => {
-            // destructive_cleanup on Install kind already rm -rf's install_path
-            // for us, so this is a no-op there. left explicit for symmetry
-            let support = crate::store::gog::gog_dir()
-                .join("support")
-                .join(&entry.app_id);
-            if support.exists() {
-                let _ = std::fs::remove_dir_all(&support);
-            }
-        }
-        "hoyo" => {
-            crate::gacha::hoyo::source::cleanup_hoyo_state(
-                &entry.app_id,
-                &entry.install_path,
-                entry.temp_dir.as_deref(),
-            );
-        }
-        "endfield" => {
-            crate::gacha::gryphline::source::cleanup_gryphline_state(
-                &entry.app_id,
-                &entry.install_path,
-                entry.temp_dir.as_deref(),
-            );
-        }
-        "kuro" => {
-            crate::gacha::kuro::cleanup_kuro_state(
-                &entry.app_id,
-                &entry.install_path,
-                entry.temp_dir.as_deref(),
-            );
-        }
-        "yostar" => {
-            crate::gacha::yostar::cleanup_yostar_state(
-                &entry.app_id,
-                &entry.install_path,
-                entry.temp_dir.as_deref(),
-            );
-        }
-        _ => {}
+    if let Some(source) = MANAGER.source_for(entry) {
+        source.cleanup_state(entry);
     }
 }
 

@@ -42,6 +42,24 @@ pub fn require_legendary() -> Result<PathBuf> {
 
 #[async_trait]
 impl DownloadSource for LegendarySource {
+    fn cleanup_state(&self, entry: &DownloadEntry) {
+        let Some(cfg) = dirs::config_dir() else {
+            return;
+        };
+        let resume = cfg
+            .join("legendary")
+            .join("tmp")
+            .join(format!("{}.resume", entry.app_id));
+        if !resume.exists() {
+            return;
+        }
+        if let Err(e) = std::fs::remove_file(&resume) {
+            tracing::error!("failed to clear resume state {}: {}", resume.display(), e);
+        } else {
+            tracing::debug!("cleared resume state for {}", entry.app_id);
+        }
+    }
+
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         let legendary = require_legendary()?;
 

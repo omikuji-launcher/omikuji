@@ -30,4 +30,10 @@ pub trait DownloadSource: Send + Sync {
             "this source does not support importing existing installs"
         ))
     }
+
+    // scratch left behind by a cancelled download
+    fn cleanup_state(&self, _entry: &DownloadEntry) {}
+
+    // partial work a retry must not resume from
+    fn reset_for_retry(&self, _entry: &DownloadEntry) {}
 }
