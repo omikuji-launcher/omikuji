@@ -4,12 +4,11 @@
 
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
 
 use crate::components_config::ArchiveSource;
+use crate::event_queue::EventQueue;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseInfo {
@@ -99,18 +98,14 @@ pub enum ArchiveEvent {
     },
 }
 
-static EVENTS: OnceLock<Mutex<VecDeque<ArchiveEvent>>> = OnceLock::new();
-
-fn queue() -> &'static Mutex<VecDeque<ArchiveEvent>> {
-    EVENTS.get_or_init(|| Mutex::new(VecDeque::new()))
-}
+static EVENTS: EventQueue<ArchiveEvent> = EventQueue::new(0);
 
 pub fn drain_events() -> Vec<ArchiveEvent> {
-    queue().lock().unwrap().drain(..).collect()
+    EVENTS.drain()
 }
 
 fn push(ev: ArchiveEvent) {
-    queue().lock().unwrap().push_back(ev);
+    EVENTS.push(ev);
 }
 
 const ARCHIVE_EXTS: &[(&str, &str)] = &[

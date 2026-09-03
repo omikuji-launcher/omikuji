@@ -3,12 +3,11 @@ pub mod specs;
 
 pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Source};
 
+use crate::event_queue::EventQueue;
 use anyhow::{Result, anyhow};
-use std::collections::VecDeque;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, OnceLock};
 
 fn version_marker(name: &str) -> PathBuf {
     crate::runtime_dir().join(format!("{}.version", name))
@@ -145,18 +144,14 @@ pub enum ComponentEvent {
     },
 }
 
-static EVENTS: OnceLock<Mutex<VecDeque<ComponentEvent>>> = OnceLock::new();
-
-fn queue() -> &'static Mutex<VecDeque<ComponentEvent>> {
-    EVENTS.get_or_init(|| Mutex::new(VecDeque::new()))
-}
+static EVENTS: EventQueue<ComponentEvent> = EventQueue::new(0);
 
 pub fn drain_events() -> Vec<ComponentEvent> {
-    queue().lock().unwrap().drain(..).collect()
+    EVENTS.drain()
 }
 
 fn push(ev: ComponentEvent) {
-    queue().lock().unwrap().push_back(ev);
+    EVENTS.push(ev);
 }
 
 pub fn push_fail_event(name: &str, error: &str) {

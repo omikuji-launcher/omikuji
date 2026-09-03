@@ -10,6 +10,7 @@ pub mod desktop;
 pub mod discord;
 pub mod dll_packs;
 pub mod downloads;
+pub mod event_queue;
 pub mod external;
 pub mod fs_util;
 pub mod fs_watcher;

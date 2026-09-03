@@ -1,7 +1,5 @@
+use crate::event_queue::EventQueue;
 // poll pattern instead of qt_thread.queue becuase queued closures werent reaching qml reliably
-
-use std::collections::VecDeque;
-use std::sync::Mutex;
 
 #[derive(Debug, Clone)]
 pub struct InstallSizeResult {
@@ -13,23 +11,14 @@ pub struct InstallSizeResult {
     pub error: String,
 }
 
-lazy_static::lazy_static! {
-    static ref SIZE_QUEUE: Mutex<VecDeque<InstallSizeResult>> = Mutex::new(VecDeque::new());
-}
+static SIZE_QUEUE: EventQueue<InstallSizeResult> = EventQueue::new(20);
 
 pub fn push(result: InstallSizeResult) {
-    let Ok(mut q) = SIZE_QUEUE.lock() else { return };
-    q.push_back(result);
-    while q.len() > 20 {
-        q.pop_front();
-    }
+    SIZE_QUEUE.push(result);
 }
 
 pub fn take_pending() -> Vec<InstallSizeResult> {
-    SIZE_QUEUE
-        .lock()
-        .map(|mut q| q.drain(..).collect())
-        .unwrap_or_default()
+    SIZE_QUEUE.drain()
 }
 
 // os thread + fresh runtime: cant call block_on inside the app's existing tokio context
@@ -98,15 +87,10 @@ pub struct GameDetailsResult {
     pub payload: String,
 }
 
-lazy_static::lazy_static! {
-    static ref DETAILS_QUEUE: Mutex<VecDeque<GameDetailsResult>> = Mutex::new(VecDeque::new());
-}
+static DETAILS_QUEUE: EventQueue<GameDetailsResult> = EventQueue::new(20);
 
 pub fn take_details_pending() -> Vec<GameDetailsResult> {
-    DETAILS_QUEUE
-        .lock()
-        .map(|mut q| q.drain(..).collect())
-        .unwrap_or_default()
+    DETAILS_QUEUE.drain()
 }
 
 pub fn spawn_fetch_details<F, Fut>(request_id: String, fetch: F)
@@ -122,15 +106,9 @@ where
                 String::new()
             }
         };
-        let Ok(mut q) = DETAILS_QUEUE.lock() else {
-            return;
-        };
-        q.push_back(GameDetailsResult {
+        DETAILS_QUEUE.push(GameDetailsResult {
             request_id,
             payload,
         });
-        while q.len() > 20 {
-            q.pop_front();
-        }
     });
 }

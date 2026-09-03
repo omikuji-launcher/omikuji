@@ -1,3 +1,4 @@
+use crate::event_queue::EventQueue;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -333,12 +334,10 @@ lazy_static::lazy_static! {
     static ref MANAGER: ProcessManager = ProcessManager::new();
 }
 
-use std::collections::{HashSet, VecDeque};
+use std::collections::HashSet;
 
 lazy_static::lazy_static! {
-    static ref EXITED_GAMES: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
     static ref LAUNCHING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
-    static ref LAUNCH_REQUESTS: Mutex<VecDeque<LaunchRequest>> = Mutex::new(VecDeque::new());
     static ref EXIT_WAITERS: Mutex<ExitWaiters> = Mutex::new(HashMap::new());
     static ref MARKED_IDS: Mutex<(Option<Instant>, HashSet<String>)> =
         Mutex::new((None, HashSet::new()));
@@ -346,7 +345,8 @@ lazy_static::lazy_static! {
 
 type ExitWaiters = HashMap<String, Vec<(u64, tokio::sync::oneshot::Sender<()>)>>;
 
-const MAX_LAUNCH_REQUESTS: usize = 10;
+static EXITED_GAMES: EventQueue<String> = EventQueue::new(10);
+static LAUNCH_REQUESTS: EventQueue<LaunchRequest> = EventQueue::new(10);
 const MARKED_IDS_TTL: Duration = Duration::from_millis(400);
 static WAITER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
@@ -441,18 +441,10 @@ pub fn request_launch(game_id: &str) -> tokio::sync::oneshot::Receiver<()> {
             .push((waiter, tx));
     }
 
-    let evicted: Vec<LaunchRequest> = match LAUNCH_REQUESTS.lock() {
-        Ok(mut queue) => {
-            queue.push_back(LaunchRequest {
-                game_id: game_id.to_string(),
-                waiter,
-            });
-            let excess = queue.len().saturating_sub(MAX_LAUNCH_REQUESTS);
-            queue.drain(..excess).collect()
-        }
-        Err(_) => Vec::new(),
-    };
-    for request in evicted {
+    for request in LAUNCH_REQUESTS.push(LaunchRequest {
+        game_id: game_id.to_string(),
+        waiter,
+    }) {
         request.release();
     }
 
@@ -460,30 +452,17 @@ pub fn request_launch(game_id: &str) -> tokio::sync::oneshot::Receiver<()> {
 }
 
 pub fn take_launch_requests() -> Vec<LaunchRequest> {
-    LAUNCH_REQUESTS
-        .lock()
-        .map(|mut q| q.drain(..).collect())
-        .unwrap_or_default()
+    LAUNCH_REQUESTS.drain()
 }
 
 pub fn notify_game_exited(game_id: &str) {
     clear_launching(game_id);
     release_exit_waiters(game_id);
-    if let Ok(mut queue) = EXITED_GAMES.lock() {
-        queue.push_back(game_id.to_string());
-        while queue.len() > 10 {
-            queue.pop_front();
-        }
-    }
+    EXITED_GAMES.push(game_id.to_string());
 }
 
 pub fn take_exited_games() -> Vec<String> {
-    if let Ok(mut queue) = EXITED_GAMES.lock() {
-        let games: Vec<String> = queue.drain(..).collect();
-        games
-    } else {
-        vec![]
-    }
+    EXITED_GAMES.drain()
 }
 
 // pre-launch update-required notification. consumed by the bridge
@@ -503,27 +482,15 @@ pub struct UpdateNotification {
     pub delta_supported: bool,
 }
 
-lazy_static::lazy_static! {
-    static ref UPDATE_REQUIRED: Mutex<VecDeque<UpdateNotification>> = Mutex::new(VecDeque::new());
-}
+static UPDATE_REQUIRED: EventQueue<UpdateNotification> = EventQueue::new(10);
 
 pub fn notify_update_required(n: UpdateNotification) {
-    if let Ok(mut q) = UPDATE_REQUIRED.lock() {
-        q.push_back(n);
-        while q.len() > 10 {
-            q.pop_front();
-        }
-    }
+    UPDATE_REQUIRED.push(n);
 }
 
 pub fn take_update_notifications() -> Vec<UpdateNotification> {
-    if let Ok(mut q) = UPDATE_REQUIRED.lock() {
-        q.drain(..).collect()
-    } else {
-        vec![]
-    }
+    UPDATE_REQUIRED.drain()
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)] // no ma ci sta averne 80, magari aggiungiamoci anche parametri di fisica quantistica
 pub enum ErrorAction {
     None,
@@ -549,25 +516,14 @@ pub struct ErrorNotification {
     pub action: ErrorAction,
 }
 
-lazy_static::lazy_static! {
-    static ref ERRORS: Mutex<VecDeque<ErrorNotification>> = Mutex::new(VecDeque::new());
-}
+static ERRORS: EventQueue<ErrorNotification> = EventQueue::new(10);
 
 pub fn notify_error(n: ErrorNotification) {
-    if let Ok(mut q) = ERRORS.lock() {
-        q.push_back(n);
-        while q.len() > 10 {
-            q.pop_front();
-        }
-    }
+    ERRORS.push(n);
 }
 
 pub fn take_errors() -> Vec<ErrorNotification> {
-    if let Ok(mut q) = ERRORS.lock() {
-        q.drain(..).collect()
-    } else {
-        vec![]
-    }
+    ERRORS.drain()
 }
 
 pub fn manager() -> &'static ProcessManager {

@@ -1,7 +1,6 @@
 // push from any thread; bridge drains on a poll tick and emits a signal per item
 
-use std::collections::VecDeque;
-use std::sync::Mutex;
+use crate::event_queue::EventQueue;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Level {
@@ -29,20 +28,14 @@ pub struct Notification {
     pub message: String,
 }
 
-lazy_static::lazy_static! {
-    static ref QUEUE: Mutex<VecDeque<Notification>> = Mutex::new(VecDeque::new());
-}
+static QUEUE: EventQueue<Notification> = EventQueue::new(50);
 
 pub fn push(level: Level, title: impl Into<String>, message: impl Into<String>) {
-    let Ok(mut q) = QUEUE.lock() else { return };
-    q.push_back(Notification {
+    QUEUE.push(Notification {
         level,
         title: title.into(),
         message: message.into(),
     });
-    while q.len() > 50 {
-        q.pop_front();
-    }
 }
 
 pub fn info(title: impl Into<String>, message: impl Into<String>) {
@@ -62,8 +55,5 @@ pub fn error(title: impl Into<String>, message: impl Into<String>) {
 }
 
 pub fn take_pending() -> Vec<Notification> {
-    QUEUE
-        .lock()
-        .map(|mut q| q.drain(..).collect())
-        .unwrap_or_default()
+    QUEUE.drain()
 }
