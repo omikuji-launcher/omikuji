@@ -1,5 +1,5 @@
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -41,7 +41,7 @@ pub struct GachaManifest {
     #[serde(default)]
     pub alongside: Option<ManifestAlongside>,
     #[serde(default)]
-    pub env: HashMap<String, String>,
+    pub env: IndexMap<String, String>,
 
     #[serde(default)]
     pub letter_fallback: String,
@@ -218,7 +218,7 @@ mod tests {
             runner: String::new(),
             telemetry_block: vec![],
             alongside: None,
-            env: HashMap::new(),
+            env: IndexMap::new(),
             letter_fallback: "T".into(),
             uses_temp_dir: true,
             strategy_config: serde_json::Value::Null,

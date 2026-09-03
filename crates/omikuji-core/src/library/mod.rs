@@ -1,7 +1,7 @@
 use crate::media::slugify;
 use anyhow::{Context, Result};
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -133,7 +133,7 @@ pub struct WineConfig {
     #[serde(default = "default_dpi")]
     pub dpi: u32,
     #[serde(default)]
-    pub dll_overrides: HashMap<String, String>,
+    pub dll_overrides: IndexMap<String, String>,
     #[serde(default)]
     pub dll_override_sets: Vec<String>,
     #[serde(default)]
@@ -174,7 +174,7 @@ impl Default for WineConfig {
             easyanticheat: false,
             dpi_scaling: false,
             dpi: 96,
-            dll_overrides: HashMap::new(),
+            dll_overrides: IndexMap::new(),
             dll_override_sets: Vec::new(),
             audio_driver: String::new(),
             graphics_driver: String::new(),
@@ -232,7 +232,7 @@ pub struct LaunchConfig {
     #[serde(default)]
     pub alongside_delay: u32,
     #[serde(default)]
-    pub env: HashMap<String, String>,
+    pub env: IndexMap<String, String>,
     #[serde(default)]
     pub env_sets: Vec<String>,
 }

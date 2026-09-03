@@ -1,7 +1,7 @@
 // no runtime cascade; only seeded into a Game at creation or via apply-to-existing
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -54,8 +54,8 @@ pub struct WineDefaults {
     pub dpi_scaling: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dpi: Option<u32>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub dll_overrides: HashMap<String, String>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub dll_overrides: IndexMap<String, String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub audio_driver: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -67,8 +67,8 @@ pub struct WineDefaults {
 pub struct LaunchDefaults {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command_prefix: Option<String>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub env: HashMap<String, String>,
+    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub env: IndexMap<String, String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]

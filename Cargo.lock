@@ -1605,6 +1605,7 @@ dependencies = [
  "discord-rich-presence",
  "flate2",
  "futures-util",
+ "indexmap",
  "indicatif",
  "lazy_static",
  "libc",

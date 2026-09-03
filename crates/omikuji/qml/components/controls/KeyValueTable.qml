@@ -30,8 +30,7 @@ Item {
         try { obj = JSON.parse(root.json || "{}") } catch (e) {}
         if (_modelEquals(obj)) return
         listModel.clear()
-        let keys = Object.keys(obj).sort()
-        for (let k of keys) {
+        for (let k of Object.keys(obj)) {
             listModel.append({ k: String(k), v: String(obj[k]) })
         }
     }
