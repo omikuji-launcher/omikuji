@@ -5,7 +5,7 @@
     </a>
 </div>
 
-User guide built on `0.13.0`, dev guide built on `0.13.0`.
+User guide built on `0.14.0`, dev guide built on `0.14.0`.
 
 \- If you need an installation guide, start here: [User Guide](user/installation.md).
 
