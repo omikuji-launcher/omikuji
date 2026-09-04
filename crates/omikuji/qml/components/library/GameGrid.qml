@@ -1,7 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import omikuji 1.0
-import "../lib/RunnerGrouping.js" as RG
 import "."
 import "../cards"
 import "../primitives"
@@ -25,6 +24,7 @@ Item {
     property bool showHidden: false
     property bool dimHidden: false
     property var gameModel: null
+    property var view: null
 
     readonly property bool reorderActive: cardSort === "custom" && searchText === "" && filterKind === "all"
     readonly property var reorderKeys: ["omikuji/card"]
@@ -35,51 +35,6 @@ Item {
     signal backgroundClicked()
 
     // memoized top 10 by lastPlayed desc, recomputes when the model changes or kind flips to recent
-    property var _recentIds: ({})
-    property int _recentStamp: 0
-
-    function _recomputeRecent() {
-        let dated = []
-        for (let i = 0; i < gameModel.count; i++) {
-            let g = gameModel.get_game(i)
-            if (!g) continue
-            let ts = Date.parse(g.lastPlayed || "") || 0
-            if (ts > 0) dated.push({ id: g.gameId, ts: ts })
-        }
-        dated.sort((a, b) => b.ts - a.ts)
-        let next = {}
-        for (let i = 0; i < Math.min(10, dated.length); i++) next[dated[i].id] = true
-        _recentIds = next
-        _recentStamp = Date.now()
-    }
-
-    onFilterKindChanged: if (filterKind === "recent") _recomputeRecent()
-    Connections {
-        target: gameModel
-        function onDataChanged() { if (root.filterKind === "recent") root._recomputeRecent() }
-        function onRowsInserted() { if (root.filterKind === "recent") root._recomputeRecent() }
-        function onRowsRemoved() { if (root.filterKind === "recent") root._recomputeRecent() }
-    }
-
-    function gamePassesFilter(index) {
-        if (!gameModel) return true
-        let game = gameModel.get_game(index)
-        if (!game) return false
-
-        switch (filterKind) {
-            case "all":       return true
-            case "favourite": return game.favourite === true
-            case "recent":    return _recentIds[game.gameId] === true
-            case "runner":    return RG.runnerBucket(game.runnerType) === filterValue
-            case "tag": {
-                let cats = []
-                try { cats = JSON.parse(game.categories || "[]") } catch (e) { cats = [] }
-                return cats.indexOf(filterValue) !== -1
-            }
-            default: return true
-        }
-    }
-
     EmptyState {
         anchors.fill: parent
         visible: root.gameModel && root.gameModel.count === 0
@@ -125,7 +80,7 @@ Item {
                          name.toLowerCase().includes(root.searchText.toLowerCase())) &&
                          (root.showHidden || !hidden) &&
                          (root.filterKind !== "favourite" || favourite) &&
-                         root.gamePassesFilter(index)
+                         (!root.view || root.view.gamePassesFilter(index))
             reorderable: root.reorderActive
             onClicked: root.gameClicked(index)
             onDoubleClicked: root.gameDoubleClicked(index)

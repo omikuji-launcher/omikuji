@@ -697,85 +697,36 @@ property real cardZoom: appSettings.cardZoom
         anchors.right: parent.right
         anchors.bottom: parent.bottom
 
-        Rectangle {
-            id: contentPanel
-            property bool isDropdownHost: true
-            anchors.fill: parent
-            color: Theme.surface
-            radius: Theme.radius.md
-            visible: opacity > 0
-            opacity: root.currentView === "library" ? 1 : 0
-
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        GameLibraryView {
+            id: libraryView
+            gameModel: root.gameModelRef
+            actions: gameActions
+            active: root.currentView === "library"
+            searchText: topBar.searchText
+            filterKind: navTabs.tabs[navTabs.currentIndex]?.kind || "all"
+            filterValue: navTabs.tabs[navTabs.currentIndex]?.value || ""
+            showHidden: appSettings.showHidden
+            dimHidden: appSettings.dimHidden
+            cardZoom: root.cardZoom
+            cardSpacing: appSettings.cardSpacing
+            cardElevation: appSettings.cardElevation
+            cardBaseWidth: root.cardBaseWidth
+            cardBaseHeight: root.cardBaseHeight
+            cardFlow: appSettings.cardFlow
+            cardStyle: root.cardStyle
+            cardSort: appSettings.cardSort
+            doubleClickLaunches: appSettings.doubleClickLaunches
+            onSelectionChanged: topBar.defocusSearch()
+            onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)
+            onSettingsRequested: (index) => {
+                root.settingsGameIndex = index
+                root.activeModal = "gameSettings"
             }
-
-            Rectangle {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                width: parent.radius
-                height: parent.radius
-                color: parent.color
-                visible: parent.visible
-            }
-
-            GameGrid {
-                id: gameGrid
-                anchors.fill: parent
-                model: gameModel
-                gameModel: gameModel
-                selectedIndex: gameActions.selectedIndex
-                cardZoom: root.cardZoom
-                cardSpacing: appSettings.cardSpacing
-                cardElevation: appSettings.cardElevation
-                cardBaseWidth: root.cardBaseWidth
-                cardBaseHeight: root.cardBaseHeight
-                cardFlow: appSettings.cardFlow
-                cardStyle: root.cardStyle
-                cardSort: appSettings.cardSort
-                showHidden: appSettings.showHidden
-                dimHidden: appSettings.dimHidden
-                searchText: topBar.searchText
-                filterKind: navTabs.tabs[navTabs.currentIndex]?.kind || "all"
-                filterValue: navTabs.tabs[navTabs.currentIndex]?.value || ""
-                onGameClicked: (index) => {
-                    gameActions.selectedIndex = index
-                    topBar.defocusSearch()
-                }
-                onGameDoubleClicked: (index) => {
-                    if (appSettings.doubleClickLaunches) gameActions.play(index)
-                }
-                onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)
-                onBackgroundClicked: {
-                    gameActions.selectedIndex = -1
-                    topBar.defocusSearch()
-                }
-            }
-
-            FloatingBar {
-                id: floatingBar
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                actions: gameActions
-                selectedGame: gameActions.selectedGame
-                hasSelection: gameActions.hasSelection
-                isRunning: gameActions.isRunning
-                isLaunching: gameActions.isLaunching
-                runnerUpdating: gameActions.runnerUpdating
-                downloadActivity: gameActions.downloadActivity
-                onSettingsClicked: {
-                    root.settingsGameIndex = gameActions.selectedIndex
-                    root.activeModal = "gameSettings"
-                }
-                onDownloadActivityClicked: {
-                    root.currentView = "downloads"
-                }
-                onWineToolsClicked: {
-                    if (!gameActions.selectedGame || !gameActions.selectedGame.gameId) return
-                    if (Date.now() - wineToolsMenu.lastClosedAt < 150) return
-                    wineToolsMenu.openAbove(floatingBar.wineToolsAnchor)
-                }
+            onDownloadActivityClicked: root.currentView = "downloads"
+            onWineToolsRequested: {
+                if (!gameActions.selectedGame || !gameActions.selectedGame.gameId) return
+                if (Date.now() - wineToolsMenu.lastClosedAt < 150) return
+                wineToolsMenu.openAbove(libraryView.wineToolsAnchor)
             }
         }
 

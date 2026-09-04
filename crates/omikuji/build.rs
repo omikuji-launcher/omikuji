@@ -407,6 +407,7 @@ fn main() {
         "qml/components/library/GameCard.qml",
         "qml/components/library/GameContextMenu.qml",
         "qml/components/library/GameGrid.qml",
+        "qml/components/library/GameLibraryView.qml",
         "qml/components/library/GameStatsRow.qml",
         // navigation
         "qml/components/navigation/NavTabs.qml",
