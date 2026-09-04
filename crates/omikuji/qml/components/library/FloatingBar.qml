@@ -215,7 +215,6 @@ Item {
                 actions: root.actions
                 playState: root.buttonState
                 activity: root.displayedActivity
-                labelActivity: root.downloadActivity
                 runnerUpdating: root.displayedRunnerUpdating
                 suppressAnim: root._suppressButtonAnim
                 onActivityClicked: root.downloadActivityClicked()

@@ -13,25 +13,22 @@ Item {
     property var actions: null
     property int playState: root.actions ? root.actions.playState : PlayState.Play
     property var activity: root.actions ? root.actions.downloadActivity : null
-    property var labelActivity: root.activity
     property bool runnerUpdating: root.actions ? root.actions.runnerUpdating : false
     property bool suppressAnim: false
 
     signal activityClicked()
 
     readonly property bool hasActivity: root.activity !== null && root.activity !== undefined
-    readonly property bool hasLabelActivity:
-        root.labelActivity !== null && root.labelActivity !== undefined
 
     function activityLabel() {
-        if (!root.hasLabelActivity) return ""
-        let s = root.labelActivity.status || ""
-        let kindWord = root.labelActivity.kind === "update" ? qsTr("Updating") : qsTr("Installing")
+        if (!root.hasActivity) return ""
+        let s = root.activity.status || ""
+        let kindWord = root.activity.kind === "update" ? qsTr("Updating") : qsTr("Installing")
         if (s === "Paused") return qsTr("Paused")
         if (s === "Queued") return qsTr("%1 · Queued").arg(kindWord)
         if (s === "Extracting") return qsTr("Extracting")
         if (s === "Patching") return qsTr("Patching")
-        let pct = Math.round(root.labelActivity.progress || 0)
+        let pct = Math.round(root.activity.progress || 0)
         return qsTr("%1 · %2%").arg(kindWord).arg(pct)
     }
 

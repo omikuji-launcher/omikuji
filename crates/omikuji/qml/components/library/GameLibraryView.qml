@@ -38,6 +38,7 @@ Rectangle {
     signal downloadActivityClicked()
     signal wineToolsRequested()
 
+    // memoized top 10 by lastPlayed desc, recomputes when the model changes or kind flips to recent
     property var _recentIds: ({})
 
     function _recomputeRecent() {
@@ -54,14 +55,19 @@ Rectangle {
         root._recentIds = next
     }
 
-    function gamePassesFilter(index) {
+    function passes(index, name, hidden, favourite) {
+        if (root.searchText !== "" && !name.toLowerCase().includes(root.searchText.toLowerCase())) {
+            return false
+        }
+        if (!root.showHidden && hidden) return false
         if (!root.gameModel) return true
+
         let game = root.gameModel.get_game(index)
         if (!game) return false
 
         switch (root.filterKind) {
             case "all":       return true
-            case "favourite": return game.favourite === true
+            case "favourite": return favourite
             case "recent":    return root._recentIds[game.gameId] === true
             case "runner":    return RG.runnerBucket(game.runnerType) === root.filterValue
             case "tag": {
@@ -116,11 +122,9 @@ Rectangle {
         cardFlow: root.cardFlow
         cardStyle: root.cardStyle
         cardSort: root.cardSort
-        showHidden: root.showHidden
         dimHidden: root.dimHidden
         searchText: root.searchText
         filterKind: root.filterKind
-        filterValue: root.filterValue
         onGameClicked: (index) => {
             if (root.actions) root.actions.selectedIndex = index
             root.selectionChanged()

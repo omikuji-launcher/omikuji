@@ -19,9 +19,7 @@ Item {
     property int cardBaseHeight: 240
     property string searchText: ""
     property string filterKind: "all"
-    property string filterValue: ""
     property string cardSort: "default"
-    property bool showHidden: false
     property bool dimHidden: false
     property var gameModel: null
     property var view: null
@@ -34,7 +32,6 @@ Item {
     signal gameRightClicked(int index, real winX, real winY)
     signal backgroundClicked()
 
-    // memoized top 10 by lastPlayed desc, recomputes when the model changes or kind flips to recent
     EmptyState {
         anchors.fill: parent
         visible: root.gameModel && root.gameModel.count === 0
@@ -76,11 +73,7 @@ Item {
             cardStyle: root.cardStyle
             selected: index === root.selectedIndex
             dimmed: root.dimHidden && hidden
-            cardVisible: (root.searchText === "" ||
-                         name.toLowerCase().includes(root.searchText.toLowerCase())) &&
-                         (root.showHidden || !hidden) &&
-                         (root.filterKind !== "favourite" || favourite) &&
-                         (!root.view || root.view.gamePassesFilter(index))
+            cardVisible: !root.view || root.view.passes(index, name, hidden, favourite)
             reorderable: root.reorderActive
             onClicked: root.gameClicked(index)
             onDoubleClicked: root.gameDoubleClicked(index)
