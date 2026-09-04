@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.13.1
+Version:        0.14.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,15 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Fri Sep 04 2026 reakjra <reakjra@proton.me> - 0.14.0-1
+- Amazon Games support (Nile)
+- SGDB picker
+- game_slug template variable
+- configurable steam path dirs
+- a dino for when the library is empty, eheh
+- minor ui tweaks
+- wired prevent sleep and ACs toggles
+
 * Wed Sep 02 2026 reakjra <reakjra@proton.me> - 0.13.1-1
 - Fix Arknights Endfield updates
 - SGDB 512x512 icon art priority + fallback and temp refetch

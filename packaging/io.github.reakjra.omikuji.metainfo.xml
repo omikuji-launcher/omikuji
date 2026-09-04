@@ -22,6 +22,19 @@
     </p>
   </description>
   <releases>
+    <release version="0.14.0" date="2026-09-04">
+      <description>
+        <ul>
+          <li>Amazon Games support (Nile)</li>
+          <li>SGDB picker</li>
+          <li>game_slug template variable</li>
+          <li>configurable steam path dirs</li>
+          <li>a dino for when the library is empty, eheh</li>
+          <li>minor ui tweaks</li>
+          <li>wired prevent sleep and ACs toggles</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.13.1" date="2026-09-02">
       <description>
         <ul>

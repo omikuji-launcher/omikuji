@@ -13,6 +13,21 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.14.0
+Added:
+- Amazon Games support (Nile)
+- SteamGridDB art picker in game settings
+- 'game_slug' template variable
+- Configurable Steam install directories
+- A dino for when the library is empty >:3
+- Wired 'prevent sleep while playing', 'BattleEye' and 'EasyAntiCheat' toggles.
+
+Changed:
+- the 'exe' template variable is now 'game_exe'.
+- Environment variable and DLL override lists keep the order
+- Minor UI tweaks
+- Gacha Advised runners check the Steam runner directory too
+
 ## 0.13.1
 Changed:
 - SGBD icon art 512x512 priority, fallbacks and temp fetching
