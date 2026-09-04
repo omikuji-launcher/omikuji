@@ -52,6 +52,7 @@ Item {
             let isHidden = game.hidden || false
             let isEpic = game.sourceKind === "epic" && game.sourceAppId && game.sourceAppId.length > 0
             let isGog = game.sourceKind === "gog" && game.sourceAppId && game.sourceAppId.length > 0
+            let isNile = game.sourceKind === "nile" && game.sourceAppId && game.sourceAppId.length > 0
             let hasDesktopShortcut = ctrl.gameModel.has_desktop_shortcut(index)
             let hasMenuShortcut = ctrl.gameModel.has_menu_shortcut(index)
 
@@ -75,7 +76,7 @@ Item {
                 { text: qsTr("Shortcuts"), submenu: shortcuts },
                 { text: qsTr("Duplicate"), action: "duplicate" }
             ]
-            if (isEpic || isGog) {
+            if (isEpic || isGog || isNile) {
                 built.push({ text: qsTr("Check for updates"), action: "check_update", accent: true })
             }
             if (ctrl.gameModel.game_supports_repair(game.gameId)) {
@@ -85,6 +86,8 @@ Item {
                 built.push({ text: qsTr("Uninstall (Epic Games)"), action: "uninstall_store", danger: true })
             } else if (isGog) {
                 built.push({ text: qsTr("Uninstall (GOG)"), action: "uninstall_store", danger: true })
+            } else if (isNile) {
+                built.push({ text: qsTr("Uninstall (Amazon)"), action: "uninstall_store", danger: true })
             }
             let removeItem = { text: qsTr("Remove"), action: "remove", danger: true }
             if (pinfo.hasPrefix) {
@@ -170,9 +173,9 @@ Item {
                     let g = ctrl.gameModel.get_game(idx)
                     if (g && g.gameId) {
                         uninstallConfirm.title = qsTr("Uninstall %1?").arg(g.name || qsTr("this game"))
-                        uninstallConfirm.message = g.sourceKind === "gog"
-                            ? qsTr("The game files will be deleted from disk. This cannot be undone.")
-                            : qsTr("Legendary will delete the game files from disk. This cannot be undone.")
+                        uninstallConfirm.message = g.sourceKind === "epic"
+                            ? qsTr("Legendary will delete the game files from disk. This cannot be undone.")
+                            : qsTr("The game files will be deleted from disk. This cannot be undone.")
                         uninstallConfirm.show({ id: g.gameId, kind: g.sourceKind })
                     }
                     break
@@ -181,6 +184,7 @@ Item {
                     let g = ctrl.gameModel.get_game(idx)
                     if (g && g.gameId) {
                         if (g.sourceKind === "gog") ctrl.gameModel.check_gog_update(g.gameId)
+                        else if (g.sourceKind === "nile") ctrl.gameModel.check_nile_update(g.gameId)
                         else ctrl.gameModel.check_epic_update(g.gameId)
                     }
                     break
@@ -203,6 +207,7 @@ Item {
         onConfirmed: (payload) => {
             if (!payload || !payload.id || !ctrl.gameModel) return
             if (payload.kind === "gog") ctrl.gameModel.gog_uninstall(payload.id)
+            else if (payload.kind === "nile") ctrl.gameModel.nile_uninstall(payload.id)
             else ctrl.gameModel.epic_uninstall(payload.id)
         }
     }

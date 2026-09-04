@@ -24,6 +24,7 @@ Item {
         "hpatchz":   { label: "HPatchZ",    desc: qsTr("Binary patch tool. Required for gacha diff updates.") },
         "legendary": { label: "Legendary",  desc: qsTr("Epic Games CLI binary.") },
         "gogdl":     { label: "gogdl",      desc: qsTr("GOG CLI binary.") },
+        "nile":      { label: "nile",       desc: qsTr("Amazon Games CLI binary.") },
         "egl-dummy": { label: "EGL dummy",  desc: qsTr("Dummy EpicGamesLauncher.exe needed for Epic Games imports.") }
     })
 
@@ -252,7 +253,7 @@ Item {
                 spacing: 6
 
                 Repeater {
-                    model: ["umu-run", "hpatchz", "legendary", "gogdl", "egl-dummy"]
+                    model: ["umu-run", "hpatchz", "legendary", "gogdl", "nile", "egl-dummy"]
 
                     delegate: Item {
                         id: runtimeRow

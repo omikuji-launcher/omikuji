@@ -312,6 +312,7 @@ ApplicationWindow {
     readonly property var gameModelRef: gameModel
     readonly property var epicModelRef: epicModel
     readonly property var gogModelRef: gogModel
+    readonly property var nileModelRef: nileModel
     readonly property var appSettingsRef: appSettings
     readonly property var envSetsDialogRef: envSetsDialog
     readonly property var dllSetsDialogRef: dllSetsDialog
@@ -340,12 +341,13 @@ ApplicationWindow {
             if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
         }
 
-        onUpdates_queued: (epicCount, gogCount, gachaCount) => {
-            let total = epicCount + gogCount + gachaCount
+        onUpdates_queued: (epicCount, gogCount, nileCount, gachaCount) => {
+            let total = epicCount + gogCount + nileCount + gachaCount
             if (total <= 0) return
             let bits = []
             if (epicCount > 0) bits.push(epicCount + " Epic")
             if (gogCount > 0) bits.push(gogCount + " GOG")
+            if (nileCount > 0) bits.push(nileCount + " Amazon")
             if (gachaCount > 0) bits.push(gachaCount + qsTr(" gacha"))
             toastManager.show("info", qsTr("Updates available"), qsTr("%1 queued in Downloads").arg(bits.join(" + ")))
         }
@@ -381,6 +383,8 @@ ApplicationWindow {
     EpicModel { id: epicModel }
 
     GogModel { id: gogModel }
+
+    NileModel { id: nileModel }
 
     DownloadModel {
         id: downloadModel
@@ -443,6 +447,7 @@ ApplicationWindow {
     readonly property string currentViewLabel: currentView === "steam" ? "Steam"
         : currentView === "epic" ? "Epic Games"
         : currentView === "gog" ? "GOG"
+        : currentView === "nile" ? "Amazon"
         : currentView === "hoyo" ? "Gachas"
         : currentView === "downloads" ? "Downloads"
         : navTabs.tabs[navTabs.currentIndex]?.label || ""
@@ -533,6 +538,7 @@ ApplicationWindow {
         steamStorePanel.keepAlive = false
         epicStorePanel.keepAlive = false
         gogStorePanel.keepAlive = false
+        nileStorePanel.keepAlive = false
         hoyoStorePanel.keepAlive = false
         root.visible = false
         root.releaseResources()
@@ -662,6 +668,7 @@ property real cardZoom: appSettings.cardZoom
         showSteam: appSettings.showSteam
         showEpic: appSettings.showEpic
         showGog: appSettings.showGog
+        showNile: appSettings.showNile
         showGachas: appSettings.showGachas
 
         onCategoryMenuRequested: (sourceIndex, x, y) => categoryMenu.show(sourceIndex, x, y)
@@ -677,6 +684,9 @@ property real cardZoom: appSettings.cardZoom
             } else if (storeName === "GOG") {
                 navTabs.currentStore = "GOG"
                 root.currentView = "gog"
+            } else if (storeName === "Nile") {
+                navTabs.currentStore = "Nile"
+                root.currentView = "nile"
             } else if (storeName === "HoYo") {
                 navTabs.currentStore = "HoYo"
                 root.currentView = "hoyo"
@@ -758,11 +768,13 @@ property real cardZoom: appSettings.cardZoom
             || root.currentView === "steam"
             || root.currentView === "epic"
             || root.currentView === "gog"
+            || root.currentView === "nile"
             || root.currentView === "hoyo"
         showDisplayOptions: root.currentView === "library"
             || root.currentView === "steam"
             || root.currentView === "epic"
             || root.currentView === "gog"
+            || root.currentView === "nile"
             || root.currentView === "hoyo"
         zoomValue: appSettings.cardZoom
         spacingValue: appSettings.cardSpacing
@@ -948,6 +960,31 @@ property real cardZoom: appSettings.cardZoom
         }
 
         StorePanel {
+            id: nileStorePanel
+            viewName: "nile"
+            currentView: root.currentView
+            unloadIdle: appSettings.unloadStorePages
+            onIdleUnloaded: gameModel.trim_heap()
+            sourceComponent: NileLibrary {
+                storeModel: root.nileModelRef
+                cardZoom: root.cardZoom
+                cardStyle: root.cardStyle
+                cardSpacing: appSettings.cardSpacing
+                cardElevation: appSettings.cardElevation
+                cardFlow: appSettings.cardFlow
+                searchText: topBar.searchText
+                activeDownloads: nileController.activeDownloads
+                onBackClicked: {
+                    navTabs.currentStore = ""
+                    navTabs.currentIndex = 0
+                    root.currentView = "library"
+                }
+                onInstallRequested: (index) => nileController.showInstall(index)
+                onImportRequested: (index) => nileController.showInstall(index)
+            }
+        }
+
+        StorePanel {
             id: hoyoStorePanel
             viewName: "hoyo"
             currentView: root.currentView
@@ -1009,6 +1046,11 @@ property real cardZoom: appSettings.cardZoom
                         qsTr("This will stop \"%1\" and delete the partially downloaded files.").arg(displayName)
                     cancelDownloadConfirm.show(id)
                 }
+                onPauseRequested: (id, displayName, atRisk) => {
+                    pauseDownloadConfirm.message =
+                        qsTr("Nile cannot resume a partial file. Pausing \"%1\" throws away the %2 it is currently writing.").arg(displayName).arg(atRisk)
+                    pauseDownloadConfirm.show(id)
+                }
             }
         }
 
@@ -1032,6 +1074,20 @@ property real cardZoom: appSettings.cardZoom
         id: gogController
         gameModel: root.gameModelRef
         gogModel: gogModel
+        downloadModel: downloadModel
+        defaults: defaultsBridge
+        runnersVersion: root.runnersVersion
+        onInstallEnqueued: {
+            navTabs.currentStore = ""
+            navTabs.currentBottom = "downloads"
+            root.currentView = "downloads"
+        }
+    }
+
+    NileController {
+        id: nileController
+        gameModel: root.gameModelRef
+        nileModel: nileModel
         downloadModel: downloadModel
         defaults: defaultsBridge
         runnersVersion: root.runnersVersion
@@ -1081,6 +1137,16 @@ property real cardZoom: appSettings.cardZoom
         cancelText: qsTr("Keep")
         destructive: true
         onConfirmed: (id) => { if (downloadModel) downloadModel.cancel(id) }
+    }
+
+    ConfirmDialog {
+        id: pauseDownloadConfirm
+        anchors.fill: parent
+        title: qsTr("Pause download?")
+        confirmText: qsTr("Pause anyway")
+        cancelText: qsTr("Keep downloading")
+        destructive: true
+        onConfirmed: (id) => { if (downloadModel) downloadModel.pause(id) }
     }
 
     ConfirmDialog {

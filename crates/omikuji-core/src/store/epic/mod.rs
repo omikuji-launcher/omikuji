@@ -2,23 +2,12 @@ pub mod eos_overlay;
 pub mod source;
 pub mod updates;
 
+use crate::store::StoreGame;
 use crate::store::epic::source::require_legendary;
 use anyhow::{Result, anyhow};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::process::Command as AsyncCommand;
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct EpicGame {
-    pub app_name: String,
-    pub title: String,
-    pub banner: Option<String>,
-    pub coverart: Option<String>,
-    pub icon: Option<String>,
-    pub is_installed: bool,
-    pub install_path: Option<PathBuf>,
-}
 
 pub struct EpicStore {
     pub display_name: String,
@@ -89,7 +78,7 @@ impl EpicStore {
         Ok(())
     }
 
-    pub async fn list_games(&mut self) -> Result<Vec<EpicGame>> {
+    pub async fn list_games(&mut self) -> Result<Vec<StoreGame>> {
         migrate_image_cache_once();
         let bin = require_legendary()?;
         tracing::info!("fetching library via legendary list --json ...");
@@ -169,7 +158,7 @@ impl EpicStore {
             let legendary_path = installed.get(&app_name).cloned();
             let really_installed = legendary_path.as_ref().map(|p| p.exists()).unwrap_or(false);
 
-            games.push(EpicGame {
+            games.push(StoreGame {
                 app_name: app_name.clone(),
                 title,
                 banner,
@@ -538,12 +527,12 @@ fn migrate_image_cache_once() {
     });
 }
 
-pub fn load_cached_library() -> Vec<EpicGame> {
+pub fn load_cached_library() -> Vec<StoreGame> {
     migrate_image_cache_once();
     crate::store::cache::load_library(STORE)
 }
 
-pub fn save_cached_library(games: &[EpicGame]) {
+pub fn save_cached_library(games: &[StoreGame]) {
     crate::store::cache::save_library(STORE, games);
 }
 

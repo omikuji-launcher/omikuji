@@ -570,6 +570,16 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Amazon")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.showNile : true
+                    onToggled: (val) => appSettings.applyShowNile(val)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Gachas")
                 labelWidth: root.rowLabelWidth
                 width: parent.width

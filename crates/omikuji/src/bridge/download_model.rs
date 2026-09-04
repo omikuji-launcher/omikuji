@@ -416,4 +416,15 @@ impl qobject::DownloadModel {
     fn speed_history_json(&self) -> QString {
         QString::from(&downloads::io_stats::history_json())
     }
+
+    fn partial_bytes(&self, id: &QString) -> QString {
+        let needle = id.to_string();
+        let entries = downloads::manager().list();
+        let bytes = entries
+            .iter()
+            .find(|e| e.id == needle && e.source == "nile")
+            .map(|e| omikuji_core::store::nile::inflight_bytes(&e.install_path))
+            .unwrap_or(0);
+        QString::from(&bytes.to_string())
+    }
 }

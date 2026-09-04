@@ -50,7 +50,7 @@ fetch_url = "https://raw.githubusercontent.com/reakjra/omikuji-scripts/master"
 
 ### `[components]`
 
-Download URLs for the runtime tools (`umu`, `hpatchz`, `legendary`, `gogdl`, `EGL dummy`). They're fetched when first needed, like a store login. `umu` is never fetched on its own, it'll always prompt.
+Download URLs for the runtime tools (`umu`, `hpatchz`, `legendary`, `gogdl`, `nile`, `EGL dummy`). They're fetched when first needed, like a store login. `umu` is never fetched on its own, it'll always prompt.
 
 ```toml
 [components]
@@ -58,6 +58,7 @@ umu_run = "https://api.github.com/repos/Open-Wine-Components/umu-launcher/releas
 hpatchz = "https://api.github.com/repos/sisong/HDiffPatch/releases/latest"
 legendary = "https://api.github.com/repos/derrod/legendary/releases/latest"
 gogdl = "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest"
+nile = "https://api.github.com/repos/imLinguin/nile/releases/latest"
 egl_dummy = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe"
 ```
 

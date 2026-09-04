@@ -16,6 +16,7 @@ pub enum SettingsKey {
     Hpatchz,
     Legendary,
     Gogdl,
+    Nile,
     EglDummy,
 }
 

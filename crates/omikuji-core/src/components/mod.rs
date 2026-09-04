@@ -75,6 +75,13 @@ pub fn gog_tools() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
+pub fn nile_tools() -> Vec<&'static ComponentSpec> {
+    specs::all()
+        .iter()
+        .filter(|s| matches!(s.settings_key, SettingsKey::Nile))
+        .collect()
+}
+
 pub fn gacha_tools(publisher_slug: &str) -> Vec<&'static ComponentSpec> {
     let needs_hpatchz = matches!(publisher_slug, "hoyoverse" | "hypergryph");
     specs::all()
@@ -234,6 +241,7 @@ fn url_for(key: SettingsKey) -> Result<String> {
         SettingsKey::Hpatchz => &s.hpatchz,
         SettingsKey::Legendary => &s.legendary,
         SettingsKey::Gogdl => &s.gogdl,
+        SettingsKey::Nile => &s.nile,
         SettingsKey::EglDummy => &s.egl_dummy,
     };
     if value.trim().is_empty() {

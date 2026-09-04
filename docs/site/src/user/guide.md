@@ -26,19 +26,21 @@ This is the welcome component installer where you can install a runner from the 
 
 The 'Latest' option will install the latest release and it'll update automatically the next time you start omikuji, if a new release is available.
 
-### Logging into Epic Games / GOG
+### Logging into Epic Games / GOG / Amazon Games
 
-First, select one of the two stores in the left navbar.
+First, select one of the three stores in the left navbar.
 
 ![login_epic](ss/login_epic.png)
 
-Then, click the 'Open Login Page' text. It'll redirect you to the Epic Games or GOG login page. From there, login with your account, it'll open one of the two pages (Epic Games and GOG respectively).
+Then, click the 'Open Login Page' text. It'll redirect you to the Epic Games, GOG or Amazon Games login page. From there, login with your account, it'll open one of the three pages (Epic Games, GOG and Amazon Games respectively).
 
 For Epic Games, you need to copy the authorizationCode key.
 ![login_epic_redirect](ss/login_epic_redirect.png)
 
 For GOG, you need to copy the authorization code from the link itself after the `code=` text (mind it's very long. make sure to copy it all). 
 ![login_gog_redirect](ss/login_gog_redirect.png)
+
+For Amazon Games, the login lands you on a normal Amazon page. Copy the full link from the address bar and paste that, omikuji pulls the code out of it. Copying just the `openid.oa2.authorization_code=` value works too.
 
 Paste the code into the input field and click 'Login'.
 
@@ -58,12 +60,12 @@ Omikuji has a bunch of ways to install games.
 
 Steam doesn't install anything from the launcher, you need to install games from Steam itself. However, you can import them in your library by just clicking the `+` button on the bottom left of the card. Importing Steam games gives them the `steam` runner type, that means it delegates the game launching to the Steam client.
 
-#### Epic Games / GOG
+#### Epic Games / GOG / Amazon Games
 
 ![epic](ss/epic_page.png)
 
 
-Omikuji uses `Legendary` to manage your Epic Games library and `gogdl` to manage your GOG library. You can scroll the page to see all the games you can install. By clicking the `+`, it opens an install dialog.
+Omikuji uses `Legendary` to manage your Epic Games library, `gogdl` for GOG and `nile` for Amazon Games. You can scroll the page to see all the games you can install. By clicking the `+`, it opens an install dialog.
 
 ![epic_install](ss/epic_install.png)
 
@@ -76,6 +78,10 @@ The `Prefix path` field is the prefix you want the game to use when installed an
 `DLC` checkboxes are where you can select the DLCs to install with the game. You can select multiple DLCs at once or select none at all. You can also install DLCs separately after the game is installed, just re-open the game's store card and checks the DLCs you want and press the `Install DLC` button.
 
 All this applies to GOG installations too, they're the same.
+
+Amazon Games works the same way minus the `DLC` checkboxes, Amazon ships DLC as part of the base game so there's nothing to pick.
+
+One thing specific to Amazon Games: `nile` can't resume a partially downloaded file. Pausing a download throws away whatever file it was writing at the time, which on a game built around one large archive can be several GB. Finished files are kept and get skipped when you resume. The downloads page shows this on the download item, and pausing an Amazon download asks for confirmation with the amount at risk.
 
 #### Gacha
 
@@ -117,19 +123,19 @@ This is the short version. A good amount of fields in both tabs, plus the transl
 
 #### Import
 
-If you want to add an Epic Games, GOG or Gacha game, you should NOT add them manually! Instead, go to the store the game is from and click the game card's `+` to open the dialog of the game you want to import.
+If you want to add an Epic Games, GOG, Amazon Games or Gacha game, you should NOT add them manually! Instead, go to the store the game is from and click the game card's `+` to open the dialog of the game you want to import.
 
-##### Epic Games & GOG
+##### Epic Games, GOG & Amazon Games
 
 ![epic_import](ss/epic_import.png)
 
-For both Epic Games and GOG, there are two situations:
+For all three, there are two situations:
 
-\- The game is installed AND there's an entry in `Legendary`/`gogdl` `.json` files. This will lock the `path` since it already knows where the game to import is. Pressing `import` will add the game to the library with that path. 
+\- The game is installed AND there's an entry in `Legendary`/`gogdl`/`nile` `.json` files. This will lock the `path` since it already knows where the game to import is. Pressing `import` will add the game to the library with that path. 
 
-\- The game is installed but there's no entry in `Legendary`/`gogdl` `.json` files. This will let you choose the `path` manually, since we want to import, you have to specify the path where the game is currently installed. Pressing `import` will add the game to the library with that path.
+\- The game is installed but there's no entry in `Legendary`/`gogdl`/`nile` `.json` files. This will let you choose the `path` manually, since we want to import, you have to specify the path where the game is currently installed. Pressing `import` will add the game to the library with that path.
 
-For **Repairs**, the game has to be installed and in the library. You'll find the game in the store, open the install dialog, it should resolve the installed path automatically (since it needs to be registered in the `Legendary`/`gogdl` `.json` files). Hit `repair` and it'll repair the game. Careful! `Legendary` will repair as the term intends! `GOG` will reinstall the game.
+For **Repairs**, the game has to be installed and in the library. You'll find the game in the store, open the install dialog, it should resolve the installed path automatically (since it needs to be registered in the `Legendary`/`gogdl`/`nile` `.json` files). Hit `repair` and it'll repair the game. Careful! `Legendary` will repair as the term intends! `GOG` will reinstall the game. `nile` re-checks every file and re-downloads the ones that don't match.
 
 ##### Gacha
 
@@ -344,7 +350,7 @@ Here's a little explanation of the settings tabs.
 
 ![Template Literals](ss/template_literals.png)
 
-\- **Components**: Here you can manage your layers (`dxvk`, `vkd3d`), runners (`Wine-Spritz`, `Proton-GE`, `Proton-Cachyos`, etc.) and runtime (`umu-run`, `legendary`, `gogdl`, etc.) components. You can add sources for layers and runners from the `Add Source` button. Manage the already existing ones from the `Manage` button on each item (changing values, installing from Git releases, etc.). Runtime has a 'Check for Updates' button that checks if there's an update available for any of the runtime components. Also you can reinstall them or delete them with the `x` button on the right. The `Add Source` dialog is explained in [Adding a component source](#adding-a-component-source) below.
+\- **Components**: Here you can manage your layers (`dxvk`, `vkd3d`), runners (`Wine-Spritz`, `Proton-GE`, `Proton-Cachyos`, etc.) and runtime (`umu-run`, `legendary`, `gogdl`, `nile`, etc.) components. You can add sources for layers and runners from the `Add Source` button. Manage the already existing ones from the `Manage` button on each item (changing values, installing from Git releases, etc.). Runtime has a 'Check for Updates' button that checks if there's an update available for any of the runtime components. Also you can reinstall them or delete them with the `x` button on the right. The `Add Source` dialog is explained in [Adding a component source](#adding-a-component-source) below.
 
 \- **Ofuda**: Essentially a prefix manager. Here it shows all your prefixes (in omikuji's `prefixes_path` *and* any prefix used by a game in the library). You can check their sizes, how many games use each prefix (`orphan` if no game uses it anymore). You can also manage them with the `Manage` button. It will open a dialog with some information about the prefix and some actions, such as `delete prefix` and basic `winetools` commands (`winecfg`, `winetricks`, `run wine command`, `kill wineserver`, etc.). It will also tell you precisely which games use the prefix. There's also a `new prefix` button on the top right of the page. It'll open a dialog to create a new prefix with a `Name` field, `Runner` and `Set` dropdowns. The `Set` is essentially `Game` or `Application` (they just install a bunch of stuff in the prefix)
 
@@ -410,11 +416,11 @@ Right clicking on a game card will open a context menu. Its entries are:
 
 \- **Repair**: repairs the game installation.
 
-### Epic Games / GOG
+### Epic Games / GOG / Amazon Games
 
 \- **Check for updates**: checks for updates for the game and queues them in the downloads page if present.
 
-\- **Uninstall**: removes the game installation (both from the library and the files on disk, also clears the `Legendary`/`gogdl` `.json` files).
+\- **Uninstall**: removes the game installation (both from the library and the files on disk, also clears the `Legendary`/`gogdl`/`nile` `.json` files).
 
 ### Quick Settings
 
@@ -450,7 +456,7 @@ See [Configuration > `[paths]`](configuration.md#paths).
 
 ### My store page is empty, or it says I'm not logged in
 
-See [Logging into Epic Games / GOG](#logging-into-epic-games--gog).
+See [Logging into Epic Games / GOG / Amazon Games](#logging-into-epic-games--gog--amazon-games).
 
 ### Why can't I install Steam games from omikuji?
 
@@ -462,7 +468,7 @@ See [Manually](#manually).
 
 ### Can I install a DLC (Epic Games / GOG) for a game already installed?
 
-See [Installing DLC (Epic Games / GOG)](#epic-games--gog).
+See [Installing DLC (Epic Games / GOG)](#epic-games--gog--amazon-games).
 
 ### How do I run a random `.exe` inside a game's prefix?
 
@@ -488,7 +494,7 @@ See [Configuration > `[scripts]`](configuration.md#scripts).
 
 See [Quick Settings](#quick-settings).
 
-### How do I uninstall a Epic Games / GOG game?
+### How do I uninstall a Epic Games / GOG / Amazon Games game?
 
 see [Uninstalling a Game](#library-overview)
 
@@ -502,9 +508,11 @@ Several ways:
 
 \- **Epic Games / GOG**: Right click on the game in the library and select "Check for updates". Or you can enable the toggles that check for updates on game launch.
 
+\- **Amazon Games**: Right click on the game in the library and select "Check for updates". There's no on-launch toggle for Amazon Games.
+
 \- **Gacha**: Gachas are *always* checked on launch. 
 
-All three share the `Settings -> App -> Check for updates on app launch` toggle. If on, it'll check for updates for all three and queues them in the downloads page if there are any.
+All of them share the `Settings -> App -> Check for updates on app launch` toggle. If on, it'll check for updates for every store and queues them in the downloads page if there are any.
 
 ### Do I need umu?
 
@@ -520,7 +528,7 @@ For games, logs can be seen by right clicking the game card and selecting `Show 
 
 ### Can I install the same game twice?
 
-For Epic Games and GOG, no. But you can install as many copies as you want of a gacha game.
+For Epic Games, GOG and Amazon Games, no. But you can install as many copies as you want of a gacha game.
 
 ### Can I use omikuji for regular apps instead of games?
 

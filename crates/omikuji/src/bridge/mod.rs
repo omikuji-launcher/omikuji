@@ -10,6 +10,8 @@ pub mod gog_model;
 pub mod library_watcher;
 pub mod log_highlighter;
 pub mod migration;
+pub mod nile_model;
 pub mod ofuda;
 pub mod scripts;
+pub mod store_model;
 pub mod tray;

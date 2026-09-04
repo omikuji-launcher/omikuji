@@ -24,6 +24,7 @@ Item {
     property bool pageVisible: true
 
     signal cancelRequested(string id, string displayName)
+    signal pauseRequested(string id, string displayName, string atRisk)
 
     readonly property real designWidth: 1000
     readonly property real shrink: width > 0 ? Math.min(1, width / designWidth) : 1
@@ -139,8 +140,16 @@ Item {
                             blocked: hero.isUninterruptible
                             onClicked: {
                                 if (!hero.downloadModel) return
-                                if (hero.isPaused) hero.downloadModel.resume(hero.id)
-                                else hero.downloadModel.pause(hero.id)
+                                if (hero.isPaused) {
+                                    hero.downloadModel.resume(hero.id)
+                                    return
+                                }
+                                let atRisk = parseInt(hero.downloadModel.partialBytes(hero.id)) || 0
+                                if (atRisk > 0) {
+                                    hero.pauseRequested(hero.id, hero.displayName, Format.formatBytesShort(atRisk))
+                                    return
+                                }
+                                hero.downloadModel.pause(hero.id)
                             }
 
                             Tooltip {
@@ -258,6 +267,13 @@ Item {
                 fillColor: hero.isPaused ? Theme.alpha(Theme.text, 0.3) : Theme.accent
                 handleColor: fillColor
                 trackColor: Theme.alpha(Theme.text, 0.18)
+            }
+
+            NoteChip {
+                Layout.fillWidth: true
+                Layout.topMargin: Theme.space.xs
+                visible: hero.source === "nile"
+                text: qsTr("Nile cannot resume a partial file, so stopping throws away whatever it is currently writing. Only finished files are kept. Stop at your own risk.")
             }
         }
     }

@@ -26,6 +26,7 @@ Item {
     property bool showSteam: true
     property bool showEpic: true
     property bool showGog: true
+    property bool showNile: true
     property bool showGachas: true
 
     signal tabSelected(int index)
@@ -41,6 +42,7 @@ Item {
         { name: "Steam", label: "Steam", icon: "steam", shown: root.showSteam },
         { name: "Epic", label: "Epic Games", icon: "shield_moon", shown: root.showEpic },
         { name: "GOG", label: "GOG", icon: "gog", shown: root.showGog },
+        { name: "Nile", label: qsTr("Amazon"), icon: "amazon", shown: root.showNile },
         { name: "HoYo", label: qsTr("Gachas"), icon: "local_activity", shown: root.showGachas }
     ]
 
@@ -409,7 +411,7 @@ Item {
                 color: Theme.textMuted
                 font.pixelSize: Theme.type.micro.size
                 font.weight: Font.Medium
-                visible: (root.showSteam || root.showEpic || root.showGog || root.showGachas) && !root.iconOnly
+                visible: (root.showSteam || root.showEpic || root.showGog || root.showNile || root.showGachas) && !root.iconOnly
                 height: visible ? implicitHeight : 0
             }
 

@@ -2,24 +2,13 @@
 pub mod source;
 pub mod updates;
 
+use crate::store::StoreGame;
 use anyhow::{Result, anyhow};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::process::Command as AsyncCommand;
 
 const STORE: &str = "gog";
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct GogGame {
-    pub app_name: String,
-    pub title: String,
-    pub banner: Option<String>,
-    pub coverart: Option<String>,
-    pub icon: Option<String>,
-    pub is_installed: bool,
-    pub install_path: Option<PathBuf>,
-}
 
 pub struct GogStore {
     pub display_name: String,
@@ -150,7 +139,7 @@ impl GogStore {
         Ok(())
     }
 
-    pub async fn list_games(&mut self) -> Result<Vec<GogGame>> {
+    pub async fn list_games(&mut self) -> Result<Vec<StoreGame>> {
         if !self.is_logged_in() {
             return Ok(Vec::new());
         }
@@ -223,7 +212,7 @@ impl GogStore {
                             let coverart_r =
                                 resolve_gog_image(&external_id, "coverart", coverart.as_deref());
                             let icon_r = resolve_gog_image(&external_id, "icon", icon.as_deref());
-                            games.push(GogGame {
+                            games.push(StoreGame {
                                 app_name: external_id,
                                 title,
                                 banner: banner_r,
@@ -1017,11 +1006,11 @@ fn normalize_image_url(raw: &str) -> String {
     raw.replace("{formatter}", "").replace(".{ext}", ".jpg")
 }
 
-pub fn load_cached_library() -> Vec<GogGame> {
+pub fn load_cached_library() -> Vec<StoreGame> {
     crate::store::cache::load_library(STORE)
 }
 
-pub fn save_cached_library(games: &[GogGame]) {
+pub fn save_cached_library(games: &[StoreGame]) {
     crate::store::cache::save_library(STORE, games);
 }
 

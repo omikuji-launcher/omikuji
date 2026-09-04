@@ -18,10 +18,11 @@ Item {
 
     // bubbled to main so the confirm dialog dims the whole window not just this pane
     signal cancelRequested(string id, string displayName)
+    signal pauseRequested(string id, string displayName, string atRisk)
 
     // patched row-by-row so we dont reparse the full json on every progress tick
     property var componentStatuses: ({})
-    readonly property var componentOrder: ["umu-run", "hpatchz", "legendary", "gogdl", "egl-dummy"]
+    readonly property var componentOrder: ["umu-run", "hpatchz", "legendary", "gogdl", "nile", "egl-dummy"]
     readonly property bool componentsVisible: {
         if (!componentsBridge) return false
         if (componentsBridge.inProgress) return true
@@ -144,6 +145,7 @@ Item {
                     pageVisible: root.pageVisible
                     visible: root.downloadModel && heroItem.id === root.downloadModel.heroId
                     onCancelRequested: (id, displayName) => root.cancelRequested(id, displayName)
+                    onPauseRequested: (id, displayName, atRisk) => root.pauseRequested(id, displayName, atRisk)
                 }
             }
 

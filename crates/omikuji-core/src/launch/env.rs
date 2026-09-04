@@ -159,9 +159,42 @@ pub fn build_env(
         );
     }
 
+    env.extend(nile_sdk_env(game));
+
     env.extend(game_env_pairs(game));
 
     env
+}
+
+fn nile_sdk_env(game: &Game) -> Vec<(String, String)> {
+    if game.source.kind != "nile" || game.source.app_id.is_empty() {
+        return Vec::new();
+    }
+    let sdk = crate::store::nile::sdk_dir().join("Amazon Games Services");
+    if !sdk.exists() {
+        return Vec::new();
+    }
+    let mut out = vec![
+        (
+            "FUEL_DIR".to_string(),
+            sdk.join("Legacy").to_string_lossy().to_string(),
+        ),
+        (
+            "AMAZON_GAMES_SDK_PATH".to_string(),
+            sdk.to_string_lossy().to_string(),
+        ),
+    ];
+    if let Some(ids) = crate::store::nile::product_ids(&game.source.app_id) {
+        out.push((
+            "AMAZON_GAMES_FUEL_ENTITLEMENT_ID".to_string(),
+            ids.entitlement_id,
+        ));
+        out.push(("AMAZON_GAMES_FUEL_PRODUCT_SKU".to_string(), ids.sku));
+    }
+    if let Some(name) = crate::store::nile::read_display_name() {
+        out.push(("AMAZON_GAMES_FUEL_DISPLAY_NAME".to_string(), name));
+    }
+    out
 }
 
 fn apply_kv_sets(

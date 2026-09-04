@@ -1666,6 +1666,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/json5/json5-0.4.1.crate",
+        "sha256": "96b0db21af676c1ce64250b5f40f3ce2cf27e4e47cb91ed91eb6fe9350b430c1",
+        "dest": "cargo/vendor/json5-0.4.1"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"96b0db21af676c1ce64250b5f40f3ce2cf27e4e47cb91ed91eb6fe9350b430c1\", \"files\": {}}",
+        "dest": "cargo/vendor/json5-0.4.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/kqueue/kqueue-1.1.1.crate",
         "sha256": "eac30106d7dce88daf4a3fcb4879ea939476d5074a9b7ddd0fb97fa4bed5596a",
         "dest": "cargo/vendor/kqueue-1.1.1"
@@ -2207,6 +2220,58 @@
         "type": "inline",
         "contents": "{\"package\": \"9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220\", \"files\": {}}",
         "dest": "cargo/vendor/percent-encoding-2.3.2",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/pest/pest-2.9.0.crate",
+        "sha256": "5a07a60cc7a4d00c91f95c685609d1d2f79050e6804b70ebedd7650f0b839bcf",
+        "dest": "cargo/vendor/pest-2.9.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"5a07a60cc7a4d00c91f95c685609d1d2f79050e6804b70ebedd7650f0b839bcf\", \"files\": {}}",
+        "dest": "cargo/vendor/pest-2.9.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/pest_derive/pest_derive-2.9.0.crate",
+        "sha256": "b3a83744a5c8455b8b3e0dc5031362780a347c878bdd11584d1a8984228cc88d",
+        "dest": "cargo/vendor/pest_derive-2.9.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"b3a83744a5c8455b8b3e0dc5031362780a347c878bdd11584d1a8984228cc88d\", \"files\": {}}",
+        "dest": "cargo/vendor/pest_derive-2.9.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/pest_generator/pest_generator-2.9.0.crate",
+        "sha256": "e0cd3451aa3de60d4b9a1e736885e4dea6b31617598026f12256ad566d63304a",
+        "dest": "cargo/vendor/pest_generator-2.9.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"e0cd3451aa3de60d4b9a1e736885e4dea6b31617598026f12256ad566d63304a\", \"files\": {}}",
+        "dest": "cargo/vendor/pest_generator-2.9.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/pest_meta/pest_meta-2.9.0.crate",
+        "sha256": "e04d3a0849e241d7dfce834c83b1c5edc8622009e8dd51a12ba1927c32f05496",
+        "dest": "cargo/vendor/pest_meta-2.9.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"e04d3a0849e241d7dfce834c83b1c5edc8622009e8dd51a12ba1927c32f05496\", \"files\": {}}",
+        "dest": "cargo/vendor/pest_meta-2.9.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -3416,6 +3481,19 @@
         "type": "inline",
         "contents": "{\"package\": \"562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb\", \"files\": {}}",
         "dest": "cargo/vendor/typenum-1.19.0",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/ucd-trie/ucd-trie-0.1.7.crate",
+        "sha256": "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971",
+        "dest": "cargo/vendor/ucd-trie-0.1.7"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971\", \"files\": {}}",
+        "dest": "cargo/vendor/ucd-trie-0.1.7",
         "dest-filename": ".cargo-checksum.json"
     },
     {

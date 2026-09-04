@@ -50,6 +50,16 @@ static COMPONENTS: &[ComponentSpec] = &[
         system_probe: None,
     },
     ComponentSpec {
+        name: "nile",
+        source: Source::GithubRelease {
+            asset_matcher: |n| n.contains("linux") && n.contains("x86_64"),
+        },
+        extract: ExtractStrategy::Raw,
+        dest: "nile",
+        settings_key: SettingsKey::Nile,
+        system_probe: None,
+    },
+    ComponentSpec {
         name: "egl-dummy",
         source: Source::DirectUrl { marker: "bundled" },
         extract: ExtractStrategy::Raw,

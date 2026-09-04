@@ -1,0 +1,59 @@
+import QtQuick
+
+Item {
+    id: ctrl
+
+    anchors.fill: parent
+    z: 900
+
+    property var gameModel: null
+    property var nileModel: null
+    property var downloadModel: null
+    property var defaults: null
+    property int runnersVersion: 0
+
+    property var activeDownloads: ({})
+
+    signal installEnqueued()
+
+    function syncDownloads() {
+        if (!ctrl.downloadModel) {
+            ctrl.activeDownloads = ({})
+            return
+        }
+        try { ctrl.activeDownloads = JSON.parse(ctrl.downloadModel.source_state_json("nile")) || ({}) }
+        catch (e) { ctrl.activeDownloads = ({}) }
+    }
+
+    Component.onCompleted: syncDownloads()
+    onDownloadModelChanged: syncDownloads()
+
+    function showInstall(index) {
+        dialog.gameIndex = index
+        dialog.show()
+    }
+
+    NileInstallDialog {
+        id: dialog
+        anchors.fill: parent
+        gameModel: ctrl.gameModel
+        nileModel: ctrl.nileModel
+        runnersVersion: ctrl.runnersVersion
+        defaults: ctrl.defaults
+        onCancelled: hide()
+        onInstallEnqueued: (id) => {
+            hide()
+            ctrl.installEnqueued()
+        }
+    }
+
+    Connections {
+        target: ctrl.downloadModel
+        function onState_changed() { ctrl.syncDownloads() }
+        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs) {
+            if (source !== "nile" || !ctrl.gameModel) return
+            let newId = ctrl.gameModel.nile_import_after_install(appId, displayName, prefixPath, runnerVersion)
+            if (newId && newId.length > 0 && ctrl.nileModel) ctrl.nileModel.refresh()
+        }
+    }
+}

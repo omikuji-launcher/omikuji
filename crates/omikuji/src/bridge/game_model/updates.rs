@@ -44,6 +44,44 @@ impl super::qobject::GameModel {
         true
     }
 
+    pub fn check_nile_update(&self, game_id: &QString) -> bool {
+        let gid = game_id.to_string();
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+            return false;
+        };
+        if game.source.kind != "nile" {
+            return false;
+        }
+        let id = game.metadata.id.clone();
+        let name = game.metadata.name.clone();
+        let app_id = game.source.app_id.clone();
+
+        omikuji_core::notifications::info(&name, "Checking for updates...");
+
+        std::thread::spawn(move || {
+            match omikuji_core::store::nile::updates::blocking_check_nile_update(&app_id) {
+                Some(info) => {
+                    omikuji_core::process::notify_update_required(
+                        omikuji_core::process::UpdateNotification {
+                            game_id: id,
+                            app_id,
+                            from_version: info.from_version,
+                            to_version: String::new(),
+                            download_size: info.download_size,
+                            can_diff: true,
+                            delta_supported: true,
+                        },
+                    );
+                }
+                None => {
+                    omikuji_core::notifications::info(&name, "You're on the latest version");
+                }
+            }
+        });
+
+        true
+    }
+
     pub fn check_gog_update(&self, game_id: &QString) -> bool {
         let gid = game_id.to_string();
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
@@ -175,7 +213,8 @@ impl super::qobject::GameModel {
             .game
             .iter()
             .filter(|g| {
-                (g.source.kind == "epic" || g.source.kind == "gog") && !g.source.app_id.is_empty()
+                matches!(g.source.kind.as_str(), "epic" | "gog" | "nile")
+                    && !g.source.app_id.is_empty()
             })
             .map(|g| {
                 let install_path = std::path::PathBuf::from(&g.metadata.exe)
@@ -226,6 +265,9 @@ impl super::qobject::GameModel {
             if candidates.iter().any(|c| c.source == "epic") {
                 let _ = omikuji_core::store::epic::updates::refresh_assets_cache();
             }
+            if candidates.iter().any(|c| c.source == "nile") {
+                let _ = omikuji_core::store::nile::updates::refresh_updates_cache();
+            }
 
             let existing_app_ids: std::collections::HashSet<String> =
                 omikuji_core::downloads::manager()
@@ -236,6 +278,7 @@ impl super::qobject::GameModel {
 
             let mut epic_count: i32 = 0;
             let mut gog_count: i32 = 0;
+            let mut nile_count: i32 = 0;
 
             for candidate in candidates {
                 if existing_app_ids.contains(&candidate.app_id) {
@@ -250,6 +293,10 @@ impl super::qobject::GameModel {
                         &candidate.app_id,
                     )
                     .map(|i| i.from_version),
+                    "nile" => {
+                        omikuji_core::store::nile::updates::find_update_for(&candidate.app_id)
+                            .map(|i| i.from_version)
+                    }
                     _ => None,
                 };
                 let Some(from_version) = from_version else {
@@ -277,6 +324,7 @@ impl super::qobject::GameModel {
                 match candidate.source.as_str() {
                     "epic" => epic_count += 1,
                     "gog" => gog_count += 1,
+                    "nile" => nile_count += 1,
                     _ => {}
                 }
             }
@@ -332,7 +380,7 @@ impl super::qobject::GameModel {
 
             let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
                 m.as_mut()
-                    .updates_queued(epic_count, gog_count, gacha_count);
+                    .updates_queued(epic_count, gog_count, nile_count, gacha_count);
             });
         });
     }

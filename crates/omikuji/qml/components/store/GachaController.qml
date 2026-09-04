@@ -39,7 +39,7 @@ Item {
         target: ctrl.downloadModel
         function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs, alongside) {
             if (!ctrl.gameModel) return
-            if (source === "epic" || source === "gog") return
+            if (["hoyo", "endfield", "kuro", "yostar"].indexOf(source) === -1) return
             let raw = ctrl.gameModel.gacha_manifest_for_app_id(appId)
             if (!raw || raw.length === 0) {
                 console.warn("[gacha] no manifest for", source, "app_id:", appId)

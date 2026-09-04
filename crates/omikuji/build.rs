@@ -214,6 +214,7 @@ fn main() {
         .prop_at("show_gachas", kushi::Kind::Bool, "tabs.show_gachas")
         .prop_at("show_epic", kushi::Kind::Bool, "tabs.show_epic")
         .prop_at("show_gog", kushi::Kind::Bool, "tabs.show_gog")
+        .prop_at("show_nile", kushi::Kind::Bool, "tabs.show_nile")
         .prop_at("show_steam", kushi::Kind::Bool, "tabs.show_steam")
         .prop_at("nav_width", kushi::Kind::I32, "nav.width")
         .prop_at("nav_collapsed", kushi::Kind::Bool, "nav.collapsed")
@@ -313,6 +314,7 @@ fn main() {
         )
         .custom_invokable_raw("fn active_for_game_id(self: &DownloadModel, game_id: &QString) -> QString;")
         .custom_invokable("speedHistoryJson", "fn speed_history_json(self: &DownloadModel) -> QString;")
+        .custom_invokable("partialBytes", "fn partial_bytes(self: &DownloadModel, id: &QString) -> QString;")
         .row_ops()
         .write_into(&out_dir);
 
@@ -323,6 +325,7 @@ fn main() {
             "src/bridge/log_highlighter.rs",
             "src/bridge/epic_model.rs",
             "src/bridge/gog_model.rs",
+            "src/bridge/nile_model.rs",
             "src/bridge/components.rs",
             "src/bridge/migration.rs",
             "src/bridge/ofuda.rs",
@@ -371,6 +374,7 @@ fn main() {
         "qml/components/store/GachaInstallDialog.qml",
         "qml/components/dialogs/GameCategoriesDialog.qml",
         "qml/components/store/GogInstallDialog.qml",
+        "qml/components/store/NileInstallDialog.qml",
         "qml/components/dialogs/ErrorDialog.qml",
         "qml/components/dialogs/PrefixCreateDialog.qml",
         "qml/components/dialogs/PrefixDetailDialog.qml",
@@ -432,10 +436,12 @@ fn main() {
         "qml/components/store/StoreGameDetails.qml",
         "qml/components/store/GachaLibrary.qml",
         "qml/components/store/GogLibrary.qml",
+        "qml/components/store/NileLibrary.qml",
         "qml/components/store/EpicController.qml",
         "qml/components/store/ExistingFilesNote.qml",
         "qml/components/store/GachaController.qml",
         "qml/components/store/GogController.qml",
+        "qml/components/store/NileController.qml",
         "qml/components/store/StorePanel.qml",
         "qml/components/store/SteamLibrary.qml",
         "qml/components/store/StoreLoginOverlay.qml",

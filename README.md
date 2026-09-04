@@ -188,7 +188,7 @@ mhhhhhhhh).
 
 \- **Wine Prefix Manager (Ofuda)**: create, prep and manages prefixes from the settings page. (cmon ofuda is such a cool name)
 
-\- **Stores**: import from Steam (locally), install Epic games (via legendary), GOG (via gogdl), ~~Waifu machine slots~~ HoYoverse / Kuro / Gryphline gachas (direct downloads and updates).
+\- **Stores**: import from Steam (locally), install Epic games (via legendary), GOG (via gogdl), Amazon Games (Nile), ~~Waifu machine slots~~ HoYoverse / Kuro / Gryphline and Yostar gachas (direct downloads and updates).
 
 \- **Community scripts**: [Community TOML scripts](https://github.com/omikuji-launcher/omikuji-scripts) that you can run from the launcher. (Hey, they can do a lot! Install launchers, add games entries, kiss you on the lips)
 
@@ -201,7 +201,8 @@ mhhhhhhhh).
 | Command   | args |  Description       										   					 |
 | ------ | ---------- | ---------- 												   	 				 |
 | `omikuji`         |   `path/to/.exe`     |  Opens a modal for ephemeral runs.			         	 |
-| `omikuji run`     |     `slug_or_id`     |  runs a game from the library headless.			     | 
+| `omikuji run`     |     `slug_or_id`     |  runs a game from the library headless. This skips updates, errors and such checks. Use it accordingly.		     | 
+| `omikuji run --notify-gui`     |     `slug_or_id`     |  runs a game from the library headless but will open the GUI if any errors, updates, etc. get in the way.		     | 
 | `omikuji console` |     `None`  	       |  runs Omikuji in console mode.			     			 | 
 
 
@@ -215,10 +216,6 @@ Usable. Daily-driven by me. Its pretty pls tell me its pretty
 
 
 QML side held up with tape and ~~prays~~ prayers🙏
-
-
-Not implemented/WIP/Planning to add: 
-- Amazon Games (Nile)
 
 
 ## Contributing

@@ -6,6 +6,7 @@ mod epic;
 mod gacha;
 mod gog;
 pub(crate) mod launch;
+mod nile;
 mod scripts;
 mod shortcuts;
 mod steam;
@@ -91,6 +92,7 @@ pub mod qobject {
             self: Pin<&mut GameModel>,
             epic_count: i32,
             gog_count: i32,
+            nile_count: i32,
             gacha_count: i32,
         );
 
@@ -222,6 +224,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn check_gog_update(self: &GameModel, game_id: &QString) -> bool;
+
+        #[qinvokable]
+        fn check_nile_update(self: &GameModel, game_id: &QString) -> bool;
 
         #[qinvokable]
         fn scan_all_for_updates(self: Pin<&mut GameModel>);
@@ -533,6 +538,35 @@ pub mod qobject {
 
         #[qinvokable]
         fn gog_uninstall(self: Pin<&mut GameModel>, game_id: &QString) -> bool;
+
+        #[qinvokable]
+        fn nile_check_existing_install(
+            self: &GameModel,
+            app_name: &QString,
+            install_path: &QString,
+        ) -> QString;
+
+        #[qinvokable]
+        fn nile_dir_has_game(self: &GameModel, app_id: &QString, install_path: &QString) -> bool;
+
+        #[qinvokable]
+        fn fetch_nile_install_size(
+            self: Pin<&mut GameModel>,
+            request_id: &QString,
+            app_name: &QString,
+        );
+
+        #[qinvokable]
+        fn nile_import_after_install(
+            self: Pin<&mut GameModel>,
+            app_name: &QString,
+            display_name: &QString,
+            prefix_path: &QString,
+            runner_version: &QString,
+        ) -> QString;
+
+        #[qinvokable]
+        fn nile_uninstall(self: Pin<&mut GameModel>, game_id: &QString) -> bool;
 
         #[qinvokable]
         fn list_gachas(self: &GameModel) -> QString;

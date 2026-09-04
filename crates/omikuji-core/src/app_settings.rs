@@ -174,6 +174,7 @@ pub struct TabsSettings {
     pub show_gachas: bool,
     pub show_epic: bool,
     pub show_gog: bool,
+    pub show_nile: bool,
     pub show_steam: bool,
 }
 
@@ -183,6 +184,7 @@ impl Default for TabsSettings {
             show_gachas: true,
             show_epic: true,
             show_gog: true,
+            show_nile: true,
             show_steam: true,
         }
     }

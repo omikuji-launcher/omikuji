@@ -109,6 +109,7 @@ pub struct ComponentsSettings {
     pub hpatchz: String,
     pub legendary: String,
     pub gogdl: String,
+    pub nile: String,
     pub egl_dummy: String,
 }
 
@@ -119,6 +120,7 @@ impl Default for ComponentsSettings {
             hpatchz: "https://api.github.com/repos/sisong/HDiffPatch/releases/latest".into(),
             legendary: "https://api.github.com/repos/legendary-gl/legendary/releases/latest".into(),
             gogdl: "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest".into(), // why does gogdl feels like a gurgle. goGLdl
+            nile: "https://api.github.com/repos/imLinguin/nile/releases/latest".into(),
             egl_dummy: "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
         }
     }

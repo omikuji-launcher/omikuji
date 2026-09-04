@@ -197,6 +197,10 @@ lazy_static! {
             Arc::new(crate::store::gog::source::GogdlSource),
         );
         sources.insert(
+            "nile".to_string(),
+            Arc::new(crate::store::nile::source::NileSource),
+        );
+        sources.insert(
             "hoyo".to_string(),
             Arc::new(crate::gacha::hoyo::source::HoyoSource),
         );
