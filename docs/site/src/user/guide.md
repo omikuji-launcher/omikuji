@@ -347,6 +347,8 @@ Here's a little explanation of the settings tabs.
 \- **Presets**: `Environment sets` and `DLL overrides sets` for games. Sets are groups of key value pairs that you can copy in a game setting OR sync with the game's settings (in the game's settings). Syncing means that it does not copy the pairs in the game settings, but will apply them on top of the game's ones at launch. So, if you add lets say, a 'Raytracing' set and *sync* it with a game, if you in future change the pairs set, the game will have the new pairs applied without manually editing the game's settings. It also has `Template Literals` that allow you to use variables in some fields. For example, `${prefixes_path}` will resolve the `settings.toml` `paths.prefixes_dir` value. Useful if you want to back up your settings, change user, and all games will resolve with the new prefixes path without any manual intervention per-game. You can also make custom ones.
 
 >Template Literals allow you do stuff like this. So that you can use variables in some fields, and as shown in the example I can just use this as a global variable that seeds any game I make, and it will resolve the game's slug for the file name. I'll just create that file with the parameters and it's resolved without me having to do anything.
+>
+>`VKSUMI_CONFIG_FILE=${home}/.config/vksumi/custom/${game_slug}.conf`
 
 ![Template Literals](ss/template_literals.png)
 
