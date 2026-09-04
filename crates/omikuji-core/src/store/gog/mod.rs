@@ -93,7 +93,7 @@ impl GogStore {
             .bearer_auth(&creds.access_token)
             .header(
                 "User-Agent",
-                "omikuji/0.1 (+https://github.com/reakjra/omikuji)",
+                "omikuji/0.1 (+https://github.com/omikuji-launcher/omikuji)",
             )
             .send()
             .await?;

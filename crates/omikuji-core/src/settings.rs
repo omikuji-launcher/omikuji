@@ -30,7 +30,7 @@ pub struct ScriptsSettings {
 impl Default for ScriptsSettings {
     fn default() -> Self {
         Self {
-            fetch_url: "https://raw.githubusercontent.com/reakjra/omikuji-scripts/master".into(),
+            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-scripts/master".into(),
         }
     }
 }
@@ -96,7 +96,7 @@ pub struct AssetsSettings {
 impl Default for AssetsSettings {
     fn default() -> Self {
         Self {
-            fetch_url: "https://raw.githubusercontent.com/reakjra/omikuji-assets/main".into(),
+            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main".into(),
         }
     }
 }
@@ -121,7 +121,7 @@ impl Default for ComponentsSettings {
             legendary: "https://api.github.com/repos/legendary-gl/legendary/releases/latest".into(),
             gogdl: "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest".into(), // why does gogdl feels like a gurgle. goGLdl
             nile: "https://api.github.com/repos/imLinguin/nile/releases/latest".into(),
-            egl_dummy: "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
+            egl_dummy: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
         }
     }
 }

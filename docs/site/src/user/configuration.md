@@ -36,7 +36,7 @@ Where gacha manifests and artwork are fetched from.
 
 ```toml
 [assets]
-fetch_url = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main"
+fetch_url = "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main"
 ```
 
 ### `[scripts]`
@@ -45,7 +45,7 @@ Where the community scripts registry is fetched from. Point it elsewhere to use 
 
 ```toml
 [scripts]
-fetch_url = "https://raw.githubusercontent.com/reakjra/omikuji-scripts/master"
+fetch_url = "https://raw.githubusercontent.com/omikuji-launcher/omikuji-scripts/master"
 ```
 
 ### `[components]`
@@ -59,7 +59,7 @@ hpatchz = "https://api.github.com/repos/sisong/HDiffPatch/releases/latest"
 legendary = "https://api.github.com/repos/derrod/legendary/releases/latest"
 gogdl = "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest"
 nile = "https://api.github.com/repos/imLinguin/nile/releases/latest"
-egl_dummy = "https://raw.githubusercontent.com/reakjra/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe"
+egl_dummy = "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe"
 ```
 
 ### `[steam]`
