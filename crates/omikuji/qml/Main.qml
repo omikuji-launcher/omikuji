@@ -126,7 +126,7 @@ ApplicationWindow {
         for (let i = 0; i < gameModel.count; i++) {
             let g = gameModel.get_game(i)
             if (g && g.gameId === gameId) {
-                root.tryPlay(i)
+                gameActions.play(i)
                 return
             }
         }
@@ -183,9 +183,6 @@ ApplicationWindow {
         for (let source in root.latestToasts) out[source + "-Latest"] = true
         return out
     }
-
-    readonly property bool isSelectedRunnerUpdating:
-        root.selectedGame !== null && root.updatingRunners[root.selectedGame.runner] === true
 
     function beginLatestToast(source, message) {
         if (root.latestToasts[source] !== undefined) return
@@ -310,6 +307,7 @@ ApplicationWindow {
 
     // qualified refs so delegate Components don't self-reference their own null proprty
     readonly property var gameModelRef: gameModel
+    readonly property var downloadModelRef: downloadModel
     readonly property var epicModelRef: epicModel
     readonly property var gogModelRef: gogModel
     readonly property var nileModelRef: nileModel
@@ -326,8 +324,8 @@ ApplicationWindow {
         id: gameModel
 
         onGame_stopped: (gameId) => {
-            if (root.selectedGame && root.selectedGame.gameId === gameId) {
-                root.refreshSelectedRunState()
+            if (gameActions.selectedGame && gameActions.selectedGame.gameId === gameId) {
+                gameActions.refreshRunState()
             }
             // !root.visible guard: don't clobber a manual re-show mid-session
             if (appSettings.minimizeOnLaunch && !root.visible) {
@@ -389,36 +387,24 @@ ApplicationWindow {
     DownloadModel {
         id: downloadModel
         onDownload_failed: (id, error) => console.warn("[downloads] failed:", id, error)
-        onState_changed: root.refreshSelectedDownloadActivity()
+        onState_changed: gameActions.refreshDownloadActivity()
     }
 
     LibraryWatcher {
         id: libWatcher
         onChanged: {
-            gameModel.refresh(root.selectedGameIndex)
-            resyncSelectedIndex()
-            updateSelection()
+            gameModel.refresh(gameActions.selectedIndex)
+            gameActions.resyncSelection()
+            gameActions.updateSelection()
         }
         Component.onCompleted: watch(gameModel.library_dir())
     }
 
-    function resyncSelectedIndex() {
-        if (selectedGameId === "") return
-        for (let i = 0; i < gameModel.count; i++) {
-            let game = gameModel.get_game(i)
-            if (game && game["gameId"] === selectedGameId) {
-                selectedGameIndex = i
-                return
-            }
-        }
-        selectedGameIndex = -1
-    }
-
     Connections {
         target: gameModel
-        function onRowsMoved() { root.resyncSelectedIndex() }
-        function onRowsInserted() { root.resyncSelectedIndex() }
-        function onRowsRemoved() { root.resyncSelectedIndex() }
+        function onRowsMoved() { gameActions.resyncSelection() }
+        function onRowsInserted() { gameActions.resyncSelection() }
+        function onRowsRemoved() { gameActions.resyncSelection() }
     }
 
 
@@ -429,17 +415,23 @@ ApplicationWindow {
         onTriggered: downloadModel.drain_events()
     }
 
-    property int selectedGameIndex: -1
     // set before switching to settings view; the Loader-mounted page binds to this
     property int settingsGameIndex: -1
-    function selectionValid() {
-        return selectedGameIndex >= 0 && selectedGameIndex < gameModel.count
+
+    GameActions {
+        id: gameActions
+        gameModel: root.gameModelRef
+        downloadModel: root.downloadModelRef
+        updatingRunners: root.updatingRunners
+        onDownloadInFlight: root.currentView = "downloads"
+        onComponentRequired: (index, skipUpdateCheck, missing) =>
+            componentRequiredDialog.start(index, skipUpdateCheck, missing)
+        onPrefixPrepRequired: (index, skipUpdateCheck) =>
+            prefixPrepDialog.start(index, skipUpdateCheck)
+        onForceLaunched: {
+            if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
+        }
     }
-    property bool hasSelection: selectionValid()
-    property var selectedGame: null
-    property string selectedGameId: ""
-    property bool isSelectedGameRunning: false
-    property bool isSelectedLaunching: false
 
     property string currentView: "library"
     property string activeModal: ""
@@ -458,82 +450,6 @@ ApplicationWindow {
         topBar.defocusSearch()
     }
 
-    function refreshSelectedRunState() {
-        let valid = selectionValid()
-        isSelectedGameRunning = valid && gameModel.is_running(selectedGameIndex)
-        isSelectedLaunching = valid && gameModel.is_launching(selectedGameIndex)
-    }
-
-    onSelectedGameIndexChanged: {
-        let game = selectionValid() ? gameModel.get_game(selectedGameIndex) : null
-        selectedGameId = (game && game["gameId"]) ? game["gameId"] : ""
-        refreshSelectedRunState()
-        updateSelection()
-    }
-
-    function updateSelection() {
-        let idx = selectedGameIndex
-        if (idx < 0 || idx >= gameModel.count) {
-            selectedGame = null
-            return
-        }
-        let game = gameModel.get_game(idx)
-        selectedGame = {
-            name: game["name"],
-            playtime: game["playtime"] || 0,
-            lastPlayed: game["lastPlayed"] || "",
-            runner: game["runner"] || "",
-            runnerType: game["runnerType"] || "",
-            gameId: game["gameId"] || "",
-            sourceAppId: game["sourceAppId"] || "",
-            prefixPath: game["prefixPath"] || ""
-        }
-        refreshSelectedDownloadActivity()
-    }
-
-    property var selectedDownloadActivity: null
-    function refreshSelectedDownloadActivity() {
-        if (!selectedGame || !selectedGame.gameId) {
-            selectedDownloadActivity = null
-            return
-        }
-        let raw = downloadModel.active_for_game_id(selectedGame.gameId)
-        if (!raw || raw.length === 0) {
-            selectedDownloadActivity = null
-            return
-        }
-        try {
-            selectedDownloadActivity = JSON.parse(raw)
-        } catch (e) {
-            console.warn("active_for_game_id returned bad json:", raw)
-            selectedDownloadActivity = null
-        }
-    }
-
-    // redirects to downloads if an install is in flight, launching mid-patch would read files teh patcher is rewriting
-    function tryPlay(idx, forceSkipUpdateCheck = false) {
-        if (idx < 0 || idx >= gameModel.count) return false
-        let game = gameModel.get_game(idx)
-        let gid = game ? (game["gameId"] || "") : ""
-        if (gid.length > 0) {
-            let raw = downloadModel.active_for_game_id(gid)
-            if (raw && raw.length > 0) {
-                currentView = "downloads"
-                return false
-            }
-        }
-        let missing = gameModel.missing_component(idx)
-        if (missing.length > 0) {
-            componentRequiredDialog.start(idx, forceSkipUpdateCheck, missing)
-            return true
-        }
-        if (gameModel.needs_prefix_prep(idx)) {
-            prefixPrepDialog.start(idx, forceSkipUpdateCheck)
-            return true
-        }
-        return doLaunch(idx, forceSkipUpdateCheck)
-    }
-
     function minimizeForLaunch() {
         steamStorePanel.keepAlive = false
         epicStorePanel.keepAlive = false
@@ -545,25 +461,6 @@ ApplicationWindow {
         gameModel.trim_heap()
     }
 
-    function doLaunch(idx, forceSkipUpdateCheck) {
-        if (forceSkipUpdateCheck) {
-            if (!gameModel.launch_game_force(idx)) return false
-            isSelectedLaunching = true
-            if (appSettings.minimizeOnLaunch) minimizeForLaunch()
-            return true
-        }
-        if (!gameModel.launch_game(idx)) return false
-        isSelectedLaunching = true
-        return true
-    }
-
-    Timer {
-        interval: 60
-        repeat: true
-        running: root.isSelectedLaunching
-        onTriggered: root.refreshSelectedRunState()
-    }
-
     Timer {
         id: libPollTimer
         interval: 500
@@ -571,7 +468,7 @@ ApplicationWindow {
         running: true
         onTriggered: {
             gameModel.check_exited_games()
-            root.refreshSelectedRunState()
+            gameActions.refreshRunState()
             gameModel.drain_notifications()
             gameModel.drain_launch_requests()
             gameModel.drain_update_notifications()
@@ -827,7 +724,7 @@ property real cardZoom: appSettings.cardZoom
                 anchors.fill: parent
                 model: gameModel
                 gameModel: gameModel
-                selectedIndex: root.selectedGameIndex
+                selectedIndex: gameActions.selectedIndex
                 cardZoom: root.cardZoom
                 cardSpacing: appSettings.cardSpacing
                 cardElevation: appSettings.cardElevation
@@ -842,15 +739,15 @@ property real cardZoom: appSettings.cardZoom
                 filterKind: navTabs.tabs[navTabs.currentIndex]?.kind || "all"
                 filterValue: navTabs.tabs[navTabs.currentIndex]?.value || ""
                 onGameClicked: (index) => {
-                    root.selectedGameIndex = index
+                    gameActions.selectedIndex = index
                     topBar.defocusSearch()
                 }
                 onGameDoubleClicked: (index) => {
-                    if (appSettings.doubleClickLaunches) root.tryPlay(index)
+                    if (appSettings.doubleClickLaunches) gameActions.play(index)
                 }
                 onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)
                 onBackgroundClicked: {
-                    root.selectedGameIndex = -1
+                    gameActions.selectedIndex = -1
                     topBar.defocusSearch()
                 }
             }
@@ -860,27 +757,22 @@ property real cardZoom: appSettings.cardZoom
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                selectedGame: root.selectedGame
-                hasSelection: root.hasSelection
-                isRunning: root.isSelectedGameRunning
-                isLaunching: root.isSelectedLaunching
-                runnerUpdating: root.isSelectedRunnerUpdating
-                downloadActivity: root.selectedDownloadActivity
+                actions: gameActions
+                selectedGame: gameActions.selectedGame
+                hasSelection: gameActions.hasSelection
+                isRunning: gameActions.isRunning
+                isLaunching: gameActions.isLaunching
+                runnerUpdating: gameActions.runnerUpdating
+                downloadActivity: gameActions.downloadActivity
                 onSettingsClicked: {
-                    root.settingsGameIndex = root.selectedGameIndex
+                    root.settingsGameIndex = gameActions.selectedIndex
                     root.activeModal = "gameSettings"
                 }
                 onDownloadActivityClicked: {
                     root.currentView = "downloads"
                 }
-                onPlayClicked: root.tryPlay(root.selectedGameIndex)
-                onStopClicked: {
-                    if (root.selectedGame && root.selectedGame.gameId) {
-                        gameModel.stop_game(root.selectedGame.gameId)
-                    }
-                }
                 onWineToolsClicked: {
-                    if (!root.selectedGame || !root.selectedGame.gameId) return
+                    if (!gameActions.selectedGame || !gameActions.selectedGame.gameId) return
                     if (Date.now() - wineToolsMenu.lastClosedAt < 150) return
                     wineToolsMenu.openAbove(floatingBar.wineToolsAnchor)
                 }
@@ -1115,16 +1007,16 @@ property real cardZoom: appSettings.cardZoom
     GameContextMenu {
         id: gameContextMenu
         gameModel: root.gameModelRef
-        onPlayRequested: (idx) => root.tryPlay(idx)
+        onPlayRequested: (idx) => gameActions.play(idx)
         onLogsRequested: (gid, gname) => root.openGameLogs(gid, gname)
         onConfigureRequested: (idx) => {
-            root.selectedGameIndex = idx
+            gameActions.selectedIndex = idx
             root.settingsGameIndex = idx
             root.activeModal = "gameSettings"
         }
         onCategoriesRequested: (idx) => categoriesController.showForGame(idx)
         onRemoveRequested: (idx) => {
-            if (root.selectedGameIndex === idx) root.selectedGameIndex = -1
+            if (gameActions.selectedIndex === idx) gameActions.selectedIndex = -1
         }
     }
 
@@ -1359,14 +1251,14 @@ property real cardZoom: appSettings.cardZoom
         onUpdateRequested: (gid, aid, fromV) => {
             let newId = gameModel.enqueue_game_update(gid, fromV)
             if (newId && newId.length > 0) {
-                toastManager.show("info", qsTr("Update queued"), root.selectedGame ? root.selectedGame.name : "")
+                toastManager.show("info", qsTr("Update queued"), gameActions.selectedGame ? gameActions.selectedGame.name : "")
             } else {
                 toastManager.show("error", qsTr("Update failed"), qsTr("Could not enqueue update"))
             }
         }
         onRunAnywayRequested: (gid) => {
             let idx = gameModel.index_of_id(gid)
-            if (idx >= 0) root.tryPlay(idx, true)
+            if (idx >= 0) gameActions.play(idx, true)
         }
     }
 
@@ -1437,14 +1329,14 @@ property real cardZoom: appSettings.cardZoom
         id: componentRequiredDialog
         anchors.fill: parent
         componentsBridge: root.componentsBridgeRef
-        onLaunchReady: (idx, skip) => root.tryPlay(idx, skip)
+        onLaunchReady: (idx, skip) => gameActions.play(idx, skip)
     }
 
     PrefixPrepDialog {
         id: prefixPrepDialog
         anchors.fill: parent
         gameModel: root.gameModelRef
-        onLaunchReady: (idx, skip) => root.doLaunch(idx, skip)
+        onLaunchReady: (idx, skip) => gameActions.launch(idx, skip)
     }
 
     MigrationDialog {
@@ -1533,13 +1425,13 @@ property real cardZoom: appSettings.cardZoom
         ]
 
         onItemClicked: (action) => {
-            if (!root.selectedGame || !root.selectedGame.gameId) return
-            let gid = root.selectedGame.gameId
+            if (!gameActions.selectedGame || !gameActions.selectedGame.gameId) return
+            let gid = gameActions.selectedGame.gameId
             if (action === "run_exe") {
                 runExePicker.open()
             } else if (action === "run_command") {
                 gameRunCommandDialog.gameId = gid
-                gameRunCommandDialog.show(root.selectedGame.name || "", root.selectedGame.prefixPath || "")
+                gameRunCommandDialog.show(gameActions.selectedGame.name || "", gameActions.selectedGame.prefixPath || "")
             } else {
                 gameModel.run_wine_tool(gid, action)
             }
@@ -1550,8 +1442,8 @@ property real cardZoom: appSettings.cardZoom
             title: qsTr("Select EXE to run in prefix")
             startFolder: "/home"
             onPicked: (path) => {
-                if (root.selectedGame && root.selectedGame.gameId) {
-                    gameModel.run_wine_exe(root.selectedGame.gameId, path)
+                if (gameActions.selectedGame && gameActions.selectedGame.gameId) {
+                    gameModel.run_wine_exe(gameActions.selectedGame.gameId, path)
                 }
             }
         }
@@ -1573,7 +1465,7 @@ property real cardZoom: appSettings.cardZoom
                 onSaveRequested: (idx) => root.activeModal = ""
                 onSaveAndPlayRequested: (idx) => {
                     root.activeModal = ""
-                    root.tryPlay(idx)
+                    gameActions.play(idx)
                 }
                 onRefetchMediaRequested: (gid) => refetchMediaConfirm.show(gid)
                 onPreviewImageRequested: (src, caption) => imagePreviewDialog.show(src, caption)
@@ -1598,7 +1490,7 @@ property real cardZoom: appSettings.cardZoom
                     for (let i = 0; i < gameModel.count; i++) {
                         let g = gameModel.get_game(i)
                         if (g && g["gameId"] === gameId) {
-                            root.selectedGameIndex = i
+                            gameActions.selectedIndex = i
                             break
                         }
                     }
@@ -1608,8 +1500,8 @@ property real cardZoom: appSettings.cardZoom
                     for (let i = 0; i < gameModel.count; i++) {
                         let g = gameModel.get_game(i)
                         if (g && g["gameId"] === gameId) {
-                            root.selectedGameIndex = i
-                            root.tryPlay(i)
+                            gameActions.selectedIndex = i
+                            gameActions.play(i)
                             break
                         }
                     }

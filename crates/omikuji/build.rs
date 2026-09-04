@@ -202,6 +202,7 @@ fn main() {
     qrc_paths.push("qml/components/lib/RunnerGrouping.js".to_string());
     qrc_paths.push("qml/components/lib/Format.js".to_string());
     qrc_paths.push("qml/components/lib/ArchiveAssets.js".to_string());
+    qrc_paths.push("qml/components/lib/PlayState.js".to_string());
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let app_settings_bridge = kushi::ObjectBridge::new("AppSettingsBridge")
@@ -401,9 +402,12 @@ fn main() {
         "qml/components/downloads/MiniRow.qml",
         // library
         "qml/components/library/FloatingBar.qml",
+        "qml/components/library/GameActionButton.qml",
+        "qml/components/library/GameActions.qml",
         "qml/components/library/GameCard.qml",
         "qml/components/library/GameContextMenu.qml",
         "qml/components/library/GameGrid.qml",
+        "qml/components/library/GameStatsRow.qml",
         // navigation
         "qml/components/navigation/NavTabs.qml",
         "qml/components/navigation/SubNavRail.qml",
