@@ -105,6 +105,15 @@ pub mod qobject {
         fn media_changed(self: Pin<&mut GameModel>, game_id: &QString);
 
         #[qsignal]
+        #[cxx_name = "mediaCandidatesReady"]
+        fn media_candidates_ready(
+            self: Pin<&mut GameModel>,
+            game_id: &QString,
+            kind: &QString,
+            payload: &QString,
+        );
+
+        #[qsignal]
         #[cxx_name = "prepareOutput"]
         fn prepare_output(self: Pin<&mut GameModel>, line: &QString);
 
@@ -277,6 +286,24 @@ pub mod qobject {
             manual_override: &QString,
             kind: &QString,
         ) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "searchMediaCandidates"]
+        fn search_media_candidates(
+            self: Pin<&mut GameModel>,
+            game_id: &QString,
+            kind: &QString,
+            sgdb_game_id: i64,
+        );
+
+        #[qinvokable]
+        #[cxx_name = "pickMediaCandidate"]
+        fn pick_media_candidate(
+            self: Pin<&mut GameModel>,
+            game_id: &QString,
+            kind: &QString,
+            url: &QString,
+        );
 
         #[qinvokable]
         #[cxx_name = "applyDefaultsToExistingGames"]
@@ -1086,6 +1113,44 @@ fn media_changed_notifier(
     }
 }
 
+fn media_candidates_payload(
+    games: &[media::SgdbGame],
+    sgdb_game_id: u64,
+    assets: &[media::SgdbAsset],
+    error: &str,
+) -> String {
+    serde_json::json!({
+        "error": error,
+        "sgdbGameId": sgdb_game_id,
+        "games": games,
+        "assets": assets,
+    })
+    .to_string()
+}
+
+fn media_candidates(name: &str, media_type: &MediaType, sgdb_game_id: i64) -> String {
+    let mut games = Vec::new();
+    let resolved = if sgdb_game_id > 0 {
+        sgdb_game_id as u64
+    } else {
+        match media::sgdb_search_games(name) {
+            Ok(found) => {
+                let Some(first) = found.first().map(|g| g.id) else {
+                    return media_candidates_payload(&found, 0, &[], "");
+                };
+                games = found;
+                first
+            }
+            Err(e) => return media_candidates_payload(&[], 0, &[], &e.to_string()),
+        }
+    };
+
+    match media::sgdb_assets_for(media_type, resolved) {
+        Ok(assets) => media_candidates_payload(&games, resolved, &assets, ""),
+        Err(e) => media_candidates_payload(&games, resolved, &[], &e.to_string()),
+    }
+}
+
 fn ok_bool<T, E: std::fmt::Display>(op: &str, result: Result<T, E>) -> bool {
     match result {
         Ok(_) => true,
@@ -1380,9 +1445,27 @@ impl qobject::GameModel {
         new_id
     }
 
+    fn notify_media_row(mut self: Pin<&mut Self>, game_id: &str) {
+        let Some(row) = self
+            .library
+            .game
+            .iter()
+            .position(|g| g.metadata.id == game_id)
+        else {
+            return;
+        };
+        let idx = self
+            .as_ref()
+            .model_index(row as i32, 0, &QModelIndex::default());
+        let roles = cxx_qt_lib::QList::<i32>::default();
+        self.as_mut().data_changed(&idx, &idx, &roles);
+        self.as_mut().media_changed(&QString::from(game_id));
+    }
+
     fn discard_draft(mut self: Pin<&mut Self>) {
         if let Some(draft) = self.as_mut().rust_mut().get_mut().draft.take() {
             media::discard_pending(&draft.metadata.id);
+            self.as_mut().notify_media_row(&draft.metadata.id);
         }
     }
 
@@ -1391,7 +1474,9 @@ impl qobject::GameModel {
         let cloned = self.library.game.get(idx).cloned();
         let m = match &cloned {
             Some(game) => {
-                media::discard_pending(&game.metadata.id);
+                let id = game.metadata.id.clone();
+                media::discard_pending(&id);
+                self.as_mut().notify_media_row(&id);
                 config_map(game)
             }
             None => QMap::<QMapPair_QString_QVariant>::default(),
@@ -1419,11 +1504,7 @@ impl qobject::GameModel {
         }
         self.as_mut().rust_mut().get_mut().library.game[idx] = draft;
         media::commit_pending(&id);
-        let model_idx = self
-            .as_ref()
-            .model_index(idx as i32, 0, &QModelIndex::default());
-        let roles = cxx_qt_lib::QList::<i32>::default();
-        self.as_mut().data_changed(&model_idx, &model_idx, &roles);
+        self.as_mut().notify_media_row(&id);
         self.as_mut().resort_reset();
         true
     }
@@ -1848,6 +1929,65 @@ impl qobject::GameModel {
             }
             _ => {
                 let _ = media::fetch_media_blocking_with(slot, &id, &name, on_asset);
+            }
+        });
+    }
+
+    fn search_media_candidates(
+        mut self: Pin<&mut Self>,
+        game_id: &QString,
+        kind: &QString,
+        sgdb_game_id: i64,
+    ) {
+        let id = game_id.to_string();
+        let kind = kind.to_string();
+        let Some(media_type) = MediaType::from_suffix(&kind) else {
+            tracing::warn!("search_media_candidates: unknown kind '{}'", kind);
+            return;
+        };
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == id) else {
+            tracing::warn!("search_media_candidates: game id '{}' not found", id);
+            return;
+        };
+        let name = game.metadata.name.clone();
+
+        let qt_thread = self.as_mut().qt_thread();
+        std::thread::spawn(move || {
+            let payload = media_candidates(&name, &media_type, sgdb_game_id);
+            let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::GameModel>| {
+                obj.as_mut().media_candidates_ready(
+                    &QString::from(&id),
+                    &QString::from(&kind),
+                    &QString::from(&payload),
+                );
+            });
+        });
+    }
+
+    fn pick_media_candidate(
+        mut self: Pin<&mut Self>,
+        game_id: &QString,
+        kind: &QString,
+        url: &QString,
+    ) {
+        let id = game_id.to_string();
+        let kind = kind.to_string();
+        let Some(media_type) = MediaType::from_suffix(&kind) else {
+            tracing::warn!("pick_media_candidate: unknown kind '{}'", kind);
+            return;
+        };
+        if !self.library.game.iter().any(|g| g.metadata.id == id) {
+            tracing::warn!("pick_media_candidate: game id '{}' not found", id);
+            return;
+        }
+        let url = url.to_string();
+
+        let qt_thread = self.as_mut().qt_thread();
+        let mut on_asset = media_changed_notifier(qt_thread, id.clone());
+        std::thread::spawn(move || {
+            match media::download_into(media::MediaSlot::Pending, &id, &media_type, &url) {
+                Ok(_) => on_asset(&media_type),
+                Err(e) => tracing::error!("pick_media_candidate: {} failed: {}", url, e),
             }
         });
     }

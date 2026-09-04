@@ -28,6 +28,7 @@ Item {
     signal saveAndPlayRequested(int gameIndex)
     signal refetchMediaRequested(string gameId)
     signal previewImageRequested(string source, string caption)
+    signal pickMediaRequested(string gameId, string kind)
 
     property var tabs: {
         let base = [
@@ -144,6 +145,7 @@ Item {
                 item.gameId = Qt.binding(() => root.gameId)
                 item.refetchMediaRequested.connect(() => root.refetchMediaRequested(root.gameId))
                 item.previewImageRequested.connect(root.previewImageRequested)
+                item.pickMediaRequested.connect(root.pickMediaRequested)
             }
         }
 

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
@@ -29,6 +29,22 @@ impl MediaType {
     pub fn from_suffix(suffix: &str) -> Option<Self> {
         ALL_TYPES.into_iter().find(|t| t.suffix() == suffix)
     }
+
+    fn sgdb_endpoint(&self) -> &'static str {
+        match self {
+            MediaType::Banner => HERO_ENDPOINT,
+            MediaType::Coverart => GRID_ENDPOINT,
+            MediaType::Icon => ICON_ENDPOINT,
+        }
+    }
+
+    fn sgdb_query(&self) -> &'static [(&'static str, &'static str)] {
+        match self {
+            MediaType::Coverart => &GRID_QUERY,
+            MediaType::Banner => &[],
+            MediaType::Icon => &ICON_QUERY,
+        }
+    }
 }
 
 pub const ALL_TYPES: [MediaType; 3] = [MediaType::Banner, MediaType::Coverart, MediaType::Icon];
@@ -50,8 +66,11 @@ impl MediaSlot {
 
 const SGDB_BASE: &str = "https://www.steamgriddb.com/api/v2";
 const ICON_ENDPOINT: &str = "icons";
+const GRID_ENDPOINT: &str = "grids";
+const HERO_ENDPOINT: &str = "heroes";
 const ICON_DIMENSION: &str = "512";
 const ICON_QUERY: [(&str, &str); 1] = [("dimensions", ICON_DIMENSION)];
+const GRID_QUERY: [(&str, &str); 1] = [("dimensions", "600x900")];
 const ICO_MIME: &str = "image/vnd.microsoft.icon";
 const SGDB_API_KEY: &str = "b0e57477a2e9665d6e1789d72cf0f334";
 
@@ -61,23 +80,25 @@ struct SgdbResponse<T> {
     data: Option<T>,
 }
 
-#[derive(Debug, Deserialize)]
-struct SgdbGame {
-    id: u64,
-    name: String,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SgdbGame {
+    pub id: u64,
+    pub name: String,
     #[serde(default)]
-    verified: bool,
+    pub verified: bool,
 }
 
-#[derive(Debug, Deserialize)]
-struct SgdbAsset {
-    url: String,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SgdbAsset {
+    pub url: String,
     #[serde(default)]
-    mime: String,
+    pub thumb: String,
     #[serde(default)]
-    width: u32,
+    pub mime: String,
     #[serde(default)]
-    height: u32,
+    pub width: u32,
+    #[serde(default)]
+    pub height: u32,
 }
 
 impl SgdbAsset {
@@ -221,22 +242,9 @@ where
     }
 
     // coverart first, card binds to this and it's ~5x smaller than hero
-    let tasks = [
-        (
-            MediaType::Coverart,
-            "grids",
-            vec![("dimensions", "600x900")],
-        ),
-        (MediaType::Banner, "heroes", vec![]),
-        (MediaType::Icon, ICON_ENDPOINT, vec![]),
-    ];
-
-    for (media_type, endpoint, query) in tasks {
-        let resolved = match media_type {
-            MediaType::Icon => sgdb_icon_assets(sgdb_id).map(best_icon),
-            _ => sgdb_first_asset(endpoint, sgdb_id, &query),
-        };
-        let url = match resolved {
+    for media_type in [MediaType::Coverart, MediaType::Banner, MediaType::Icon] {
+        let endpoint = media_type.sgdb_endpoint();
+        let url = match sgdb_best_asset(&media_type, sgdb_id) {
             Ok(Some(u)) => u,
             Ok(None) => {
                 tracing::debug!("sgdb {} no data for game {}", endpoint, sgdb_id);
@@ -294,7 +302,7 @@ pub fn sgdb_icon_url(name: &str) -> Result<Option<String>> {
     Ok(best_icon(web_safe))
 }
 
-fn sgdb_search(name: &str) -> Result<Option<u64>> {
+pub fn sgdb_search_games(name: &str) -> Result<Vec<SgdbGame>> {
     let mut url = reqwest::Url::parse(SGDB_BASE).unwrap();
     url.path_segments_mut()
         .unwrap()
@@ -303,20 +311,18 @@ fn sgdb_search(name: &str) -> Result<Option<u64>> {
     if !resp.success {
         anyhow::bail!("sgdb search api reported failure for '{}'", name);
     }
-    let Some(games) = resp.data else {
-        return Ok(None);
-    };
-    if games.is_empty() {
-        return Ok(None);
-    }
 
     let needle = name.to_lowercase();
-    let pick = games
-        .iter()
-        .find(|g| g.name.to_lowercase() == needle && g.verified)
-        .or_else(|| games.iter().find(|g| g.name.to_lowercase() == needle))
-        .or_else(|| games.iter().find(|g| g.verified))
-        .unwrap_or(&games[0]);
+    let mut games = resp.data.unwrap_or_default();
+    games.sort_by_key(|g| std::cmp::Reverse((g.name.to_lowercase() == needle, g.verified)));
+    Ok(games)
+}
+
+fn sgdb_search(name: &str) -> Result<Option<u64>> {
+    let games = sgdb_search_games(name)?;
+    let Some(pick) = games.first() else {
+        return Ok(None);
+    };
 
     tracing::debug!(
         "sgdb match for '{}' -> '{}' (id {}, verified {})",
@@ -347,15 +353,19 @@ fn sgdb_assets(endpoint: &str, game_id: u64, query: &[(&str, &str)]) -> Result<V
     Ok(resp.data.unwrap_or_default())
 }
 
-fn sgdb_first_asset(
-    endpoint: &str,
-    game_id: u64,
-    query: &[(&str, &str)],
-) -> Result<Option<String>> {
-    Ok(sgdb_assets(endpoint, game_id, query)?
-        .into_iter()
-        .next()
-        .map(|a| a.url))
+pub fn sgdb_assets_for(media_type: &MediaType, game_id: u64) -> Result<Vec<SgdbAsset>> {
+    match media_type {
+        MediaType::Icon => sgdb_icon_assets(game_id),
+        _ => sgdb_assets(media_type.sgdb_endpoint(), game_id, media_type.sgdb_query()),
+    }
+}
+
+fn sgdb_best_asset(media_type: &MediaType, game_id: u64) -> Result<Option<String>> {
+    let assets = sgdb_assets_for(media_type, game_id)?;
+    Ok(match media_type {
+        MediaType::Icon => best_icon(assets),
+        _ => assets.into_iter().next().map(|a| a.url),
+    })
 }
 
 fn sgdb_icon_assets(game_id: u64) -> Result<Vec<SgdbAsset>> {
@@ -385,6 +395,16 @@ fn download_blocking(url: &str, dest: &PathBuf) -> Result<usize> {
 
     fs::write(dest, &bytes)?;
     Ok(bytes.len())
+}
+
+pub fn download_into(
+    slot: MediaSlot,
+    game_id: &str,
+    media_type: &MediaType,
+    url: &str,
+) -> Result<usize> {
+    fs::create_dir_all(cache_dir()).context("creating media cache dir")?;
+    download_blocking(url, &media_path_in(slot, game_id, media_type))
 }
 
 #[derive(Debug, Default)]

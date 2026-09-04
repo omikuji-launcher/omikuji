@@ -1008,6 +1008,12 @@ property real cardZoom: appSettings.cardZoom
         title: qsTr("Art preview")
     }
 
+    MediaPickerDialog {
+        id: mediaPickerDialog
+        anchors.fill: parent
+        gameModel: root.gameModelRef
+    }
+
     DefaultsApplyDialog {
         id: defaultsApplyDialog
         anchors.fill: parent
@@ -1420,6 +1426,7 @@ property real cardZoom: appSettings.cardZoom
                 }
                 onRefetchMediaRequested: (gid) => refetchMediaConfirm.show(gid)
                 onPreviewImageRequested: (src, caption) => imagePreviewDialog.show(src, caption)
+                onPickMediaRequested: (gid, kind) => mediaPickerDialog.show(gid, kind)
             }
         }
     }

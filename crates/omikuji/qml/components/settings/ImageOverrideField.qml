@@ -37,12 +37,22 @@ M3FileField {
     expandWith: gameModel ? (t) => gameModel.expandGlobalVars(t) : null
 
     signal previewRequested(string source, string caption)
+    signal pickRequested(string kind)
 
     onTextEdited: (t) => root.updateField(root.configKey, t)
 
-    trailingActions: FieldButton {
-        icon: "image"
-        blocked: root.resolved === ""
-        onClicked: root.previewRequested(root.resolved, root.resolved)
-    }
+    trailingActions: [
+        FieldButton {
+            icon: "search"
+            tooltip: qsTr("Search on SGDB")
+            blocked: root.gameId === ""
+            onClicked: root.pickRequested(root.kind)
+        },
+        FieldButton {
+            icon: "image"
+            tooltip: qsTr("Preview image")
+            blocked: root.resolved === ""
+            onClicked: root.previewRequested(root.resolved, root.resolved)
+        }
+    ]
 }

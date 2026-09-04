@@ -18,6 +18,7 @@ Item {
 
     signal refetchMediaRequested()
     signal previewImageRequested(string source, string caption)
+    signal pickMediaRequested(string gameId, string kind)
 
     implicitHeight: content.height
 
@@ -105,6 +106,7 @@ Item {
                     config: root.config
                     updateField: root.updateField
                     onPreviewRequested: (src, caption) => root.previewImageRequested(src, caption)
+                    onPickRequested: (kind) => root.pickMediaRequested(root.gameId, kind)
                 }
             }
 

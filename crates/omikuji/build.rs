@@ -462,6 +462,7 @@ fn main() {
         "qml/components/controls/InstallActions.qml",
         "qml/components/dialogs/IconPickerDialog.qml",
         "qml/components/dialogs/ImagePreviewDialog.qml",
+        "qml/components/dialogs/MediaPickerDialog.qml",
         "qml/components/controls/KeyValueTable.qml",
         "qml/components/controls/LabeledSwitch.qml",
         "qml/components/primitives/LoadingDots.qml",
@@ -499,6 +500,8 @@ fn main() {
         qml_module = qml_module.qml_files(qml_files);
     }
     qml_module = qml_module.qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true));
+    qml_module =
+        qml_module.qml_file(QmlFile::from("qml/components/OverlayStack.qml").singleton(true));
     qml_module =
         qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
 

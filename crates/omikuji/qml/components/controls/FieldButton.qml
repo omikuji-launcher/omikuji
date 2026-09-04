@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
+import "../popups"
 import "../primitives"
 
 FieldSurface {
@@ -9,6 +10,9 @@ FieldSurface {
 
     property string icon: ""
     property bool blocked: false
+    property string tooltip: ""
+
+    readonly property bool hovered: mouse.containsMouse
 
     signal clicked()
 
@@ -44,5 +48,10 @@ FieldSurface {
         hoverEnabled: true
         cursorShape: root.blocked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
         onClicked: if (!root.blocked) root.clicked()
+    }
+
+    Tooltip {
+        text: root.tooltip
+        tipVisible: root.tooltip !== "" && root.hovered
     }
 }

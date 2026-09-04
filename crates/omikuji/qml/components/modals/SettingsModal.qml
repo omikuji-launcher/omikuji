@@ -26,11 +26,15 @@ Item {
     onShownChanged: {
         resizer.markUnsettled()
         if (shown && sizeKey !== "") resizer.loadSize()
+        if (shown) OverlayStack.push(root)
+        else OverlayStack.pop(root)
     }
+
+    Component.onDestruction: OverlayStack.pop(root)
 
     Shortcut {
         sequence: "Escape"
-        enabled: root.shown
+        enabled: root.shown && OverlayStack.top === root
         onActivated: root.closeRequested()
     }
 
