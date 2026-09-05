@@ -20,18 +20,43 @@ Item {
     property real imageOpacity: 1.0
     property string cardStyle: "normal"
 
-    readonly property bool imageFit: cardStyle === "fit"
-    readonly property bool frameless: cardStyle === "frameless"
-    readonly property bool vignette: cardStyle === "vignette"
     readonly property color onArtColor: "#ffffff"
+
+    readonly property var styleDefaults: ({
+        artMargin: 8,
+        artBottomGap: 44,
+        artRadius: Theme.radius.md,
+        artClipBleed: false,
+        fitImage: false,
+        baseHeight: 240,
+        aspectHeight: false,
+        nameOnArt: false,
+        nameMargin: 8,
+        nameBottomMargin: 10
+    })
+
+    readonly property var styleOverrides: ({
+        fit: { baseHeight: 290, fitImage: true },
+        frameless: {
+            artMargin: 0,
+            artBottomGap: 40,
+            artRadius: Theme.radius.lg,
+            artClipBleed: true,
+            aspectHeight: true
+        },
+        vignette: { artBottomGap: 16, nameOnArt: true, nameMargin: 16, nameBottomMargin: 16 }
+    })
+
+    readonly property var spec: Object.assign({}, root.styleDefaults,
+        root.styleOverrides[root.cardStyle] || ({}))
 
     readonly property real imageAspect: bannerImg.implicitWidth > 0 && bannerImg.implicitHeight > 0
         ? bannerImg.implicitWidth / bannerImg.implicitHeight
         : 0
 
-    readonly property real styledHeight: frameless && imageAspect > 0
-        ? Math.round(width / imageAspect) + 40
-        : (imageFit ? 290 : 240) * (width / 180)
+    readonly property real styledHeight: spec.aspectHeight && imageAspect > 0
+        ? Math.round(width / imageAspect) + spec.artBottomGap
+        : spec.baseHeight * (width / 180)
 
     property string leftIconName: ""
     property int leftIconSize: 20
@@ -57,7 +82,7 @@ Item {
     readonly property alias bannerArea: bannerClip
     readonly property alias labelArea: nameRow
 
-    readonly property real overlayBottomInset: root.vignette
+    readonly property real overlayBottomInset: root.spec.nameOnArt
         ? root.height - nameRow.y
         : root.height - (bannerClip.y + bannerClip.height)
 
@@ -117,13 +142,13 @@ Item {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.margins: root.frameless ? 0 : 8
-            height: parent.height - (root.frameless ? 40 : root.vignette ? 16 : 44)
+            anchors.margins: root.spec.artMargin
+            height: parent.height - root.spec.artBottomGap
 
             Rectangle {
                 anchors.fill: parent
                 color: root.placeholderTint
-                radius: Theme.radius.md
+                radius: root.spec.artRadius
                 visible: !bannerImg.visible
             }
 
@@ -139,7 +164,7 @@ Item {
                     id: bannerImg
                     anchors.fill: parent
                     source: root.imageSource
-                    fillMode: root.imageFit ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                    fillMode: root.spec.fitImage ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                     asynchronous: true
                     sourceSize.width: 360
                     sourceSize.height: 480
@@ -156,7 +181,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    visible: root.vignette
+                    visible: root.spec.nameOnArt
                     gradient: Gradient {
                         GradientStop { position: 0.5; color: "transparent" }
                         GradientStop { position: 0.78; color: Qt.rgba(0, 0, 0, 0.42) }
@@ -171,13 +196,13 @@ Item {
 
                         Rectangle {
                             x: (parent.width - width) / 2
-                            y: root.frameless ? 0 : (parent.height - height) / 2
-                            width: root.imageFit && !root.frameless && bannerImg.visible
+                            y: root.spec.artClipBleed ? 0 : (parent.height - height) / 2
+                            width: root.spec.fitImage && !root.spec.artClipBleed && bannerImg.visible
                                 ? bannerImg.paintedWidth : parent.width
-                            height: root.frameless
+                            height: root.spec.artClipBleed
                                 ? parent.height + radius
-                                : root.imageFit && bannerImg.visible ? bannerImg.paintedHeight : parent.height
-                            radius: root.frameless ? Theme.radius.lg : Theme.radius.md
+                                : root.spec.fitImage && bannerImg.visible ? bannerImg.paintedHeight : parent.height
+                            radius: root.spec.artRadius
                         }
                     }
                 }
@@ -202,7 +227,7 @@ Item {
                 height: width
                 radius: Theme.radius.md
                 fillColor: Qt.rgba(0, 0, 0, 0.45)
-                visible: root.vignette && root.leftIconName !== ""
+                visible: root.spec.nameOnArt && root.leftIconName !== ""
 
                 SvgIcon {
                     anchors.centerIn: parent
@@ -216,11 +241,11 @@ Item {
         Item {
             id: nameRow
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: root.vignette ? 16 : 10
+            anchors.bottomMargin: root.spec.nameBottomMargin
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: root.vignette ? 16 : 8
-            anchors.rightMargin: root.vignette ? 16 : 8
+            anchors.leftMargin: root.spec.nameMargin
+            anchors.rightMargin: root.spec.nameMargin
             height: 20
 
             SvgIcon {
@@ -230,7 +255,7 @@ Item {
                 name: root.leftIconName
                 size: root.leftIconSize
                 color: root.leftIconColor
-                visible: root.leftIconName !== "" && !root.vignette
+                visible: root.leftIconName !== "" && !root.spec.nameOnArt
             }
 
             Loader {
@@ -250,11 +275,11 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.leftMargin: root.vignette ? 0 : nameRow.reserve
-                anchors.rightMargin: root.vignette ? nameRow.rightReserve : nameRow.reserve
-                horizontalAlignment: root.vignette ? Text.AlignLeft : Text.AlignHCenter
+                anchors.leftMargin: root.spec.nameOnArt ? 0 : nameRow.reserve
+                anchors.rightMargin: root.spec.nameOnArt ? nameRow.rightReserve : nameRow.reserve
+                horizontalAlignment: root.spec.nameOnArt ? Text.AlignLeft : Text.AlignHCenter
                 text: root.title
-                color: root.vignette ? root.onArtColor : Theme.text
+                color: root.spec.nameOnArt ? root.onArtColor : Theme.text
                 font.pixelSize: Theme.type.label.size
                 font.weight: Font.Medium
                 elide: Text.ElideRight
