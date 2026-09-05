@@ -9,6 +9,7 @@ Item {
     id: root
 
     property Item bannerArea: null
+    property real bottomInset: 0
     property string status: ""
     property real progress: 0
     property bool animate: true
@@ -17,7 +18,6 @@ Item {
     readonly property bool isPaused: status === "Paused"
 
     readonly property real bannerInset: bannerArea ? bannerArea.x : 0
-    readonly property real bannerGap: bannerArea ? root.height - (bannerArea.y + bannerArea.height) : 0
 
     Rectangle {
         anchors.left: parent.left
@@ -25,7 +25,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.leftMargin: root.bannerInset + Theme.space.xs
         anchors.rightMargin: root.bannerInset + Theme.space.xs
-        anchors.bottomMargin: root.bannerGap + Theme.space.xs
+        anchors.bottomMargin: root.bottomInset + Theme.space.xs
         height: content.implicitHeight + Theme.space.sm * 2
         radius: Theme.radius.md
         color: Theme.alpha(Theme.bg, 0.86)

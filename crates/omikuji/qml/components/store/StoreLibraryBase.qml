@@ -132,6 +132,7 @@ Item {
                     readonly property var download: root.activeDownloads[storeCard.modelData.appName]
                     visible: storeCard.isDownloading && download !== undefined
                     bannerArea: storeCard.bannerArea
+                    bottomInset: storeCard.overlayBottomInset
                     status: download ? download.status : ""
                     progress: download ? download.progress : 0
                 }

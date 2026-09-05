@@ -22,6 +22,8 @@ Item {
 
     readonly property bool imageFit: cardStyle === "fit"
     readonly property bool frameless: cardStyle === "frameless"
+    readonly property bool vignette: cardStyle === "vignette"
+    readonly property color onArtColor: "#ffffff"
 
     readonly property real imageAspect: bannerImg.implicitWidth > 0 && bannerImg.implicitHeight > 0
         ? bannerImg.implicitWidth / bannerImg.implicitHeight
@@ -53,6 +55,11 @@ Item {
     property Component actionComponent: null
     property Component overlayComponent: null
     readonly property alias bannerArea: bannerClip
+    readonly property alias labelArea: nameRow
+
+    readonly property real overlayBottomInset: root.vignette
+        ? root.height - nameRow.y
+        : root.height - (bannerClip.y + bannerClip.height)
 
     signal clicked()
     signal doubleClicked()
@@ -111,7 +118,7 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.margins: root.frameless ? 0 : 8
-            height: parent.height - (root.frameless ? 40 : 44)
+            height: parent.height - (root.frameless ? 40 : root.vignette ? 16 : 44)
 
             Rectangle {
                 anchors.fill: parent
@@ -147,6 +154,16 @@ Item {
                     opacity: root.imageOpacity
                 }
 
+                Rectangle {
+                    anchors.fill: parent
+                    visible: root.vignette
+                    gradient: Gradient {
+                        GradientStop { position: 0.5; color: "transparent" }
+                        GradientStop { position: 0.78; color: Qt.rgba(0, 0, 0, 0.42) }
+                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.88) }
+                    }
+                }
+
                 layer.effect: OpacityMask {
                     maskSource: Item {
                         width: imageFrame.width
@@ -176,16 +193,34 @@ Item {
                 font.weight: Font.Bold
                 visible: !bannerImg.visible
             }
+
+            Squircle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.margins: 8
+                width: root.leftIconSize + 10
+                height: width
+                radius: Theme.radius.md
+                fillColor: Qt.rgba(0, 0, 0, 0.45)
+                visible: root.vignette && root.leftIconName !== ""
+
+                SvgIcon {
+                    anchors.centerIn: parent
+                    name: root.leftIconName
+                    size: root.leftIconSize
+                    color: root.onArtColor
+                }
+            }
         }
 
         Item {
             id: nameRow
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 10
+            anchors.bottomMargin: root.vignette ? 16 : 10
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
+            anchors.leftMargin: root.vignette ? 16 : 8
+            anchors.rightMargin: root.vignette ? 16 : 8
             height: 20
 
             SvgIcon {
@@ -195,7 +230,7 @@ Item {
                 name: root.leftIconName
                 size: root.leftIconSize
                 color: root.leftIconColor
-                visible: root.leftIconName !== ""
+                visible: root.leftIconName !== "" && !root.vignette
             }
 
             Loader {
@@ -213,11 +248,13 @@ Item {
             Text {
                 id: nameLabel
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width - nameRow.reserve * 2
-                horizontalAlignment: Text.AlignHCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: root.vignette ? 0 : nameRow.reserve
+                anchors.rightMargin: root.vignette ? nameRow.rightReserve : nameRow.reserve
+                horizontalAlignment: root.vignette ? Text.AlignLeft : Text.AlignHCenter
                 text: root.title
-                color: Theme.text
+                color: root.vignette ? root.onArtColor : Theme.text
                 font.pixelSize: Theme.type.label.size
                 font.weight: Font.Medium
                 elide: Text.ElideRight
