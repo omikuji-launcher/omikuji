@@ -121,7 +121,8 @@ Popup {
                     options: [
                         { label: qsTr("Normal"), value: "normal" },
                         { label: qsTr("Fit"), value: "fit" },
-                        { label: qsTr("Frameless"), value: "frameless" }
+                        { label: qsTr("Frameless"), value: "frameless" },
+                        { label: qsTr("Vignette"), value: "vignette" }
                     ]
                     currentIndex: Math.max(0, options.findIndex(o => o.value === root.cardStyleValue))
                     onSelected: (value) => root.cardStyleSelected(value)
