@@ -13,6 +13,11 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.14.1
+Added:
+- 'Vignette' card style 
+- Play button on card toggle
+
 ## 0.14.0
 Added:
 - Amazon Games support (Nile)

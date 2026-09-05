@@ -22,6 +22,14 @@
     </p>
   </description>
   <releases>
+    <release version="0.14.1" date="2026-09-05">
+      <description>
+        <ul>
+          <li>Vignette card style</li>
+          <li>play button on card toggle</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.0" date="2026-09-04">
       <description>
         <ul>

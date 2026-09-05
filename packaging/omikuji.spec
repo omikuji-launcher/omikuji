@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.14.0
+Version:        0.14.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,10 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sat Sep 05 2026 reakjra <reakjra@proton.me> - 0.14.1-1
+- Vignette card style
+- play button on card toggle
+
 * Fri Sep 04 2026 reakjra <reakjra@proton.me> - 0.14.0-1
 - Amazon Games support (Nile)
 - SGDB picker
