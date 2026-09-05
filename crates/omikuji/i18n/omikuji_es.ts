@@ -59,20 +59,20 @@
     <message numerus="yes">
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="326"/>
         <source>%n version(s) available</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n versión disponible</numerusform>
+            <numerusform>%n versiones disponibles</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="327"/>
         <source>No versions loaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">No hay versiones cargadas</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="361"/>
         <source>Loading…</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargando…</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ArchiveManageDialog.qml" line="362"/>
