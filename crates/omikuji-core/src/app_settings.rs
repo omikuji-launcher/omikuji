@@ -298,6 +298,7 @@ pub struct DisplaySettings {
     pub card_flow: String,
     pub card_sort: String,
     pub card_style: String,
+    pub card_play_button: bool,
     pub highlight_logs: bool,
     pub log_rules: Vec<LogRule>,
 }
@@ -314,6 +315,7 @@ impl Default for DisplaySettings {
             card_flow: "center".into(),
             card_sort: "default".into(),
             card_style: "normal".into(),
+            card_play_button: false,
             highlight_logs: true,
             log_rules: Vec::new(),
         }

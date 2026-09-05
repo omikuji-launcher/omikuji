@@ -245,6 +245,7 @@ fn main() {
         .prop_custom_apply("card_flow", kushi::Kind::QString, "display.card_flow")
         .prop_custom_apply("card_sort", kushi::Kind::QString, "display.card_sort")
         .prop_at("card_style", kushi::Kind::QString, "display.card_style")
+        .prop_at("card_play_button", kushi::Kind::Bool, "display.card_play_button")
         .prop_at("console_background", kushi::Kind::QString, "console_mode.background")
         .prop_custom_apply("follow_system_colors", kushi::Kind::Bool, "theme.follow_system_colors")
         .prop_custom_apply("follow_system_font", kushi::Kind::Bool, "theme.follow_system_font")
@@ -504,6 +505,8 @@ fn main() {
         qml_module.qml_file(QmlFile::from("qml/components/OverlayStack.qml").singleton(true));
     qml_module =
         qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
+    qml_module =
+        qml_module.qml_file(QmlFile::from("qml/components/CardStyles.qml").singleton(true));
 
     let builder = CxxQtBuilder::new_qml_module(qml_module)
         .qrc_resources(&qrc_paths)

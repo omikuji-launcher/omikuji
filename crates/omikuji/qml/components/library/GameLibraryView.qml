@@ -28,6 +28,7 @@ Rectangle {
     property int cardBaseWidth: 180
     property int cardBaseHeight: 240
     property string cardSort: "default"
+    property bool cardPlayButton: false
     property bool doubleClickLaunches: false
 
     readonly property alias wineToolsAnchor: floatingBar.wineToolsAnchor
@@ -122,6 +123,8 @@ Rectangle {
         cardFlow: root.cardFlow
         cardStyle: root.cardStyle
         cardSort: root.cardSort
+        cardPlayButton: root.cardPlayButton
+        actions: root.actions
         dimHidden: root.dimHidden
         searchText: root.searchText
         filterKind: root.filterKind

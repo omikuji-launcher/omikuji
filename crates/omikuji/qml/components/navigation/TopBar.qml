@@ -22,6 +22,8 @@ Item {
     property bool showHiddenValue: false
     property bool showHiddenOption: false
     property string cardStyleValue: "normal"
+    property bool cardPlayButtonValue: false
+    property bool showCardPlayButton: false
     property alias searchText: searchInput.text
 
     signal addClicked()
@@ -31,6 +33,7 @@ Item {
     signal sortSelected(string value)
     signal showHiddenToggled(bool value)
     signal cardStyleSelected(string value)
+    signal cardPlayButtonToggled(bool value)
     signal consoleModeClicked()
 
     height: 54
@@ -187,10 +190,13 @@ Item {
         showHiddenValue: root.showHiddenValue
         showHiddenOption: root.showHiddenOption
         cardStyleValue: root.cardStyleValue
+        cardPlayButtonValue: root.cardPlayButtonValue
+        showCardPlayButton: root.showCardPlayButton
         onZoomMoved: (v) => root.zoomMoved(v)
         onSpacingMoved: (v) => root.spacingMoved(v)
         onSortSelected: (v) => root.sortSelected(v)
         onShowHiddenToggled: (v) => root.showHiddenToggled(v)
         onCardStyleSelected: (v) => root.cardStyleSelected(v)
+        onCardPlayButtonToggled: (v) => root.cardPlayButtonToggled(v)
     }
 }

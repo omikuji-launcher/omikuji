@@ -16,6 +16,10 @@ Item {
     property bool runnerUpdating: root.actions ? root.actions.runnerUpdating : false
     property bool suppressAnim: false
 
+    property int index: root.actions ? root.actions.selectedIndex : -1
+    property string gameId: root.actions ? root.actions.selectedGameId : ""
+    property bool iconOnly: false
+
     signal activityClicked()
 
     readonly property bool hasActivity: root.activity !== null && root.activity !== undefined
@@ -39,7 +43,7 @@ Item {
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        width: 100
+        width: root.iconOnly ? 40 : 100
         height: 40
         opacity: root.playState === slot.forState ? 1 : 0
         visible: opacity > 0.001
@@ -50,7 +54,7 @@ Item {
         }
     }
 
-    width: root.playState === PlayState.Activity ? 150 : 100
+    width: root.iconOnly ? 40 : (root.playState === PlayState.Activity ? 150 : 100)
     height: 40
 
     Behavior on width {
@@ -64,7 +68,8 @@ Item {
             anchors.fill: parent
             variant: "filled"
             enabled: false
-            text: qsTr("Starting")
+            icon: root.iconOnly ? "schedule" : ""
+            text: root.iconOnly ? "" : qsTr("Starting")
         }
     }
 
@@ -75,9 +80,10 @@ Item {
             anchors.fill: parent
             variant: "filled"
             danger: true
-            text: qsTr("Stop")
+            icon: root.iconOnly ? "stop" : ""
+            text: root.iconOnly ? "" : qsTr("Stop")
             onClicked: {
-                if (root.actions) root.actions.stop()
+                if (root.actions) root.actions.stop(root.gameId)
             }
         }
     }
@@ -120,6 +126,7 @@ Item {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
+                    visible: !root.iconOnly
                     text: root.activityLabel()
                     color: Theme.text
                     font.pixelSize: Theme.type.micro.size
@@ -143,9 +150,10 @@ Item {
             anchors.fill: parent
             variant: "filled"
             enabled: !root.runnerUpdating
-            text: qsTr("Play")
+            icon: root.iconOnly ? "play_arrow" : ""
+            text: root.iconOnly ? "" : qsTr("Play")
             onClicked: {
-                if (root.actions) root.actions.play(root.actions.selectedIndex)
+                if (root.actions) root.actions.play(root.index)
             }
         }
     }

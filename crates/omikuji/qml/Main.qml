@@ -680,6 +680,8 @@ property real cardZoom: appSettings.cardZoom
         showHiddenValue: appSettings.showHidden
         showHiddenOption: root.currentView === "library"
         cardStyleValue: appSettings.cardStyle
+        cardPlayButtonValue: appSettings.cardPlayButton
+        showCardPlayButton: root.currentView === "library"
 
         onAddClicked: root.activeModal = "addGame"
         onInstallScriptClicked: scriptBrowserDialog.show()
@@ -689,6 +691,7 @@ property real cardZoom: appSettings.cardZoom
         onSortSelected: (v) => appSettings.applyCardSort(v)
         onShowHiddenToggled: (v) => appSettings.applyShowHidden(v)
         onCardStyleSelected: (v) => appSettings.applyCardStyle(v)
+        onCardPlayButtonToggled: (v) => appSettings.applyCardPlayButton(v)
     }
 
     Item {
@@ -715,6 +718,7 @@ property real cardZoom: appSettings.cardZoom
             cardFlow: appSettings.cardFlow
             cardStyle: root.cardStyle
             cardSort: appSettings.cardSort
+            cardPlayButton: appSettings.cardPlayButton
             doubleClickLaunches: appSettings.doubleClickLaunches
             onSelectionChanged: topBar.defocusSearch()
             onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)

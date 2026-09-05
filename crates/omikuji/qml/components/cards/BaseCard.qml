@@ -80,6 +80,7 @@ Item {
     property Component actionComponent: null
     property Component overlayComponent: null
     readonly property alias bannerArea: bannerClip
+    readonly property alias hovered: cardHoverHandler.hovered
     readonly property alias labelArea: nameRow
 
     readonly property real overlayBottomInset: root.spec.nameOnArt
@@ -94,10 +95,19 @@ Item {
     signal reorderEnded()
 
     readonly property bool nameHovered: {
-        if (!cardHover.containsMouse) return false
-        let p = nameLabel.mapFromItem(cardHover, cardHover.mouseX, cardHover.mouseY)
+        if (!cardHoverHandler.hovered) return false
+        let pos = cardHoverHandler.point.position
+        let p = nameLabel.mapFromItem(root, pos.x, pos.y)
         return p.x >= 0 && p.x <= nameLabel.width
             && p.y >= 0 && p.y <= nameLabel.height
+    }
+
+    HoverHandler {
+        id: cardHoverHandler
+        enabled: root.cardVisible
+        cursorShape: root.reordering ? Qt.ClosedHandCursor
+            : root.clickable ? Qt.PointingHandCursor
+            : Qt.ArrowCursor
     }
 
     implicitWidth: 180
@@ -133,7 +143,7 @@ Item {
             : Theme.cardBg
         scale: root.reordering ? 1.0
             : cardHover.containsPress ? 0.96
-            : (cardHover.containsMouse ? 1.02 : 1.0)
+            : (root.hovered ? 1.02 : 1.0)
 
         Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
@@ -292,20 +302,13 @@ Item {
             }
         }
 
-        Loader {
-            id: overlayLoader
-            anchors.fill: parent
-            sourceComponent: root.overlayComponent
-            active: root.overlayComponent !== null
-        }
-
         Rectangle {
             anchors.fill: parent
             radius: Theme.radius.lg
             color: "transparent"
             border.width: root.selected ? root.selectedBorderWidth : 1
             border.color: root.selected ? root.selectedBorderColor
-                : cardHover.containsMouse ? Theme.cardBorderHover : Theme.cardBorder
+                : root.hovered ? Theme.cardBorderHover : Theme.cardBorder
 
             Behavior on border.color { ColorAnimation { duration: 150 } }
             Behavior on border.width { NumberAnimation { duration: 100 } }
@@ -315,12 +318,7 @@ Item {
     MouseArea {
         id: cardHover
         anchors.fill: parent
-        hoverEnabled: root.cardVisible
         enabled: root.cardVisible
-        cursorShape: root.reordering ? Qt.ClosedHandCursor
-            : root.cardVisible && root.clickable
-            ? Qt.PointingHandCursor
-            : Qt.ArrowCursor
         acceptedButtons: root.clickable
             ? (root.contextEnabled ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton)
             : Qt.NoButton
@@ -359,6 +357,15 @@ Item {
 
         onReleased: root._finishReorder()
         onCanceled: root._finishReorder()
+    }
+
+    Loader {
+        id: overlayLoader
+        anchors.fill: parent
+        scale: frame.scale
+        transformOrigin: Item.Center
+        sourceComponent: root.overlayComponent
+        active: root.overlayComponent !== null
     }
 
     function _finishReorder() {

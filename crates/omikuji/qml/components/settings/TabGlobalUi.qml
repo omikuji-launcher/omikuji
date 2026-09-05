@@ -219,19 +219,26 @@ Item {
 
             SettingsRow {
                 label: qsTr("Card style")
-                description: qsTr("Normal crops to fill, Fit shows the whole image, Frameless makes the image the card")
+                description: qsTr("Normal crops to fill, Fit shows the whole image, Frameless makes the image the card, Vignette puts the name on the art")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
 
                 M3Dropdown {
                     width: 200
-                    options: [
-                        { label: qsTr("Normal"), value: "normal" },
-                        { label: qsTr("Fit"), value: "fit" },
-                        { label: qsTr("Frameless"), value: "frameless" }
-                    ]
+                    options: CardStyles.options()
                     currentIndex: Math.max(0, options.findIndex(o => o.value === (appSettings ? appSettings.cardStyle : "normal")))
                     onSelected: (value) => appSettings.applyCardStyle(value)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Play button on cards")
+                description: qsTr("Show a play button on a library card while hovering it")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.cardPlayButton : false
+                    onToggled: (val) => appSettings.applyCardPlayButton(val)
                 }
             }
 

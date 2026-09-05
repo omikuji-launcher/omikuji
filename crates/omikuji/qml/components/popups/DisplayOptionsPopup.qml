@@ -22,12 +22,15 @@ Popup {
     property bool showHiddenValue: false
     property bool showHiddenOption: false
     property string cardStyleValue: "normal"
+    property bool cardPlayButtonValue: false
+    property bool showCardPlayButton: false
 
     signal zoomMoved(real value)
     signal spacingMoved(int value)
     signal sortSelected(string value)
     signal showHiddenToggled(bool value)
     signal cardStyleSelected(string value)
+    signal cardPlayButtonToggled(bool value)
 
     padding: 16
     margins: 0
@@ -118,12 +121,7 @@ Popup {
 
                 M3Dropdown {
                     width: parent.width
-                    options: [
-                        { label: qsTr("Normal"), value: "normal" },
-                        { label: qsTr("Fit"), value: "fit" },
-                        { label: qsTr("Frameless"), value: "frameless" },
-                        { label: qsTr("Vignette"), value: "vignette" }
-                    ]
+                    options: CardStyles.options()
                     currentIndex: Math.max(0, options.findIndex(o => o.value === root.cardStyleValue))
                     onSelected: (value) => root.cardStyleSelected(value)
                 }
@@ -135,6 +133,14 @@ Popup {
                 label: qsTr("Show hidden games")
                 checked: root.showHiddenValue
                 onToggled: (val) => root.showHiddenToggled(val)
+            }
+
+            LabeledSwitch {
+                width: parent.width
+                visible: root.showCardPlayButton
+                label: qsTr("Play button on cards")
+                checked: root.cardPlayButtonValue
+                onToggled: (val) => root.cardPlayButtonToggled(val)
             }
         }
     }

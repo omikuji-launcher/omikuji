@@ -129,9 +129,10 @@ QtObject {
         return true
     }
 
-    function stop() {
-        if (root.selectedGameId.length === 0) return false
-        return root.gameModel.stop_game(root.selectedGameId)
+    function stop(gameId = "") {
+        let id = gameId.length > 0 ? gameId : root.selectedGameId
+        if (id.length === 0) return false
+        return root.gameModel.stop_game(id)
     }
 
     onSelectedIndexChanged: {

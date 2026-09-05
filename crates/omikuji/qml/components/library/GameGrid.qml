@@ -23,6 +23,8 @@ Item {
     property bool dimHidden: false
     property var gameModel: null
     property var view: null
+    property var actions: null
+    property bool cardPlayButton: false
 
     readonly property bool reorderActive: cardSort === "custom" && searchText === "" && filterKind === "all"
     readonly property var reorderKeys: ["omikuji/card"]
@@ -58,6 +60,7 @@ Item {
 
             required property int index
             required property string name
+            required property string gameId
             required property string coverart
             required property string banner
             required property string color
@@ -71,6 +74,9 @@ Item {
 
             elevation: root.cardElevation && dragProxy.dragCard !== cardDelegate
             cardStyle: root.cardStyle
+            actions: root.actions
+            gameModel: root.gameModel
+            showPlayButton: root.cardPlayButton
             selected: index === root.selectedIndex
             dimmed: root.dimHidden && hidden
             cardVisible: !root.view || root.view.passes(index, name, hidden, favourite)
