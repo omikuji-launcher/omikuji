@@ -1,8 +1,6 @@
 use anyhow::{Result, anyhow, bail};
 use futures_util::StreamExt;
-use md5::{Digest, Md5};
 use std::collections::{HashMap, HashSet};
-use std::io::Read;
 use std::path::Path;
 
 use super::api::{PatchConfig, PatchIndexFile, ResourceFile, ResourceInfo};
@@ -10,9 +8,27 @@ use super::krpdiff::Krpdiff;
 use super::source::sync_file;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
-use crate::gacha::file_sync::{SyncProgress, download_one, sanitize_rel};
+use crate::gacha::file_sync::{
+    Skip, SyncProgress, download_one, expected_md5, file_md5, is_stale, sanitize_rel,
+};
 
+// interrupt keeps staging so a resume reuses the pulled diffs
 pub(super) async fn run_patch_update(
+    entry: &DownloadEntry,
+    info: &ResourceInfo,
+    patch: &PatchConfig,
+    pidx: &PatchIndexFile,
+) -> Result<bool> {
+    let result = patch_into_staging(entry, info, patch, pidx).await;
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(entry.install_path.join(STAGING_DIR));
+    }
+    result
+}
+
+const STAGING_DIR: &str = ".omikuji-patch";
+
+async fn patch_into_staging(
     entry: &DownloadEntry,
     info: &ResourceInfo,
     patch: &PatchConfig,
@@ -33,7 +49,7 @@ pub(super) async fn run_patch_update(
     }
 
     let install_root = entry.install_path.clone();
-    let staging = install_root.join(".omikuji-patch");
+    let staging = install_root.join(STAGING_DIR);
     let dl_root = staging.join("dl");
     let out_root = staging.join("out");
     std::fs::create_dir_all(&dl_root)?;
@@ -62,7 +78,14 @@ pub(super) async fn run_patch_update(
             if check_control(&id) != ControlSignal::None {
                 return Ok::<_, anyhow::Error>(());
             }
-            download_one(&id, &sync_file(&file, &base), &dl_root, &progress).await
+            download_one(
+                &id,
+                &sync_file(&file, &base),
+                &dl_root,
+                &progress,
+                Skip::SameSize,
+            )
+            .await
         }
     }))
     .buffer_unordered(GachaLimits::load().connections);
@@ -121,20 +144,32 @@ pub(super) async fn run_patch_update(
         flush_staged(&mut staged, &pending_src, &out_root, &install_root);
     }
 
-    let mut fallback: Vec<ResourceFile> = Vec::new();
     let mut seen: HashSet<&str> = HashSet::new();
-    for f in pidx.group_infos.iter().flat_map(|g| g.dst_files.iter()) {
-        if !seen.insert(f.dest.as_str()) {
-            continue;
-        }
-        let rel = sanitize_rel(&f.dest);
-        let in_out = matches!(std::fs::metadata(out_root.join(&rel)), Ok(m) if m.len() == f.size);
-        let in_place =
-            matches!(std::fs::metadata(install_root.join(&rel)), Ok(m) if m.len() == f.size);
-        if !in_out && !in_place {
-            fallback.push(f.clone());
-        }
-    }
+    let candidates: Vec<ResourceFile> = pidx
+        .group_infos
+        .iter()
+        .flat_map(|g| g.dst_files.iter())
+        .filter(|f| seen.insert(f.dest.as_str()))
+        .cloned()
+        .collect();
+
+    let fallback = {
+        let out_root = out_root.clone();
+        let install_root = install_root.clone();
+        tokio::task::spawn_blocking(move || {
+            candidates
+                .into_iter()
+                .filter(|f| {
+                    let rel = sanitize_rel(&f.dest);
+                    let want = expected_md5(&f.md5);
+                    // apply_group already hashed out_root
+                    is_stale(&out_root.join(&rel), f.size, None)
+                        && is_stale(&install_root.join(&rel), f.size, want.as_deref())
+                })
+                .collect::<Vec<_>>()
+        })
+        .await?
+    };
     if !fallback.is_empty() {
         tracing::warn!("kuro patch: {} files need a full download", fallback.len());
         set_status(&entry.id, DownloadStatus::Downloading);
@@ -147,6 +182,7 @@ pub(super) async fn run_patch_update(
                 &sync_file(f, &info.base_url),
                 &out_root,
                 &progress,
+                Skip::SameSize,
             )
             .await?;
         }
@@ -198,25 +234,13 @@ fn apply_group(
                 size
             );
         }
-        if !f.md5.is_empty() && file_md5(&path)? != f.md5.to_lowercase() {
+        if let Some(want) = expected_md5(&f.md5)
+            && file_md5(&path)? != want
+        {
             bail!("patched output {} md5 mismatch", f.dest);
         }
     }
     Ok(())
-}
-
-fn file_md5(path: &Path) -> Result<String> {
-    let mut file = std::fs::File::open(path)?;
-    let mut hasher = Md5::new();
-    let mut buf = vec![0u8; 1024 * 1024];
-    loop {
-        let n = file.read(&mut buf)?;
-        if n == 0 {
-            break;
-        }
-        hasher.update(&buf[..n]);
-    }
-    Ok(format!("{:x}", hasher.finalize()))
 }
 
 fn move_tree(from: &Path, to: &Path) -> Result<()> {

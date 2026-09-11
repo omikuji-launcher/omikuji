@@ -2,19 +2,27 @@ use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 
 use super::api;
-use crate::downloads::{DownloadEntry, DownloadKind, DownloadSource};
-use crate::gacha::file_sync::{self, SyncFile, SyncProgress};
+use crate::downloads::{DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, set_status};
+use crate::gacha::file_sync::{self, Skip, SyncFile, SyncProgress};
 
 pub struct KuroSource;
 
 #[async_trait]
 impl DownloadSource for KuroSource {
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
-        run_install_or_update(entry).await
+        run_sync(entry).await
     }
 
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
-        run_install_or_update(entry).await
+        run_sync(entry).await
+    }
+
+    fn supports_repair(&self) -> bool {
+        true
+    }
+
+    async fn repair(&self, entry: &DownloadEntry) -> Result<()> {
+        run_sync(entry).await
     }
 }
 
@@ -25,13 +33,14 @@ pub(super) fn sync_file(file: &api::ResourceFile, base_url: &str) -> SyncFile {
         rel_path: file.dest.clone(),
         size: file.size,
         url: format!("{}{}", base_url, clean.replace(' ', "%20")),
+        md5: file_sync::expected_md5(&file.md5),
     }
 }
 
-async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
+async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     if !matches!(
         entry.kind,
-        DownloadKind::Install | DownloadKind::Update { .. }
+        DownloadKind::Install | DownloadKind::Update { .. } | DownloadKind::Repair
     ) {
         return Err(anyhow!("KuroSource: unexpected DownloadKind"));
     }
@@ -76,15 +85,30 @@ async fn run_install_or_update(entry: &DownloadEntry) -> Result<()> {
     let install_root = entry.install_path.clone();
     std::fs::create_dir_all(&install_root)?;
 
-    let total: u64 = index.resource.iter().map(|r| r.size).sum();
-    let files: Vec<SyncFile> = index
+    let mut files: Vec<SyncFile> = index
         .resource
         .iter()
         .map(|f| sync_file(f, &info.base_url))
         .collect();
 
+    let verified = !matches!(entry.kind, DownloadKind::Install);
+    if verified {
+        set_status(&entry.id, DownloadStatus::Verifying);
+        let Some(stale) = file_sync::select_stale(&entry.id, files, &install_root).await? else {
+            return Ok(());
+        };
+        files = stale;
+    }
+
+    set_status(&entry.id, DownloadStatus::Downloading);
+    let total: u64 = files.iter().map(|f| f.size).sum();
     let progress = SyncProgress::new(total);
-    if !file_sync::sync_all(&entry.id, files, &install_root, progress).await? {
+    let skip = if verified {
+        Skip::Never
+    } else {
+        Skip::SameSize
+    };
+    if !file_sync::sync_all(&entry.id, files, &install_root, progress, skip).await? {
         return Ok(());
     }
 

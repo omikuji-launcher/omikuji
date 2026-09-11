@@ -30,6 +30,7 @@ Item {
         let kindWord = root.activity.kind === "update" ? qsTr("Updating") : qsTr("Installing")
         if (s === "Paused") return qsTr("Paused")
         if (s === "Queued") return qsTr("%1 · Queued").arg(kindWord)
+        if (s === "Verifying") return qsTr("Verifying · %1%").arg(Math.round(root.activity.progress || 0))
         if (s === "Extracting") return qsTr("Extracting")
         if (s === "Patching") return qsTr("Patching")
         let pct = Math.round(root.activity.progress || 0)

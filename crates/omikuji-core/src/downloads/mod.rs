@@ -20,6 +20,7 @@ pub use source::DownloadSource;
 pub enum DownloadStatus {
     Queued,
     Starting,
+    Verifying,
     Downloading,
     Extracting,
     Patching,
@@ -33,7 +34,11 @@ impl DownloadStatus {
     pub fn is_running(&self) -> bool {
         matches!(
             self,
-            Self::Starting | Self::Downloading | Self::Extracting | Self::Patching
+            Self::Starting
+                | Self::Verifying
+                | Self::Downloading
+                | Self::Extracting
+                | Self::Patching
         )
     }
 
@@ -42,6 +47,7 @@ impl DownloadStatus {
             self,
             Self::Queued
                 | Self::Starting
+                | Self::Verifying
                 | Self::Downloading
                 | Self::Extracting
                 | Self::Patching
@@ -55,6 +61,7 @@ impl DownloadStatus {
         match self {
             Self::Queued => "Queued",
             Self::Starting => "Starting",
+            Self::Verifying => "Verifying",
             Self::Downloading => "Downloading",
             Self::Extracting => "Extracting",
             Self::Patching => "Patching",
@@ -659,7 +666,7 @@ fn sampler_loop() {
             last_id = Some(id);
         }
         let net = match status {
-            DownloadStatus::Extracting | DownloadStatus::Patching => 0,
+            DownloadStatus::Verifying | DownloadStatus::Extracting | DownloadStatus::Patching => 0,
             _ => speed,
         };
         io_stats::tick(net);
@@ -849,6 +856,7 @@ pub fn set_status(id: &str, status: DownloadStatus) {
 
     let prefix = match status {
         DownloadStatus::Downloading => "Downloading",
+        DownloadStatus::Verifying => "Verifying",
         DownloadStatus::Extracting => "Extracting",
         DownloadStatus::Patching => "Patching",
         DownloadStatus::Starting => "Starting",

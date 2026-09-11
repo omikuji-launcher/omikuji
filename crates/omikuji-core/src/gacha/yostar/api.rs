@@ -37,6 +37,8 @@ impl FileIndex {
                 rel_path: f.path.clone(),
                 size: f.size,
                 url: format!("{}{}", self.base_url, encode_path(&f.path)),
+                // crc64
+                md5: None,
             })
             .collect()
     }

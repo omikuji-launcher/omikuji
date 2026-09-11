@@ -53,7 +53,15 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     std::fs::create_dir_all(&install_root)?;
 
     let progress = SyncProgress::new(index.total_size());
-    if !file_sync::sync_all(&entry.id, index.sync_files(), &install_root, progress).await? {
+    if !file_sync::sync_all(
+        &entry.id,
+        index.sync_files(),
+        &install_root,
+        progress,
+        file_sync::Skip::SameSize,
+    )
+    .await?
+    {
         return Ok(());
     }
 
