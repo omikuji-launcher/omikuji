@@ -1270,6 +1270,7 @@ property real cardZoom: appSettings.cardZoom
         anchors.fill: parent
         gameModel: root.gameModelRef
         ofudaBridge: root.ofudaBridgeRef
+        defaults: defaultsBridge
     }
 
     ScriptBrowserDialog {

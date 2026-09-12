@@ -15,6 +15,7 @@ DialogCard {
     readonly property bool busy: ofudaBridge ? ofudaBridge.creating : false
 
     property string nameValue: ""
+    property var defaults: null
     property string runnerValue: ""
     property string setValue: "base"
     property string outputText: ""
@@ -65,6 +66,9 @@ DialogCard {
                 width: parent.width
                 options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
                 currentIndex: {
+                    let def = root.defaults ? (root.defaults.getConfig()["wine.version"] || "") : ""
+                    let i = RG.preferredIndex(options, def, ["GE-Proton", "Proton-GE", "wine-ge"])
+                    if (i >= 0) return i
                     let f = RG.firstNonHeader(options)
                     return f >= 0 ? f : 0
                 }
