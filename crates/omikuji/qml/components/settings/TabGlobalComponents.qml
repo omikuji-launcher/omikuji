@@ -159,11 +159,11 @@ Item {
                         sourceName: modelData.name
                         sourceKind: modelData.kind
                         installedCount: root.installedCounts["dll_packs/" + modelData.name] || 0
-                        showAutoInject: true
+                        showDefaultVersion: true
                         installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
                         activeVersion: root.activeVersions[modelData.name] || ""
                         onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
-                        onAutoInjectChanged: (tag) => {
+                        onDefaultVersionSelected: (tag) => {
                             root.archiveManager.setDllPackActiveVersion(sourceName, tag)
                             root.refreshInstalledCounts()
                         }

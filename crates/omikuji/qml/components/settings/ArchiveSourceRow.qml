@@ -12,14 +12,14 @@ Item {
     property string sourceKind: ""
     property int    installedCount: 0
 
-    property bool   showAutoInject: false
+    property bool   showDefaultVersion: false
     property var    installedVersions: []
     property string activeVersion: ""
 
     signal manageClicked()
-    signal autoInjectChanged(string tag)
+    signal defaultVersionSelected(string tag)
 
-    height: showAutoInject ? 100 : 56
+    height: showDefaultVersion ? 100 : 56
 
     Squircle {
         anchors.fill: parent
@@ -96,7 +96,7 @@ Item {
     }
 
     Rectangle {
-        visible: root.showAutoInject
+        visible: root.showDefaultVersion
         anchors.left: parent.left
         anchors.leftMargin: 14
         anchors.right: parent.right
@@ -107,19 +107,19 @@ Item {
     }
 
     Item {
-        id: autoInjectRow
-        visible: root.showAutoInject
+        id: defaultVersionRow
+        visible: root.showDefaultVersion
         anchors.top: topRow.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
 
         Text {
-            id: autoInjectLabel
+            id: defaultVersionLabel
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Auto install on prefix")
+            text: qsTr("Default version")
             color: Theme.text
             font.pixelSize: Theme.type.label.size
         }
@@ -143,7 +143,7 @@ Item {
                 return idx >= 0 ? idx : 0
             }
             onSelected: (value) => {
-                if (value !== root.activeVersion) root.autoInjectChanged(value)
+                if (value !== root.activeVersion) root.defaultVersionSelected(value)
             }
 
             TextMetrics {
