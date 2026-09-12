@@ -22,6 +22,17 @@
     </p>
   </description>
   <releases>
+    <release version="0.14.2" date="2026-09-12">
+      <description>
+        <ul>
+          <li>repair button for kuro's games</li>
+          <li>base set for prefix creation (ofuda)</li>
+          <li>mono and logs font dropdown in settings</li>
+          <li>minor ui tweaks</li>
+          <li>filter out dlcs in gog's store view</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.1" date="2026-09-05">
       <description>
         <ul>

@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.14.1
+Version:        0.14.2
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,13 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sat Sep 12 2026 reakjra <reakjra@proton.me> - 0.14.2-1
+- repair button for kuro's games
+- base set for prefix creation (ofuda)
+- mono and logs font dropdown in settings
+- minor ui tweaks
+- filter out dlcs in gog's store view
+
 * Sat Sep 05 2026 reakjra <reakjra@proton.me> - 0.14.1-1
 - Vignette card style
 - play button on card toggle

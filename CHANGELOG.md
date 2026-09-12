@@ -13,6 +13,18 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.14.2
+Added:
+- Repair button for Kuro's games
+- Base set for prefix creation (ofuda)
+- Mono and logs font dropdown in settings
+
+Changed:
+- Loading dots (now a little spirit)
+- Downloads tab dot (now a little hitodama)
+- Layers label to 'Default version' rather than 'auto install on prefix'
+- Filter out DLCs in GOG's store view 
+
 ## 0.14.1
 Added:
 - 'Vignette' card style 
