@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import "../cards"
+import "../primitives"
 
 
 Item {
@@ -29,12 +30,20 @@ Item {
     }
 
     // z:10 so it sits above the CardGrid's empty Flow during load
+    LoadingSpirit {
+        anchors.centerIn: parent
+        visible: root.loading
+        running: visible
+        text: qsTr("Loading Steam games")
+        z: 10
+    }
+
     Text {
         anchors.centerIn: parent
-        text: root.loading ? qsTr("Loading Steam games...") : qsTr("No Steam games found")
+        text: qsTr("No Steam games found")
         color: Theme.textFaint
         font.pixelSize: Theme.type.label.size
-        visible: root.loading || root.steamGames.length === 0
+        visible: !root.loading && root.steamGames.length === 0
         z: 10
     }
 

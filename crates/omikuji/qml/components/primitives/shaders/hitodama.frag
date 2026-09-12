@@ -4,6 +4,7 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float qt_Opacity;
     float time;
+    float phase;
     vec2 resolution;
     vec4 accentColor;
     vec4 coreColor;
@@ -21,7 +22,7 @@ void main() {
     float aspect = ubuf.resolution.x / max(ubuf.resolution.y, 1.0);
     vec2 p = vec2((qt_TexCoord0.x - 0.5) * aspect, 1.0 - qt_TexCoord0.y);
 
-    float t = ubuf.time * 1.75;
+    float t = (ubuf.time + ubuf.phase) * 1.75;
 
     float h = smoothstep(0.06, 0.78, p.y);
     vec2 q = p;

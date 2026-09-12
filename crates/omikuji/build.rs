@@ -206,7 +206,6 @@ fn main() {
     println!("cargo:rustc-env=OMIKUJI_QT_VERSION={}", qt_version());
 
     let shader_paths = compile_shaders();
-    println!("cargo:rerun-if-changed=qml/components/consolemode/shaders");
 
     let translation_paths = compile_translations();
     println!("cargo:rerun-if-changed=i18n");
@@ -492,7 +491,7 @@ fn main() {
         "qml/components/dialogs/MediaPickerDialog.qml",
         "qml/components/controls/KeyValueTable.qml",
         "qml/components/controls/LabeledSwitch.qml",
-        "qml/components/primitives/LoadingDots.qml",
+        "qml/components/primitives/LoadingSpirit.qml",
         "qml/components/controls/M3Button.qml",
         "qml/components/controls/M3Checkbox.qml",
         "qml/components/store/DlcPicker.qml",

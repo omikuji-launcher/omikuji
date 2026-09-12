@@ -146,8 +146,9 @@ Item {
         visible: root.isLoggedIn && root.isRefreshing && cardGrid.count === 0
         z: 90
 
-        LoadingDots {
+        LoadingSpirit {
             anchors.centerIn: parent
+            spiritWidth: Math.round(Math.min(loadingOverlay.width * 0.34, 280))
             text: qsTr("Loading library")
             running: loadingOverlay.visible
         }

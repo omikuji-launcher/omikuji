@@ -10,6 +10,7 @@ Item {
                                       1)
     property bool animated: true
     property int supersample: 4
+    property real phase: 0
 
     implicitWidth: 20
     implicitHeight: 26
@@ -26,6 +27,7 @@ Item {
                                    Math.round(fx.height * root.supersample))
 
         property real time: 0
+        property real phase: root.phase
         property size resolution: Qt.size(fx.width, fx.height)
         property color accentColor: root.color
         property color coreColor: root.coreColor

@@ -355,11 +355,17 @@ DialogCard {
 
             ScrollBar.vertical: ThinScrollBar {}
 
+            LoadingSpirit {
+                anchors.centerIn: parent
+                visible: list.count === 0 && root.fetching
+                running: visible
+                text: qsTr("Loading versions")
+            }
+
             Text {
                 anchors.centerIn: parent
-                visible: list.count === 0
-                text: root.fetching ? qsTr("Loading…")
-                    : root.errorText !== "" ? qsTr("Installed runners are still listed under Found runners.")
+                visible: list.count === 0 && !root.fetching
+                text: root.errorText !== "" ? qsTr("Installed runners are still listed under Found runners.")
                     : qsTr("No versions available.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.label.size

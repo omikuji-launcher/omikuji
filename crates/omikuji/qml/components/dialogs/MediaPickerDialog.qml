@@ -225,7 +225,7 @@ DialogCard {
             }
         }
 
-        LoadingDots {
+        LoadingSpirit {
             anchors.centerIn: parent
             visible: root.loading || root.picking
             running: visible
