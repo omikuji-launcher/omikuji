@@ -140,6 +140,7 @@ api_url = "https://api.github.com/repos/doitsujin/dxvk/releases"
 desc = ""
 asset_priority = []
 require_asset_match = false
+prefix_install_version = "dxvk-3.0.2"
 
 [[layers]]
 name = "VKD3D-Proton"
@@ -148,6 +149,7 @@ api_url = "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases"
 desc = ""
 asset_priority = []
 require_asset_match = false
+prefix_install_version = ""
 
 [[layers]]
 name = "DXVK-NVAPI"
@@ -156,12 +158,10 @@ api_url = "https://api.github.com/repos/jp7677/dxvk-nvapi/releases"
 desc = ""
 asset_priority = []
 require_asset_match = false
-
-[active]
-DXVK-NVAPI = "v0.9.2"
-DXVK = "dxvk-3.0.2"
-VKD3D-Proton = "vkd3d-proton-3.0.1"
+prefix_install_version = ""
 ```
+
+`prefix_install_version` is the layer version installed into every prefix omikuji creates, set from `Settings -> Components`. Empty installs nothing.
 
 ## `defaults.toml`
 

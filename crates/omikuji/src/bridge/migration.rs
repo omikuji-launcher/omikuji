@@ -27,6 +27,14 @@ pub mod qobject {
         fn pending(self: &MigrationBridge) -> bool;
 
         #[qinvokable]
+        #[cxx_name = "schemaPending"]
+        fn schema_pending(self: &MigrationBridge) -> i32;
+
+        #[qinvokable]
+        #[cxx_name = "runSchema"]
+        fn run_schema(self: &MigrationBridge);
+
+        #[qinvokable]
         fn run(self: Pin<&mut MigrationBridge>);
 
         #[qinvokable]
@@ -45,6 +53,14 @@ pub struct MigrationRust {
 impl qobject::MigrationBridge {
     fn pending(&self) -> bool {
         omikuji_core::migration::pending()
+    }
+
+    fn schema_pending(&self) -> i32 {
+        omikuji_core::migration::schema_pending() as i32
+    }
+
+    fn run_schema(&self) {
+        omikuji_core::migration::run_schema();
     }
 
     fn run(mut self: Pin<&mut Self>) {

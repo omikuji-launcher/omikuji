@@ -1309,6 +1309,18 @@ property real cardZoom: appSettings.cardZoom
         Component.onCompleted: if (migrationBridge.pending()) start()
     }
 
+    ConfirmDialog {
+        id: schemaMigrationDialog
+        anchors.fill: parent
+        title: qsTr("Translation layers changed")
+        maxWidth: 620
+        message: qsTr("Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.\n\nSo %n Proton game(s) would start running on Wine's own Direct3D instead of what they use today. Turning those toggles back on keeps them exactly as they are.\n\nEach one is set to Built-in, so it uses the DLLs the runner already ships. Nothing is downloaded and no files are replaced.\n\n Would you like Omikuji to migrate these games for you? They'll behave like they did before if you let it migrate.", "", migrationBridge.schemaPending())
+        confirmText: qsTr("Update games")
+        cancelText: qsTr("Not now")
+        onConfirmed: migrationBridge.runSchema()
+        Component.onCompleted: if (!migrationBridge.pending() && migrationBridge.schemaPending() > 0) show(null)
+    }
+
     PrefixDetailDialog {
         id: prefixDetailDialog
         anchors.fill: parent

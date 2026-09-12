@@ -280,8 +280,8 @@ Item {
                     icon: "warning"
                     tone: Theme.error
                     text: root.protonPatchState === "foreign"
-                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles will not apply. See the docs on Proton DLLs.")
-                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles will not apply. See the docs on Proton DLLs.")
+                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles will not apply. See Translation Layers in the Usage Guide.")
+                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles will not apply. See Translation Layers in the Usage Guide.")
                 }
             }
 

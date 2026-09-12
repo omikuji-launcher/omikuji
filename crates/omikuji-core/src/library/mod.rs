@@ -114,7 +114,7 @@ pub struct WineConfig {
     pub vkd3d: bool,
     #[serde(default = "default_builtin")]
     pub vkd3d_version: String,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub dxvk_nvapi: bool,
     #[serde(default = "default_builtin")]
     pub dxvk_nvapi_version: String,
@@ -164,7 +164,7 @@ impl Default for WineConfig {
             dxvk_version: default_builtin(),
             vkd3d: true,
             vkd3d_version: default_builtin(),
-            dxvk_nvapi: false,
+            dxvk_nvapi: true,
             dxvk_nvapi_version: default_builtin(),
             fsr: false,
             battleye: false,

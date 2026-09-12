@@ -205,6 +205,67 @@ fn lift_config(legacy: &LegacyFile, on_line: &mut impl FnMut(String)) -> Result<
     Ok(())
 }
 
+// migrates old games to the new layer toggle behaviour, see runners/proton_monkey_patch.rs
+// TODO: remove the settings.toml schema value in 1/2 releases and clean up the several migration bits, this is rotting
+pub fn schema_pending() -> usize {
+    if settings::get().schema_version >= settings::SCHEMA_VERSION {
+        return 0;
+    }
+    proton_layer_games().len()
+}
+
+pub fn run_schema() {
+    let mut settings = settings::get().clone();
+    if settings.schema_version >= settings::SCHEMA_VERSION {
+        return;
+    }
+    if settings.schema_version < 1 {
+        adopt_proton_layers();
+    }
+    settings.schema_version = settings::SCHEMA_VERSION;
+    if let Err(e) = settings::save(&settings) {
+        tracing::warn!("couldn't stamp schema version: {}", e);
+    }
+}
+
+fn adopt_layer(enabled: &mut bool, version: &mut String) -> bool {
+    if *enabled {
+        return false;
+    }
+    *enabled = true;
+    *version = crate::dll_packs::BUILTIN.to_string();
+    true
+}
+
+fn proton_layer_games() -> Vec<crate::library::Game> {
+    let Ok(library) = crate::library::Library::load() else {
+        return Vec::new();
+    };
+    library
+        .game
+        .into_iter()
+        .filter(|g| {
+            g.uses_wine_prefix()
+                && crate::launch::WineVariant::from_version(&g.wine.version)
+                    == crate::launch::WineVariant::Proton
+                && !(g.wine.dxvk && g.wine.vkd3d && g.wine.dxvk_nvapi)
+        })
+        .collect()
+}
+
+fn adopt_proton_layers() {
+    for mut game in proton_layer_games() {
+        let mut changed = adopt_layer(&mut game.wine.dxvk, &mut game.wine.dxvk_version);
+        changed |= adopt_layer(&mut game.wine.vkd3d, &mut game.wine.vkd3d_version);
+        changed |= adopt_layer(&mut game.wine.dxvk_nvapi, &mut game.wine.dxvk_nvapi_version);
+        if changed
+            && let Err(e) = crate::library::Library::save_game_static(&game)
+        {
+            tracing::warn!("layer migration failed for {}: {}", game.id(), e);
+        }
+    }
+}
+
 fn rewrite_settings(
     runners_custom: Option<PathBuf>,
     layers_custom: Option<PathBuf>,

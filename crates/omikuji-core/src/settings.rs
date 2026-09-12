@@ -11,9 +11,12 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
+pub const SCHEMA_VERSION: u32 = 1;
+
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Settings {
+    pub schema_version: u32,
     pub paths: PathsSettings,
     pub assets: AssetsSettings,
     pub scripts: ScriptsSettings,

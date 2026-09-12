@@ -118,7 +118,6 @@ wine = {
   ntsync = true
   dxvk = true
   vkd3d = true
-  d3d_extras = true
 };
 
 launch.env = {

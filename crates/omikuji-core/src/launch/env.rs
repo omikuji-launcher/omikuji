@@ -16,7 +16,7 @@ const EAC_RUNTIME_APPID: &str = "1826330";
 
 const DXVK_DLLS: &str = "d3d11,d3d10core,d3d9,d3d8,dxgi";
 const VKD3D_DLLS: &str = "d3d12,d3d12core";
-const NVAPI_DLLS: &str = "nvapi,nvapi64";
+const NVAPI_DLLS: &str = "nvapi,nvapi64,nvofapi64";
 
 pub fn build_env(
     game: &Game,

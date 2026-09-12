@@ -214,15 +214,17 @@ Wine/proton config. Only shown for Wine games. (we'll see the settings per heade
 
 \- **DXVK-NVAPI**: exposes NVIDIA features (DLSS, Reflex).
 
-For this there are two things happening. First of all, toggling these layers (except `D3D Extras`) will show dropdowns. These dropdowns allow you to select the version of the layer to use. `Default (Global)` takes the version selected in `Settings => Components`.
+Toggling a layer shows a dropdown under it. Off disables the layer, and the game falls back to Wine's own Direct3D. `Built-in` leaves the dlls alone. Picking a version makes omikuji install that version.
 
-Now, for `Proton`, since it overrides the wine prefix dlls for these layers, we simply cannot just swap the prefix ones only. So, when you enable this toggle, **on launch**, omikuji will swap the dlls in the wine prefix *and* the runner's built-ins. 
+`Built-in` differs per runner. On Wine it is whatever dlls are already in the prefix. On Proton it is the layer bundled in the runner's files, which Proton deploys into the prefix at launch.
 
-For `Wine`, since this doesn't occur, it will simply swap the prefix dlls. 
+Installing a version differs per runner too. On Wine omikuji copies the dlls into the prefix. On Proton it also swaps the dlls inside the runner's files, since Proton redeploys its own bundle over the prefix at launch. The originals are kept and restored when a game on that runner asks for `Built-in` or turns the layer off.
 
-Omikuji tracks both the swapped ones and the old ones. So, let's say you have two games with `Proton`. Resident Evil Revelations and Cyberpunk 2077. If on the first game you enable a layer toggle, on launch, it will swap the dlls as said. Note that nothing will revert these dlls when you close the game. However, if you then run the second game, Cyberpunk 2077, that has these toggles OFF, it *will* revert them to the runner's default. So be careful, because if they're overridden, and you launch a game from another launcher, you will still be using the overridden dlls.
+The restore runs at launch, not when a game closes. Two games sharing a runner each set it as they start, and a game launched from another launcher in between uses whatever the last omikuji launch left there.
 
-Also of course for wine it adds the env vars to work.
+Turning a layer off on Proton needs more than an environment variable, since Proton writes its own dll overrides after every hook it exposes. omikuji writes a `user_settings.py` into the runner folder, a file Proton imports when present, which reads an environment variable set at launch and holds the overrides in place. It does nothing when that variable is absent, so the runner behaves normally for Steam and for anything else launching it.
+
+If a runner already has its own `user_settings.py`, omikuji leaves it alone and these toggles will not apply. The Runner tab says so, and the same warning shows for a Proton build without the hook.
 
 **Misc**
 
