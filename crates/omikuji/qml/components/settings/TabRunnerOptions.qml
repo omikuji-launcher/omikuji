@@ -25,21 +25,48 @@ Item {
     property bool isWine: runnerType === "" || runnerType === "wine"
     property bool isProtonWine: isProtonVersion(config["wine.version"] || "")
 
+    readonly property string protonPatchState: gameModel && isProtonWine ? gameModel.proton_patch_state(config["wine.version"] || "") : "not_proton"
+
+    readonly property var layerKeys: ["dxvk", "vkd3d", "dxvk_nvapi"]
+    readonly property bool hasPinnedLayer: layerKeys.some(k => config["wine." + k] === true && (config["wine." + k + "_version"] || "") !== "builtin")
+    readonly property bool hasDisabledLayer: config["wine.dxvk"] !== true || config["wine.vkd3d"] !== true
+
     function isProtonVersion(version) {
         return gameModel.runner_is_proton(String(version || ""))
     }
 
-    component DllVersionPicker: M3Dropdown {
+    component DllVersionPicker: Column {
+        id: picker
+
         required property string kind
         required property string fieldKey
+        required property string layerName
+        required property bool isProton
         required property var gameModel
         required property var config
         required property var apply
+
         width: parent.width
-        readonly property var _versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
-        options: RG.withUnresolved([{ label: qsTr("Default (global)"), value: "" }].concat(_versions.map(v => ({ label: v, value: v }))), config[fieldKey] || "", { tint: Theme.error, missingLabel: qsTr("missing") })
-        currentIndex: Math.max(0, RG.indexOfValue(options, config[fieldKey] || ""))
-        onSelected: (v) => apply(fieldKey, v)
+        spacing: Theme.space.sm
+
+        readonly property var versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
+        readonly property string value: config[fieldKey] || ""
+
+        M3Dropdown {
+            width: parent.width
+            label: qsTr("%1 version").arg(picker.layerName)
+            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin" }, { label: qsTr("Default (global)"), value: "" }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
+            currentIndex: Math.max(0, RG.indexOfValue(options, picker.value))
+            onSelected: (v) => picker.apply(picker.fieldKey, v)
+        }
+
+        NoteChip {
+            width: parent.width
+            visible: picker.value === "builtin"
+            text: picker.isProton
+                ? qsTr("Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
+                : qsTr("Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
+        }
     }
 
     Column {
@@ -183,6 +210,7 @@ Item {
             SettingsSection {
                 label: qsTr("Translation Layers")
                 icon: "layers"
+                hint: qsTr("A layer that is off is actively disabled, so the game falls back to Wine's own Direct3D even on Proton.")
                 width: parent.width
 
                 GridLayout {
@@ -201,12 +229,6 @@ Item {
                         onToggled: (val) => root.updateField("wine.vkd3d", val)
                     }
 
-                    LabeledSwitch {
-                        label: qsTr("D3D Extras")
-                        checked: root.config["wine.d3d_extras"] === true
-                        onToggled: (val) => root.updateField("wine.d3d_extras", val)
-                    }
-
                     LabeledSwitch {                        label: "DXVK-NVAPI"
                         checked: root.config["wine.dxvk_nvapi"] === true
                         onToggled: (val) => root.updateField("wine.dxvk_nvapi", val)
@@ -216,7 +238,8 @@ Item {
                 DllVersionPicker {
                     kind: "dxvk"
                     fieldKey: "wine.dxvk_version"
-                    label: qsTr("DXVK version")
+                    layerName: "DXVK"
+                    isProton: root.isProtonWine
                     gameModel: root.gameModel
                     config: root.config
                     apply: root.updateField
@@ -226,7 +249,8 @@ Item {
                 DllVersionPicker {
                     kind: "vkd3d"
                     fieldKey: "wine.vkd3d_version"
-                    label: qsTr("VKD3D version")
+                    layerName: "VKD3D"
+                    isProton: root.isProtonWine
                     gameModel: root.gameModel
                     config: root.config
                     apply: root.updateField
@@ -236,7 +260,8 @@ Item {
                 DllVersionPicker {
                     kind: "dxvk_nvapi"
                     fieldKey: "wine.dxvk_nvapi_version"
-                    label: qsTr("DXVK-NVAPI version")
+                    layerName: "DXVK-NVAPI"
+                    isProton: root.isProtonWine
                     gameModel: root.gameModel
                     config: root.config
                     apply: root.updateField
@@ -245,8 +270,18 @@ Item {
 
                 NoteChip {
                     width: parent.width
-                    visible: root.isProtonWine && (root.config["wine.dxvk"] === true || root.config["wine.vkd3d"] === true || root.config["wine.dxvk_nvapi"] === true)
-                    text: qsTr("With Proton, this swaps the runner's built-in .dll files too. When they're off, it restores the runner's defaults on the next launch. Mind that nothing reverts them on its own.")
+                    visible: root.isProtonWine && root.hasPinnedLayer
+                    text: qsTr("With Proton, picking a version swaps the .dll files inside the runner itself. Switching back to Built-in restores them on the next launch.")
+                }
+
+                NoteChip {
+                    width: parent.width
+                    visible: root.protonPatchState === "foreign" || root.protonPatchState === "unsupported"
+                    icon: "warning"
+                    tone: Theme.error
+                    text: root.protonPatchState === "foreign"
+                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles will not apply. See the docs on Proton DLLs.")
+                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles will not apply. See the docs on Proton DLLs.")
                 }
             }
 

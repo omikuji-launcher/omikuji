@@ -8,6 +8,7 @@ use std::process::Command;
 use std::sync::{LazyLock, Mutex};
 
 pub mod dll_override;
+pub mod proton_monkey_patch;
 
 pub fn runners_dir() -> PathBuf {
     crate::runners_dir()
@@ -251,6 +252,7 @@ pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
             desc: String::new(),
             asset_priority: Vec::new(),
             require_asset_match: false,
+            prefix_install_version: String::new(),
         },
         tag,
         registered: false,

@@ -134,8 +134,10 @@ fn sync_from_game(runner_dir: &Path, game: &Game) -> Result<()> {
         }
         let now = current.get(key).cloned().unwrap_or_default();
         match dll_packs::resolved_layer(game, key) {
-            Some(tag) if tag != now => apply(runner_dir, k, &tag)?,
-            None if !now.is_empty() => restore(runner_dir, k)?,
+            dll_packs::Layer::Pack(tag) if tag != now => apply(runner_dir, k, &tag)?,
+            dll_packs::Layer::Off | dll_packs::Layer::Builtin if !now.is_empty() => {
+                restore(runner_dir, k)?
+            }
             _ => {}
         }
     }

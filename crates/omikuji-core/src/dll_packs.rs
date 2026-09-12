@@ -61,6 +61,15 @@ fn resolve_pack(
     Some((source, tag))
 }
 
+pub const BUILTIN: &str = "builtin";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Layer {
+    Off,
+    Builtin,
+    Pack(String),
+}
+
 fn game_layer<'a>(game: &'a Game, kind: &str) -> Option<(bool, &'a str)> {
     match kind {
         "dxvk" => Some((game.wine.dxvk, game.wine.dxvk_version.as_str())),
@@ -70,12 +79,20 @@ fn game_layer<'a>(game: &'a Game, kind: &str) -> Option<(bool, &'a str)> {
     }
 }
 
-pub fn resolved_layer(game: &Game, kind: &str) -> Option<String> {
-    let (enabled, pinned) = game_layer(game, kind)?;
+pub fn resolved_layer(game: &Game, kind: &str) -> Layer {
+    let Some((enabled, pinned)) = game_layer(game, kind) else {
+        return Layer::Off;
+    };
     if !enabled {
-        return None;
+        return Layer::Off;
     }
-    resolve_pack(&components_config::get(), kind, pinned).map(|(_, tag)| tag)
+    if pinned == BUILTIN {
+        return Layer::Builtin;
+    }
+    match resolve_pack(&components_config::get(), kind, pinned) {
+        Some((_, tag)) => Layer::Pack(tag),
+        None => Layer::Builtin,
+    }
 }
 
 pub fn installed_versions_for_kind(kind: &str) -> Vec<String> {
@@ -114,6 +131,51 @@ pub fn pack_arch_dirs(pack_root: &Path) -> (PathBuf, Option<PathBuf>) {
     (x64, x32)
 }
 
+fn install_pack(kind: &str, tag: &str, system32: &Path, syswow64: Option<&PathBuf>) -> Result<()> {
+    let Some(pack_root) = pack_dir(kind, tag) else {
+        tracing::warn!("{} {} resolved but its install dir is gone", kind, tag);
+        return Ok(());
+    };
+    let (x64_src, x32_src) = pack_arch_dirs(&pack_root);
+
+    match syswow64 {
+        Some(syswow64) => {
+            if x64_src.exists() {
+                copy_dll_dir(&x64_src, system32)?;
+            }
+            if let Some(ref x32) = x32_src {
+                copy_dll_dir(x32, syswow64)?;
+            }
+        }
+        None => {
+            if let Some(ref x32) = x32_src {
+                copy_dll_dir(x32, system32)?;
+            }
+        }
+    }
+
+    tracing::info!("injected {} {} -> {}", kind, tag, system32.display());
+    Ok(())
+}
+
+pub fn install_prefix_defaults(prefix: &Path) -> Result<()> {
+    let system32 = prefix.join("drive_c").join("windows").join("system32");
+    if !system32.is_dir() {
+        return Ok(());
+    }
+    let syswow64 = prefix.join("drive_c").join("windows").join("syswow64");
+    let syswow64 = syswow64.is_dir().then_some(syswow64);
+
+    for source in components_config::get().layers {
+        let tag = source.prefix_install_version;
+        if tag.is_empty() || tag == "disabled" {
+            continue;
+        }
+        install_pack(&source.kind, &tag, &system32, syswow64.as_ref())?;
+    }
+    Ok(())
+}
+
 pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     let Some(prefix_str) = env.get("WINEPREFIX") else {
         return Ok(());
@@ -141,28 +203,10 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
 
     if variant != WineVariant::Proton {
         for kind in ["dxvk", "vkd3d", "dxvk_nvapi"] {
-            let Some(tag) = resolved_layer(game, kind) else {
+            let Layer::Pack(tag) = resolved_layer(game, kind) else {
                 continue;
             };
-            let Some(pack_root) = pack_dir(kind, &tag) else {
-                tracing::warn!("{} {} resolved but its install dir is gone", kind, tag);
-                continue;
-            };
-
-            let (x64_src, x32_src) = pack_arch_dirs(&pack_root);
-
-            if is_64bit {
-                if x64_src.exists() {
-                    copy_dll_dir(&x64_src, &system32)?;
-                }
-                if let Some(ref x32) = x32_src {
-                    copy_dll_dir(x32, &syswow64)?;
-                }
-            } else if let Some(ref x32) = x32_src {
-                copy_dll_dir(x32, &system32)?;
-            }
-
-            tracing::info!("injected {} {} -> {}", kind, tag, prefix.display());
+            install_pack(kind, &tag, &system32, is_64bit.then_some(&syswow64))?;
         }
     }
 
@@ -253,7 +297,7 @@ fn ensure_prefix_bootstrapped(
     if !status.success() {
         anyhow::bail!("wineboot -u exited with {}", status);
     }
-    Ok(())
+    install_prefix_defaults(prefix)
 }
 
 // search common nvidia driver install locations for teh wine nvngx bridge dlls. first hit wins.

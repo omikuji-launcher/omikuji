@@ -185,7 +185,8 @@ pub fn create_prefix<F: FnMut(&str)>(
         (!runner.is_empty()).then(|| runner.to_string()),
     );
 
-    crate::wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)
+    crate::wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)?;
+    crate::dll_packs::install_prefix_defaults(&dir)
 }
 
 pub fn prefix_needs_bootstrap(game: &crate::library::Game) -> bool {
@@ -214,7 +215,8 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
         return Ok(());
     }
 
-    crate::wine_tools::run_streamed(game, crate::wine_tools::WineTool::Wineboot, on_line)
+    crate::wine_tools::run_streamed(game, crate::wine_tools::WineTool::Wineboot, on_line)?;
+    crate::dll_packs::install_prefix_defaults(&prefix)
 }
 
 pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {

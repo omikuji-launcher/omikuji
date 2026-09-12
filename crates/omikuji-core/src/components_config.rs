@@ -14,6 +14,8 @@ pub struct ArchiveSource {
     pub asset_priority: Vec<String>,
     #[serde(default)]
     pub require_asset_match: bool,
+    #[serde(default)]
+    pub prefix_install_version: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -42,6 +44,7 @@ fn src(name: &str, kind: &str, api_url: &str) -> ArchiveSource {
         desc: String::new(),
         asset_priority: Vec::new(),
         require_asset_match: false,
+        prefix_install_version: String::new(),
     }
 }
 
@@ -218,6 +221,15 @@ pub fn remove_source(category: &str, name: &str) -> anyhow::Result<()> {
 
 pub fn active_version(source_name: &str) -> String {
     get().active.get(source_name).cloned().unwrap_or_default()
+}
+
+pub fn set_prefix_install_version(source_name: &str, tag: &str) -> anyhow::Result<()> {
+    mutate(|config| {
+        if let Some(source) = config.layers.iter_mut().find(|s| s.name == source_name) {
+            source.prefix_install_version = tag.to_string();
+        }
+        Ok(())
+    })
 }
 
 pub fn set_active_version(source_name: &str, tag: &str) -> anyhow::Result<()> {

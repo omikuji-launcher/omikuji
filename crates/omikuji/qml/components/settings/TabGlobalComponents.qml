@@ -162,9 +162,14 @@ Item {
                         showDefaultVersion: true
                         installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
                         activeVersion: root.activeVersions[modelData.name] || ""
+                        prefixInstallVersion: modelData.prefix_install_version || ""
                         onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
                         onDefaultVersionSelected: (tag) => {
                             root.archiveManager.setDllPackActiveVersion(sourceName, tag)
+                            root.refreshInstalledCounts()
+                        }
+                        onPrefixInstallVersionSelected: (tag) => {
+                            root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
                             root.refreshInstalledCounts()
                         }
                     }

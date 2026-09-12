@@ -209,7 +209,6 @@ Item {
 
             ToggleRow { fieldKey: "wine.dxvk"; toggleLabel: "DXVK" }
             ToggleRow { fieldKey: "wine.vkd3d"; toggleLabel: "VKD3D" }
-            ToggleRow { fieldKey: "wine.d3d_extras"; toggleLabel: qsTr("D3D Extras") }
             ToggleRow { fieldKey: "wine.dxvk_nvapi"; toggleLabel: "DXVK-NVAPI"; toggleDescription: qsTr("Nvidia DLSS support") }
         }
 

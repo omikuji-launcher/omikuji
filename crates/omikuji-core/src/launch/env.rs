@@ -14,6 +14,10 @@ pub enum EnvPurpose {
 const BATTLEYE_RUNTIME_APPID: &str = "1161040";
 const EAC_RUNTIME_APPID: &str = "1826330";
 
+const DXVK_DLLS: &str = "d3d11,d3d10core,d3d9,d3d8,dxgi";
+const VKD3D_DLLS: &str = "d3d12,d3d12core";
+const NVAPI_DLLS: &str = "nvapi,nvapi64";
+
 pub fn build_env(
     game: &Game,
     variant: WineVariant,
@@ -89,19 +93,37 @@ pub fn build_env(
         );
     }
 
-    if game.wine.dxvk {
-        append_dll_override(&mut env, "d3d11,d3d10core,d3d9,d3d8,dxgi=n,b");
-        env.insert("WINE_LARGE_ADDRESS_AWARE".to_string(), "1".to_string());
+    let layers = [
+        (DXVK_DLLS, game.wine.dxvk),
+        (VKD3D_DLLS, game.wine.vkd3d),
+        (NVAPI_DLLS, game.wine.dxvk_nvapi),
+    ];
+    if variant == WineVariant::Proton {
+        let pins: Vec<String> = layers
+            .iter()
+            .filter(|(_, enabled)| !enabled)
+            .map(|(dlls, _)| format!("{dlls}=b"))
+            .collect();
+        if !pins.is_empty() {
+            env.insert(
+                crate::runners::proton_monkey_patch::PIN_VAR.to_string(),
+                pins.join(";"),
+            );
+        }
+    } else {
+        for (dlls, enabled) in layers {
+            let form = if enabled { "n,b" } else { "b" };
+            append_dll_override(&mut env, &format!("{dlls}={form}"));
+        }
     }
 
-    if game.wine.vkd3d {
-        append_dll_override(&mut env, "d3d12,d3d12core=n,b");
+    if game.wine.dxvk {
+        env.insert("WINE_LARGE_ADDRESS_AWARE".to_string(), "1".to_string());
     }
 
     if game.wine.dxvk_nvapi {
         env.insert("DXVK_ENABLE_NVAPI".to_string(), "1".to_string());
         env.insert("DXVK_NVAPIHACK".to_string(), "0".to_string());
-        append_dll_override(&mut env, "nvapi,nvapi64=n,b");
     }
 
     if variant == WineVariant::Proton {

@@ -37,10 +37,6 @@ pub struct WineDefaults {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vkd3d_version: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub d3d_extras: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub d3d_extras_version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub dxvk_nvapi: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dxvk_nvapi_version: Option<String>,
@@ -178,12 +174,6 @@ impl Defaults {
             }
             if let Some(v) = &self.wine.vkd3d_version {
                 game.wine.vkd3d_version = v.clone();
-            }
-            if let Some(v) = self.wine.d3d_extras {
-                game.wine.d3d_extras = v;
-            }
-            if let Some(v) = &self.wine.d3d_extras_version {
-                game.wine.d3d_extras_version = v.clone();
             }
             if let Some(v) = self.wine.dxvk_nvapi {
                 game.wine.dxvk_nvapi = v;
@@ -333,8 +323,6 @@ impl Defaults {
             || self.wine.dxvk_version.is_some()
             || self.wine.vkd3d.is_some()
             || self.wine.vkd3d_version.is_some()
-            || self.wine.d3d_extras.is_some()
-            || self.wine.d3d_extras_version.is_some()
             || self.wine.dxvk_nvapi.is_some()
             || self.wine.dxvk_nvapi_version.is_some()
         {

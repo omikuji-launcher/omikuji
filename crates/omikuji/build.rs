@@ -498,6 +498,7 @@ fn main() {
         "qml/components/primitives/EmptyState.qml",
         "qml/components/settings/TabGog.qml",
         "qml/components/controls/M3Dropdown.qml",
+        "qml/components/controls/InfoHint.qml",
         "qml/components/controls/NoteChip.qml",
         "qml/components/controls/M3FileField.qml",
         "qml/components/controls/M3Slider.qml",

@@ -227,6 +227,14 @@ pub mod qobject {
         );
 
         #[qinvokable]
+        #[cxx_name = "setDllPackPrefixInstallVersion"]
+        fn set_dll_pack_prefix_install_version(
+            self: Pin<&mut ArchiveManagerBridge>,
+            source: QString,
+            tag: QString,
+        );
+
+        #[qinvokable]
         #[cxx_name = "foundRunners"]
         fn found_runners(self: &ArchiveManagerBridge) -> QString;
 
@@ -682,6 +690,13 @@ impl qobject::ArchiveManagerBridge {
         let name = source.to_string();
         let tag_s = tag.to_string();
         if let Err(e) = components_config::set_active_version(&name, &tag_s) {
+            tracing::error!("save failed for {}: {}", name, e);
+        }
+    }
+
+    fn set_dll_pack_prefix_install_version(self: Pin<&mut Self>, source: QString, tag: QString) {
+        let name = source.to_string();
+        if let Err(e) = components_config::set_prefix_install_version(&name, &tag.to_string()) {
             tracing::error!("save failed for {}: {}", name, e);
         }
     }

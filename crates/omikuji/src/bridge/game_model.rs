@@ -320,6 +320,9 @@ pub mod qobject {
         fn runner_is_proton(self: &GameModel, version: &QString) -> bool;
 
         #[qinvokable]
+        fn proton_patch_state(self: &GameModel, version: &QString) -> QString;
+
+        #[qinvokable]
         fn dll_versions_for_kind(self: &GameModel, kind: &QString) -> QString;
 
         #[qinvokable]
@@ -1025,8 +1028,6 @@ game_fields! {
     "wine.dxvk_version" => str, wine.dxvk_version,
     "wine.vkd3d" => bool, wine.vkd3d,
     "wine.vkd3d_version" => str, wine.vkd3d_version,
-    "wine.d3d_extras" => bool, wine.d3d_extras,
-    "wine.d3d_extras_version" => str, wine.d3d_extras_version,
     "wine.dxvk_nvapi" => bool, wine.dxvk_nvapi,
     "wine.dxvk_nvapi_version" => str, wine.dxvk_nvapi_version,
     "wine.fsr" => bool, wine.fsr,
@@ -2054,6 +2055,14 @@ impl qobject::GameModel {
             omikuji_core::launch::WineVariant::from_version(&version.to_string()),
             omikuji_core::launch::WineVariant::Proton
         )
+    }
+
+    fn proton_patch_state(&self, version: &QString) -> QString {
+        use omikuji_core::runners::proton_monkey_patch::{PatchState, status};
+        let state = omikuji_core::runners::runner_dir(&version.to_string())
+            .map(|dir| status(&dir))
+            .unwrap_or(PatchState::NotProton);
+        QString::from(serde_json::to_string(&state).unwrap_or_default().trim_matches('"'))
     }
 
     fn dll_versions_for_kind(&self, kind: &QString) -> QString {

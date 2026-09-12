@@ -301,8 +301,6 @@ defaults_fields! {
     "wine.dxvk_version" => str, wine.dxvk_version, w.dxvk_version,
     "wine.vkd3d" => bool, wine.vkd3d, w.vkd3d,
     "wine.vkd3d_version" => str, wine.vkd3d_version, w.vkd3d_version,
-    "wine.d3d_extras" => bool, wine.d3d_extras, w.d3d_extras,
-    "wine.d3d_extras_version" => str, wine.d3d_extras_version, w.d3d_extras_version,
     "wine.dxvk_nvapi" => bool, wine.dxvk_nvapi, w.dxvk_nvapi,
     "wine.dxvk_nvapi_version" => str, wine.dxvk_nvapi_version, w.dxvk_nvapi_version,
     "wine.fsr" => bool, wine.fsr, w.fsr,

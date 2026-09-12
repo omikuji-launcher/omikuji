@@ -23,11 +23,13 @@ Item {
     property bool   showDefaultVersion: false
     property var    installedVersions: []
     property string activeVersion: ""
+    property string prefixInstallVersion: ""
 
     signal manageClicked()
     signal defaultVersionSelected(string tag)
+    signal prefixInstallVersionSelected(string tag)
 
-    height: showDefaultVersion ? 100 : 56
+    height: showDefaultVersion ? 56 + versionRows.height : 56
 
     Squircle {
         anchors.fill: parent
@@ -105,31 +107,32 @@ Item {
         }
     }
 
-    Rectangle {
-        visible: root.showDefaultVersion
-        anchors.left: parent.left
-        anchors.leftMargin: 14
-        anchors.right: parent.right
-        anchors.rightMargin: 14
-        anchors.top: topRow.bottom
-        height: 1
-        color: Theme.separator
-    }
+    component VersionRow: Item {
+        id: versionRow
 
-    Item {
-        id: defaultVersionRow
-        visible: root.showDefaultVersion
-        anchors.top: topRow.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+        required property string label
+        required property var versions
+        required property string value
+        signal picked(string tag)
+
+        width: parent.width
+        height: 44
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.leftMargin: 14
+            anchors.right: parent.right
+            anchors.rightMargin: 14
+            anchors.top: parent.top
+            height: 1
+            color: Theme.separator
+        }
 
         Text {
-            id: defaultVersionLabel
             anchors.left: parent.left
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Default version")
+            text: versionRow.label
             color: Theme.text
             font.pixelSize: Theme.type.label.size
         }
@@ -138,30 +141,42 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(240, labelMetrics.width + 56)
+            width: Math.min(240, valueMetrics.width + 56)
             fieldHeight: 32
-            options: {
-                let opts = [{ label: qsTr("Disabled"), value: "" }]
-                for (let i = 0; i < root.installedVersions.length; i++) {
-                    let tag = root.installedVersions[i]
-                    opts.push({ label: tag, value: tag })
-                }
-                return opts
-            }
-            currentIndex: {
-                let idx = RG.indexOfValue(options, root.activeVersion)
-                return idx >= 0 ? idx : 0
-            }
-            onSelected: (value) => {
-                if (value !== root.activeVersion) root.defaultVersionSelected(value)
+            options: [{ label: qsTr("Disabled"), value: "" }].concat(
+                versionRow.versions.map(tag => ({ label: tag, value: tag })))
+            currentIndex: Math.max(0, RG.indexOfValue(options, versionRow.value))
+            onSelected: (tag) => {
+                if (tag !== versionRow.value) versionRow.picked(tag)
             }
 
             TextMetrics {
-                id: labelMetrics
+                id: valueMetrics
                 font.pixelSize: Theme.type.body.size
-                text: root.activeVersion === "" ? qsTr("Disabled") : root.activeVersion
+                text: versionRow.value === "" ? qsTr("Disabled") : versionRow.value
             }
         }
     }
 
+    Column {
+        id: versionRows
+        visible: root.showDefaultVersion
+        anchors.top: topRow.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        VersionRow {
+            label: qsTr("Default version")
+            versions: root.installedVersions
+            value: root.activeVersion
+            onPicked: (tag) => root.defaultVersionSelected(tag)
+        }
+
+        VersionRow {
+            label: qsTr("Install into new prefixes")
+            versions: root.installedVersions
+            value: root.prefixInstallVersion
+            onPicked: (tag) => root.prefixInstallVersionSelected(tag)
+        }
+    }
 }

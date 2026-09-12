@@ -7,6 +7,7 @@ Popup {
 
     property string text: ""
     property bool tipVisible: false
+    property int showDelay: 180
 
     readonly property int padH: 9
     readonly property int padTop: 3
@@ -26,7 +27,7 @@ Popup {
 
     Timer {
         id: showTimer
-        interval: 180
+        interval: root.showDelay
         onTriggered: root.visible = true
     }
     Timer {

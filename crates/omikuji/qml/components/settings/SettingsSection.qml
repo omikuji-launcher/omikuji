@@ -1,12 +1,14 @@
 import QtQuick
 import omikuji 1.0
 
+import "../controls"
 
 Item {
     id: root
 
     property string icon: ""
     property string label: ""
+    property string hint: ""
     property Component action: null
     default property alias content: sectionContent.children
 
@@ -30,8 +32,18 @@ Item {
             font.letterSpacing: 0.6
         }
 
-        Rectangle {
+        InfoHint {
+            id: headerHint
+            visible: root.hint !== ""
+            width: visible ? implicitWidth : 0
             anchors.left: headerLabel.right
+            anchors.leftMargin: visible ? 6 : 0
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.hint
+        }
+
+        Rectangle {
+            anchors.left: headerHint.right
             anchors.leftMargin: 12
             anchors.right: actionLoader.active ? actionLoader.left : parent.right
             anchors.rightMargin: actionLoader.active ? 12 : 0

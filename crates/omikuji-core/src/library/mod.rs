@@ -106,21 +106,17 @@ pub struct WineConfig {
     pub fsync: bool,
     #[serde(default)]
     pub ntsync: bool,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub dxvk: bool,
-    #[serde(default)]
+    #[serde(default = "default_builtin")]
     pub dxvk_version: String,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub vkd3d: bool,
-    #[serde(default)]
+    #[serde(default = "default_builtin")]
     pub vkd3d_version: String,
     #[serde(default)]
-    pub d3d_extras: bool,
-    #[serde(default)]
-    pub d3d_extras_version: String,
-    #[serde(default)]
     pub dxvk_nvapi: bool,
-    #[serde(default)]
+    #[serde(default = "default_builtin")]
     pub dxvk_nvapi_version: String,
     #[serde(default)]
     pub fsr: bool,
@@ -148,6 +144,9 @@ fn default_prefix_arch() -> String {
 fn default_true() -> bool {
     true
 }
+fn default_builtin() -> String {
+    crate::dll_packs::BUILTIN.to_string()
+}
 fn default_dpi() -> u32 {
     96
 }
@@ -161,14 +160,12 @@ impl Default for WineConfig {
             esync: true,
             fsync: true,
             ntsync: false,
-            dxvk: false,
-            dxvk_version: String::new(),
-            vkd3d: false,
-            vkd3d_version: String::new(),
-            d3d_extras: false,
-            d3d_extras_version: String::new(),
+            dxvk: true,
+            dxvk_version: default_builtin(),
+            vkd3d: true,
+            vkd3d_version: default_builtin(),
             dxvk_nvapi: false,
-            dxvk_nvapi_version: String::new(),
+            dxvk_nvapi_version: default_builtin(),
             fsr: false,
             battleye: false,
             easyanticheat: false,
@@ -634,12 +631,6 @@ impl Game {
             &mut self.wine.vkd3d_version,
             &w.vkd3d_version,
             &d.wine.vkd3d_version,
-        );
-        seed(&mut self.wine.d3d_extras, &w.d3d_extras, &d.wine.d3d_extras);
-        seed(
-            &mut self.wine.d3d_extras_version,
-            &w.d3d_extras_version,
-            &d.wine.d3d_extras_version,
         );
         seed(&mut self.wine.dxvk_nvapi, &w.dxvk_nvapi, &d.wine.dxvk_nvapi);
         seed(
