@@ -206,15 +206,22 @@ impl GogStore {
                         continue;
                     }
                     match fetch_game_metadata(client, &external_id).await {
-                        Ok((title, banner, coverart, icon)) => {
+                        Ok(meta) if meta.is_dlc => {
+                            tracing::debug!("skipping dlc {} ({})", meta.title, external_id);
+                        }
+                        Ok(meta) => {
                             let banner_r =
-                                resolve_gog_image(&external_id, "banner", banner.as_deref());
-                            let coverart_r =
-                                resolve_gog_image(&external_id, "coverart", coverart.as_deref());
-                            let icon_r = resolve_gog_image(&external_id, "icon", icon.as_deref());
+                                resolve_gog_image(&external_id, "banner", meta.banner.as_deref());
+                            let coverart_r = resolve_gog_image(
+                                &external_id,
+                                "coverart",
+                                meta.coverart.as_deref(),
+                            );
+                            let icon_r =
+                                resolve_gog_image(&external_id, "icon", meta.icon.as_deref());
                             games.push(StoreGame {
                                 app_name: external_id,
-                                title,
+                                title: meta.title,
                                 banner: banner_r,
                                 coverart: coverart_r,
                                 icon: icon_r,
@@ -968,10 +975,15 @@ fn save_user_data(name: &str, id: &str) {
     let _ = crate::fs_util::write_atomic(&user_data_path(), body);
 }
 
-async fn fetch_game_metadata(
-    client: &reqwest::Client,
-    external_id: &str,
-) -> Result<(String, Option<String>, Option<String>, Option<String>)> {
+struct ProductMeta {
+    title: String,
+    banner: Option<String>,
+    coverart: Option<String>,
+    icon: Option<String>,
+    is_dlc: bool,
+}
+
+async fn fetch_game_metadata(client: &reqwest::Client, external_id: &str) -> Result<ProductMeta> {
     let url = format!("https://api.gog.com/v2/games/{}?locale=en-US", external_id);
     let resp = client.get(url).send().await?;
     if !resp.status().is_success() {
@@ -998,7 +1010,18 @@ async fn fetch_game_metadata(
         .and_then(|u| u.as_str())
         .map(normalize_image_url)
         .or_else(|| coverart.clone());
-    Ok((title, banner, coverart, icon))
+    // PACK is playable (bundles, goty editions), only DLC is an add-on. ok lol
+    let is_dlc = v
+        .pointer("/_embedded/productType")
+        .and_then(|t| t.as_str())
+        .is_some_and(|t| t.eq_ignore_ascii_case("dlc"));
+    Ok(ProductMeta {
+        title,
+        banner,
+        coverart,
+        icon,
+        is_dlc,
+    })
 }
 
 // gog's image urls carry {formatter} placeholders; the plain url is already fine for our card slot
