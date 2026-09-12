@@ -64,8 +64,8 @@ Item {
             width: parent.width
             visible: picker.value === "builtin"
             text: picker.isProton
-                ? qsTr("Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
-                : qsTr("Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
+                ? qsTr("For Proton, Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
+                : qsTr("For Wine, Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
         }
     }
 
