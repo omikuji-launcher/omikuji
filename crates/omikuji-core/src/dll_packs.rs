@@ -36,31 +36,6 @@ pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
     archive_source::delete_version(source, &source_root(source), tag)
 }
 
-fn resolve_pack(
-    cfg: &components_config::ComponentsConfig,
-    kind: &str,
-    pinned: &str,
-) -> Option<(ArchiveSource, String)> {
-    let sources: Vec<ArchiveSource> = cfg
-        .layers
-        .iter()
-        .filter(|s| s.kind == kind)
-        .cloned()
-        .collect();
-    let tag = if !pinned.is_empty() && pinned != "disabled" {
-        pinned.to_string()
-    } else {
-        sources
-            .iter()
-            .map(|s| components_config::active_version(&s.name))
-            .find(|t| !t.is_empty() && t != "disabled")?
-    };
-    let source = sources
-        .into_iter()
-        .find(|s| list_installed(s).iter().any(|v| v == &tag))?;
-    Some((source, tag))
-}
-
 pub const BUILTIN: &str = "builtin";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -86,12 +61,10 @@ pub fn resolved_layer(game: &Game, kind: &str) -> Layer {
     if !enabled {
         return Layer::Off;
     }
-    if pinned == BUILTIN {
-        return Layer::Builtin;
-    }
-    match resolve_pack(&components_config::get(), kind, pinned) {
-        Some((_, tag)) => Layer::Pack(tag),
-        None => Layer::Builtin,
+    if pack_dir(kind, pinned).is_some() {
+        Layer::Pack(pinned.to_string())
+    } else {
+        Layer::Builtin
     }
 }
 

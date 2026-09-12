@@ -30,7 +30,8 @@ pub struct ScriptsSettings {
 impl Default for ScriptsSettings {
     fn default() -> Self {
         Self {
-            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-scripts/master".into(),
+            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-scripts/master"
+                .into(),
         }
     }
 }
@@ -96,7 +97,8 @@ pub struct AssetsSettings {
 impl Default for AssetsSettings {
     fn default() -> Self {
         Self {
-            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main".into(),
+            fetch_url: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main"
+                .into(),
         }
     }
 }

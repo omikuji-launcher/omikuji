@@ -20,16 +20,14 @@ Item {
         dxvk_nvapi: "DXVK-NVAPI"
     })
 
-    property bool   showDefaultVersion: false
+    property bool   showPrefixInstall: false
     property var    installedVersions: []
-    property string activeVersion: ""
     property string prefixInstallVersion: ""
 
     signal manageClicked()
-    signal defaultVersionSelected(string tag)
     signal prefixInstallVersionSelected(string tag)
 
-    height: showDefaultVersion ? 56 + versionRows.height : 56
+    height: showPrefixInstall ? 56 + versionRows.height : 56
 
     Squircle {
         anchors.fill: parent
@@ -160,17 +158,10 @@ Item {
 
     Column {
         id: versionRows
-        visible: root.showDefaultVersion
+        visible: root.showPrefixInstall
         anchors.top: topRow.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-
-        VersionRow {
-            label: qsTr("Default version")
-            versions: root.installedVersions
-            value: root.activeVersion
-            onPicked: (tag) => root.defaultVersionSelected(tag)
-        }
 
         VersionRow {
             label: qsTr("Install into new prefixes")

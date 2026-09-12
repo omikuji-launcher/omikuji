@@ -10,8 +10,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use crate::library::Game;
 
 const APP_ID: &str = "1503896994018623709";
-const LAUNCHER_LOGO: &str =
-    "https://raw.githubusercontent.com/omikuji-launcher/omikuji/master/crates/omikuji/qml/icons/app.png";
+const LAUNCHER_LOGO: &str = "https://raw.githubusercontent.com/omikuji-launcher/omikuji/master/crates/omikuji/qml/icons/app.png";
 
 fn client_cell() -> &'static Mutex<Option<DiscordIpcClient>> {
     static CELL: OnceLock<Mutex<Option<DiscordIpcClient>>> = OnceLock::new();

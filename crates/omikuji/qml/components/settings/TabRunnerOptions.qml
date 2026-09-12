@@ -55,7 +55,7 @@ Item {
         M3Dropdown {
             width: parent.width
             label: qsTr("%1 version").arg(picker.layerName)
-            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin" }, { label: qsTr("Default (global)"), value: "" }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
+            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin" }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
             currentIndex: Math.max(0, RG.indexOfValue(options, picker.value))
             onSelected: (v) => picker.apply(picker.fieldKey, v)
         }

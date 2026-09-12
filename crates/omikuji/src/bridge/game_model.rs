@@ -2062,7 +2062,11 @@ impl qobject::GameModel {
         let state = omikuji_core::runners::runner_dir(&version.to_string())
             .map(|dir| status(&dir))
             .unwrap_or(PatchState::NotProton);
-        QString::from(serde_json::to_string(&state).unwrap_or_default().trim_matches('"'))
+        QString::from(
+            serde_json::to_string(&state)
+                .unwrap_or_default()
+                .trim_matches('"'),
+        )
     }
 
     fn dll_versions_for_kind(&self, kind: &QString) -> QString {

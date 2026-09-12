@@ -215,18 +215,6 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "dllPackActiveVersion"]
-        fn dll_pack_active_version(self: &ArchiveManagerBridge, source: QString) -> QString;
-
-        #[qinvokable]
-        #[cxx_name = "setDllPackActiveVersion"]
-        fn set_dll_pack_active_version(
-            self: Pin<&mut ArchiveManagerBridge>,
-            source: QString,
-            tag: QString,
-        );
-
-        #[qinvokable]
         #[cxx_name = "setDllPackPrefixInstallVersion"]
         fn set_dll_pack_prefix_install_version(
             self: Pin<&mut ArchiveManagerBridge>,
@@ -679,19 +667,6 @@ impl qobject::ArchiveManagerBridge {
                     .move_to_steam_done(QString::from(&name), QString::from(&err));
             });
         });
-    }
-
-    fn dll_pack_active_version(&self, source: QString) -> QString {
-        let name = source.to_string();
-        QString::from(&components_config::active_version(&name))
-    }
-
-    fn set_dll_pack_active_version(self: Pin<&mut Self>, source: QString, tag: QString) {
-        let name = source.to_string();
-        let tag_s = tag.to_string();
-        if let Err(e) = components_config::set_active_version(&name, &tag_s) {
-            tracing::error!("save failed for {}: {}", name, e);
-        }
     }
 
     fn set_dll_pack_prefix_install_version(self: Pin<&mut Self>, source: QString, tag: QString) {

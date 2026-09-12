@@ -81,7 +81,9 @@ impl ProcessManager {
             tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
         }
 
-        if config.env.contains_key(crate::runners::proton_monkey_patch::PIN_VAR)
+        if config
+            .env
+            .contains_key(crate::runners::proton_monkey_patch::PIN_VAR)
             && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
         {
             crate::runners::proton_monkey_patch::ensure_installed(&runner_dir);

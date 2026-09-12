@@ -91,6 +91,39 @@ Item {
         }
     }
 
+    component LayerVersionRow: Row {
+        id: layerRow
+        property string fieldKey: ""
+        property string kind: ""
+        property string versionLabel: ""
+
+        width: parent.width
+        spacing: 8
+
+        M3Dropdown {
+            id: layerDd
+            label: layerRow.versionLabel
+            width: parent.width - 32
+            options: {
+                let installed = []
+                try {
+                    installed = root.gameModel ? JSON.parse(root.gameModel.dll_versions_for_kind(layerRow.kind)) || [] : []
+                } catch (e) {
+                    installed = []
+                }
+                return [{ label: qsTr("Built-in"), value: "builtin" }]
+                    .concat(installed.map(tag => ({ label: tag, value: tag })))
+            }
+            currentIndex: Math.max(0, RG.indexOfValue(options, root.cfg[layerRow.fieldKey] || "builtin"))
+            onSelected: (tag) => root.update(layerRow.fieldKey, tag)
+        }
+
+        ResetBadge {
+            y: layerDd.boxCenterY - height / 2
+            fieldKey: layerRow.fieldKey
+        }
+    }
+
     Column {
         id: content
         width: parent.width
@@ -208,8 +241,13 @@ Item {
             width: parent.width
 
             ToggleRow { fieldKey: "wine.dxvk"; toggleLabel: "DXVK" }
+            LayerVersionRow { fieldKey: "wine.dxvk_version"; kind: "dxvk"; versionLabel: qsTr("DXVK version") }
+
             ToggleRow { fieldKey: "wine.vkd3d"; toggleLabel: "VKD3D" }
+            LayerVersionRow { fieldKey: "wine.vkd3d_version"; kind: "vkd3d"; versionLabel: qsTr("VKD3D version") }
+
             ToggleRow { fieldKey: "wine.dxvk_nvapi"; toggleLabel: "DXVK-NVAPI"; toggleDescription: qsTr("Nvidia DLSS support") }
+            LayerVersionRow { fieldKey: "wine.dxvk_nvapi_version"; kind: "dxvk_nvapi"; versionLabel: qsTr("DXVK-NVAPI version") }
         }
 
         SettingsSection {

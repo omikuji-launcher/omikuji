@@ -4,7 +4,6 @@ use crate::components_config::{self, ArchiveSource, ComponentsConfig};
 use crate::settings::{self, Settings};
 use anyhow::{Context, Result};
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -21,12 +20,6 @@ struct LegacyFile {
 struct LegacyPaths {
     runners_dir: String,
     dll_packs_dir: String,
-}
-
-#[derive(Debug, Default, Deserialize)]
-#[serde(default)]
-struct LegacyState {
-    dll_packs: HashMap<String, String>,
 }
 
 fn state_path() -> PathBuf {
@@ -202,13 +195,8 @@ fn lift_config(legacy: &LegacyFile, on_line: &mut impl FnMut(String)) -> Result<
         if !legacy.dll_packs.is_empty() {
             config.layers = legacy.dll_packs.clone();
         }
-        if let Ok(body) = fs::read_to_string(state_path()) {
-            config.active = toml::from_str::<LegacyState>(&body)
-                .unwrap_or_default()
-                .dll_packs;
-        }
         components_config::save(&config).context("writing components.toml")?;
-        on_line("sources + active layers -> components.toml".into());
+        on_line("sources -> components.toml".into());
     }
     if state_path().exists() {
         fs::remove_file(state_path()).context("removing components_state.toml")?;

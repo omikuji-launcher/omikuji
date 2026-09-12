@@ -66,7 +66,6 @@ Item {
     property var dllPacks: []
     property var installedCounts: ({})
     property var installedVersions: ({})
-    property var activeVersions: ({})
 
     function loadSources() {
         if (!archiveManager) return
@@ -81,7 +80,6 @@ Item {
         if (!archiveManager) return
         let counts = ({})
         let versions = ({})
-        let active = ({})
         for (let i = 0; i < runners.length; i++) {
             let r = runners[i]
             try {
@@ -103,11 +101,9 @@ Item {
                 counts["dll_packs/" + d.name] = 0
                 versions["dll_packs/" + d.name] = []
             }
-            active[d.name] = archiveManager.dllPackActiveVersion(d.name)
         }
         installedCounts = counts
         installedVersions = versions
-        activeVersions = active
     }
 
     onArchiveManagerChanged: loadSources()
@@ -159,15 +155,10 @@ Item {
                         sourceName: modelData.name
                         sourceKind: modelData.kind
                         installedCount: root.installedCounts["dll_packs/" + modelData.name] || 0
-                        showDefaultVersion: true
+                        showPrefixInstall: true
                         installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
-                        activeVersion: root.activeVersions[modelData.name] || ""
                         prefixInstallVersion: modelData.prefix_install_version || ""
                         onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
-                        onDefaultVersionSelected: (tag) => {
-                            root.archiveManager.setDllPackActiveVersion(sourceName, tag)
-                            root.refreshInstalledCounts()
-                        }
                         onPrefixInstallVersionSelected: (tag) => {
                             root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
                             root.refreshInstalledCounts()

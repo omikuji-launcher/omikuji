@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -23,7 +22,6 @@ pub struct ArchiveSource {
 pub struct ComponentsConfig {
     pub runners: Vec<ArchiveSource>,
     pub layers: Vec<ArchiveSource>,
-    pub active: HashMap<String, String>,
 }
 
 impl Default for ComponentsConfig {
@@ -31,7 +29,6 @@ impl Default for ComponentsConfig {
         Self {
             runners: default_runners(),
             layers: default_layers(),
-            active: HashMap::new(),
         }
     }
 }
@@ -200,6 +197,7 @@ pub fn update_source(category: &str, name: &str, source: ArchiveSource) -> anyho
             .ok_or_else(|| anyhow::anyhow!("no source named \"{}\"", name))?;
         *existing = ArchiveSource {
             name: existing.name.clone(),
+            prefix_install_version: existing.prefix_install_version.clone(),
             ..source
         };
         Ok(())
@@ -219,27 +217,10 @@ pub fn remove_source(category: &str, name: &str) -> anyhow::Result<()> {
     })
 }
 
-pub fn active_version(source_name: &str) -> String {
-    get().active.get(source_name).cloned().unwrap_or_default()
-}
-
 pub fn set_prefix_install_version(source_name: &str, tag: &str) -> anyhow::Result<()> {
     mutate(|config| {
         if let Some(source) = config.layers.iter_mut().find(|s| s.name == source_name) {
             source.prefix_install_version = tag.to_string();
-        }
-        Ok(())
-    })
-}
-
-pub fn set_active_version(source_name: &str, tag: &str) -> anyhow::Result<()> {
-    mutate(|config| {
-        if tag.is_empty() {
-            config.active.remove(source_name);
-        } else {
-            config
-                .active
-                .insert(source_name.to_string(), tag.to_string());
         }
         Ok(())
     })
