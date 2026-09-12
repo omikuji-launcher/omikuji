@@ -16,7 +16,7 @@ DialogCard {
 
     property string nameValue: ""
     property string runnerValue: ""
-    property string setValue: "game"
+    property string setValue: "base"
     property string outputText: ""
 
     maxWidth: 460
@@ -39,7 +39,7 @@ DialogCard {
         }
         function onCreateFinished(ok, error) {
             if (ok) root.close()
-            else root.errorText = (error && error.length > 0) ? error : qsTr("winetricks failed")
+            else root.errorText = (error && error.length > 0) ? error : qsTr("Prefix creation failed")
         }
     }
 
@@ -76,6 +76,7 @@ DialogCard {
                 label: qsTr("Set")
                 width: parent.width
                 options: [
+                    { label: qsTr("Base"), value: "base" },
                     { label: qsTr("Game"), value: "game" },
                     { label: qsTr("Application"), value: "app" }
                 ]

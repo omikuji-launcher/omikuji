@@ -124,18 +124,44 @@ fn steam_runner(app_id: &str) -> String {
         .unwrap_or_default()
 }
 
-fn preset_verbs(preset: &str) -> Vec<String> {
-    let verbs: &[&str] = match preset {
-        "game" => &[
-            "d3dx9",
-            "d3dcompiler_43",
-            "d3dcompiler_47",
-            "corefonts",
-            "msls31",
-        ],
-        _ => &["corefonts"],
-    };
-    verbs.iter().map(|s| s.to_string()).collect()
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum PrefixPreset {
+    #[default]
+    Base,
+    Game,
+    Application,
+}
+
+impl PrefixPreset {
+    pub fn from_id(id: &str) -> Self {
+        match id {
+            "game" => Self::Game,
+            "app" => Self::Application,
+            _ => Self::Base,
+        }
+    }
+
+    fn verbs(self) -> &'static [&'static str] {
+        match self {
+            Self::Base => &[],
+            Self::Game => &[
+                "d3dx9",
+                "d3dcompiler_43",
+                "d3dcompiler_47",
+                "corefonts",
+                "msls31",
+            ],
+            Self::Application => &["corefonts"],
+        }
+    }
+
+    fn tool(self) -> crate::wine_tools::WineTool {
+        let verbs = self.verbs();
+        if verbs.is_empty() {
+            return crate::wine_tools::WineTool::Wineboot;
+        }
+        crate::wine_tools::WineTool::WinetricksVerbs(verbs.iter().map(|s| s.to_string()).collect())
+    }
 }
 
 pub fn create_prefix<F: FnMut(&str)>(
@@ -159,8 +185,7 @@ pub fn create_prefix<F: FnMut(&str)>(
         (!runner.is_empty()).then(|| runner.to_string()),
     );
 
-    let tool = crate::wine_tools::WineTool::WinetricksVerbs(preset_verbs(preset));
-    crate::wine_tools::run_streamed(&game, tool, on_line)
+    crate::wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)
 }
 
 pub fn prefix_needs_bootstrap(game: &crate::library::Game) -> bool {
