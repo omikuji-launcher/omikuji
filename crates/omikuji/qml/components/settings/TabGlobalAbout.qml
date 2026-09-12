@@ -47,7 +47,7 @@ Item {
                     text: qsTr("Version %1").arg(root.appVersion)
                     color: Theme.textMuted
                     font.pixelSize: Theme.type.label.size
-                    font.family: "monospace"
+                    font.family: Theme.mono
                 }
             }
         }
@@ -97,7 +97,7 @@ Item {
                             text: "<a href='" + linkRow.modelData.url + "' style='color:" + Theme.accent + "'>" + linkRow.modelData.url + "</a>"
                             color: Theme.accent
                             font.pixelSize: Theme.type.label.size
-                            font.family: "monospace"
+                            font.family: Theme.mono
                             textFormat: Text.RichText
                             onLinkActivated: (link) => Qt.openUrlExternally(link)
                             anchors.verticalCenter: parent.verticalCenter
@@ -123,7 +123,7 @@ Item {
                     wrapMode: TextArea.Wrap
                     selectByMouse: true
                     color: Theme.text
-                    font.family: "monospace"
+                    font.family: Theme.mono
                     font.pixelSize: Theme.type.label.size
                     leftPadding: 12
                     rightPadding: 12

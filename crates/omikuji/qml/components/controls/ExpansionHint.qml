@@ -13,6 +13,6 @@ Text {
     text: active ? resolver(source) : ""
     color: Theme.accent
     font.pixelSize: Theme.type.micro.size
-    font.family: "monospace"
+    font.family: Theme.mono
     elide: Text.ElideMiddle
 }

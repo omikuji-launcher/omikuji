@@ -41,7 +41,7 @@ Rectangle {
             wrapMode: TextArea.Wrap
             selectByMouse: true
             color: Theme.textMuted
-            font.family: "monospace"
+            font.family: Theme.logs
             font.pixelSize: Theme.type.caption.size
             background: Rectangle { color: "transparent" }
             onTextChanged: if (root.follow) cursorPosition = length

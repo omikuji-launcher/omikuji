@@ -250,6 +250,16 @@ fn main() {
         .prop_custom_apply("follow_system_colors", kushi::Kind::Bool, "theme.follow_system_colors")
         .prop_custom_apply("follow_system_font", kushi::Kind::Bool, "theme.follow_system_font")
         .prop_custom_apply("font_family", kushi::Kind::QString, "theme.font_family")
+        .prop_at(
+            "font_family_mono",
+            kushi::Kind::QString,
+            "theme.font_family_mono",
+        )
+        .prop_at(
+            "font_family_logs",
+            kushi::Kind::QString,
+            "theme.font_family_logs",
+        )
         .prop_readonly("fill_fields", kushi::Kind::Bool, "theme.fill_fields")
         .prop_at("language", kushi::Kind::QString, "language")
         .prop_at("welcome_seen", kushi::Kind::Bool, "state.welcome_seen")

@@ -128,7 +128,7 @@ DialogCard {
                             text: rootRow.modelData[1]
                             color: Theme.text
                             font.pixelSize: Theme.type.body.size
-                            font.family: "monospace"
+                            font.family: Theme.mono
                             elide: Text.ElideMiddle
                         }
                     }

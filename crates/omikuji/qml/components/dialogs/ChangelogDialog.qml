@@ -84,7 +84,7 @@ DialogCard {
                 text: root.fromVersion
                 color: Theme.textMuted
                 font.pixelSize: Theme.type.body.size
-                font.family: "monospace"
+                font.family: Theme.mono
                 Layout.alignment: Qt.AlignBaseline
             }
             Text {
@@ -98,7 +98,7 @@ DialogCard {
                 color: Theme.accent
                 font.pixelSize: Theme.type.body.size
                 font.weight: Font.DemiBold
-                font.family: "monospace"
+                font.family: Theme.mono
                 Layout.alignment: Qt.AlignBaseline
             }
             Item { Layout.fillWidth: true }

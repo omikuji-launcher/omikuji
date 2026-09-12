@@ -403,7 +403,7 @@ DialogCard {
                         color: Theme.accent
                         font.pixelSize: Theme.type.label.size
                         font.weight: Font.DemiBold
-                        font.family: "monospace"
+                        font.family: Theme.mono
                         elide: Text.ElideRight
                     }
 
@@ -509,7 +509,7 @@ DialogCard {
                         color: Theme.text
                         font.pixelSize: Theme.type.label.size
                         font.weight: Font.Medium
-                        font.family: "monospace"
+                        font.family: Theme.mono
                         elide: Text.ElideRight
                     }
 
@@ -523,7 +523,7 @@ DialogCard {
                         }
                         color: Theme.textSubtle
                         font.pixelSize: Theme.type.caption.size
-                        font.family: "monospace"
+                        font.family: Theme.mono
                         elide: Text.ElideRight
                     }
                 }

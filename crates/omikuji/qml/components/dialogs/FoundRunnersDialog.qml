@@ -174,7 +174,7 @@ DialogCard {
                     color: Theme.text
                     font.pixelSize: Theme.type.label.size
                     font.weight: Font.Medium
-                    font.family: "monospace"
+                    font.family: Theme.mono
                     elide: Text.ElideRight
                 }
 

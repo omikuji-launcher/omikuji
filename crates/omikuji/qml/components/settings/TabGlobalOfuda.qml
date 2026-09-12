@@ -175,7 +175,7 @@ Item {
             text: row.prefix.path || ""
             color: Theme.accent
             font.pixelSize: Theme.type.caption.size
-            font.family: "monospace"
+            font.family: Theme.mono
             elide: Text.ElideMiddle
         }
     }

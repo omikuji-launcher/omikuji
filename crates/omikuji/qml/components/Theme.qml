@@ -11,6 +11,10 @@ QtObject {
     readonly property bool systemColorsAvailable: Application.styleHints.colorScheme !== Qt.ColorScheme.Unknown
     property bool followSystemFont: true
     property string fontFamily: ""
+    property string monoFamily: ""
+    property string logsFamily: ""
+    readonly property string mono: monoFamily !== "" ? monoFamily : "monospace"
+    readonly property string logs: logsFamily !== "" ? logsFamily : "monospace"
     property var overrides: ({})
 
     function _resolve(token, system, fallback) {

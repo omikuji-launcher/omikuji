@@ -143,7 +143,7 @@ DialogCard {
             text: root.normalizedUrl()
             color: Theme.textSubtle
             font.pixelSize: Theme.type.micro.size
-            font.family: "monospace"
+            font.family: Theme.mono
             elide: Text.ElideRight
         }
 

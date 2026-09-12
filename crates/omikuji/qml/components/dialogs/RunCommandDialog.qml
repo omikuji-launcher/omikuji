@@ -80,7 +80,7 @@ DialogCard {
                     text: root.contextText
                     color: Theme.accent
                     font.pixelSize: Theme.type.caption.size
-                    font.family: "monospace"
+                    font.family: Theme.mono
                     wrapMode: Text.WrapAnywhere
                 }
             }

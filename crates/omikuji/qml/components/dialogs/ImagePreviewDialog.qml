@@ -60,7 +60,7 @@ DialogCard {
             text: root.caption
             color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
-            font.family: "monospace"
+            font.family: Theme.mono
             wrapMode: Text.WrapAnywhere
             visible: text.length > 0
         }

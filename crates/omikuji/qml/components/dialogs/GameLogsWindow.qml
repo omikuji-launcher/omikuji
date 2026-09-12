@@ -244,7 +244,7 @@ Window {
                 wrapMode: TextArea.Wrap
                 selectByMouse: true
                 color: Theme.text
-                font.family: "monospace"
+                font.family: Theme.logs
                 font.pixelSize: Theme.type.body.size
                 leftPadding: 14
                 rightPadding: 14

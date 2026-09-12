@@ -342,7 +342,7 @@ DialogCard {
                         readOnly: true
                         selectByMouse: true
                         color: Theme.text
-                        font.family: "monospace"
+                        font.family: Theme.logs
                         font.pixelSize: Theme.type.caption.size
                     }
 

@@ -182,6 +182,60 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Mono font")
+                description: qsTr("Paths, versions and inline values.")
+                labelWidth: root.rowLabelWidth
+
+                M3Dropdown {
+                    width: 260
+                    options: {
+                        let arr = [{ label: qsTr("Default"), value: "" }]
+                        for (let i = 0; i < root.fonts.length; i++) {
+                            arr.push({ label: root.fonts[i], value: root.fonts[i] })
+                        }
+                        return arr
+                    }
+                    currentIndex: {
+                        if (!root.appSettings) return 0
+                        let v = root.appSettings.fontFamilyMono
+                        if (!v) return 0
+                        for (let i = 0; i < root.fonts.length; i++) {
+                            if (root.fonts[i] === v) return i + 1
+                        }
+                        return 0
+                    }
+                    onSelected: (value) => root.appSettings.applyFontFamilyMono(value)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Logs font")
+                description: qsTr("Log views and preformatted blocks.")
+                labelWidth: root.rowLabelWidth
+
+                M3Dropdown {
+                    width: 260
+                    options: {
+                        let arr = [{ label: qsTr("Default"), value: "" }]
+                        for (let i = 0; i < root.fonts.length; i++) {
+                            arr.push({ label: root.fonts[i], value: root.fonts[i] })
+                        }
+                        return arr
+                    }
+                    currentIndex: {
+                        if (!root.appSettings) return 0
+                        let v = root.appSettings.fontFamilyLogs
+                        if (!v) return 0
+                        for (let i = 0; i < root.fonts.length; i++) {
+                            if (root.fonts[i] === v) return i + 1
+                        }
+                        return 0
+                    }
+                    onSelected: (value) => root.appSettings.applyFontFamilyLogs(value)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Font sizes")
                 description: qsTr("Per-role text sizes used across the app.")
                 labelWidth: root.rowLabelWidth

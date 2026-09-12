@@ -62,7 +62,7 @@ DialogCard {
                     + "${runtime_path}     " + qsTr("runtime root")
                 color: Theme.textMuted
                 font.pixelSize: Theme.type.caption.size
-                font.family: "monospace"
+                font.family: Theme.mono
             }
         }
 

@@ -38,6 +38,8 @@ ApplicationWindow {
             Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
             Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
             Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
+            Theme.monoFamily = Qt.binding(() => appSettings.fontFamilyMono)
+            Theme.logsFamily = Qt.binding(() => appSettings.fontFamilyLogs)
             Theme.fillFields = Qt.binding(() => appSettings.fillFields)
             Theme.overrides = JSON.parse(overridesJson())
             Theme.fontSizes = JSON.parse(fontSizesJson())

@@ -44,7 +44,7 @@ DialogCard {
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
         return escaped.replace(/`([^`]+)`/g, function(_m, p1) {
-            return '<span style="color:' + hex + '; font-family:monospace">' + p1 + '</span>'
+            return '<span style="color:' + hex + '; font-family:' + Theme.mono + '">' + p1 + '</span>'
         })
     }
 
