@@ -24,6 +24,7 @@ Rectangle {
         spacing: Theme.space.sm
 
         SvgIcon {
+            id: noteIcon
             name: root.icon
             size: 18
             color: root.tone
@@ -31,9 +32,9 @@ Rectangle {
         }
         Text {
             id: label
-            width: parent.width - 18 - Theme.space.sm
+            width: parent.width - noteIcon.size - parent.spacing
             color: Theme.text
-            font.pixelSize: Theme.type.caption.size
+            font.pixelSize: Theme.type.body.size
             wrapMode: Text.WordWrap
         }
     }
