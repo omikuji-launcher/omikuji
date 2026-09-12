@@ -185,22 +185,24 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    width: 8
-                    height: 8
-                    radius: 4
-                    color: Theme.accent
-                    border.width: 2
-                    border.color: Theme.navBg
+                Item {
+                    width: 20
+                    height: 26
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.rightMargin: -2
-                    anchors.topMargin: -2
+                    anchors.rightMargin: -10
+                    anchors.topMargin: -13
                     visible: navItem.badge
                     scale: visible ? 1.0 : 0.0
+                    transformOrigin: Item.Bottom
 
                     Behavior on scale {
                         NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+                    }
+
+                    SpiritFlame {
+                        anchors.fill: parent
+                        color: Theme.accent
                     }
                 }
             }

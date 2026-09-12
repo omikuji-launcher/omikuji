@@ -107,8 +107,21 @@ fn find_qsb() -> PathBuf {
     find_qt_tool(&["qsb"]).expect("qsb not found; install qt6-shadertools")
 }
 
+const SHADER_DIRS: [&str; 2] = [
+    "qml/components/consolemode/shaders",
+    "qml/components/primitives/shaders",
+];
+
 fn compile_shaders() -> Vec<String> {
-    let dir = Path::new("qml/components/consolemode/shaders");
+    let mut out: Vec<String> = SHADER_DIRS
+        .iter()
+        .flat_map(|d| compile_shader_dir(Path::new(d)))
+        .collect();
+    out.sort();
+    out
+}
+
+fn compile_shader_dir(dir: &Path) -> Vec<String> {
     if !dir.exists() {
         return vec![];
     }
@@ -139,9 +152,8 @@ fn compile_shaders() -> Vec<String> {
             }
         }
 
-        out_paths.push(format!("qml/components/consolemode/shaders/{qsb_filename}"));
+        out_paths.push(format!("{}/{qsb_filename}", dir.display()));
     }
-    out_paths.sort();
     out_paths
 }
 
@@ -187,6 +199,9 @@ fn main() {
     let (icon_paths, icon_names) = collect_icons();
     write_icon_names(&icon_names);
     println!("cargo:rerun-if-changed=qml/icons");
+    for dir in SHADER_DIRS {
+        println!("cargo:rerun-if-changed={dir}");
+    }
 
     println!("cargo:rustc-env=OMIKUJI_QT_VERSION={}", qt_version());
 
@@ -466,6 +481,7 @@ fn main() {
         "qml/components/cards/CardGrid.qml",
         "qml/components/cards/CardProgressOverlay.qml",
         "qml/components/popups/DisplayOptionsPopup.qml",
+        "qml/components/controls/Chip.qml",
         "qml/components/controls/FieldButton.qml",
         "qml/components/controls/FieldSurface.qml",
         "qml/components/controls/FilePicker.qml",
@@ -491,6 +507,7 @@ fn main() {
         "qml/components/controls/M3TextField.qml",
         "qml/components/controls/OutputLog.qml",
         "qml/components/controls/ResizeGrips.qml",
+        "qml/components/controls/SegmentedControl.qml",
         "qml/components/controls/SwitchField.qml",
         "qml/components/controls/ThemedLogHighlighter.qml",
         "qml/components/popups/PopupSurface.qml",
@@ -498,6 +515,7 @@ fn main() {
         "qml/components/cards/StoreCardAction.qml",
         "qml/components/primitives/ScrollEdgeFade.qml",
         "qml/components/primitives/Sparkline.qml",
+        "qml/components/primitives/SpiritFlame.qml",
         "qml/components/primitives/Squircle.qml",
         "qml/components/primitives/SvgIcon.qml",
         "qml/components/primitives/ThinScrollBar.qml",

@@ -472,52 +472,11 @@ DialogCard {
             label: qsTr("Edition")
             visible: root.editions.length > 1
 
-            RowLayout {
+            SegmentedControl {
                 width: parent.width
-                spacing: Theme.space.sm
-
-                Repeater {
-                    model: root.editions
-
-                    Item {
-                        id: editionRow
-                        required property var modelData
-                        required property int index
-
-                        Layout.fillWidth: true
-                        implicitHeight: 36
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.radius.pill
-                            color: editionRow.index === root.editionIndex
-                                ? Theme.alpha(Theme.accent, 0.15)
-                                : edBtnHover.containsMouse
-                                    ? Theme.alpha(Theme.text, 0.06)
-                                    : "transparent"
-                            border.width: editionRow.index === root.editionIndex ? 1 : 0
-                            border.color: Theme.alpha(Theme.accent, 0.3)
-
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: editionRow.modelData.label
-                            color: editionRow.index === root.editionIndex ? Theme.accent : Theme.text
-                            font.pixelSize: Theme.type.label.size
-                            font.weight: editionRow.index === root.editionIndex ? Font.DemiBold : Font.Normal
-                        }
-
-                        MouseArea {
-                            id: edBtnHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.editionIndex = editionRow.index
-                        }
-                    }
-                }
+                options: root.editions
+                currentIndex: root.editionIndex
+                onSelected: (index) => root.editionIndex = index
             }
         }
 

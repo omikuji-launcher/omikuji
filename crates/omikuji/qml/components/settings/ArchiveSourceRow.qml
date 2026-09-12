@@ -12,6 +12,14 @@ Item {
     property string sourceKind: ""
     property int    installedCount: 0
 
+    readonly property var kindLabels: ({
+        proton: "Proton",
+        wine: "Wine",
+        dxvk: "DXVK",
+        vkd3d: "VKD3D",
+        dxvk_nvapi: "DXVK-NVAPI"
+    })
+
     property bool   showDefaultVersion: false
     property var    installedVersions: []
     property string activeVersion: ""
@@ -55,21 +63,23 @@ Item {
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
-                    Rectangle {
-                        height: 16
-                        width: kindLabel.width + 12
-                        radius: Theme.radius.sm
-                        color: Theme.alpha(Theme.accent, 0.13)
+                    Row {
+                        spacing: Theme.space.xs
                         anchors.verticalCenter: parent.verticalCenter
-                        Text {
-                            id: kindLabel
-                            anchors.centerIn: parent
-                            text: root.sourceKind
+
+                        Rectangle {
+                            width: 4
+                            height: 4
+                            radius: width / 2
                             color: Theme.accent
-                            font.pixelSize: Theme.type.micro.size
-                            font.weight: Font.Medium
-                            font.capitalization: Font.AllUppercase
-                            font.letterSpacing: 0.6
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: root.kindLabels[root.sourceKind] || root.sourceKind
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.type.label.size
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }

@@ -3,6 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 
+import "../primitives"
+
 Rectangle {
     id: root
 
