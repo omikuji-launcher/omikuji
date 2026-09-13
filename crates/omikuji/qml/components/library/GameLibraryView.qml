@@ -56,21 +56,35 @@ Rectangle {
         root._recentIds = next
     }
 
+    function drawPool(excluded) {
+        let pool = []
+        if (!root.gameModel) return pool
+        for (let i = 0; i < root.gameModel.count; i++) {
+            let game = root.gameModel.get_game(i)
+            if (!game) continue
+            if (excluded && excluded[game.gameId]) continue
+            if (root.passes(i, game.name || "", game.hidden === true, game.favourite === true)) {
+                pool.push(i)
+            }
+        }
+        return pool
+    }
+
     function passes(index, name, hidden, favourite) {
         if (root.searchText !== "" && !name.toLowerCase().includes(root.searchText.toLowerCase())) {
             return false
         }
         if (!root.showHidden && hidden) return false
+        if (root.filterKind === "all") return true
+        if (root.filterKind === "favourite") return favourite
         if (!root.gameModel) return true
 
         let game = root.gameModel.get_game(index)
         if (!game) return false
 
         switch (root.filterKind) {
-            case "all":       return true
-            case "favourite": return favourite
-            case "recent":    return root._recentIds[game.gameId] === true
-            case "runner":    return RG.runnerBucket(game.runnerType) === root.filterValue
+            case "recent": return root._recentIds[game.gameId] === true
+            case "runner": return RG.runnerBucket(game.runnerType) === root.filterValue
             case "tag": {
                 let cats = []
                 try { cats = JSON.parse(game.categories || "[]") } catch (e) { cats = [] }

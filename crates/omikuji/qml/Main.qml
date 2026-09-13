@@ -14,6 +14,7 @@ import "components/navigation"
 import "components/store"
 import "components/modals"
 import "components/popups"
+import "components/lib/Omikuji.js" as Omikuji
 
 /*
 yes this is cursed. yes it works. we ballin
@@ -87,6 +88,12 @@ ApplicationWindow {
                 root.pushTrayRecent()
             }
         }
+    }
+
+    property var omikujiTied: ({})
+
+    function omikujiDraw() {
+        omikujiDialog.reveal(Omikuji.pick(libraryView.drawPool(root.omikujiTied)))
     }
 
     function pushTrayRecent() {
@@ -663,6 +670,7 @@ property real cardZoom: appSettings.cardZoom
         leftInset: navTabs.width
 
         showAddButton: root.currentView === "library"
+        showDrawButton: root.currentView === "library"
         showSearch: root.currentView === "library"
             || root.currentView === "steam"
             || root.currentView === "epic"
@@ -688,6 +696,10 @@ property real cardZoom: appSettings.cardZoom
         onAddClicked: root.activeModal = "addGame"
         onInstallScriptClicked: scriptBrowserDialog.show()
         onConsoleModeClicked: gameModel.launch_console_mode()
+        onDrawClicked: {
+            omikujiDialog.open()
+            root.omikujiDraw()
+        }
         onZoomMoved: (v) => appSettings.applyCardZoom(v)
         onSpacingMoved: (v) => appSettings.applyCardSpacing(v)
         onSortSelected: (v) => appSettings.applyCardSort(v)
@@ -1229,6 +1241,22 @@ property real cardZoom: appSettings.cardZoom
         id: changelogDialog
         anchors.fill: parent
         onDismissed: gameModel.mark_changelog_seen()
+    }
+
+    OmikujiDrawDialog {
+        id: omikujiDialog
+        anchors.fill: parent
+        gameModel: root.gameModelRef
+        onRedrawRequested: root.omikujiDraw()
+        onTieRequested: (gameId) => {
+            let tied = root.omikujiTied
+            tied[gameId] = true
+            root.omikujiTied = tied
+        }
+        onPlayRequested: (index) => {
+            gameActions.selectedIndex = index
+            gameActions.play(index)
+        }
     }
 
     WelcomeDialog {

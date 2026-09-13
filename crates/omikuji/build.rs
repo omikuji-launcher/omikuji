@@ -217,6 +217,7 @@ fn main() {
     qrc_paths.push("qml/components/lib/Format.js".to_string());
     qrc_paths.push("qml/components/lib/ArchiveAssets.js".to_string());
     qrc_paths.push("qml/components/lib/PlayState.js".to_string());
+    qrc_paths.push("qml/components/lib/Omikuji.js".to_string());
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let app_settings_bridge = kushi::ObjectBridge::new("AppSettingsBridge")
@@ -412,6 +413,7 @@ fn main() {
         "qml/components/dialogs/LogRulesDialog.qml",
         "qml/components/dialogs/GameLogsWindow.qml",
         "qml/components/dialogs/MigrationDialog.qml",
+        "qml/components/dialogs/OmikujiDrawDialog.qml",
         "qml/components/dialogs/SetsDialog.qml",
         "qml/components/dialogs/SteamMoveDialog.qml",
         "qml/components/dialogs/ScriptBrowserDialog.qml",
@@ -513,6 +515,9 @@ fn main() {
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",
         "qml/components/cards/StoreCardAction.qml",
+        "qml/components/primitives/MikujiBox.qml",
+        "qml/components/primitives/MikujiScene.qml",
+        "qml/components/primitives/PosedSpirit.qml",
         "qml/components/primitives/ScrollEdgeFade.qml",
         "qml/components/primitives/Sparkline.qml",
         "qml/components/primitives/SpiritFlame.qml",

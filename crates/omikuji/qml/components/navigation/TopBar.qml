@@ -13,6 +13,7 @@ Item {
     property bool showTitle: false
     property real leftInset: 0
     property bool showAddButton: true
+    property bool showDrawButton: false
     property bool showSearch: true
     property bool showDisplayOptions: false
     property real zoomValue: 1.0
@@ -35,6 +36,7 @@ Item {
     signal cardStyleSelected(string value)
     signal cardPlayButtonToggled(bool value)
     signal consoleModeClicked()
+    signal drawClicked()
 
     height: 54
 
@@ -112,6 +114,22 @@ Item {
         anchors.rightMargin: 16
         anchors.verticalCenter: parent.verticalCenter
         spacing: 6
+
+        IconButton {
+            id: drawBtn
+            icon: "casino"
+            size: 32
+            rounded: true
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.showDrawButton
+            onClicked: root.drawClicked()
+
+            Tooltip {
+                text: qsTr("Draw a fortune")
+                tipVisible: drawBtn.hovered
+                y: parent.height + 8
+            }
+        }
 
         IconButton {
             id: consoleBtn
