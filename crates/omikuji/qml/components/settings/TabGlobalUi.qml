@@ -287,6 +287,19 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Progress style")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+
+                M3Dropdown {
+                    width: 200
+                    options: ProgressStyles.options()
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (appSettings ? appSettings.progressStyle : "rope")))
+                    onSelected: (value) => appSettings.applyProgressStyle(value)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Highlight logs")
                 description: qsTr("Color error, fixme and warning lines in log output")
                 labelWidth: root.rowLabelWidth

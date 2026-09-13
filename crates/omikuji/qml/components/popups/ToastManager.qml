@@ -187,18 +187,15 @@ Item {
                     visible: text.length > 0
                 }
 
-                WavyProgressBar {
+                LinearProgress {
                     width: parent.width
                     visible: toast.progress >= 0
                     value: toast.progress
-                    wavy: false
                     trackWidth: 3
                     handleWidth: 3
                     handleHeight: 12
                     handleMargins: 2
                     fillColor: toast.levelColor
-                    handleColor: fillColor
-                    trackColor: Theme.alpha(Theme.text, 0.18)
                 }
             }
 

@@ -97,11 +97,10 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        WavyProgressBar {
+        LinearProgress {
             Layout.fillWidth: true
             visible: root.installing
             value: root.percent / 100
-            fillColor: Theme.accent
             trackColor: Theme.alpha(Theme.text, 0.16)
         }
     }

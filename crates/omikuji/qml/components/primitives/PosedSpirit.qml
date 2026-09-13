@@ -5,14 +5,12 @@ Item {
     id: root
 
     property color accentColor: Theme.accent
-    property color coreColor: Qt.hsla(root.accentColor.hslHue,
-                                      Math.min(1, root.accentColor.hslSaturation * 2.4),
-                                      Math.min(1, root.accentColor.hslLightness * 1.10),
-                                      1)
+    property color coreColor: Theme.coreTone(root.accentColor)
     property real lookUp: 0
     property real squeeze: 0
     property real wobble: 0
     property real blush: 1
+    property real strain: 0
     property bool animated: true
 
     implicitWidth: 136
@@ -29,6 +27,7 @@ Item {
         property real squeeze: root.squeeze
         property real wobble: root.wobble
         property real blush: root.blush
+        property real strain: root.strain
         property size resolution: Qt.size(fx.width, fx.height)
         property color accentColor: root.accentColor
         property color coreColor: root.coreColor

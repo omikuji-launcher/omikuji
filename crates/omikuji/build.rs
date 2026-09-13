@@ -253,6 +253,7 @@ fn main() {
         .prop_custom_apply("ui_scale", kushi::Kind::F64, "display.scale")
         .prop_at("muted_icons", kushi::Kind::Bool, "display.muted_icons")
         .prop_at("filled_icons", kushi::Kind::Bool, "display.filled_icons")
+        .prop_at("progress_style", kushi::Kind::QString, "display.progress_style")
         .prop_at("show_hidden", kushi::Kind::Bool, "display.show_hidden")
         .prop_at("dim_hidden", kushi::Kind::Bool, "display.dim_hidden")
         .prop_at("show_steam_prefixes", kushi::Kind::Bool, "display.show_steam_prefixes")
@@ -515,20 +516,25 @@ fn main() {
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",
         "qml/components/cards/StoreCardAction.qml",
+        "qml/components/primitives/BlockTrack.qml",
         "qml/components/primitives/HoppingSpirit.qml",
+        "qml/components/primitives/LinearProgress.qml",
+        "qml/components/primitives/LinearTrack.qml",
         "qml/components/primitives/MikujiBox.qml",
         "qml/components/primitives/MikujiScene.qml",
+        "qml/components/primitives/PillTrack.qml",
         "qml/components/primitives/PosedSpirit.qml",
+        "qml/components/primitives/RopeTrack.qml",
         "qml/components/primitives/ScrollEdgeFade.qml",
         "qml/components/primitives/Sparkline.qml",
         "qml/components/primitives/SpiritFlame.qml",
         "qml/components/primitives/Squircle.qml",
+        "qml/components/primitives/StripeTrack.qml",
         "qml/components/primitives/SvgIcon.qml",
         "qml/components/primitives/ThinScrollBar.qml",
         "qml/components/primitives/ToriiGate.qml",
         "qml/components/popups/ToastManager.qml",
         "qml/components/popups/Tooltip.qml",
-        "qml/components/primitives/WavyProgressBar.qml",
     ];
 
     let mut qml_module = QmlModule::new("omikuji");
@@ -542,6 +548,8 @@ fn main() {
         qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
     qml_module =
         qml_module.qml_file(QmlFile::from("qml/components/CardStyles.qml").singleton(true));
+    qml_module =
+        qml_module.qml_file(QmlFile::from("qml/components/ProgressStyles.qml").singleton(true));
 
     let builder = CxxQtBuilder::new_qml_module(qml_module)
         .qrc_resources(&qrc_paths)

@@ -58,19 +58,16 @@ Item {
                 }
             }
 
-            WavyProgressBar {
+            LinearProgress {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 12
                 value: Math.max(0, Math.min(1, root.progress / 100.0))
-                wavy: !root.isPaused
-                animate: root.animate && !root.isPaused
+                paused: root.isPaused
+                animate: root.animate
                 trackWidth: 3
                 handleWidth: 3
                 handleHeight: 12
                 handleMargins: 2
-                fillColor: root.isPaused ? Theme.alpha(Theme.text, 0.3) : Theme.accent
-                handleColor: fillColor
-                trackColor: Theme.alpha(Theme.text, 0.18)
             }
         }
     }

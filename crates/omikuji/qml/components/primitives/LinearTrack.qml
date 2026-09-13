@@ -7,11 +7,6 @@ Item {
 
     property real value: 0.0
 
-    // smooth incoming progress so the handle slides rather than jumping between backend ticks
-    Behavior on value {
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
-    }
-
     property bool wavy: true
     property bool animate: true
 
@@ -37,13 +32,14 @@ Item {
     readonly property real effectiveWidth: Math.max(0, width - 2 * handleMargins)
     readonly property real handleX: handleMargins + visualPosition * effectiveWidth - handleWidth / 2
     readonly property real halfHandleGap: handleWidth / 2
+    readonly property real fillWidth: Math.max(0, handleX - handleMargins - halfHandleGap)
 
     // canvas rasterized once per size/color change, motion comes from x-translation, sliding one wavelength equals advancing phase by 2pi at near-zero per-frame cost
     Item {
         id: fillClip
         anchors.verticalCenter: parent.verticalCenter
         x: root.handleMargins
-        width: Math.max(0, root.handleX - root.handleMargins - root.halfHandleGap)
+        width: root.fillWidth
         height: root.trackWidth * 6
         clip: true
         visible: root.wavy
@@ -99,7 +95,7 @@ Item {
     Loader {
         anchors.verticalCenter: parent.verticalCenter
         x: root.handleMargins
-        width: Math.max(0, root.handleX - root.handleMargins - root.halfHandleGap)
+        width: root.fillWidth
         height: root.trackWidth
         active: !root.wavy
         sourceComponent: Rectangle {

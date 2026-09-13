@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -7,10 +8,7 @@ Item {
     property color gateCoreColor: Qt.lighter(root.gateColor, 1.35)
     property color trimColor: "#2b1c1e"
     property color spiritColor: "#ffffff"
-    property color spiritCoreColor: Qt.hsla(root.spiritColor.hslHue,
-                                            Math.min(1, root.spiritColor.hslSaturation * 2.4),
-                                            Math.min(1, root.spiritColor.hslLightness * 1.10),
-                                            1)
+    property color spiritCoreColor: Theme.coreTone(root.spiritColor)
     property bool animated: true
     property int supersample: 4
 

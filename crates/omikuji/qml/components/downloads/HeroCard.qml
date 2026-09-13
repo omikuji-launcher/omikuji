@@ -258,15 +258,12 @@ Item {
                 }
             }
 
-            WavyProgressBar {
+            LinearProgress {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.space.xs
                 value: Math.max(0, Math.min(1, hero.progress / 100.0))
-                wavy: !hero.isPaused
-                animate: hero.pageVisible && !hero.isPaused
-                fillColor: hero.isPaused ? Theme.alpha(Theme.text, 0.3) : Theme.accent
-                handleColor: fillColor
-                trackColor: Theme.alpha(Theme.text, 0.18)
+                paused: hero.isPaused
+                animate: hero.pageVisible
             }
 
             NoteChip {

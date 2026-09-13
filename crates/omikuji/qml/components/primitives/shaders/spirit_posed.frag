@@ -8,6 +8,7 @@ layout(std140, binding = 0) uniform buf {
     float squeeze;
     float wobble;
     float blush;
+    float strain;
     vec2 resolution;
     vec4 accentColor;
     vec4 coreColor;
@@ -32,6 +33,13 @@ float limb(vec2 p, vec2 a, vec2 b, float r) {
     float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
     vec2 d = pa - ba * h;
     return (r * r) / (dot(d, d) + 1e-5);
+}
+
+float segment(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+    return length(pa - ba * h);
 }
 
 void main() {
@@ -65,8 +73,17 @@ void main() {
     eye.y *= squish;
     float eyeD = length(eye);
     float eyeAA = fwidth(eyeD) + 1e-4;
-    col = mix(col, vec3(0.15, 0.12, 0.16),
-              1.0 - smoothstep(EYE_R - eyeAA, EYE_R + eyeAA, eyeD));
+    float pupil = 1.0 - smoothstep(EYE_R - eyeAA, EYE_R + eyeAA, eyeD);
+
+    vec2 c = m - EYE;
+    float arm = EYE_R * 1.5;
+    float chevD = min(segment(c, vec2(-arm * 0.5, 0.0), vec2(arm * 0.5, arm * 0.6)),
+                      segment(c, vec2(-arm * 0.5, 0.0), vec2(arm * 0.5, -arm * 0.6))) - EYE_R * 0.38;
+    float chevAA = fwidth(chevD) + 1e-4;
+    float chevron = 1.0 - smoothstep(-chevAA, chevAA, chevD);
+
+    float strain = clamp(ubuf.strain, 0.0, 1.0);
+    col = mix(col, vec3(0.15, 0.12, 0.16), mix(pupil, chevron, strain));
 
     fragColor = vec4(col, 1.0) * mask * ubuf.qt_Opacity;
 }

@@ -49,6 +49,7 @@ QtObject {
 
     property bool mutedIcons: false
     property bool filledIcons: false
+    property string progressStyle: "rope"
     property real uiScale: 1.0
     property color icon: Qt.rgba(text.r, text.g, text.b, mutedIcons ? 0.55 : 0.92)
     property color iconHover: Qt.rgba(text.r, text.g, text.b, mutedIcons ? 0.9 : 1.0)
@@ -68,6 +69,9 @@ QtObject {
     function alpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
     function mix(a, b, t) {
         return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
+    }
+    function coreTone(c) {
+        return Qt.hsla(c.hslHue, Math.min(1, c.hslSaturation * 2.4), Math.min(1, c.hslLightness * 1.10), 1)
     }
     function resolveColor(v) {
         const t = theme[v]

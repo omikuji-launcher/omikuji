@@ -7,10 +7,7 @@ Item {
     property string text: ""
     property bool running: false
     property color color: Theme.accent
-    property color coreColor: Qt.hsla(root.color.hslHue,
-                                      Math.min(1, root.color.hslSaturation * 2.4),
-                                      Math.min(1, root.color.hslLightness * 1.10),
-                                      1)
+    property color coreColor: Theme.coreTone(root.color)
     property int supersample: 3
     property int spiritWidth: 136
     property int textSize: Theme.type.body.size

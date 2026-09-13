@@ -1,13 +1,11 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
 
     property color color: "#ffffff"
-    property color coreColor: Qt.hsla(root.color.hslHue,
-                                      Math.min(1, root.color.hslSaturation * 2.4),
-                                      Math.min(1, root.color.hslLightness * 1.10),
-                                      1)
+    property color coreColor: Theme.coreTone(root.color)
     property bool animated: true
     property int supersample: 4
     property real phase: 0
