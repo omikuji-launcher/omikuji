@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window
 
 import omikuji 1.0
-import "components/consolemode"
 
 ApplicationWindow {
     id: root

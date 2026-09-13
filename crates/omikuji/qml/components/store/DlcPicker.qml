@@ -3,8 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import Qt5Compat.GraphicalEffects
-import "../controls"
-import "../primitives"
 import "../lib/Format.js" as Format
 
 Item {

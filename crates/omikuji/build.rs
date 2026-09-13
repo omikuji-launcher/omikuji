@@ -3,30 +3,29 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[path = "src/qml_tree.rs"]
+mod qml_tree;
+
+const QML_ROOT: &str = "qml";
+
+fn walk_files(dir: &str, exts: &[&str]) -> Vec<PathBuf> {
+    qml_tree::walk_files(Path::new(dir), exts).unwrap_or_else(|e| panic!("walk {dir}: {e}"))
+}
+
+fn path_string(p: &Path) -> String {
+    p.to_string_lossy().into_owned()
+}
+
 fn collect_icons() -> (Vec<String>, Vec<String>) {
-    let dir = Path::new("qml/icons");
-    let mut paths: Vec<String> = vec![];
-    let mut names: Vec<String> = vec![];
-    for entry in fs::read_dir(dir).expect("qml/icons must exist") {
-        let entry = entry.expect("read qml/icons entry");
-        let p = entry.path();
-        let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("");
-        if !matches!(ext, "svg" | "png") {
-            continue;
-        }
-        let filename = p.file_name().unwrap().to_string_lossy().into_owned();
-        let stem = filename
-            .strip_suffix(&format!(".{ext}"))
-            .unwrap()
-            .to_string();
-        paths.push(format!("qml/icons/{filename}"));
-        if ext == "svg" && stem != "app" && !stem.ends_with("_fill") {
-            names.push(stem);
-        }
-    }
-    paths.sort();
-    names.sort();
-    (paths, names)
+    let files = walk_files("qml/icons", &["svg", "png"]);
+    let names = files
+        .iter()
+        .filter(|p| p.extension().is_some_and(|ext| ext == "svg"))
+        .filter_map(|p| p.file_stem()?.to_str())
+        .filter(|stem| *stem != "app" && !stem.ends_with("_fill"))
+        .map(str::to_owned)
+        .collect();
+    (files.iter().map(|p| path_string(p)).collect(), names)
 }
 
 const SOURCE_TRANSLATION: &str = "omikuji_en";
@@ -107,54 +106,28 @@ fn find_qsb() -> PathBuf {
     find_qt_tool(&["qsb"]).expect("qsb not found; install qt6-shadertools")
 }
 
-const SHADER_DIRS: [&str; 2] = [
-    "qml/components/consolemode/shaders",
-    "qml/components/primitives/shaders",
-];
-
 fn compile_shaders() -> Vec<String> {
-    let mut out: Vec<String> = SHADER_DIRS
-        .iter()
-        .flat_map(|d| compile_shader_dir(Path::new(d)))
-        .collect();
-    out.sort();
-    out
-}
-
-fn compile_shader_dir(dir: &Path) -> Vec<String> {
-    if !dir.exists() {
-        return vec![];
-    }
     let mut qsb: Option<PathBuf> = None;
-    let mut out_paths: Vec<String> = vec![];
-    for entry in fs::read_dir(dir).expect("read shader dir") {
-        let entry = entry.expect("read shader entry");
-        let p = entry.path();
-        let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("");
-        if !matches!(ext, "frag" | "vert") {
-            continue;
-        }
-        let filename = p.file_name().unwrap().to_string_lossy().into_owned();
-        let qsb_filename = format!("{filename}.qsb");
-        let qsb_dest = dir.join(&qsb_filename);
-
-        if needs_recompile(&p, &qsb_dest) {
-            let qsb = qsb.get_or_insert_with(find_qsb);
-            let status = Command::new(&*qsb)
-                .arg("--qt6")
-                .arg("-o")
-                .arg(&qsb_dest)
-                .arg(&p)
-                .status()
-                .expect("invoke qsb");
-            if !status.success() {
-                panic!("qsb failed for {filename}");
+    walk_files(QML_ROOT, &["frag", "vert"])
+        .into_iter()
+        .map(|src| {
+            let dest = PathBuf::from(format!("{}.qsb", src.display()));
+            if needs_recompile(&src, &dest) {
+                let qsb = qsb.get_or_insert_with(find_qsb);
+                let status = Command::new(&*qsb)
+                    .arg("--qt6")
+                    .arg("-o")
+                    .arg(&dest)
+                    .arg(&src)
+                    .status()
+                    .expect("invoke qsb");
+                if !status.success() {
+                    panic!("qsb failed for {}", src.display());
+                }
             }
-        }
-
-        out_paths.push(format!("{}/{qsb_filename}", dir.display()));
-    }
-    out_paths
+            path_string(&dest)
+        })
+        .collect()
 }
 
 fn needs_recompile(source: &Path, artifact: &Path) -> bool {
@@ -198,10 +171,7 @@ fn qt_version() -> String {
 fn main() {
     let (icon_paths, icon_names) = collect_icons();
     write_icon_names(&icon_names);
-    println!("cargo:rerun-if-changed=qml/icons");
-    for dir in SHADER_DIRS {
-        println!("cargo:rerun-if-changed={dir}");
-    }
+    println!("cargo:rerun-if-changed={QML_ROOT}");
 
     println!("cargo:rustc-env=OMIKUJI_QT_VERSION={}", qt_version());
 
@@ -213,11 +183,7 @@ fn main() {
     let mut qrc_paths = icon_paths;
     qrc_paths.extend(shader_paths);
     qrc_paths.extend(translation_paths);
-    qrc_paths.push("qml/components/lib/RunnerGrouping.js".to_string());
-    qrc_paths.push("qml/components/lib/Format.js".to_string());
-    qrc_paths.push("qml/components/lib/ArchiveAssets.js".to_string());
-    qrc_paths.push("qml/components/lib/PlayState.js".to_string());
-    qrc_paths.push("qml/components/lib/Omikuji.js".to_string());
+    qrc_paths.extend(walk_files(QML_ROOT, &["js"]).iter().map(|p| path_string(p)));
 
     let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
     let app_settings_bridge = kushi::ObjectBridge::new("AppSettingsBridge")
@@ -369,187 +335,15 @@ fn main() {
     let hot_reload = std::env::var("OMIKUJI_QML_HOTRELOAD").is_ok_and(|v| !v.is_empty());
     println!("cargo:rerun-if-env-changed=OMIKUJI_QML_HOTRELOAD");
 
-    // holy fucking shit this is wild actually
-    let qml_files = [
-        "qml/Main.qml",
-        "qml/ConsoleMode.qml",
-        "qml/RunExe.qml",
-        // root
-        "qml/components/consolemode/ConsoleCard.qml",
-        "qml/components/consolemode/ConsoleCardRow.qml",
-        "qml/components/consolemode/ConsoleHintBar.qml",
-        "qml/components/consolemode/ConsoleOsk.qml",
-        "qml/components/consolemode/ConsolePlayButton.qml",
-        "qml/components/consolemode/ConsoleSettingsDialog.qml",
-        "qml/components/consolemode/ConsoleTopBar.qml",
-        "qml/components/categories/CategoriesController.qml",
-        "qml/components/categories/CategoryContextMenu.qml",
-        // dialogs
-        "qml/components/dialogs/ArchiveManageDialog.qml",
-        "qml/components/dialogs/ArchiveSourceDialog.qml",
-        "qml/components/dialogs/FoundRunnersDialog.qml",
-        "qml/components/dialogs/CategoryEditDialog.qml",
-        "qml/components/dialogs/ConfirmDialog.qml",
-        "qml/components/dialogs/ChangelogDialog.qml",
-        "qml/components/dialogs/ComponentRequiredDialog.qml",
-        "qml/components/dialogs/WelcomeDialog.qml",
-        "qml/components/popups/ContextMenu.qml",
-        "qml/components/dialogs/DialogCard.qml",
-        "qml/components/dialogs/DialogSection.qml",
-        "qml/components/dialogs/RadiiDialog.qml",
-        "qml/components/dialogs/DefaultsApplyDialog.qml",
-        "qml/components/store/EpicInstallDialog.qml",
-        "qml/components/store/GachaInstallDialog.qml",
-        "qml/components/dialogs/GameCategoriesDialog.qml",
-        "qml/components/store/GogInstallDialog.qml",
-        "qml/components/store/NileInstallDialog.qml",
-        "qml/components/dialogs/ErrorDialog.qml",
-        "qml/components/dialogs/PrefixCreateDialog.qml",
-        "qml/components/dialogs/PrefixDetailDialog.qml",
-        "qml/components/dialogs/PrefixPrepDialog.qml",
-        "qml/components/dialogs/RunCommandDialog.qml",
-        "qml/components/dialogs/TemplateVarsDialog.qml",
-        "qml/components/dialogs/FontSizesDialog.qml",
-        "qml/components/controls/ExpansionHint.qml",
-        "qml/components/dialogs/LogRulesDialog.qml",
-        "qml/components/dialogs/GameLogsWindow.qml",
-        "qml/components/dialogs/MigrationDialog.qml",
-        "qml/components/dialogs/OmikujiDrawDialog.qml",
-        "qml/components/dialogs/SetsDialog.qml",
-        "qml/components/dialogs/SteamMoveDialog.qml",
-        "qml/components/dialogs/ScriptBrowserDialog.qml",
-        "qml/components/dialogs/ScriptRunDialog.qml",
-        "qml/components/dialogs/UpdateAvailableDialog.qml",
-        // downloads
-        "qml/components/downloads/BannerThumb.qml",
-        "qml/components/downloads/CapsLabel.qml",
-        "qml/components/downloads/ComponentRow.qml",
-        "qml/components/downloads/DownloadsPage.qml",
-        "qml/components/downloads/HeroCard.qml",
-        "qml/components/downloads/KindChip.qml",
-        "qml/components/downloads/MiniRow.qml",
-        // library
-        "qml/components/library/FloatingBar.qml",
-        "qml/components/library/GameActionButton.qml",
-        "qml/components/library/GameActions.qml",
-        "qml/components/library/GameCard.qml",
-        "qml/components/library/GameContextMenu.qml",
-        "qml/components/library/GameGrid.qml",
-        "qml/components/library/GameLibraryView.qml",
-        "qml/components/library/GameStatsRow.qml",
-        // navigation
-        "qml/components/navigation/NavTabs.qml",
-        "qml/components/navigation/SubNavRail.qml",
-        "qml/components/navigation/TopBar.qml",
-        // pages
-        "qml/components/modals/AddGamePage.qml",
-        "qml/components/modals/GameSettingsPage.qml",
-        "qml/components/modals/GlobalSettingsPage.qml",
-        "qml/components/modals/SettingsModal.qml",
-        // settings
-        "qml/components/settings/ArchiveSourceRow.qml",
-        "qml/components/settings/SettingsRow.qml",
-        "qml/components/settings/SettingsSection.qml",
-        "qml/components/settings/TabEpic.qml",
-        "qml/components/settings/ImageOverrideField.qml",
-        "qml/components/settings/TabGameInfo.qml",
-        "qml/components/settings/TabGlobalAbout.qml",
-        "qml/components/settings/TabGlobalComponents.qml",
-        "qml/components/settings/TabGlobalDefaults.qml",
-        "qml/components/settings/TabGlobalOfuda.qml",
-        "qml/components/settings/TabGlobalPresets.qml",
-        "qml/components/settings/TabGlobalApp.qml",
-        "qml/components/settings/TabGlobalTheme.qml",
-        "qml/components/settings/TabGlobalUi.qml",
-        "qml/components/settings/TabRunnerOptions.qml",
-        "qml/components/settings/TabSystem.qml",
-        // store
-        "qml/components/store/StoreLibraryBase.qml",
-        "qml/components/store/EpicLibrary.qml",
-        "qml/components/store/StoreGameDetails.qml",
-        "qml/components/store/GachaLibrary.qml",
-        "qml/components/store/GogLibrary.qml",
-        "qml/components/store/NileLibrary.qml",
-        "qml/components/store/EpicController.qml",
-        "qml/components/store/ExistingFilesNote.qml",
-        "qml/components/store/GachaController.qml",
-        "qml/components/store/GogController.qml",
-        "qml/components/store/NileController.qml",
-        "qml/components/store/StorePanel.qml",
-        "qml/components/store/SteamLibrary.qml",
-        "qml/components/store/StoreLoginOverlay.qml",
-        // widgets
-        "qml/components/cards/BaseCard.qml",
-        "qml/components/cards/CardGrid.qml",
-        "qml/components/cards/CardProgressOverlay.qml",
-        "qml/components/popups/DisplayOptionsPopup.qml",
-        "qml/components/controls/Chip.qml",
-        "qml/components/controls/FieldButton.qml",
-        "qml/components/controls/FieldSurface.qml",
-        "qml/components/controls/FilePicker.qml",
-        "qml/components/controls/IconButton.qml",
-        "qml/components/controls/InstallActions.qml",
-        "qml/components/dialogs/IconPickerDialog.qml",
-        "qml/components/dialogs/ImagePreviewDialog.qml",
-        "qml/components/dialogs/MediaPickerDialog.qml",
-        "qml/components/controls/KeyValueTable.qml",
-        "qml/components/controls/LabeledSwitch.qml",
-        "qml/components/primitives/LoadingSpirit.qml",
-        "qml/components/controls/M3Button.qml",
-        "qml/components/controls/M3Checkbox.qml",
-        "qml/components/store/DlcPicker.qml",
-        "qml/components/primitives/EmptyState.qml",
-        "qml/components/settings/TabGog.qml",
-        "qml/components/controls/M3Dropdown.qml",
-        "qml/components/controls/InfoHint.qml",
-        "qml/components/controls/NoteChip.qml",
-        "qml/components/controls/M3FileField.qml",
-        "qml/components/controls/M3Slider.qml",
-        "qml/components/controls/M3SpinBox.qml",
-        "qml/components/controls/M3Switch.qml",
-        "qml/components/controls/M3TextField.qml",
-        "qml/components/controls/OutputLog.qml",
-        "qml/components/controls/ResizeGrips.qml",
-        "qml/components/controls/SegmentedControl.qml",
-        "qml/components/controls/SwitchField.qml",
-        "qml/components/controls/ThemedLogHighlighter.qml",
-        "qml/components/popups/PopupSurface.qml",
-        "qml/components/popups/PopupZoom.qml",
-        "qml/components/cards/StoreCardAction.qml",
-        "qml/components/primitives/BlockTrack.qml",
-        "qml/components/primitives/HoppingSpirit.qml",
-        "qml/components/primitives/LinearProgress.qml",
-        "qml/components/primitives/LinearTrack.qml",
-        "qml/components/primitives/MikujiBox.qml",
-        "qml/components/primitives/MikujiScene.qml",
-        "qml/components/primitives/PillTrack.qml",
-        "qml/components/primitives/PosedSpirit.qml",
-        "qml/components/primitives/RopeTrack.qml",
-        "qml/components/primitives/ScrollEdgeFade.qml",
-        "qml/components/primitives/Sparkline.qml",
-        "qml/components/primitives/SpiritFlame.qml",
-        "qml/components/primitives/Squircle.qml",
-        "qml/components/primitives/StripeTrack.qml",
-        "qml/components/primitives/SvgIcon.qml",
-        "qml/components/primitives/ThinScrollBar.qml",
-        "qml/components/primitives/ToriiGate.qml",
-        "qml/components/popups/ToastManager.qml",
-        "qml/components/popups/Tooltip.qml",
-    ];
+    let (singletons, qml_files): (Vec<_>, Vec<_>) = walk_files(QML_ROOT, &["qml"])
+        .into_iter()
+        .partition(|p| qml_tree::is_singleton(p));
 
-    let mut qml_module = QmlModule::new("omikuji");
+    let mut qml_module = QmlModule::new("omikuji")
+        .qml_files(singletons.into_iter().map(|p| QmlFile::from(p).singleton(true)));
     if !hot_reload {
         qml_module = qml_module.qml_files(qml_files);
     }
-    qml_module = qml_module.qml_file(QmlFile::from("qml/components/Theme.qml").singleton(true));
-    qml_module =
-        qml_module.qml_file(QmlFile::from("qml/components/OverlayStack.qml").singleton(true));
-    qml_module =
-        qml_module.qml_file(QmlFile::from("qml/components/CategoryLabels.qml").singleton(true));
-    qml_module =
-        qml_module.qml_file(QmlFile::from("qml/components/CardStyles.qml").singleton(true));
-    qml_module =
-        qml_module.qml_file(QmlFile::from("qml/components/ProgressStyles.qml").singleton(true));
 
     let builder = CxxQtBuilder::new_qml_module(qml_module)
         .qrc_resources(&qrc_paths)

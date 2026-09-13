@@ -1,8 +1,6 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
-import "../controls"
-
 
 Popup {
     id: root

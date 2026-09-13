@@ -1,0 +1,499 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import omikuji 1.0
+import QtQuick.Layouts
+
+import "../../lib/RunnerGrouping.js" as RG
+
+Item {
+    id: root
+
+    property var config: ({})
+    property var updateField: function(key, value) {}
+    property var gameModel: null
+    property var openDllSets: function() {}
+
+    // list_runners is a function call not a reactive property, bumping this forces re-evaluation
+    property int runnersVersion: 0
+
+    implicitHeight: content.height
+
+    property string runnerType: config["runner.type"] || ""
+    property bool isWine: runnerType === "" || runnerType === "wine"
+    property bool isProtonWine: isProtonVersion(config["wine.version"] || "")
+
+    readonly property string protonPatchState: gameModel && isProtonWine ? gameModel.proton_patch_state(config["wine.version"] || "") : "not_proton"
+
+    readonly property var layerKeys: ["dxvk", "vkd3d", "dxvk_nvapi"]
+    readonly property bool hasPinnedLayer: layerKeys.some(k => config["wine." + k] === true && (config["wine." + k + "_version"] || "") !== "builtin")
+    readonly property bool hasDisabledLayer: config["wine.dxvk"] !== true || config["wine.vkd3d"] !== true
+
+    function isProtonVersion(version) {
+        return gameModel.runner_is_proton(String(version || ""))
+    }
+
+    component DllVersionPicker: Column {
+        id: picker
+
+        required property string kind
+        required property string fieldKey
+        required property string layerName
+        required property bool isProton
+        required property var gameModel
+        required property var config
+        required property var apply
+
+        width: parent.width
+        spacing: Theme.space.sm
+
+        readonly property var versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
+        readonly property string value: config[fieldKey] || ""
+
+        M3Dropdown {
+            width: parent.width
+            label: qsTr("%1 version").arg(picker.layerName)
+            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin" }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
+            currentIndex: Math.max(0, RG.indexOfValue(options, picker.value))
+            onSelected: (v) => picker.apply(picker.fieldKey, v)
+        }
+
+        NoteChip {
+            width: parent.width
+            visible: picker.value === "builtin"
+            text: picker.isProton
+                ? qsTr("For Proton, Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
+                : qsTr("For Wine, Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
+        }
+    }
+
+    Column {
+        id: content
+        width: parent.width
+        spacing: 20
+
+        Column {
+            width: parent.width
+            spacing: 20
+            visible: root.isWine
+
+            SettingsSection {
+                label: qsTr("Executable")
+                icon: "terminal"
+                width: parent.width
+
+                M3FileField {
+                    label: qsTr("Path")
+                    text: root.config["meta.exe"] || ""
+                    width: parent.width
+                    gameModel: root.gameModel
+                    expandHint: false
+                    onTextEdited: (t) => root.updateField("meta.exe", t)
+                }
+
+                M3FileField {
+                    label: qsTr("Working Directory")
+                    placeholder: qsTr("empty = executable's parent directory")
+                    text: root.config["launch.working_dir"] || ""
+                    selectFolder: true
+                    width: parent.width
+                    gameModel: root.gameModel
+                    onTextEdited: (t) => root.updateField("launch.working_dir", t)
+                }
+
+                M3TextField {
+                    label: qsTr("Arguments")
+                    placeholder: '--skip-intro --windowed --name "John Doe"'
+                    text: root.config["launch.args"] || ""
+                    width: parent.width
+                    gameModel: root.gameModel
+                    onTextEdited: (t) => root.updateField("launch.args", t)
+                }
+
+                M3TextField {
+                    label: qsTr("Command Prefix")
+                    placeholder: qsTr("prepended to command (e.g. custom wrapper)")
+                    text: root.config["launch.command_prefix"] || ""
+                    width: parent.width
+                    onTextEdited: (t) => root.updateField("launch.command_prefix", t)
+                }
+            }
+
+            SettingsSection {
+                label: "Wine"
+                icon: "wine_bar"
+                width: parent.width
+
+                M3Dropdown {
+                    label: qsTr("Version")
+                    width: parent.width
+                    options: {
+                        // touch runnersVersion so QML re-evaluates the binding after install/delete
+                        void root.runnersVersion
+                        let runners = root.gameModel ? JSON.parse(root.gameModel.list_runners()) : []
+                        return RG.runnerOptions(runners, root.config["wine.version"] || "", {
+                            emptyLabel: qsTr("No runners installed"),
+                            tint: Theme.error,
+                            missingLabel: qsTr("missing")
+                        })
+                    }
+                    currentIndex: {
+                        void root.runnersVersion
+                        return RG.selectedIndex(options, root.config["wine.version"] || "")
+                    }
+                    onSelected: (val) => root.updateField("wine.version", val)
+                }
+
+                M3FileField {
+                    label: qsTr("Prefix")
+                    placeholder: root.config["wine.prefix.resolved"] || qsTr("empty = auto-create per game")
+                    text: root.config["wine.prefix"] || ""
+                    selectFolder: true
+                    width: parent.width
+                    gameModel: root.gameModel
+                    onTextEdited: (t) => root.updateField("wine.prefix", t)
+                }
+
+                M3Dropdown {
+                    label: qsTr("Architecture")
+                    width: parent.width
+                    options: [
+                        { label: qsTr("64-bit (win64)"), value: "win64" },
+                        { label: qsTr("32-bit (win32)"), value: "win32" }
+                    ]
+                    currentIndex: root.config["wine.prefix_arch"] === "win32" ? 1 : 0
+                    onSelected: (val) => root.updateField("wine.prefix_arch", val)
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("Sync")
+                icon: "sync"
+                width: parent.width
+
+                GridLayout {
+                    columns: 2
+                    columnSpacing: 96
+                    rowSpacing: 12
+
+                    LabeledSwitch {
+                        label: qsTr("Esync")
+                        checked: root.config["wine.esync"] === true
+                        onToggled: (val) => root.updateField("wine.esync", val)
+                    }
+
+                    LabeledSwitch {                        label: qsTr("Fsync")
+                        checked: root.config["wine.fsync"] === true
+                        onToggled: (val) => root.updateField("wine.fsync", val)
+                    }
+
+                    LabeledSwitch {
+                        label: qsTr("NTSync")
+                        enabled: root.isProtonWine
+                        checked: root.config["wine.ntsync"] === true
+                        onToggled: (val) => root.updateField("wine.ntsync", val)
+                    }
+
+                    Text {
+                        text: qsTr("NTSync is only applied when the selected Wine version is Proton.")
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.label.size
+                        visible: !root.isProtonWine
+                        Layout.columnSpan: 2
+                        wrapMode: Text.WordWrap
+                    }
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("Translation Layers")
+                icon: "layers"
+                hint: qsTr("A layer that is off is actively disabled, so the game falls back to Wine's own Direct3D even on Proton.")
+                width: parent.width
+
+                GridLayout {
+                    columns: 2
+                    columnSpacing: 96
+                    rowSpacing: 12
+
+                    LabeledSwitch {
+                        label: "DXVK"
+                        checked: root.config["wine.dxvk"] === true
+                        onToggled: (val) => root.updateField("wine.dxvk", val)
+                    }
+
+                    LabeledSwitch {                        label: "VKD3D"
+                        checked: root.config["wine.vkd3d"] === true
+                        onToggled: (val) => root.updateField("wine.vkd3d", val)
+                    }
+
+                    LabeledSwitch {                        label: "DXVK-NVAPI"
+                        checked: root.config["wine.dxvk_nvapi"] === true
+                        onToggled: (val) => root.updateField("wine.dxvk_nvapi", val)
+                    }
+                }
+
+                DllVersionPicker {
+                    kind: "dxvk"
+                    fieldKey: "wine.dxvk_version"
+                    layerName: "DXVK"
+                    isProton: root.isProtonWine
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.dxvk"] === true
+                }
+
+                DllVersionPicker {
+                    kind: "vkd3d"
+                    fieldKey: "wine.vkd3d_version"
+                    layerName: "VKD3D"
+                    isProton: root.isProtonWine
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.vkd3d"] === true
+                }
+
+                DllVersionPicker {
+                    kind: "dxvk_nvapi"
+                    fieldKey: "wine.dxvk_nvapi_version"
+                    layerName: "DXVK-NVAPI"
+                    isProton: root.isProtonWine
+                    gameModel: root.gameModel
+                    config: root.config
+                    apply: root.updateField
+                    visible: root.config["wine.dxvk_nvapi"] === true
+                }
+
+                NoteChip {
+                    width: parent.width
+                    visible: root.isProtonWine && root.hasPinnedLayer
+                    text: qsTr("With Proton, picking a version swaps the .dll files inside the runner itself. Switching back to Built-in restores them on the next launch.")
+                }
+
+                NoteChip {
+                    width: parent.width
+                    visible: root.protonPatchState === "foreign" || root.protonPatchState === "unsupported"
+                    icon: "warning"
+                    tone: Theme.error
+                    text: root.protonPatchState === "foreign"
+                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles will not apply. See Translation Layers in the Usage Guide.")
+                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles will not apply. See Translation Layers in the Usage Guide.")
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("Compatibility")
+                icon: "verified"
+                width: parent.width
+
+                GridLayout {
+                    columns: 2
+                    columnSpacing: 96
+                    rowSpacing: 12
+
+                    LabeledSwitch {
+                        label: "BattlEye"
+                        checked: root.config["wine.battleye"] === true
+                        onToggled: (val) => root.updateField("wine.battleye", val)
+                    }
+
+                    LabeledSwitch {                        label: "EasyAntiCheat"
+                        checked: root.config["wine.easyanticheat"] === true
+                        onToggled: (val) => root.updateField("wine.easyanticheat", val)
+                    }
+
+                    LabeledSwitch {
+                        label: "FSR"
+                        checked: root.config["wine.fsr"] === true
+                        onToggled: (val) => root.updateField("wine.fsr", val)
+                    }
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("Display")
+                icon: "desktop_windows"
+                width: parent.width
+
+                LabeledSwitch {
+                    label: qsTr("DPI Scaling")
+                    checked: root.config["wine.dpi_scaling"] === true
+                    onToggled: (val) => root.updateField("wine.dpi_scaling", val)
+                }
+
+                SettingsRow {
+                    label: qsTr("DPI")
+                    width: parent.width
+                    contentRightMargin: 0
+                    visible: root.config["wine.dpi_scaling"] === true
+
+                    M3SpinBox {
+                        from: 72
+                        to: 288
+                        stepSize: 12
+                        value: root.config["wine.dpi"] || 96
+                        onMoved: (val) => root.updateField("wine.dpi", val)
+                    }
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("Drivers")
+                icon: "headphones"
+                width: parent.width
+
+                M3Dropdown {
+                    label: qsTr("Audio Driver")
+                    width: parent.width
+                    options: [
+                        { label: qsTr("Default"), value: "" },
+                        { label: "PulseAudio", value: "pulse" },
+                        { label: "ALSA", value: "alsa" }
+                    ]
+                    currentIndex: {
+                        let d = root.config["wine.audio_driver"] || ""
+                        if (d === "pulse") return 1
+                        if (d === "alsa") return 2
+                        return 0
+                    }
+                    onSelected: (val) => root.updateField("wine.audio_driver", val)
+                }
+
+                M3Dropdown {
+                    label: qsTr("Graphics Driver")
+                    width: parent.width
+                    options: [
+                        { label: qsTr("Default"), value: "" },
+                        { label: "X11", value: "x11" },
+                        { label: "Wayland", value: "wayland" }
+                    ]
+                    currentIndex: {
+                        let d = root.config["wine.graphics_driver"] || ""
+                        if (d === "x11") return 1
+                        if (d === "wayland") return 2
+                        return 0
+                    }
+                    onSelected: (val) => root.updateField("wine.graphics_driver", val)
+                }
+            }
+
+            SettingsSection {
+                label: qsTr("DLL Overrides")
+                icon: "build"
+                width: parent.width
+
+                KeyValueTable {
+                    width: parent.width
+                    json: root.config["wine.dll_overrides"] || "{}"
+                    keyPlaceholder: "dll_name"
+                    valuePlaceholder: "n,b"
+                    addLabel: qsTr("Add override")
+                    onChanged: (j) => root.updateField("wine.dll_overrides", j)
+                }
+
+                M3Button {
+                    text: {
+                        let n = 0
+                        try { n = JSON.parse(root.config["wine.dll_override_sets"] || "[]").length } catch (e) {}
+                        return n > 0 ? qsTr("Sets · %1 synced").arg(n) : qsTr("Sets")
+                    }
+                    variant: "tonal"
+                    icon: "view_list"
+                    onClicked: root.openDllSets()
+                }
+            }
+        }
+
+        // the more i add the more i aks myself why im doing this. Electron was the real answer all along...
+        SettingsSection {
+            label: qsTr("Native")
+            icon: "terminal"
+            width: parent.width
+            visible: root.runnerType === "native"
+
+            M3FileField {
+                label: qsTr("Executable")
+                text: root.config["meta.exe"] || ""
+                width: parent.width
+                gameModel: root.gameModel
+                expandHint: false
+                onTextEdited: (t) => root.updateField("meta.exe", t)
+            }
+
+            M3FileField {
+                label: qsTr("Working Directory")
+                placeholder: qsTr("empty = executable's parent directory")
+                text: root.config["launch.working_dir"] || ""
+                selectFolder: true
+                width: parent.width
+                gameModel: root.gameModel
+                onTextEdited: (t) => root.updateField("launch.working_dir", t)
+            }
+
+            M3TextField {
+                label: qsTr("Arguments")
+                placeholder: '--skip-intro --windowed'
+                text: root.config["launch.args"] || ""
+                width: parent.width
+                gameModel: root.gameModel
+                onTextEdited: (t) => root.updateField("launch.args", t)
+            }
+
+            M3TextField {
+                label: qsTr("Command Prefix")
+                placeholder: qsTr("prepended to command (e.g. custom wrapper)")
+                text: root.config["launch.command_prefix"] || ""
+                width: parent.width
+                onTextEdited: (t) => root.updateField("launch.command_prefix", t)
+            }
+        }
+
+        SettingsSection {
+            label: "Steam"
+            icon: "steam"
+            width: parent.width
+            visible: root.runnerType === "steam"
+
+            M3TextField {
+                label: qsTr("Application ID")
+                placeholder: "e.g. 235320"
+                text: root.config["source.app_id"] || ""
+                width: parent.width
+                onTextEdited: (t) => root.updateField("source.app_id", t)
+            }
+
+            M3TextField {
+                label: qsTr("Arguments")
+                placeholder: '--skip-intro --windowed'
+                text: root.config["launch.args"] || ""
+                width: parent.width
+                onTextEdited: (t) => root.updateField("launch.args", t)
+            }
+        }
+
+        SettingsSection {
+            label: "Flatpak"
+            icon: "sports_esports"
+            width: parent.width
+            visible: root.runnerType === "flatpak"
+
+            M3TextField {
+                label: qsTr("Application ID")
+                placeholder: "e.g. com.valvesoftware.Steam"
+                text: root.config["source.app_id"] || ""
+                width: parent.width
+                onTextEdited: (t) => root.updateField("source.app_id", t)
+            }
+
+            M3TextField {
+                label: qsTr("Arguments")
+                placeholder: qsTr("passed to the application")
+                text: root.config["launch.args"] || ""
+                width: parent.width
+                onTextEdited: (t) => root.updateField("launch.args", t)
+            }
+        }
+    }
+}

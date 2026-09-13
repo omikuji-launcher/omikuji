@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import "../controls"
 
 DialogCard {
     id: root

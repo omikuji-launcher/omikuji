@@ -1,0 +1,163 @@
+import QtQuick
+
+// every knob is a live apply* call, no save/cancel flow
+Item {
+    id: root
+
+    property var appSettings: null
+    property var componentsBridge: null
+    property var archiveManager: null
+    property var ofudaBridge: null
+    property var defaults: null
+    property var gameModel: null
+    property var activeInstalls: ({})
+
+    // bubbles to Main.qml which owns teh dialog, full-window dim needs a root-level sibling
+    signal manageRequested(string category, string source, string kind)
+    signal addSourceRequested(string category)
+    signal manageFoundRunnersRequested()
+
+    signal categoryAddRequested()
+    signal categoryEditRequested(int index, var entry)
+    signal categoryDeleteRequested(int index, var entry)
+    signal manageLogRulesRequested()
+
+    signal defaultsApplyToExistingRequested()
+    signal manageSetsRequested(string kind)
+    signal manageFontSizesRequested()
+    signal manageRadiiRequested()
+
+    signal prefixOpenRequested(var prefix)
+    signal prefixCreateRequested()
+
+    readonly property string modalTitle: qsTr("Settings")
+    readonly property string modalSubtitle: ""
+    readonly property string primaryLabel: ""
+    readonly property string secondaryLabel: ""
+    readonly property bool primaryEnabled: false
+    readonly property bool secondaryEnabled: false
+
+    function primaryAction() {}
+    function secondaryAction() {}
+    function closeAction() {}
+
+    property var tabs: [
+        { label: qsTr("App"),        kind: "app",        icon: "dataset" },
+        { label: qsTr("Interface"),  kind: "ui",         icon: "tune" },
+        { label: qsTr("Defaults"),   kind: "defaults",   icon: "settings" },
+        { label: qsTr("Presets"),    kind: "presets",    icon: "view_list" },
+        { label: qsTr("Components"), kind: "components", icon: "layers" },
+        { label: "Ofuda",            kind: "ofuda",      icon: "ofuda" },
+        { label: qsTr("Theme"),      kind: "theme",      icon: "imagesmode", pinned: true },
+        { label: qsTr("About"),      kind: "about",      icon: "verified",   pinned: true }
+    ]
+    property int currentTabIndex: 0
+    readonly property string currentKind:
+        tabs[currentTabIndex] ? tabs[currentTabIndex].kind : "app"
+
+    implicitHeight: contentCol.implicitHeight
+
+    Column {
+        id: contentCol
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 0
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "components"
+            visible: active
+            source: "global/TabGlobalComponents.qml"
+            onLoaded: {
+                item.componentsBridge = Qt.binding(() => root.componentsBridge)
+                item.archiveManager = Qt.binding(() => root.archiveManager)
+                item.activeInstalls = Qt.binding(() => root.activeInstalls)
+                item.manageRequested.connect((cat, name, kind) => {
+                    root.manageRequested(cat, name, kind)
+                })
+                item.addSourceRequested.connect((cat) => {
+                    root.addSourceRequested(cat)
+                })
+                item.manageFoundRunnersRequested.connect(() => {
+                    root.manageFoundRunnersRequested()
+                })
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "ofuda"
+            visible: active
+            source: "global/TabGlobalOfuda.qml"
+            onLoaded: {
+                item.ofudaBridge = Qt.binding(() => root.ofudaBridge)
+                item.appSettings = Qt.binding(() => root.appSettings)
+                item.openRequested.connect((p) => root.prefixOpenRequested(p))
+                item.createRequested.connect(() => root.prefixCreateRequested())
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "defaults"
+            visible: active
+            source: "global/TabGlobalDefaults.qml"
+            onLoaded: {
+                item.defaults = Qt.binding(() => root.defaults)
+                item.gameModel = Qt.binding(() => root.gameModel)
+                item.appSettings = Qt.binding(() => root.appSettings)
+                item.applyToExistingRequested.connect(() => root.defaultsApplyToExistingRequested())
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "presets"
+            visible: active
+            source: "global/TabGlobalPresets.qml"
+            onLoaded: item.manageSetsRequested.connect((kind) => root.manageSetsRequested(kind))
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "ui"
+            visible: active
+            source: "global/TabGlobalUi.qml"
+            onLoaded: {
+                item.appSettings = Qt.binding(() => root.appSettings)
+                item.categoryAddRequested.connect(() => root.categoryAddRequested())
+                item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
+                item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
+                item.manageLogRulesRequested.connect(() => root.manageLogRulesRequested())
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "app"
+            visible: active
+            source: "global/TabGlobalApp.qml"
+            onLoaded: item.appSettings = Qt.binding(() => root.appSettings)
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "theme"
+            visible: active
+            source: "global/TabGlobalTheme.qml"
+            onLoaded: {
+                item.appSettings = Qt.binding(() => root.appSettings)
+                item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
+                item.manageRadiiRequested.connect(() => root.manageRadiiRequested())
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.currentKind === "about"
+            visible: active
+            source: "global/TabGlobalAbout.qml"
+            onLoaded: item.gameModel = Qt.binding(() => root.gameModel)
+        }
+    }
+}

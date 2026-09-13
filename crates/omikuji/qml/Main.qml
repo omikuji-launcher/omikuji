@@ -5,15 +5,6 @@ import QtQml
 import QtQuick.Controls
 
 import omikuji 1.0
-import "components/categories"
-import "components/controls"
-import "components/dialogs"
-import "components/downloads"
-import "components/library"
-import "components/navigation"
-import "components/store"
-import "components/modals"
-import "components/popups"
 import "components/lib/Omikuji.js" as Omikuji
 
 /*

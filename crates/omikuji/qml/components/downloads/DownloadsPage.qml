@@ -4,9 +4,6 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
 
-import "."
-import "../primitives"
-
 Item {
     id: root
 

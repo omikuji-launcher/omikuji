@@ -1,8 +1,5 @@
 import QtQuick
 import omikuji 1.0
-import "../controls"
-import "../primitives"
-
 
 Item {
     id: root

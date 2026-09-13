@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import omikuji 1.0
-import "../primitives"
 
 Item {
     id: root

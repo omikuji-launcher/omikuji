@@ -1,13 +1,14 @@
 mod bridge;
 mod cli;
+mod hot_reload;
 mod inhibit;
 mod log_fmt;
 mod notify;
+mod qml_tree;
 mod single_instance;
 
-use cxx_qt_lib::{QQmlApplicationEngine, QUrl};
+use cxx_qt_lib::{QQmlApplicationEngine, QString, QUrl};
 use std::ffi::{CString, c_void};
-use std::path::PathBuf;
 
 unsafe extern "C" {
     fn omikuji_app_init();
@@ -22,23 +23,6 @@ unsafe extern "C" {
         qml_dir: *const std::os::raw::c_char,
         root_url: *const std::os::raw::c_char,
     );
-}
-
-fn hot_reload_dir() -> Option<PathBuf> {
-    match std::env::var("OMIKUJI_QML_HOTRELOAD") {
-        Ok(val) if !val.is_empty() => Some(match val.as_str() {
-            "1" | "true" => PathBuf::from(env!("CARGO_MANIFEST_DIR")),
-            path => PathBuf::from(path),
-        }),
-        _ => None,
-    }
-}
-
-fn qml_root_url(rel: &str) -> String {
-    match hot_reload_dir() {
-        Some(dir) => format!("file://{}", dir.join(rel).display()),
-        None => format!("qrc:/qt/qml/omikuji/{rel}"),
-    }
 }
 
 #[tokio::main]
@@ -65,10 +49,18 @@ async fn main() {
         }
     };
 
-    let qml_root = qml_root_url(qml_rel);
-    if qml_root.starts_with("file://") {
-        eprintln!("omikuji: qml hot-reload active, loading from {qml_root}");
-    }
+    let hot_source = hot_reload::source_dir();
+    let disk_module = hot_source
+        .as_deref()
+        .map(|dir| hot_reload::DiskModule::mount(dir).expect("mount the hot reload qml module"));
+    let qml_root = match &disk_module {
+        Some(module) => {
+            let url = module.file_url(qml_rel);
+            eprintln!("omikuji: qml hot-reload active, loading from {url}");
+            url
+        }
+        None => format!("qrc:/qt/qml/omikuji/{qml_rel}"),
+    };
 
     if !matches!(action, cli::CliAction::RunExe(_)) && !single_instance::check().await {
         return;
@@ -103,18 +95,24 @@ async fn main() {
     let mut engine = QQmlApplicationEngine::new();
 
     if let Some(mut engine) = engine.as_mut() {
+        if let Some(module) = &disk_module {
+            engine
+                .as_mut()
+                .add_import_path(&QString::from(&*module.import_path().to_string_lossy()));
+        }
+
         engine.as_mut().load(&QUrl::from(qml_root.as_str()));
 
-        if let Some(dir) = hot_reload_dir() {
+        if let Some(dir) = &hot_source
+            && let (Ok(qml_dir), Ok(root)) = (
+                CString::new(dir.join("qml").to_string_lossy().as_bytes()),
+                CString::new(qml_root.as_bytes()),
+            )
+        {
             let engine_ptr = unsafe {
                 engine.as_mut().get_unchecked_mut() as *mut QQmlApplicationEngine as *mut c_void
             };
-            if let (Ok(qml_dir), Ok(root)) = (
-                CString::new(dir.join("qml").to_string_lossy().as_bytes()),
-                CString::new(qml_root.as_bytes()),
-            ) {
-                unsafe { omikuji_start_qml_watcher(engine_ptr, qml_dir.as_ptr(), root.as_ptr()) };
-            }
+            unsafe { omikuji_start_qml_watcher(engine_ptr, qml_dir.as_ptr(), root.as_ptr()) };
         }
     }
 

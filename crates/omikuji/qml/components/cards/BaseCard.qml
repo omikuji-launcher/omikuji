@@ -4,8 +4,6 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
-import "../popups"
-import "../primitives"
 
 Item {
     id: root

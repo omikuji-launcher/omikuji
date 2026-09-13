@@ -4,7 +4,6 @@ import QtQuick.Window
 
 import omikuji 1.0
 import "components/lib/RunnerGrouping.js" as RG
-import "components/controls"
 
 ApplicationWindow {
     id: root

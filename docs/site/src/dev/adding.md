@@ -62,10 +62,10 @@ ComponentSpec {
 
 Dialogs are built on `DialogCard`, which owns the backdrop, dim, click-outside, Esc, shadow, and scrolling. A dialog is a config of its slots.
 
-1. Create `qml/components/dialogs/MyDialog.qml`:
+1. Create `MyDialog.qml` in the folder of the feature it belongs to, e.g. `qml/components/prefixes/`. `qml/components/dialogs/` only holds the shared dialog building blocks:
 ```qml
 import QtQuick
-import "../widgets"
+import omikuji 1.0
 
 DialogCard {
     id: root
@@ -73,12 +73,12 @@ DialogCard {
     maxWidth: 480
 
     body: Column {
-        spacing: theme.space.md
-        Text { text: "..."; color: theme.text }
+        spacing: Theme.space.md
+        Text { text: "..."; color: Theme.text }
     }
 
     actions: Row {
-        spacing: theme.space.sm
+        spacing: Theme.space.sm
         M3Button { text: "Cancel"; variant: "text"; onClicked: root.close() }
         M3Button { text: "Confirm"; variant: "tonal"; onClicked: { root.close() } }
     }
@@ -87,8 +87,8 @@ DialogCard {
 }
 ```
 
-2. Register it in `qml_files` in `build.rs`.
+   Every type in the app resolves through `import omikuji 1.0`, so there are no relative folder imports. `build.rs` picks up any `.qml` file under `qml/` on its own.
 
-3. Instantiate it once where it's used (a page, or `Main.qml`), give it an `id`, and call `.open()` to show it.
+2. Instantiate it once where it's used (a page, or `Main.qml`), give it an `id`, and call `.open()` to show it.
 
 The slots take a `Component`, but a plain element works directly. Don't add your own backdrop or scrollbar, `DialogCard` owns those. For a fixed-height list dialog, set `fillHeight: true` and `scrollable: false`.

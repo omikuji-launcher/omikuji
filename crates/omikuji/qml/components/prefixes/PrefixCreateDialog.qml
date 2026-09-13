@@ -1,0 +1,129 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import omikuji 1.0
+
+import "../lib/RunnerGrouping.js" as RG
+
+DialogCard {
+    id: root
+
+    property var gameModel: null
+    property var ofudaBridge: null
+
+    readonly property bool busy: ofudaBridge ? ofudaBridge.creating : false
+
+    property string nameValue: ""
+    property var defaults: null
+    property string runnerValue: ""
+    property string setValue: "base"
+    property string outputText: ""
+
+    maxWidth: 460
+    demandWidth: (root.busy || root.outputText.length > 0) ? root.logDemandWidth : 0
+    title: qsTr("New prefix")
+
+    function show() {
+        nameValue = ""
+        root.errorText = ""
+        outputText = ""
+        open()
+    }
+
+    onCloseRequested: if (!busy) close()
+
+    Connections {
+        target: root.ofudaBridge
+        enabled: root.ofudaBridge !== null
+        function onCreateOutput(line) {
+            root.outputText += (root.outputText.length ? "\n" : "") + line
+        }
+        function onCreateFinished(ok, error) {
+            if (ok) root.close()
+            else root.errorText = (error && error.length > 0) ? error : qsTr("Prefix creation failed")
+        }
+    }
+
+    body: Column {
+        width: parent.width
+        spacing: Theme.space.lg
+
+        Column {
+            width: parent.width
+            spacing: Theme.space.md
+            enabled: !root.busy
+
+            M3TextField {
+                label: qsTr("Name")
+                placeholder: qsTr("my-prefix")
+                width: parent.width
+                text: root.nameValue
+                onTextEdited: (t) => root.nameValue = t
+            }
+
+            M3Dropdown {
+                label: qsTr("Runner")
+                width: parent.width
+                options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
+                currentIndex: {
+                    let def = root.defaults ? (root.defaults.getConfig()["wine.version"] || "") : ""
+                    let i = RG.preferredIndex(options, def, ["GE-Proton", "Proton-GE", "wine-ge"])
+                    if (i >= 0) return i
+                    let f = RG.firstNonHeader(options)
+                    return f >= 0 ? f : 0
+                }
+                onSelected: (v) => root.runnerValue = v
+                Component.onCompleted: root.runnerValue = currentValue
+            }
+
+            M3Dropdown {
+                label: qsTr("Set")
+                width: parent.width
+                options: [
+                    { label: qsTr("Base"), value: "base" },
+                    { label: qsTr("Game"), value: "game" },
+                    { label: qsTr("Application"), value: "app" }
+                ]
+                onSelected: (v) => root.setValue = v
+                Component.onCompleted: root.setValue = currentValue
+            }
+        }
+
+        Column {
+            width: parent.width
+            spacing: Theme.space.xs
+            visible: root.busy || root.outputText.length > 0
+
+            Text {
+                visible: root.busy
+                text: qsTr("Setting up your Ofuda…")
+                color: Theme.accent
+                font.pixelSize: Theme.type.caption.size
+            }
+
+            OutputLog {
+                width: parent.width
+                height: 200
+                text: root.outputText
+            }
+        }
+
+    }
+
+    actions: Row {
+        spacing: Theme.space.sm
+
+        M3Button {
+            text: qsTr("Cancel")
+            variant: "tonal"
+            enabled: !root.busy
+            onClicked: root.close()
+        }
+        M3Button {
+            text: root.busy ? qsTr("Working…") : qsTr("Create")
+            variant: "filled"
+            enabled: !root.busy && root.nameValue.trim() !== "" && !!root.runnerValue
+            onClicked: root.ofudaBridge.createPrefix(root.nameValue.trim(), root.runnerValue, root.setValue)
+        }
+    }
+}

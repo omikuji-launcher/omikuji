@@ -4,7 +4,6 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
 import QtQuick.Window
-import "../primitives"
 
 Popup {
     id: root

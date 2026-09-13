@@ -1,8 +1,6 @@
 import QtQuick
 import omikuji 1.0
 
-import "../primitives"
-
 Squircle {
     id: root
 

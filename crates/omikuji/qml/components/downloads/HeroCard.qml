@@ -1,9 +1,6 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import "../controls"
-import "../popups"
-import "../primitives"
 import "../lib/Format.js" as Format
 
 Item {

@@ -3,9 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import "../controls"
-import "../primitives"
-
 
 Rectangle {
     id: row

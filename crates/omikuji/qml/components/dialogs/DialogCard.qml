@@ -4,8 +4,6 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import "../controls"
-import "../primitives"
 
 Item {
     id: root

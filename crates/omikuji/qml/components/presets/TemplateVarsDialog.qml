@@ -1,0 +1,83 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import omikuji 1.0
+
+DialogCard {
+    id: root
+    sizeKey: "template_vars"
+
+    property var appSettings: null
+    property var gameModel: null
+
+    maxWidth: 620
+    title: qsTr("Template literals")
+
+    onCloseRequested: close()
+
+    body: Column {
+        width: parent.width
+        spacing: Theme.space.md
+
+        Text {
+            width: parent.width
+            text: qsTr("Custom ${variable} tokens, usable in launch fields, prefix, install paths, scripts and image overrides. Values may reference the built-ins below.")
+            color: Theme.textSubtle
+            font.pixelSize: Theme.type.label.size
+            wrapMode: Text.WordWrap
+        }
+
+        Squircle {
+            width: parent.width
+            height: builtinsText.implicitHeight + Theme.space.md
+            radius: Theme.radius.sm
+            fillColor: Theme.alpha(Theme.text, 0.06)
+
+            Text {
+                id: builtinsText
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Theme.space.md
+                anchors.rightMargin: Theme.space.md
+                text: "${game_exe}         " + qsTr("game executable") + "\n"
+                + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
+                + "${game_prefix}      " + qsTr("the game's resolved prefix") + "\n"
+                + "${game_id}          " + qsTr("internal game id") + "\n"
+                + "${game_name}        " + qsTr("game name") + "\n"
+                + "${game_slug}        " + qsTr("url-safe game name, as used by omikuji run") + "\n"
+                + "${home}             " + qsTr("home folder") + "\n"
+                + "${prefixes_path}    " + qsTr("prefixes root") + "\n"
+                + "${cache_path}       " + qsTr("cache root") + "\n"
+                + "${scripts_path}     " + qsTr("install scripts root") + "\n"
+                + "${data_path}        " + qsTr("omikuji data root") + "\n"
+                + "${gachas_path}      " + qsTr("gacha manifests root") + "\n"
+                + "${components_path}  " + qsTr("components root") + "\n"
+                + "${runners_path}     " + qsTr("runners root") + "\n"
+                + "${layers_path}      " + qsTr("layers root") + "\n"
+                + "${tools_path}       " + qsTr("tools root") + "\n"
+                + "${logs_path}        " + qsTr("logs root") + "\n"
+                    + "${runtime_path}     " + qsTr("runtime root")
+                color: Theme.textMuted
+                font.pixelSize: Theme.type.caption.size
+                font.family: Theme.mono
+            }
+        }
+
+        KeyValueTable {
+            width: parent.width
+            json: root.appSettings ? root.appSettings.templateVarsJson() : "{}"
+            keyPlaceholder: "my_var"
+            valuePlaceholder: "/some/path or ${prefixes_path}"
+            addLabel: qsTr("Add variable")
+            gameModel: root.gameModel
+            onChanged: (j) => { if (root.appSettings) root.appSettings.applyTemplateVarsJson(j) }
+        }
+    }
+
+    actions: M3Button {
+        text: qsTr("Close")
+        variant: "tonal"
+        onClicked: root.close()
+    }
+}

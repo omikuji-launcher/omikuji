@@ -1,5 +1,5 @@
 import QtQuick
-import "../popups"
+import omikuji 1.0
 
 Item {
     id: ctrl

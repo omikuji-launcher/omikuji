@@ -3,9 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 
-import "../primitives"
-import "../popups"
-
 Item {
     id: root
 

@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "../primitives"
+import omikuji 1.0
 
 // Flow+Repeater not GridView becuase GridView only repositions on model changes, we need the slide when a card flips visible false for filtering
 Item {

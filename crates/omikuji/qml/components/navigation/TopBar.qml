@@ -1,9 +1,6 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
-import "../controls"
-import "../popups"
-import "../primitives"
 
 
 Item {

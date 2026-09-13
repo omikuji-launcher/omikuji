@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import "../controls"
-import "../primitives"
 import "../lib/PlayState.js" as PlayState
 
 

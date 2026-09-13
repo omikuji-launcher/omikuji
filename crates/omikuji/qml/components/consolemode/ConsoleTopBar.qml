@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import Qt5Compat.GraphicalEffects
-import "../primitives"
 
 Row {
     id: bar

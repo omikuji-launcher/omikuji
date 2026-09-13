@@ -1,8 +1,6 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import "../controls"
-import "../downloads"
 
 ColumnLayout {
     id: root

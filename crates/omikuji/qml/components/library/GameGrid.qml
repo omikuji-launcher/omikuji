@@ -1,9 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import omikuji 1.0
-import "."
-import "../cards"
-import "../primitives"
 
 Item {
     id: root

@@ -1,7 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import "../cards"
+import omikuji 1.0
 import "../lib/PlayState.js" as PlayState
 
 // dont re-declare required props here, QML rejects the redeclaration and model roles never reach the card

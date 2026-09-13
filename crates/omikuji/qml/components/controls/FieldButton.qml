@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import "../popups"
-import "../primitives"
 
 FieldSurface {
     id: root

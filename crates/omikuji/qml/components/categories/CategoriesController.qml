@@ -1,5 +1,5 @@
 import QtQuick
-import "../dialogs"
+import omikuji 1.0
 
 Item {
     id: ctrl
