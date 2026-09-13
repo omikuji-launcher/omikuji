@@ -1,10 +1,13 @@
 import QtQuick
 import omikuji 1.0
 
+import "../controls"
+
 Item {
     id: root
 
     property string label: ""
+    property string hint: ""
     property alias contentSpacing: inner.spacing
     default property alias content: inner.children
 
@@ -13,7 +16,8 @@ Item {
     Item {
         id: header
         width: parent.width
-        height: visible ? labelText.implicitHeight : 0
+        height: visible ? Math.max(labelText.implicitHeight,
+                                   headerHint.visible ? headerHint.implicitHeight : 0) : 0
         visible: root.label !== ""
 
         Text {
@@ -28,8 +32,18 @@ Item {
             font.letterSpacing: 0.6
         }
 
-        Rectangle {
+        InfoHint {
+            id: headerHint
+            visible: root.hint !== ""
+            width: visible ? implicitWidth : 0
             anchors.left: labelText.right
+            anchors.leftMargin: visible ? Theme.space.xs : 0
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.hint
+        }
+
+        Rectangle {
+            anchors.left: headerHint.right
             anchors.leftMargin: Theme.space.md
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter

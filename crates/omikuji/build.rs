@@ -519,6 +519,7 @@ fn main() {
         "qml/components/primitives/Squircle.qml",
         "qml/components/primitives/SvgIcon.qml",
         "qml/components/primitives/ThinScrollBar.qml",
+        "qml/components/primitives/ToriiGate.qml",
         "qml/components/popups/ToastManager.qml",
         "qml/components/popups/Tooltip.qml",
         "qml/components/primitives/WavyProgressBar.qml",

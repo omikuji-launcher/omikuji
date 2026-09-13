@@ -76,13 +76,11 @@ DialogCard {
             Layout.fillWidth: true
             spacing: Theme.space.md
 
-            SvgIcon {
-                Layout.preferredWidth: 40
-                Layout.preferredHeight: 40
+            ToriiGate {
+                Layout.preferredWidth: 88
+                Layout.preferredHeight: 76
                 Layout.alignment: Qt.AlignVCenter
-                name: "favorite_fill"
-                size: 40
-                color: Theme.accent
+                spiritColor: Theme.accent
             }
 
             Text {
@@ -98,14 +96,7 @@ DialogCard {
         DialogSection {
             Layout.fillWidth: true
             label: qsTr("Runners")
-
-            Text {
-                width: parent.width
-                text: qsTr("Games run through a Wine or Proton build, you'll need at least one.")
-                color: Theme.textSubtle
-                font.pixelSize: Theme.type.caption.size
-                wrapMode: Text.WordWrap
-            }
+            hint: qsTr("Games run through a Wine or Proton build, you'll need at least one.")
 
             Item {
                 width: parent.width
