@@ -13,6 +13,7 @@ Item {
     // user size lives as a fraction of the available frame so it scales with the window
     property real fracW: 0
     property real fracH: 0
+    property real demandW: 0
     property real demandH: 0
     property bool dragging: false
     readonly property bool settled: !dragging && !settleTimer.running
@@ -49,8 +50,8 @@ Item {
     function widthFor(fallback) {
         let avail = frame ? frame.width - frameMargin : fallback
         let base = fracW > 0
-            ? Math.min(Math.max(minWidth, Math.round(fracW * avail)), avail)
-            : Math.min(fallback, avail)
+            ? Math.min(Math.max(minWidth, Math.round(fracW * avail), demandW), avail)
+            : Math.min(Math.max(fallback, demandW), avail)
         return hugT > 0 && frame ? Math.round(base + (frame.width - base) * hugT) : base
     }
 

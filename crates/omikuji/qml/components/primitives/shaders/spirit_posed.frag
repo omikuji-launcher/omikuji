@@ -7,6 +7,7 @@ layout(std140, binding = 0) uniform buf {
     float lookUp;
     float squeeze;
     float wobble;
+    float blush;
     vec2 resolution;
     vec4 accentColor;
     vec4 coreColor;
@@ -57,7 +58,7 @@ void main() {
     // before the eyes on purpose, or it tints his pupils pink
     vec2 blush = m - vec2(EYE.x * 1.30, EYE.y - 0.062);
     col = mix(col, vec3(0.90, 0.35, 0.45),
-              (1.0 - smoothstep(0.0, 0.062, length(blush))) * 0.45);
+              (1.0 - smoothstep(0.0, 0.062, length(blush))) * 0.45 * ubuf.blush);
 
     float squish = mix(1.0, 8.0, clamp(ubuf.squeeze, 0.0, 1.0));
     vec2 eye = m - vec2(EYE.x, EYE.y + ubuf.lookUp * 0.024);

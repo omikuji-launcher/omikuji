@@ -14,6 +14,7 @@ DialogCard {
     property var scriptsBridge: null
     property var gameModel: null
     property var ofudaBridge: null
+    property var defaults: null
 
     signal installed(string gameId, string gameName)
 
@@ -42,6 +43,7 @@ DialogCard {
     }
 
     maxWidth: 640
+    demandWidth: (root.busy || root.outputText.length > 0) ? root.logDemandWidth : 0
     title: detail.name || qsTr("Install script")
 
     function show(path) {
@@ -61,7 +63,9 @@ DialogCard {
             ? JSON.parse(ofudaBridge.listJson()).map(p => ({ label: p.name, value: p.path }))
             : []
         let runners = root.gameModel ? RG.groupRunners(JSON.parse(root.gameModel.list_runners())) : []
-        let ri = RG.firstNonHeader(runners)
+        let defaultCfg = defaults ? defaults.getConfig() : ({})
+        let defaultPrefix = defaultCfg["wine.prefix"] || ""
+        let ri = RG.preferredIndex(runners, defaultCfg["wine.version"] || "", [])
         let firstRunner = ri >= 0 ? runners[ri].value : ""
 
         // che schifo
@@ -72,7 +76,11 @@ DialogCard {
                 if (input.kind === "bool") v = "false"
                 else if (input.kind === "choice") v = (input.options || [])[0] || ""
                 else if (input.kind === "runner") v = firstRunner
-                else if (input.kind === "prefix" && input.picker !== "path") v = (prefixOptions[0] || {}).value || ""
+                else if (input.kind === "prefix") v = input.picker === "path"
+                    ? defaultPrefix
+                    : (prefixOptions.some(p => p.value === defaultPrefix)
+                        ? defaultPrefix
+                        : (prefixOptions[0] || {}).value || "")
             }
             vals[input.id] = v
         }
@@ -264,6 +272,10 @@ DialogCard {
                     width: parent.width
                     label: input?.label || ""
                     options: root.prefixOptions
+                    currentIndex: {
+                        root.valuesRev
+                        return Math.max(0, RG.selectedIndex(options, root.values[input?.id] || ""))
+                    }
                     enabled: root.prefixOptions.length > 0
                     onSelected: (v) => root.setValue(input.id, v)
                     Component.onCompleted: if (input?.id && root.prefixOptions.length > 0 && !root.values[input.id]) root.setValue(input.id, currentValue)
@@ -284,8 +296,8 @@ DialogCard {
                 label: input?.label || ""
                 options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
                 currentIndex: {
-                    let f = RG.firstNonHeader(options)
-                    return f >= 0 ? f : 0
+                    root.valuesRev
+                    return Math.max(0, RG.selectedIndex(options, root.values[input?.id] || ""))
                 }
                 onSelected: (v) => root.setValue(input.id, v)
             }

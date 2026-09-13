@@ -19,6 +19,7 @@ DialogCard {
     signal submitted(string command)
 
     maxWidth: 560
+    demandWidth: (root.running || root.outputText.length > 0) ? root.logDemandWidth : 0
     title: qsTr("Run wine command")
 
     function show(ctxTitle, ctx) {

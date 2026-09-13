@@ -19,6 +19,8 @@ Item {
     property string errorText: ""
     property bool errorAtTop: true
     property real maxWidth: 440
+    property real demandWidth: 0
+    readonly property real logDemandWidth: 800
     property Component leftPanel: null
     property Component rightPanel: null
     property bool panelsShown: false
@@ -37,6 +39,7 @@ Item {
     property Component body: null
     property Component actions: null
     property Component footerLeft: null
+    property Component headerRight: null
 
     readonly property alias bodyItem: bodyLoader.item
 
@@ -239,11 +242,20 @@ Item {
             anchors.rightMargin: Theme.space.xl
             height: titleText.text !== "" ? titleText.implicitHeight + Theme.space.md : 0
 
+            Loader {
+                id: headerRightLoader
+                anchors.right: parent.right
+                anchors.verticalCenter: titleText.verticalCenter
+                active: root.headerRight !== null
+                sourceComponent: root.headerRight
+            }
+
             Text {
                 id: titleText
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.right: parent.right
+                anchors.right: headerRightLoader.active ? headerRightLoader.left : parent.right
+                anchors.rightMargin: headerRightLoader.active ? Theme.space.md : 0
                 text: root.title
                 color: Theme.text
                 font.pixelSize: Theme.type.title.size
@@ -335,6 +347,7 @@ Item {
             sizeKey: root.sizeKey
             minWidth: root.minWidth
             minHeight: root.minHeight
+            demandW: root.demandWidth
             demandH: root.fillHeight ? 0 : cardWrap.naturalHeight
         }
     }

@@ -515,6 +515,7 @@ fn main() {
         "qml/components/popups/PopupSurface.qml",
         "qml/components/popups/PopupZoom.qml",
         "qml/components/cards/StoreCardAction.qml",
+        "qml/components/primitives/HoppingSpirit.qml",
         "qml/components/primitives/MikujiBox.qml",
         "qml/components/primitives/MikujiScene.qml",
         "qml/components/primitives/PosedSpirit.qml",

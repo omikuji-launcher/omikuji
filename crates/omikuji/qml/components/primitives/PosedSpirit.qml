@@ -12,6 +12,7 @@ Item {
     property real lookUp: 0
     property real squeeze: 0
     property real wobble: 0
+    property real blush: 1
     property bool animated: true
 
     implicitWidth: 136
@@ -27,6 +28,7 @@ Item {
         property real lookUp: root.lookUp
         property real squeeze: root.squeeze
         property real wobble: root.wobble
+        property real blush: root.blush
         property size resolution: Qt.size(fx.width, fx.height)
         property color accentColor: root.accentColor
         property color coreColor: root.coreColor

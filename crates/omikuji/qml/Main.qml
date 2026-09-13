@@ -1314,6 +1314,7 @@ property real cardZoom: appSettings.cardZoom
         scriptsBridge: root.scriptsBridgeRef
         gameModel: root.gameModelRef
         ofudaBridge: root.ofudaBridgeRef
+        defaults: defaultsBridge
         onInstalled: (gameId, gameName) => toastManager.show("success", qsTr("Game added"), gameName)
     }
 

@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import "../controls"
+import "../primitives"
 
 
 DialogCard {
@@ -20,6 +21,7 @@ DialogCard {
     readonly property bool busy: gameModel ? gameModel.preparing : false
 
     maxWidth: 640
+    demandWidth: root.logDemandWidth
     fillHeight: true
     preferredHeight: 440
     scrollable: false
@@ -36,6 +38,11 @@ DialogCard {
     }
 
     onCloseRequested: { root.cancelled = true; close() }
+
+    headerRight: HoppingSpirit {
+        visible: root.busy
+        running: root.busy
+    }
 
     Connections {
         target: root.gameModel

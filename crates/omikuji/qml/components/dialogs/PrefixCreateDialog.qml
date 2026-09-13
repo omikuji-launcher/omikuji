@@ -21,6 +21,7 @@ DialogCard {
     property string outputText: ""
 
     maxWidth: 460
+    demandWidth: (root.busy || root.outputText.length > 0) ? root.logDemandWidth : 0
     title: qsTr("New prefix")
 
     function show() {
