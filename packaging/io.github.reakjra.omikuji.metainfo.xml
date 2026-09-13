@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.15.0" date="2026-09-13">
+      <description>
+        <ul>
+          <li>Pick random game button</li>
+          <li>Changed layers toggles behaviour</li>
+          <li>minor ui tweaks</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.14.2" date="2026-09-12">
       <description>
         <ul>

@@ -13,6 +13,14 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.15.0
+Added:
+- Pick random game button 
+
+Changed:
+- Layers toggles behaviour (dxvk, vkd3d, nvapi. Check docs)
+- Minor UI tweaks (shaders, spirit, etc.)
+
 ## 0.14.2
 Added:
 - Repair button for Kuro's games
