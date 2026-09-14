@@ -73,11 +73,6 @@ Item {
 
         PauseAnimation { duration: 140 }
         ScriptAction { script: root.revealed() }
-
-        NumberAnimation {
-            target: root; property: "tilt"; to: 0
-            duration: 220; easing.type: Easing.OutCubic
-        }
     }
 
     Item {
