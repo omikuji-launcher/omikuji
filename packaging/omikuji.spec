@@ -27,7 +27,6 @@ BuildRequires:  qt6-qttools-devel
 Requires:       qt6-qtbase
 Requires:       qt6-qtdeclarative
 Requires:       qt6-qtsvg
-Requires:       qt6-qt5compat
 Requires:       qt6-qtwayland
 Recommends:     vulkan-loader
 

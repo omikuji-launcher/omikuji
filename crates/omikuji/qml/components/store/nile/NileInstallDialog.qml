@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import "../../lib/RunnerGrouping.js" as RG
 import "../../lib/Format.js" as Format
 
@@ -232,12 +231,8 @@ DialogCard {
                 sourceSize.height: 240
                 visible: status === Image.Ready
                 layer.enabled: true
-                layer.effect: OpacityMask {
-                    maskSource: Rectangle {
-                        width: bannerImg.width
-                        height: bannerImg.height
-                        radius: Theme.radius.md
-                    }
+                layer.effect: RoundedRectMask {
+                    radius: Theme.radius.md
                 }
             }
         }

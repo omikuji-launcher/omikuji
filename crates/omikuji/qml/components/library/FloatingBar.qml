@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import "../lib/PlayState.js" as PlayState
 
 
@@ -126,14 +126,13 @@ Item {
 
     height: 56
 
-    RectangularGlow {
+    RectangularShadow {
         anchors.fill: bar
         anchors.topMargin: 4
         anchors.bottomMargin: -4
-        glowRadius: 20
-        spread: 0.06
+        blur: 20
+        radius: bar.radius
         color: Qt.rgba(0, 0, 0, 0.45)
-        cornerRadius: Theme.radius.lg + 20
         opacity: bar.opacity
         visible: bar.visible
     }

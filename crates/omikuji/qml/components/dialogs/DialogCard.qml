@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Item {
     id: root
@@ -110,12 +110,11 @@ Item {
 
         Behavior on opacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
 
-        RectangularGlow {
+        RectangularShadow {
             anchors.fill: panelSurf
-            glowRadius: 26
-            spread: 0.06
+            blur: 26
+            radius: panelSurf.radius
             color: Qt.rgba(0, 0, 0, 0.45)
-            cornerRadius: Theme.radius.xl + 26
         }
 
         Squircle {
@@ -191,12 +190,11 @@ Item {
         Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
         Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
 
-        RectangularGlow {
+        RectangularShadow {
             anchors.fill: card
-            glowRadius: 26
-            spread: 0.06
+            blur: 26
+            radius: card.radius
             color: Qt.rgba(0, 0, 0, 0.45)
-            cornerRadius: Theme.radius.xl + 26
             opacity: 1 - resizer.hugT
         }
 

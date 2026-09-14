@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -19,12 +18,8 @@ Item {
         anchors.fill: parent
         visible: root.ready
         layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: content.width
-                height: content.height
-                radius: root.cornerRadius
-            }
+        layer.effect: RoundedRectMask {
+            radius: root.cornerRadius
         }
 
         Image {

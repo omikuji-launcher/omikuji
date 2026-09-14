@@ -13,7 +13,6 @@ let
     qtdeclarative
     qtsvg
     qtshadertools
-    qt5compat
   ];
 in
 pkgs.mkShell {

@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
 
 Row {
     id: bar
@@ -203,12 +202,8 @@ Row {
                 mipmap: true
             }
 
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: appBg.width
-                    height: appBg.height
-                    radius: 12 * bar._scale
-                }
+            layer.effect: RoundedRectMask {
+                radius: 12 * bar._scale
             }
         }
 

@@ -1,5 +1,5 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import omikuji 1.0
 
 Item {
@@ -175,12 +175,11 @@ Item {
             Drag.hotSpot.x: grabX
             Drag.hotSpot.y: grabY
 
-            DropShadow {
+            RectangularShadow {
                 anchors.fill: cardClone
-                source: cardClone
-                radius: 24
-                samples: 25
-                verticalOffset: 10
+                offset.y: 10
+                blur: 24
+                radius: Theme.radius.lg
                 color: Qt.rgba(0, 0, 0, 0.4)
             }
 

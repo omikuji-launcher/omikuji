@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 
 DialogCard {
     sizeKey: "script_browser"
@@ -158,12 +157,8 @@ DialogCard {
                         sourceSize.height: 72
                         layer.enabled: visible
                         layer.smooth: true
-                        layer.effect: OpacityMask {
-                            maskSource: Rectangle {
-                                width: iconBox.width
-                                height: iconBox.height
-                                radius: iconBox.radius
-                            }
+                        layer.effect: RoundedRectMask {
+                            radius: iconBox.radius
                         }
                     }
                     Text {

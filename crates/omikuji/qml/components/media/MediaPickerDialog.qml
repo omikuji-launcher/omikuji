@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
 import omikuji 1.0
 
 DialogCard {
@@ -166,13 +165,8 @@ DialogCard {
                             sourceSize.width: Math.round(grid.cellWidth * 2)
                             layer.enabled: true
                             layer.smooth: true
-                            layer.effect: OpacityMask {
-                                maskSource: Rectangle {
-                                    width: art.width
-                                    height: art.height
-                                    radius: cellBg.radius
-                                    antialiasing: true
-                                }
+                            layer.effect: RoundedRectMask {
+                                radius: cellBg.radius
                             }
                         }
 

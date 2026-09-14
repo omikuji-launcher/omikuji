@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: card
@@ -74,12 +73,8 @@ Item {
             visible: !coverartImg.visible && !bannerImg.visible
         }
 
-        layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: frame.width
-                height: frame.height
-                radius: card.cardRadius
-            }
+        layer.effect: RoundedRectMask {
+            radius: card.cardRadius
         }
     }
 

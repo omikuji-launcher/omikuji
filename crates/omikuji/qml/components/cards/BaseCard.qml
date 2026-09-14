@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Effects
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -115,18 +114,15 @@ Item {
     visible: opacity > 0.01
     Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
-    // declared before frame so it renders under in paint order, only the halo that bleeds into paddingRect ends up visible
-    MultiEffect {
+    // declared before frame so it renders under in paint order, only the halo outside the card ends up visible
+    RectangularShadow {
         anchors.fill: frame
-        source: frame
         visible: root.elevation && opacity > 0.01
         opacity: root.elevation ? 1 : 0
-        paddingRect: Qt.rect(24, 16, 24, 28)
-        shadowEnabled: true
-        shadowHorizontalOffset: 0
-        shadowVerticalOffset: 8
-        shadowBlur: 1.0
-        shadowColor: Qt.rgba(0, 0, 0, 0.45)
+        offset.y: 8
+        blur: 24
+        radius: frame.radius
+        color: Qt.rgba(0, 0, 0, 0.45)
         scale: frame.scale
         transformOrigin: Item.Center
         Behavior on opacity { NumberAnimation { duration: 150 } }
@@ -197,22 +193,17 @@ Item {
                     }
                 }
 
-                layer.effect: OpacityMask {
-                    maskSource: Item {
-                        width: imageFrame.width
-                        height: imageFrame.height
+                layer.effect: RoundedRectMask {
+                    readonly property real maskWidth: root.spec.fitImage && !root.spec.artClipBleed && bannerImg.visible
+                        ? bannerImg.paintedWidth : imageFrame.width
+                    readonly property real maskHeight: root.spec.artClipBleed
+                        ? imageFrame.height + root.spec.artRadius
+                        : root.spec.fitImage && bannerImg.visible ? bannerImg.paintedHeight : imageFrame.height
 
-                        Rectangle {
-                            x: (parent.width - width) / 2
-                            y: root.spec.artClipBleed ? 0 : (parent.height - height) / 2
-                            width: root.spec.fitImage && !root.spec.artClipBleed && bannerImg.visible
-                                ? bannerImg.paintedWidth : parent.width
-                            height: root.spec.artClipBleed
-                                ? parent.height + radius
-                                : root.spec.fitImage && bannerImg.visible ? bannerImg.paintedHeight : parent.height
-                            radius: root.spec.artRadius
-                        }
-                    }
+                    radius: root.spec.artRadius
+                    maskRect: Qt.rect((imageFrame.width - maskWidth) / 2,
+                        root.spec.artClipBleed ? 0 : (imageFrame.height - maskHeight) / 2,
+                        maskWidth, maskHeight)
                 }
             }
 

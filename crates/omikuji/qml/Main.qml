@@ -1555,4 +1555,3 @@ property real cardZoom: appSettings.cardZoom
 }
 
 // TODO might just really need to spend a week just on un-spaghettifying the whole qml. just sayin
-// TODO kill dropshadow so we can drop qt6-5compat

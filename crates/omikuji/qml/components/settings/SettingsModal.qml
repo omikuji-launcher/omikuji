@@ -1,7 +1,7 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Item {
     id: root
@@ -70,12 +70,11 @@ Item {
         Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
         Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
 
-        RectangularGlow {
+        RectangularShadow {
             anchors.fill: card
-            glowRadius: 30
-            spread: 0.08
+            blur: 30
+            radius: card.radius
             color: Qt.rgba(0, 0, 0, 0.5)
-            cornerRadius: Theme.radius.xxl + 30
             opacity: 1 - resizer.hugT
         }
 

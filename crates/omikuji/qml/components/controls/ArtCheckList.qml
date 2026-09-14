@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
 import "../lib/Format.js" as Format
 
 Item {
@@ -121,12 +120,8 @@ Item {
                             sourceSize.height: 64
                             layer.enabled: visible
                             layer.smooth: true
-                            layer.effect: OpacityMask {
-                                maskSource: Rectangle {
-                                    width: artBox.width
-                                    height: artBox.height
-                                    radius: artBox.radius
-                                }
+                            layer.effect: RoundedRectMask {
+                                radius: artBox.radius
                             }
                         }
 

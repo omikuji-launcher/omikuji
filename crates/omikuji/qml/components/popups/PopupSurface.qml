@@ -1,6 +1,6 @@
 import QtQuick
 import omikuji 1.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Rectangle {
     id: surface
@@ -10,14 +10,13 @@ Rectangle {
         : Qt.lighter(Theme.popup, 1.3)
     radius: Theme.radius.md
 
-    RectangularGlow {
+    RectangularShadow {
         z: -1
         anchors.fill: parent
         anchors.topMargin: 3
         anchors.bottomMargin: -3
-        glowRadius: 16
-        spread: 0.05
+        blur: 16
+        radius: surface.radius
         color: Qt.rgba(0, 0, 0, 0.35)
-        cornerRadius: surface.radius + 16
     }
 }

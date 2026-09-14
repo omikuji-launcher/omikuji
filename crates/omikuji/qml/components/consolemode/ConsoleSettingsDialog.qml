@@ -1,7 +1,7 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Item {
     id: root
@@ -76,6 +76,14 @@ Item {
         }
     }
 
+    RectangularShadow {
+        anchors.fill: card
+        offset.y: 6
+        blur: 24
+        radius: card.radius
+        color: Qt.rgba(0, 0, 0, 0.4)
+    }
+
     Rectangle {
         id: card
         anchors.centerIn: parent
@@ -91,15 +99,6 @@ Item {
             acceptedButtons: Qt.AllButtons
             onClicked: {}
             onWheel: (wheel) => wheel.accepted = true
-        }
-
-        layer.enabled: true
-        layer.effect: DropShadow {
-            radius: 24
-            samples: 32
-            color: Qt.rgba(0, 0, 0, 0.4)
-            horizontalOffset: 0
-            verticalOffset: 6
         }
 
         ColumnLayout {
