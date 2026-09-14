@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -11,6 +12,7 @@ Item {
     property int runnersVersion: 0
 
     property var config: ({})
+    property bool draftLoaded: false
 
     // set by save() on success so saveAndPlay can locate the new game
     property string newGameId: ""
@@ -51,6 +53,7 @@ Item {
     function startDraft() {
         if (!gameModel) return
         config = gameModel.begin_new_game()
+        draftLoaded = true
     }
 
     function updateField(key, value) {
@@ -105,41 +108,38 @@ Item {
         // all three stay active so field state survives tab switches, a fresh Loader would lose user input
         Loader {
             width: parent.width
-            active: true
+            active: root.draftLoaded
             visible: root.currentKind === "info"
-            source: "game/TabGameInfo.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.previewImageRequested.connect(root.previewImageRequested)
+            sourceComponent: TabGameInfo {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                onPreviewImageRequested: (source, caption) => root.previewImageRequested(source, caption)
             }
         }
 
         Loader {
             width: parent.width
-            active: true
+            active: root.draftLoaded
             visible: root.currentKind === "runner"
-            source: "game/TabRunnerOptions.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.runnersVersion = Qt.binding(() => root.runnersVersion)
-                item.openDllSets = root.openDllSets
+            sourceComponent: TabRunnerOptions {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                runnersVersion: root.runnersVersion
+                openDllSets: root.openDllSets
             }
         }
 
         Loader {
             width: parent.width
-            active: true
+            active: root.draftLoaded
             visible: root.currentKind === "system"
-            source: "game/TabSystem.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.openEnvSets = root.openEnvSets
+            sourceComponent: TabSystem {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                openEnvSets: root.openEnvSets
             }
         }
     }

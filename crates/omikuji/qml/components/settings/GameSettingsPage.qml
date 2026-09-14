@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -16,6 +17,7 @@ Item {
 
     property var gameData: null
     property var config: ({})
+    property bool draftLoaded: false
 
     readonly property string modalTitle: gameData ? (gameData["name"] || "") : ""
     readonly property string modalSubtitle: gameId
@@ -62,6 +64,7 @@ Item {
 
     function loadGame() {
         if (!gameModel || gameIndex < 0) {
+            draftLoaded = false
             gameData = null
             config = {}
             gameId = ""
@@ -71,6 +74,7 @@ Item {
         gameData = data
         gameId = data ? data["gameId"] : ""
         config = gameModel.begin_edit_game(gameIndex)
+        draftLoaded = true
     }
 
     function save() {
@@ -135,71 +139,66 @@ Item {
 
         Loader {
             width: parent.width
-            active: root.currentKind === "info"
+            active: root.draftLoaded && root.currentKind === "info"
             visible: active
-            source: "game/TabGameInfo.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.gameId = Qt.binding(() => root.gameId)
-                item.refetchMediaRequested.connect(() => root.refetchMediaRequested(root.gameId))
-                item.previewImageRequested.connect(root.previewImageRequested)
-                item.pickMediaRequested.connect(root.pickMediaRequested)
+            sourceComponent: TabGameInfo {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                gameId: root.gameId
+                onRefetchMediaRequested: root.refetchMediaRequested(root.gameId)
+                onPreviewImageRequested: (source, caption) => root.previewImageRequested(source, caption)
+                onPickMediaRequested: (gameId, kind) => root.pickMediaRequested(gameId, kind)
             }
         }
 
         Loader {
             width: parent.width
-            active: root.currentKind === "runner"
+            active: root.draftLoaded && root.currentKind === "runner"
             visible: active
-            source: "game/TabRunnerOptions.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.runnersVersion = Qt.binding(() => root.runnersVersion)
-                item.openDllSets = root.openDllSets
+            sourceComponent: TabRunnerOptions {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                runnersVersion: root.runnersVersion
+                openDllSets: root.openDllSets
             }
         }
 
         Loader {
             width: parent.width
-            active: root.currentKind === "system"
+            active: root.draftLoaded && root.currentKind === "system"
             visible: active
-            source: "game/TabSystem.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.openEnvSets = root.openEnvSets
+            sourceComponent: TabSystem {
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
+                openEnvSets: root.openEnvSets
             }
         }
 
         Loader {
             width: parent.width
-            active: root.currentKind === "epic"
+            active: root.draftLoaded && root.currentKind === "epic"
             visible: active
-            source: "game/TabEpic.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.updateField = root.updateField
-                item.refreshConfig = root.refreshConfig
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.gameId = Qt.binding(() => root.gameId)
+            sourceComponent: TabEpic {
+                config: root.config
+                updateField: root.updateField
+                refreshConfig: root.refreshConfig
+                gameModel: root.gameModel
+                gameId: root.gameId
             }
         }
 
         Loader {
             width: parent.width
-            active: root.currentKind === "gog"
+            active: root.draftLoaded && root.currentKind === "gog"
             visible: active
-            source: "game/TabGog.qml"
-            onLoaded: {
-                item.config = Qt.binding(() => root.config)
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.gameId = Qt.binding(() => root.gameId)
-                item.viewportHeight = Qt.binding(() => root.viewportHeight)
+            sourceComponent: TabGog {
+                config: root.config
+                gameModel: root.gameModel
+                gameId: root.gameId
+                viewportHeight: root.viewportHeight
             }
         }
     }

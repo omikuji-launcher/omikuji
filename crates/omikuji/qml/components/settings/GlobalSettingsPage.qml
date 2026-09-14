@@ -1,4 +1,5 @@
 import QtQuick
+import omikuji 1.0
 
 // every knob is a live apply* call, no save/cancel flow
 Item {
@@ -67,20 +68,13 @@ Item {
             width: parent.width
             active: root.currentKind === "components"
             visible: active
-            source: "global/TabGlobalComponents.qml"
-            onLoaded: {
-                item.componentsBridge = Qt.binding(() => root.componentsBridge)
-                item.archiveManager = Qt.binding(() => root.archiveManager)
-                item.activeInstalls = Qt.binding(() => root.activeInstalls)
-                item.manageRequested.connect((cat, name, kind) => {
-                    root.manageRequested(cat, name, kind)
-                })
-                item.addSourceRequested.connect((cat) => {
-                    root.addSourceRequested(cat)
-                })
-                item.manageFoundRunnersRequested.connect(() => {
-                    root.manageFoundRunnersRequested()
-                })
+            sourceComponent: TabGlobalComponents {
+                componentsBridge: root.componentsBridge
+                archiveManager: root.archiveManager
+                activeInstalls: root.activeInstalls
+                onManageRequested: (category, source, kind) => root.manageRequested(category, source, kind)
+                onAddSourceRequested: (category) => root.addSourceRequested(category)
+                onManageFoundRunnersRequested: root.manageFoundRunnersRequested()
             }
         }
 
@@ -88,12 +82,11 @@ Item {
             width: parent.width
             active: root.currentKind === "ofuda"
             visible: active
-            source: "global/TabGlobalOfuda.qml"
-            onLoaded: {
-                item.ofudaBridge = Qt.binding(() => root.ofudaBridge)
-                item.appSettings = Qt.binding(() => root.appSettings)
-                item.openRequested.connect((p) => root.prefixOpenRequested(p))
-                item.createRequested.connect(() => root.prefixCreateRequested())
+            sourceComponent: TabGlobalOfuda {
+                ofudaBridge: root.ofudaBridge
+                appSettings: root.appSettings
+                onOpenRequested: (prefix) => root.prefixOpenRequested(prefix)
+                onCreateRequested: root.prefixCreateRequested()
             }
         }
 
@@ -101,12 +94,11 @@ Item {
             width: parent.width
             active: root.currentKind === "defaults"
             visible: active
-            source: "global/TabGlobalDefaults.qml"
-            onLoaded: {
-                item.defaults = Qt.binding(() => root.defaults)
-                item.gameModel = Qt.binding(() => root.gameModel)
-                item.appSettings = Qt.binding(() => root.appSettings)
-                item.applyToExistingRequested.connect(() => root.defaultsApplyToExistingRequested())
+            sourceComponent: TabGlobalDefaults {
+                defaults: root.defaults
+                gameModel: root.gameModel
+                appSettings: root.appSettings
+                onApplyToExistingRequested: root.defaultsApplyToExistingRequested()
             }
         }
 
@@ -114,21 +106,21 @@ Item {
             width: parent.width
             active: root.currentKind === "presets"
             visible: active
-            source: "global/TabGlobalPresets.qml"
-            onLoaded: item.manageSetsRequested.connect((kind) => root.manageSetsRequested(kind))
+            sourceComponent: TabGlobalPresets {
+                onManageSetsRequested: (kind) => root.manageSetsRequested(kind)
+            }
         }
 
         Loader {
             width: parent.width
             active: root.currentKind === "ui"
             visible: active
-            source: "global/TabGlobalUi.qml"
-            onLoaded: {
-                item.appSettings = Qt.binding(() => root.appSettings)
-                item.categoryAddRequested.connect(() => root.categoryAddRequested())
-                item.categoryEditRequested.connect((idx, entry) => root.categoryEditRequested(idx, entry))
-                item.categoryDeleteRequested.connect((idx, entry) => root.categoryDeleteRequested(idx, entry))
-                item.manageLogRulesRequested.connect(() => root.manageLogRulesRequested())
+            sourceComponent: TabGlobalUi {
+                appSettings: root.appSettings
+                onCategoryAddRequested: root.categoryAddRequested()
+                onCategoryEditRequested: (index, entry) => root.categoryEditRequested(index, entry)
+                onCategoryDeleteRequested: (index, entry) => root.categoryDeleteRequested(index, entry)
+                onManageLogRulesRequested: root.manageLogRulesRequested()
             }
         }
 
@@ -136,19 +128,19 @@ Item {
             width: parent.width
             active: root.currentKind === "app"
             visible: active
-            source: "global/TabGlobalApp.qml"
-            onLoaded: item.appSettings = Qt.binding(() => root.appSettings)
+            sourceComponent: TabGlobalApp {
+                appSettings: root.appSettings
+            }
         }
 
         Loader {
             width: parent.width
             active: root.currentKind === "theme"
             visible: active
-            source: "global/TabGlobalTheme.qml"
-            onLoaded: {
-                item.appSettings = Qt.binding(() => root.appSettings)
-                item.manageFontSizesRequested.connect(() => root.manageFontSizesRequested())
-                item.manageRadiiRequested.connect(() => root.manageRadiiRequested())
+            sourceComponent: TabGlobalTheme {
+                appSettings: root.appSettings
+                onManageFontSizesRequested: root.manageFontSizesRequested()
+                onManageRadiiRequested: root.manageRadiiRequested()
             }
         }
 
@@ -156,8 +148,9 @@ Item {
             width: parent.width
             active: root.currentKind === "about"
             visible: active
-            source: "global/TabGlobalAbout.qml"
-            onLoaded: item.gameModel = Qt.binding(() => root.gameModel)
+            sourceComponent: TabGlobalAbout {
+                gameModel: root.gameModel
+            }
         }
     }
 }
