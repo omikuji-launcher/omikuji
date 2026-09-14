@@ -339,8 +339,11 @@ fn main() {
         .into_iter()
         .partition(|p| qml_tree::is_singleton(p));
 
-    let mut qml_module = QmlModule::new("omikuji")
-        .qml_files(singletons.into_iter().map(|p| QmlFile::from(p).singleton(true)));
+    let mut qml_module = QmlModule::new("omikuji").qml_files(
+        singletons
+            .into_iter()
+            .map(|p| QmlFile::from(p).singleton(true)),
+    );
     if !hot_reload {
         qml_module = qml_module.qml_files(qml_files);
     }

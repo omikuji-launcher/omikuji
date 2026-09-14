@@ -1,0 +1,35 @@
+name: Clippy
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinux:latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: |
+          source packaging/PKGBUILD-git
+          pacman -Syu --noconfirm --needed base-devel "${depends[@]}" "${makedepends[@]}"
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings

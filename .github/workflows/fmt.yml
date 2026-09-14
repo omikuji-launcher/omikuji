@@ -1,0 +1,22 @@
+name: Rustfmt
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '**.rs'
+  pull_request:
+    paths:
+      - '**.rs'
+  workflow_dispatch:
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Rustfmt
+        run: cargo fmt --all --check

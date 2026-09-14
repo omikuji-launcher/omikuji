@@ -313,9 +313,13 @@ mod tests {
     #[test]
     fn native_dll_present_reads_the_wine_stamp() {
         let dir = tempfile::tempdir().unwrap();
-        let write = |name: &str, bytes: &[u8]| std::fs::write(dir.path().join(name), bytes).unwrap();
+        let write =
+            |name: &str, bytes: &[u8]| std::fs::write(dir.path().join(name), bytes).unwrap();
         write("builtin.dll", &dll_with_stamp(b"Wine builtin DLL\0"));
-        write("placeholder.dll", &dll_with_stamp(b"Wine placeholder DLL\0"));
+        write(
+            "placeholder.dll",
+            &dll_with_stamp(b"Wine placeholder DLL\0"),
+        );
         write("dxvk.dll", &dll_with_stamp(b""));
 
         assert!(!native_dll_present(dir.path(), "builtin.dll"));

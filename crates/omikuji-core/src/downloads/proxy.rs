@@ -200,29 +200,6 @@ async fn forward<'a>(
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    #[ignore = "needs network"]
-    async fn tunnels_https_through_connect() {
-        let addr = start().await.expect("proxy binds");
-        let client = reqwest::Client::builder()
-            .proxy(reqwest::Proxy::all(format!("http://{}", addr)).unwrap())
-            .build()
-            .unwrap();
-        let resp = client
-            .get("https://api.github.com/zen")
-            .header("user-agent", "omikuji-proxy-test")
-            .send()
-            .await
-            .expect("request goes through the tunnel");
-        assert!(resp.status().is_success());
-        assert!(!resp.text().await.unwrap().is_empty());
-    }
-}
-
 fn clamp_read_ahead(stream: &TcpStream) {
     use std::os::fd::AsRawFd;
 
@@ -263,5 +240,28 @@ where
         }
         to.write_all(&buf[..n]).await?;
         throttle::global().take(n).await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore = "needs network"]
+    async fn tunnels_https_through_connect() {
+        let addr = start().await.expect("proxy binds");
+        let client = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(format!("http://{}", addr)).unwrap())
+            .build()
+            .unwrap();
+        let resp = client
+            .get("https://api.github.com/zen")
+            .header("user-agent", "omikuji-proxy-test")
+            .send()
+            .await
+            .expect("request goes through the tunnel");
+        assert!(resp.status().is_success());
+        assert!(!resp.text().await.unwrap().is_empty());
     }
 }

@@ -45,7 +45,10 @@ impl DiskModule {
     }
 
     pub fn file_url(&self, rel: &str) -> String {
-        format!("file://{}", self.import_path.join(MODULE).join(rel).display())
+        format!(
+            "file://{}",
+            self.import_path.join(MODULE).join(rel).display()
+        )
     }
 }
 
@@ -56,7 +59,11 @@ fn qmldir(module_dir: &Path) -> io::Result<String> {
             continue;
         };
         let rel = qml.strip_prefix(module_dir).unwrap_or(&qml).display();
-        let singleton = if qml_tree::is_singleton(&qml) { "singleton " } else { "" };
+        let singleton = if qml_tree::is_singleton(&qml) {
+            "singleton "
+        } else {
+            ""
+        };
         let _ = writeln!(out, "{singleton}{name} 1.0 {rel}");
     }
     Ok(out)

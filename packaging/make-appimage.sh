@@ -6,9 +6,7 @@ ARCH=$(uname -m)
 SHARUN="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/quick-sharun.sh"
 DEBLOATED_PKGS="https://raw.githubusercontent.com/pkgforge-dev/Anylinux-AppImages/refs/heads/main/useful-tools/get-debloated-pkgs.sh"
 
-if [ -n "${GITHUB_REF_NAME:-}" ] && [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-    VERSION="${GITHUB_REF_NAME}"
-else
+if [ -z "${VERSION:-}" ]; then
     VERSION=$(pacman -Q omikuji-git | awk '{print $2; exit}')
 fi
 export ARCH VERSION
