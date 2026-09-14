@@ -13,6 +13,14 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.16.1
+
+Changed:
+- Completed and failed downloads will be stored. (+ clear button)
+
+Fixes:
+- Arknights: Endfield (CN) download failure. (#82)
+
 ## 0.16.0
 Added:
 - Progress bar styles (Settings > Interface)

@@ -22,6 +22,14 @@
     </p>
   </description>
   <releases>
+    <release version="0.16.1" date="2026-09-14">
+      <description>
+        <ul>
+          <li>completed and failed downloads will be stored (+ clear button)</li>
+          <li>Arknights: Endfield (CN) download failure fix (#82)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.16.0" date="2026-09-14">
       <description>
         <ul>
