@@ -134,7 +134,7 @@ DialogCard {
     footerLeft: M3Button {
         text: qsTr("Open repository")
         variant: "tonal"
-        onClicked: Qt.openUrlExternally("https://github.com/reakjra/omikuji")
+        onClicked: Qt.openUrlExternally("https://github.com/omikuji-launcher/omikuji")
     }
 
     actions: Row {
