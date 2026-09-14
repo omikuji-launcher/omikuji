@@ -15,6 +15,7 @@ omikuji-core = { path = "../omikuji-core" }
 
 # gui-only deps
 tokio = { version = "1", features = ["full"] }
+serde = "1"
 serde_json = "1"
 regex = "1"
 lazy_static = "1"

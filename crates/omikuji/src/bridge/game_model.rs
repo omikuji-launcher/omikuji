@@ -326,6 +326,9 @@ pub mod qobject {
         fn dll_versions_for_kind(self: &GameModel, kind: &QString) -> QString;
 
         #[qinvokable]
+        fn prefix_layer(self: &GameModel, prefix: &QString, kind: &QString) -> QString;
+
+        #[qinvokable]
         fn list_gpus(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -1076,10 +1079,18 @@ game_fields! {
     "system.discord_rpc" => bool, system.discord_rpc,
 }
 
+fn unit_variant_name(value: &impl serde::Serialize) -> QString {
+    QString::from(
+        serde_json::to_string(value)
+            .unwrap_or_default()
+            .trim_matches('"'),
+    )
+}
+
 fn config_map(game: &Game) -> QMap<QMapPair_QString_QVariant> {
     let mut m = QMap::<QMapPair_QString_QVariant>::default();
     populate_config_map(game, &mut m);
-    if !game.metadata.id.is_empty() {
+    if !game.metadata.id.is_empty() || !game.wine.prefix.is_empty() {
         let resolved = omikuji_core::launch::prefix_path_for(game);
         m.insert(
             QString::from("wine.prefix.resolved"),
@@ -2062,11 +2073,7 @@ impl qobject::GameModel {
         let state = omikuji_core::runners::runner_dir(&version.to_string())
             .map(|dir| status(&dir))
             .unwrap_or(PatchState::NotProton);
-        QString::from(
-            serde_json::to_string(&state)
-                .unwrap_or_default()
-                .trim_matches('"'),
-        )
+        unit_variant_name(&state)
     }
 
     fn dll_versions_for_kind(&self, kind: &QString) -> QString {
@@ -2075,6 +2082,13 @@ impl qobject::GameModel {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[]"),
         }
+    }
+
+    fn prefix_layer(&self, prefix: &QString, kind: &QString) -> QString {
+        unit_variant_name(&omikuji_core::dll_packs::prefix_layer(
+            std::path::Path::new(&prefix.to_string()),
+            &kind.to_string(),
+        ))
     }
 
     fn list_gpus(&self) -> QString {

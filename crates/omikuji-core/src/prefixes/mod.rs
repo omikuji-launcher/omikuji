@@ -3,7 +3,13 @@ pub mod registry;
 use crate::launch::prefix_path_for;
 use crate::library::Library;
 use std::collections::BTreeMap;
+use std::fs::File;
+use std::io::Read;
 use std::path::{Path, PathBuf};
+
+const WINE_DLL_STAMPS: [&[u8]; 2] = [b"Wine builtin DLL\0", b"Wine placeholder DLL\0"];
+const DOS_HEADER_LEN: usize = 0x40;
+const STAMPED_HEADER_LEN: usize = DOS_HEADER_LEN + 32;
 
 pub struct PrefixInfo {
     pub path: PathBuf,
@@ -20,6 +26,35 @@ struct Acc {
 
 fn canonical(p: &Path) -> PathBuf {
     std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+}
+
+pub fn windows_dir(prefix: &Path) -> PathBuf {
+    prefix.join("drive_c").join("windows")
+}
+
+pub fn system32_dir(prefix: &Path) -> PathBuf {
+    windows_dir(prefix).join("system32")
+}
+
+pub fn syswow64_dir(prefix: &Path) -> PathBuf {
+    windows_dir(prefix).join("syswow64")
+}
+
+// same test as is_fake_dll in wine's dlls/setupapi/fakedll.c, winebuild stamps every dll wine ships so anything unstamped came from somewhere else
+pub fn native_dll_present(dir: &Path, name: &str) -> bool {
+    let Ok(mut file) = File::open(dir.join(name)) else {
+        return false;
+    };
+    let mut header = [0u8; STAMPED_HEADER_LEN];
+    if file.read_exact(&mut header).is_err() {
+        return true;
+    }
+    let e_lfanew = u32::from_le_bytes([header[0x3c], header[0x3d], header[0x3e], header[0x3f]]);
+    if &header[..2] != b"MZ" || (e_lfanew as usize) < STAMPED_HEADER_LEN {
+        return true;
+    }
+    let stamp = &header[DOS_HEADER_LEN..];
+    !WINE_DLL_STAMPS.iter().any(|s| stamp.starts_with(s))
 }
 
 pub fn list_prefixes() -> Vec<PrefixInfo> {
@@ -193,12 +228,7 @@ pub fn prefix_needs_bootstrap(game: &crate::library::Game) -> bool {
     if !game.uses_wine_prefix() {
         return false;
     }
-    let prefix = prefix_path_for(game);
-    !prefix
-        .join("drive_c")
-        .join("windows")
-        .join("system32")
-        .is_dir()
+    !system32_dir(&prefix_path_for(game)).is_dir()
 }
 
 pub fn bootstrap_prefix<F: FnMut(&str)>(
@@ -206,12 +236,7 @@ pub fn bootstrap_prefix<F: FnMut(&str)>(
     on_line: F,
 ) -> anyhow::Result<()> {
     let prefix = crate::launch::resolve_prefix(game);
-    if prefix
-        .join("drive_c")
-        .join("windows")
-        .join("system32")
-        .is_dir()
-    {
+    if system32_dir(&prefix).is_dir() {
         return Ok(());
     }
 
@@ -270,5 +295,32 @@ pub fn delete_prefix(target: &Path) -> bool {
             tracing::error!("delete_prefix failed: {e}");
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dll_with_stamp(stamp: &[u8]) -> Vec<u8> {
+        let mut bytes = vec![0u8; STAMPED_HEADER_LEN + 16];
+        bytes[..2].copy_from_slice(b"MZ");
+        bytes[0x3c..0x40].copy_from_slice(&(STAMPED_HEADER_LEN as u32).to_le_bytes());
+        bytes[DOS_HEADER_LEN..DOS_HEADER_LEN + stamp.len()].copy_from_slice(stamp);
+        bytes
+    }
+
+    #[test]
+    fn native_dll_present_reads_the_wine_stamp() {
+        let dir = tempfile::tempdir().unwrap();
+        let write = |name: &str, bytes: &[u8]| std::fs::write(dir.path().join(name), bytes).unwrap();
+        write("builtin.dll", &dll_with_stamp(b"Wine builtin DLL\0"));
+        write("placeholder.dll", &dll_with_stamp(b"Wine placeholder DLL\0"));
+        write("dxvk.dll", &dll_with_stamp(b""));
+
+        assert!(!native_dll_present(dir.path(), "builtin.dll"));
+        assert!(!native_dll_present(dir.path(), "placeholder.dll"));
+        assert!(native_dll_present(dir.path(), "dxvk.dll"));
+        assert!(!native_dll_present(dir.path(), "missing.dll"));
     }
 }

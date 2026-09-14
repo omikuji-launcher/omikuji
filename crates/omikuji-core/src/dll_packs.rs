@@ -2,7 +2,9 @@ use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
 use crate::launch::{ProtonVerb, WineVariant, wine_command};
 use crate::library::Game;
+use crate::prefixes;
 use anyhow::Result;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
@@ -131,22 +133,67 @@ fn install_pack(kind: &str, tag: &str, system32: &Path, syswow64: Option<&PathBu
     Ok(())
 }
 
+fn prefix_install_tag(source: &ArchiveSource) -> Option<&str> {
+    let tag = source.prefix_install_version.as_str();
+    (!tag.is_empty() && tag != "disabled").then_some(tag)
+}
+
 pub fn install_prefix_defaults(prefix: &Path) -> Result<()> {
-    let system32 = prefix.join("drive_c").join("windows").join("system32");
+    let system32 = prefixes::system32_dir(prefix);
     if !system32.is_dir() {
         return Ok(());
     }
-    let syswow64 = prefix.join("drive_c").join("windows").join("syswow64");
+    let syswow64 = prefixes::syswow64_dir(prefix);
     let syswow64 = syswow64.is_dir().then_some(syswow64);
 
     for source in components_config::get().layers {
-        let tag = source.prefix_install_version;
-        if tag.is_empty() || tag == "disabled" {
+        let Some(tag) = prefix_install_tag(&source) else {
             continue;
-        }
-        install_pack(&source.kind, &tag, &system32, syswow64.as_ref())?;
+        };
+        install_pack(&source.kind, tag, &system32, syswow64.as_ref())?;
     }
     Ok(())
+}
+
+fn layer_dll(kind: &str, is_64bit: bool) -> Option<&'static str> {
+    match kind {
+        "dxvk" => Some("d3d11.dll"),
+        "vkd3d" => Some("d3d12.dll"),
+        "dxvk_nvapi" => Some(if is_64bit { "nvapi64.dll" } else { "nvapi.dll" }),
+        _ => None,
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PrefixLayer {
+    Present,
+    Absent,
+    PresentOnCreate,
+    AbsentOnCreate,
+}
+
+fn auto_installs_into_new_prefixes(kind: &str) -> bool {
+    components_config::get().layers.iter().any(|source| {
+        source.kind == kind
+            && prefix_install_tag(source).is_some_and(|tag| pack_dir(kind, tag).is_some())
+    })
+}
+
+pub fn prefix_layer(prefix: &Path, kind: &str) -> PrefixLayer {
+    let system32 = prefixes::system32_dir(prefix);
+    if !system32.is_dir() {
+        return if auto_installs_into_new_prefixes(kind) {
+            PrefixLayer::PresentOnCreate
+        } else {
+            PrefixLayer::AbsentOnCreate
+        };
+    }
+    let is_64bit = prefixes::syswow64_dir(prefix).is_dir();
+    match layer_dll(kind, is_64bit) {
+        Some(dll) if !prefixes::native_dll_present(&system32, dll) => PrefixLayer::Absent,
+        _ => PrefixLayer::Present,
+    }
 }
 
 pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
@@ -160,7 +207,7 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
         .unwrap_or_else(|| PathBuf::from("wine"));
     let variant = WineVariant::from_version(&game.wine.version);
 
-    let system32 = prefix.join("drive_c").join("windows").join("system32");
+    let system32 = prefixes::system32_dir(&prefix);
     if !system32.exists() {
         ensure_prefix_bootstrapped(&prefix, &wine_exe, variant, env)?;
     }
@@ -171,7 +218,7 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
         );
         return Ok(());
     }
-    let syswow64 = prefix.join("drive_c").join("windows").join("syswow64");
+    let syswow64 = prefixes::syswow64_dir(&prefix);
     let is_64bit = syswow64.exists();
 
     if variant != WineVariant::Proton {

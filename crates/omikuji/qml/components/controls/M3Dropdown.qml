@@ -236,13 +236,15 @@ Item {
                         required property int index
                         required property var modelData
                         readonly property bool isHeader: modelData && modelData.header === true
+                        readonly property bool selectable: !isHeader && !(modelData && modelData.disabled === true)
                         readonly property color tint: (modelData && modelData.tint)
                             ? modelData.tint
+                            : !optionRow.selectable ? Theme.textSubtle
                             : (index === root.currentIndex ? Theme.accent : Theme.text)
                         width: col.width
                         height: isHeader ? (index === 0 ? 22 : 28) : 40
                         radius: Theme.radius.xs
-                        color: !isHeader && optionMouse.containsMouse
+                        color: selectable && optionMouse.containsMouse
                             ? Theme.alpha(tint, index === root.currentIndex ? 0.18 : 0.14)
                             : "transparent"
 
@@ -273,7 +275,7 @@ Item {
                             readonly property real overflow: Math.max(0, optionText.implicitWidth - width)
                             property real pan: 0
                             property bool manualPan: false
-                            readonly property color bg: !optionRow.isHeader && optionMouse.containsMouse
+                            readonly property color bg: optionRow.selectable && optionMouse.containsMouse
                                 ? Theme.mix(popup.color, optionRow.tint,
                                             optionRow.index === root.currentIndex ? 0.18 : 0.14)
                                 : popup.color
@@ -348,11 +350,11 @@ Item {
                         MouseArea {
                             id: optionMouse
                             anchors.fill: parent
-                            enabled: !optionRow.isHeader
-                            hoverEnabled: !optionRow.isHeader
+                            enabled: optionRow.selectable
+                            hoverEnabled: optionRow.selectable
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (optionRow.isHeader) return
+                                if (!optionRow.selectable) return
                                 root.currentIndex = optionRow.index
                                 root.selected(root.options[optionRow.index].value)
                                 popup.close()

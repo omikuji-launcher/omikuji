@@ -83,7 +83,7 @@ pub fn prepare_epic_prefix(
 
     let dummy_src = crate::runtime_dir().join("EpicGamesLauncher.exe");
     if dummy_src.exists() {
-        let dest_dir = prefix.join("drive_c").join("windows").join("command");
+        let dest_dir = crate::prefixes::windows_dir(&prefix).join("command");
         if let Err(e) = std::fs::create_dir_all(&dest_dir) {
             tracing::error!("failed to create command dir in prefix: {}", e);
         } else {

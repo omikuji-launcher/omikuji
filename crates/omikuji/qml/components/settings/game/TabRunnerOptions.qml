@@ -49,11 +49,27 @@ Item {
 
         readonly property var versions: gameModel ? (JSON.parse(gameModel.dll_versions_for_kind(kind)) || []) : []
         readonly property string value: config[fieldKey] || ""
+        readonly property string prefixPath: picker.config["wine.prefix.resolved"] || ""
+        readonly property string layerState: picker.isProton || !picker.gameModel ? "present" : picker.gameModel.prefix_layer(picker.prefixPath, picker.kind)
+        readonly property bool builtinAvailable: picker.layerState === "present" || picker.layerState === "present_on_create"
+        readonly property bool builtinMissing: picker.value === "builtin" && !picker.builtinAvailable
+
+        function builtinNote() {
+            if (picker.layerState === "present_on_create")
+                return qsTr("A new prefix will be created here at launch with %1, because it is set to auto-install under Components.").arg(picker.layerName)
+            if (picker.layerState === "absent_on_create")
+                return qsTr("A new prefix will be created here at launch without %1, because it isn't set to auto-install under Components. Pick a version, or turn auto-install on.").arg(picker.layerName)
+            if (picker.layerState === "absent")
+                return qsTr("This prefix has no %1 of its own, so Built-in has nothing to use. Pick a version, or install one under Components.").arg(picker.layerName)
+            return picker.isProton
+                ? qsTr("For Proton, Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
+                : qsTr("For Wine, Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
+        }
 
         M3Dropdown {
             width: parent.width
             label: qsTr("%1 version").arg(picker.layerName)
-            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin" }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
+            options: RG.withUnresolved([{ label: qsTr("Built-in"), value: "builtin", disabled: !picker.builtinAvailable, tint: picker.builtinMissing ? Theme.error : undefined }].concat(picker.versions.map(v => ({ label: v, value: v }))), picker.value, { tint: Theme.error, missingLabel: qsTr("missing") })
             currentIndex: Math.max(0, RG.indexOfValue(options, picker.value))
             onSelected: (v) => picker.apply(picker.fieldKey, v)
         }
@@ -61,9 +77,9 @@ Item {
         NoteChip {
             width: parent.width
             visible: picker.value === "builtin"
-            text: picker.isProton
-                ? qsTr("For Proton, Built-in uses the %1 bundled in the runner's files, not the prefix.").arg(picker.layerName)
-                : qsTr("For Wine, Built-in uses whatever %1 is already in the prefix.").arg(picker.layerName)
+            icon: picker.builtinMissing ? "warning" : "info"
+            tone: picker.builtinMissing ? Theme.error : Theme.accent
+            text: picker.builtinNote()
         }
     }
 
