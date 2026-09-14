@@ -5,7 +5,7 @@ pkgver=0.16.1
 pkgrel=1
 pkgdesc='Qt/QML based wine apps launcher for Linux'
 arch=('x86_64')
-url='https://github.com/reakjra/omikuji'
+url='https://github.com/omikuji-launcher/omikuji'
 license=('GPL-3.0-or-later')
 provides=("$_pkgname=$pkgver")
 conflicts=("$_pkgname")
