@@ -464,6 +464,75 @@ Clicking a script pulls it locally and opens a new dialog. The fields in it are 
 
 See [Configuration > `[paths]`](configuration.md#paths).
 
+### What does omikuji manage on disk?
+
+Everything omikuji creates or edits, grouped by where it lives. Paths under `~/.local/share/omikuji` are the defaults and follow whatever you set in [`[paths]`](configuration.md#paths).
+
+#### Omikuji's own folders
+
+\- `~/.local/share/omikuji/settings.toml`: always at this path, since it's the file that says where every other folder is.
+
+\- `library/`: one `.toml` per game.
+
+\- `components/runners`, `components/layers`: runners and DXVK / VKD3D-Proton / dxvk-nvapi builds.
+
+\- `components/tools`: companion tools that run alongside a game, like the ones a gacha manifest suggests.
+
+\- `prefixes/`: wine prefixes created by omikuji.
+
+\- `gachas/`: gacha manifests fetched from the registry and versions storing.
+
+\- `scripts/`: installed community scripts.
+
+\- `runtime/`: the runtime components (`umu`, `hpatchz`, `legendary`, `gogdl`, `nile`, the dummy `EpicGamesLauncher.exe`, etc.) and store state like `gogdl` and `nile`'s config, auth, installed games, etc.
+
+\- `cache/`: stores' libraries, cover art, and `cache/downloads/queue.json` (downloads page entries).
+
+\- `logs/`: game logs, when saving them to disk is enabled.
+
+#### Runner folders
+
+\- `.omikuji.json`: written inside every runner omikuji installs. It holds the source and release tag the runner came from.
+
+\- `<Source>-Latest` (e.g. `GE-Proton-Latest`): a normal runner folder with a fixed name. When a newer release comes out, its content is replaced and the name stays the same, so games using it never need to be edited.
+
+\- `user_settings.py`: written into a `Proton` runner the first time a game on it turns a translation layer off (`DXVK`, `VKD3D-Proton`, etc.). `Proton` imports this file on its own, and omikuji uses it to stop `Proton` from putting back the DLL overrides you disabled. It does nothing unless the game was launched by omikuji with a layer pinned, so the same runner used by Steam or other launchers behaves as if nothing was touched. If a runner already has a `user_settings.py` that isn't omikuji's, it is left alone and the layer toggles won't apply on that runner (also noted in the UI with a warning).
+
+\- `.omikuji-dll-override.json` and `*.omikuji-bak`: when a game picks a specific `DXVK` / `VKD3D-Proton` / `dxvk-nvapi` version on a `Proton` runner, the runner's bundled DLLs in `files/lib/wine/` are swapped for that version. The original files are renamed with `.omikuji-bak` and the JSON file tracks what was swapped, so they can be restored. Runners inside `steamapps/common` are never swapped.
+
+#### Wine prefixes
+
+\- `drive_c/windows/system32` and `syswow64`: translation layer DLLs are copied here at launch. On wine runners these are the `DXVK` / `VKD3D-Proton` / `dxvk-nvapi` versions the game has enabled.
+
+\- Epic Games' games: an Epic launcher registry key is added to the prefix, and `drive_c/windows/command/EpicGamesLauncher.exe` is copied in, because some games refuse to start without them.
+
+#### Steam
+
+\- `compatibilitytools.d/<runner>`: a symlink (or the moved runner itself if not a `-Latest` type) when a runner is exposed to Steam from the `Components` settings. For symlinked runners (`-Latest` types), the tool name inside the runner's `compatibilitytool.vdf` is rewritten to the folder name, so a `-Latest` runner shows up under the same name and Steam doesn't deselect it when the runner is updated.
+
+\- `userdata/<id>/config/shortcuts.vdf`: the entry added by "Add to Steam".
+
+\- `userdata/<id>/config/grid/`: the game's art for that shortcut (`<appid>.jpg`, `<appid>_hero.jpg`, `<appid>p.jpg`, `<appid>_icon.png`).
+
+#### Desktop & Others
+
+\- `~/.local/share/applications/omikuji.<slug>-<id>.desktop` or `~/Desktop/omikuji.<slug>-<id>.desktop`: desktop shortcuts, running `omikuji run <slug>_<id> --notify-gui`.
+
+\- `~/.local/share/icons/hicolor/256x256/apps/steam_icon_<appid>.png`: a symlink to the game's icon, (for anything like docks, shell previews, etc.).
+
+
+#### Game install folders (gachas)
+
+These only exist while an install or update is in progress, paused, or failed. They are removed when it finishes or is cancelled.
+
+\- `.omikuji-dl-<game>`: downloaded archive parts of an install. Created next to the install path, or inside the temp path if one is set.
+
+\- `.omikuji-update-<game>`: the same for updates.
+
+\- `.omikuji-patch`: a staging folder inside the install path while a patch is being applied.
+
+\- `*.parts` and `*.omikuji-parts`: small journals next to a partially downloaded file, recording which pieces are already done so a paused download resumes where it stopped.
+
 ### My store page is empty, or it says I'm not logged in
 
 See [Logging into Epic Games / GOG / Amazon Games](#logging-into-epic-games--gog--amazon-games).
