@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.15.0
+Version:        0.16.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,13 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Mon Sep 14 2026 reakjra <reakjra@proton.me> - 0.16.0-1
+- progress bar styles
+- proper prefix layers checks
+- 'apply defaults to existing games' rework
+- downloads resumes jitter fix
+- nile stale progress on resume fix
+
 * Sun Sep 13 2026 reakjra <reakjra@proton.me> - 0.15.0-1
 - Pick random game button
 - Changed layers toggles behaviour

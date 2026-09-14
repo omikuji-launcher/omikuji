@@ -13,6 +13,18 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.16.0
+Added:
+- Progress bar styles (Settings > Interface)
+- Proper prefix layers checks (+ auto install on prefix check on game creation)
+
+Changed:
+- 'apply defaults to existing games' is now per-setting and per-game
+
+Fixes:
+- Downloads resumes jitter
+- Nile stale progress on resume
+
 ## 0.15.0
 Added:
 - Pick random game button 

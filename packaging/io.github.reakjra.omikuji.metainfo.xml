@@ -22,6 +22,17 @@
     </p>
   </description>
   <releases>
+    <release version="0.16.0" date="2026-09-14">
+      <description>
+        <ul>
+          <li>progress bar styles</li>
+          <li>proper prefix layers checks</li>
+          <li>'apply defaults to existing games' rework</li>
+          <li>downloads resumes jitter fix</li>
+          <li>nile stale progress on resume fix</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.15.0" date="2026-09-13">
       <description>
         <ul>
