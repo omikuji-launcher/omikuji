@@ -1,5 +1,6 @@
 // no runtime cascade; only seeded into a Game at creation or via apply-to-existing
 
+use crate::library::{Game, GraphicsConfig, LaunchConfig, SystemConfig, WineConfig};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -123,6 +124,147 @@ pub struct SystemDefaults {
     pub discord_rpc: Option<bool>,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct ConfigSections {
+    pub wine: WineConfig,
+    pub launch: LaunchConfig,
+    pub graphics: GraphicsConfig,
+    pub system: SystemConfig,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CopyMode {
+    Seed,
+    Merge,
+    Replace,
+}
+
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct DefaultField {
+    pub key: &'static str,
+    pub group: &'static str,
+    pub is_map: bool,
+}
+
+pub trait DefaultSlot<T> {
+    fn copy_into(&self, field: &mut T, stock: &T, mode: CopyMode);
+}
+
+impl<T: PartialEq + Clone> DefaultSlot<T> for Option<T> {
+    fn copy_into(&self, field: &mut T, stock: &T, mode: CopyMode) {
+        match (self, mode) {
+            (None, CopyMode::Seed) => {}
+            (Some(v), CopyMode::Seed) => {
+                if field == stock {
+                    *field = v.clone();
+                }
+            }
+            (v, _) => *field = v.as_ref().unwrap_or(stock).clone(),
+        }
+    }
+}
+
+impl DefaultSlot<IndexMap<String, String>> for IndexMap<String, String> {
+    fn copy_into(
+        &self,
+        field: &mut IndexMap<String, String>,
+        _stock: &IndexMap<String, String>,
+        mode: CopyMode,
+    ) {
+        match mode {
+            CopyMode::Seed => {
+                for (k, v) in self {
+                    field.entry(k.clone()).or_insert_with(|| v.clone());
+                }
+            }
+            CopyMode::Merge => field.extend(self.iter().map(|(k, v)| (k.clone(), v.clone()))),
+            CopyMode::Replace => *field = self.clone(),
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! with_default_fields {
+    ($then:ident) => {
+        $then! {
+            "wine.version" => str, wine, wine.version,
+            "wine.prefix" => str, wine, wine.prefix,
+            "wine.prefix_arch" => str, wine, wine.prefix_arch,
+            "wine.esync" => bool, sync, wine.esync,
+            "wine.fsync" => bool, sync, wine.fsync,
+            "wine.ntsync" => bool, sync, wine.ntsync,
+            "wine.dxvk" => bool, translation_layers, wine.dxvk,
+            "wine.dxvk_version" => str, translation_layers, wine.dxvk_version,
+            "wine.vkd3d" => bool, translation_layers, wine.vkd3d,
+            "wine.vkd3d_version" => str, translation_layers, wine.vkd3d_version,
+            "wine.dxvk_nvapi" => bool, translation_layers, wine.dxvk_nvapi,
+            "wine.dxvk_nvapi_version" => str, translation_layers, wine.dxvk_nvapi_version,
+            "wine.battleye" => bool, compatibility, wine.battleye,
+            "wine.easyanticheat" => bool, compatibility, wine.easyanticheat,
+            "wine.fsr" => bool, compatibility, wine.fsr,
+            "wine.dpi_scaling" => bool, display, wine.dpi_scaling,
+            "wine.dpi" => int, display, wine.dpi,
+            "wine.audio_driver" => str, drivers, wine.audio_driver,
+            "wine.graphics_driver" => str, drivers, wine.graphics_driver,
+            "wine.dll_overrides" => map, dll_overrides, wine.dll_overrides,
+
+            "launch.command_prefix" => str, launch, launch.command_prefix,
+            "launch.env" => map, environment, launch.env,
+
+            "graphics.mangohud" => bool, graphics, graphics.mangohud,
+            "graphics.gpu" => str, graphics, graphics.gpu,
+
+            "graphics.gamescope.enabled" => bool, gamescope, graphics.gamescope.enabled,
+            "graphics.gamescope.width" => int, gamescope, graphics.gamescope.width,
+            "graphics.gamescope.height" => int, gamescope, graphics.gamescope.height,
+            "graphics.gamescope.game_width" => int, gamescope, graphics.gamescope.game_width,
+            "graphics.gamescope.game_height" => int, gamescope, graphics.gamescope.game_height,
+            "graphics.gamescope.fullscreen" => bool, gamescope, graphics.gamescope.fullscreen,
+            "graphics.gamescope.borderless" => bool, gamescope, graphics.gamescope.borderless,
+            "graphics.gamescope.integer_scaling" => bool, gamescope, graphics.gamescope.integer_scaling,
+            "graphics.gamescope.hdr" => bool, gamescope, graphics.gamescope.hdr,
+            "graphics.gamescope.fps" => int, gamescope, graphics.gamescope.fps,
+            "graphics.gamescope.refresh_rate" => int, gamescope, graphics.gamescope.refresh_rate,
+            "graphics.gamescope.filter" => str, gamescope, graphics.gamescope.filter,
+            "graphics.gamescope.fsr_sharpness" => int, gamescope, graphics.gamescope.fsr_sharpness,
+
+            "system.gamemode" => bool, performance, system.gamemode,
+            "system.cpu_limit" => int, performance, system.cpu_limit,
+            "system.pulse_latency" => bool, audio, system.pulse_latency,
+            "system.prevent_sleep" => bool, power, system.prevent_sleep,
+            "system.discord_rpc" => bool, discord, system.discord_rpc,
+        }
+    };
+}
+
+macro_rules! is_map_kind {
+    (map) => {
+        true
+    };
+    ($other:ident) => {
+        false
+    };
+}
+
+macro_rules! impl_default_fields {
+    ($( $key:literal => $kind:ident, $group:ident, $($path:ident).+ ),* $(,)?) => {
+        pub const FIELDS: &[DefaultField] = &[
+            $( DefaultField { key: $key, group: stringify!($group), is_map: is_map_kind!($kind) } ),*
+        ];
+
+        impl Defaults {
+            fn copy_field(&self, key: &str, game: &mut Game, stock: &ConfigSections, mode: CopyMode) {
+                match key {
+                    $( $key => self.$($path).+.copy_into(&mut game.$($path).+, &stock.$($path).+, mode), )*
+                    _ => tracing::warn!("unknown defaults key: {key}"),
+                }
+            }
+        }
+    };
+}
+
+with_default_fields!(impl_default_fields);
+
 pub fn defaults_path() -> PathBuf {
     dirs::data_dir()
         .unwrap_or_else(|| PathBuf::from("."))
@@ -131,257 +273,16 @@ pub fn defaults_path() -> PathBuf {
 }
 
 impl Defaults {
-    // replace_maps only meaningful for env/dll_overrides
-    pub fn apply_sections_to(
+    pub fn apply_to<'a>(
         &self,
-        game: &mut crate::library::Game,
-        sections: &[String],
-        replace_maps: bool,
+        game: &mut Game,
+        keys: impl IntoIterator<Item = &'a str>,
+        mode: CopyMode,
     ) {
-        let has = |s: &str| sections.iter().any(|x| x == s);
-
-        if has("wine") {
-            if let Some(v) = &self.wine.version {
-                game.wine.version = v.clone();
-            }
-            if let Some(v) = &self.wine.prefix {
-                game.wine.prefix = v.clone();
-            }
-            if let Some(v) = &self.wine.prefix_arch {
-                game.wine.prefix_arch = v.clone();
-            }
+        let stock = ConfigSections::default();
+        for key in keys {
+            self.copy_field(key, game, &stock, mode);
         }
-        if has("sync") {
-            if let Some(v) = self.wine.esync {
-                game.wine.esync = v;
-            }
-            if let Some(v) = self.wine.fsync {
-                game.wine.fsync = v;
-            }
-            if let Some(v) = self.wine.ntsync {
-                game.wine.ntsync = v;
-            }
-        }
-        if has("translation_layers") {
-            if let Some(v) = self.wine.dxvk {
-                game.wine.dxvk = v;
-            }
-            if let Some(v) = &self.wine.dxvk_version {
-                game.wine.dxvk_version = v.clone();
-            }
-            if let Some(v) = self.wine.vkd3d {
-                game.wine.vkd3d = v;
-            }
-            if let Some(v) = &self.wine.vkd3d_version {
-                game.wine.vkd3d_version = v.clone();
-            }
-            if let Some(v) = self.wine.dxvk_nvapi {
-                game.wine.dxvk_nvapi = v;
-            }
-            if let Some(v) = &self.wine.dxvk_nvapi_version {
-                game.wine.dxvk_nvapi_version = v.clone();
-            }
-        }
-        if has("compatibility") {
-            if let Some(v) = self.wine.battleye {
-                game.wine.battleye = v;
-            }
-            if let Some(v) = self.wine.easyanticheat {
-                game.wine.easyanticheat = v;
-            }
-            if let Some(v) = self.wine.fsr {
-                game.wine.fsr = v;
-            }
-        }
-        if has("display") {
-            if let Some(v) = self.wine.dpi_scaling {
-                game.wine.dpi_scaling = v;
-            }
-            if let Some(v) = self.wine.dpi {
-                game.wine.dpi = v;
-            }
-        }
-        if has("drivers") {
-            if let Some(v) = &self.wine.audio_driver {
-                game.wine.audio_driver = v.clone();
-            }
-            if let Some(v) = &self.wine.graphics_driver {
-                game.wine.graphics_driver = v.clone();
-            }
-        }
-        if has("dll_overrides") {
-            if replace_maps {
-                game.wine.dll_overrides = self.wine.dll_overrides.clone();
-            } else {
-                for (k, v) in &self.wine.dll_overrides {
-                    game.wine.dll_overrides.insert(k.clone(), v.clone());
-                }
-            }
-        }
-        if has("launch")
-            && let Some(v) = &self.launch.command_prefix
-        {
-            game.launch.command_prefix = v.clone();
-        }
-        if has("environment") {
-            if replace_maps {
-                game.launch.env = self.launch.env.clone();
-            } else {
-                for (k, v) in &self.launch.env {
-                    game.launch.env.insert(k.clone(), v.clone());
-                }
-            }
-        }
-        if has("graphics") {
-            if let Some(v) = self.graphics.mangohud {
-                game.graphics.mangohud = v;
-            }
-            if let Some(v) = &self.graphics.gpu {
-                game.graphics.gpu = v.clone();
-            }
-        }
-        if has("gamescope") {
-            let gs = &mut game.graphics.gamescope;
-            let dgs = &self.graphics.gamescope;
-            if let Some(v) = dgs.enabled {
-                gs.enabled = v;
-            }
-            if let Some(v) = dgs.width {
-                gs.width = v;
-            }
-            if let Some(v) = dgs.height {
-                gs.height = v;
-            }
-            if let Some(v) = dgs.game_width {
-                gs.game_width = v;
-            }
-            if let Some(v) = dgs.game_height {
-                gs.game_height = v;
-            }
-            if let Some(v) = dgs.fps {
-                gs.fps = v;
-            }
-            if let Some(v) = dgs.refresh_rate {
-                gs.refresh_rate = v;
-            }
-            if let Some(v) = dgs.fullscreen {
-                gs.fullscreen = v;
-            }
-            if let Some(v) = dgs.borderless {
-                gs.borderless = v;
-            }
-            if let Some(v) = dgs.integer_scaling {
-                gs.integer_scaling = v;
-            }
-            if let Some(v) = dgs.hdr {
-                gs.hdr = v;
-            }
-            if let Some(v) = &dgs.filter {
-                gs.filter = v.clone();
-            }
-            if let Some(v) = dgs.fsr_sharpness {
-                gs.fsr_sharpness = v;
-            }
-        }
-        if has("performance") {
-            if let Some(v) = self.system.gamemode {
-                game.system.gamemode = v;
-            }
-            if let Some(v) = self.system.cpu_limit {
-                game.system.cpu_limit = v;
-            }
-        }
-        if has("audio")
-            && let Some(v) = self.system.pulse_latency
-        {
-            game.system.pulse_latency = v;
-        }
-        if has("power")
-            && let Some(v) = self.system.prevent_sleep
-        {
-            game.system.prevent_sleep = v;
-        }
-        if has("discord")
-            && let Some(v) = self.system.discord_rpc
-        {
-            game.system.discord_rpc = v;
-        }
-    }
-
-    pub fn populated_sections(&self) -> Vec<String> {
-        let mut out = Vec::new();
-        if self.wine.version.is_some()
-            || self.wine.prefix.is_some()
-            || self.wine.prefix_arch.is_some()
-        {
-            out.push("wine".into());
-        }
-        if self.wine.esync.is_some() || self.wine.fsync.is_some() || self.wine.ntsync.is_some() {
-            out.push("sync".into());
-        }
-        if self.wine.dxvk.is_some()
-            || self.wine.dxvk_version.is_some()
-            || self.wine.vkd3d.is_some()
-            || self.wine.vkd3d_version.is_some()
-            || self.wine.dxvk_nvapi.is_some()
-            || self.wine.dxvk_nvapi_version.is_some()
-        {
-            out.push("translation_layers".into());
-        }
-        if self.wine.battleye.is_some()
-            || self.wine.easyanticheat.is_some()
-            || self.wine.fsr.is_some()
-        {
-            out.push("compatibility".into());
-        }
-        if self.wine.dpi_scaling.is_some() || self.wine.dpi.is_some() {
-            out.push("display".into());
-        }
-        if self.wine.audio_driver.is_some() || self.wine.graphics_driver.is_some() {
-            out.push("drivers".into());
-        }
-        if !self.wine.dll_overrides.is_empty() {
-            out.push("dll_overrides".into());
-        }
-        if self.launch.command_prefix.is_some() {
-            out.push("launch".into());
-        }
-        if !self.launch.env.is_empty() {
-            out.push("environment".into());
-        }
-        if self.graphics.mangohud.is_some() || self.graphics.gpu.is_some() {
-            out.push("graphics".into());
-        }
-        let gs = &self.graphics.gamescope;
-        if gs.enabled.is_some()
-            || gs.width.is_some()
-            || gs.height.is_some()
-            || gs.game_width.is_some()
-            || gs.game_height.is_some()
-            || gs.fps.is_some()
-            || gs.refresh_rate.is_some()
-            || gs.fullscreen.is_some()
-            || gs.borderless.is_some()
-            || gs.integer_scaling.is_some()
-            || gs.hdr.is_some()
-            || gs.filter.is_some()
-            || gs.fsr_sharpness.is_some()
-        {
-            out.push("gamescope".into());
-        }
-        if self.system.gamemode.is_some() || self.system.cpu_limit.is_some() {
-            out.push("performance".into());
-        }
-        if self.system.pulse_latency.is_some() {
-            out.push("audio".into());
-        }
-        if self.system.prevent_sleep.is_some() {
-            out.push("power".into());
-        }
-        if self.system.discord_rpc.is_some() {
-            out.push("discord".into());
-        }
-        out
     }
 
     pub fn load() -> Self {

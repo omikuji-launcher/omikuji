@@ -199,6 +199,10 @@ pub mod qobject {
         fn get_game(self: &GameModel, index: i32) -> QMap_QString_QVariant;
 
         #[qinvokable]
+        #[cxx_name = "gameSummariesJson"]
+        fn game_summaries_json(self: &GameModel) -> QString;
+
+        #[qinvokable]
         fn cache_dir(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -309,7 +313,8 @@ pub mod qobject {
         #[cxx_name = "applyDefaultsToExistingGames"]
         fn apply_defaults_to_existing_games(
             self: Pin<&mut GameModel>,
-            sections_csv: &QString,
+            keys_csv: &QString,
+            game_ids_csv: &QString,
             replace_maps: bool,
         ) -> i32;
 
@@ -1735,6 +1740,22 @@ impl qobject::GameModel {
         }
     }
 
+    fn game_summaries_json(&self) -> QString {
+        let games: Vec<_> = self
+            .library
+            .game
+            .iter()
+            .map(|g| {
+                serde_json::json!({
+                    "id": g.metadata.id,
+                    "name": g.metadata.name,
+                    "coverart": media::resolve_image(&g.metadata.id, &g.metadata.coverart, &MediaType::Coverart),
+                })
+            })
+            .collect();
+        QString::from(&serde_json::Value::from(games).to_string())
+    }
+
     fn get_game(&self, index: i32) -> QMap<QMapPair_QString_QVariant> {
         let idx = index as usize;
         let Some(game) = self.library.game.get(idx) else {
@@ -2022,26 +2043,43 @@ impl qobject::GameModel {
 
     fn apply_defaults_to_existing_games(
         mut self: Pin<&mut Self>,
-        sections_csv: &QString,
+        keys_csv: &QString,
+        game_ids_csv: &QString,
         replace_maps: bool,
     ) -> i32 {
-        let sections: Vec<String> = sections_csv
-            .to_string()
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
-        if sections.is_empty() {
+        use omikuji_core::defaults::{CopyMode, Defaults};
+
+        fn split_csv(csv: &str) -> Vec<&str> {
+            csv.split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .collect()
+        }
+
+        let keys_csv = keys_csv.to_string();
+        let game_ids_csv = game_ids_csv.to_string();
+        let keys = split_csv(&keys_csv);
+        let game_ids = split_csv(&game_ids_csv);
+        if keys.is_empty() || game_ids.is_empty() {
             return 0;
         }
 
-        let defaults = omikuji_core::defaults::Defaults::load();
+        let defaults = Defaults::load();
+        let mode = if replace_maps {
+            CopyMode::Replace
+        } else {
+            CopyMode::Merge
+        };
         let mut written = 0i32;
 
         self.as_mut().begin_reset_model();
         let library = &mut self.as_mut().rust_mut().get_mut().library;
-        for game in library.game.iter_mut() {
-            defaults.apply_sections_to(game, &sections, replace_maps);
+        for game in library
+            .game
+            .iter_mut()
+            .filter(|g| game_ids.contains(&g.metadata.id.as_str()))
+        {
+            defaults.apply_to(game, keys.iter().copied(), mode);
             match Library::save_game_static(game) {
                 Ok(_) => written += 1,
                 Err(e) => {

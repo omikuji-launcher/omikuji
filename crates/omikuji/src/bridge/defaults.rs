@@ -1,9 +1,6 @@
 use cxx_qt::{CxxQtType, Threading};
-use omikuji_core::defaults::{Defaults, defaults_path};
+use omikuji_core::defaults::{ConfigSections, Defaults, FIELDS, defaults_path};
 use omikuji_core::fs_watcher::FileWatcher;
-use omikuji_core::library::{
-    GamescopeConfig, GraphicsConfig, LaunchConfig, SystemConfig, WineConfig,
-};
 use std::pin::Pin;
 use std::time::{Duration, Instant};
 
@@ -42,8 +39,8 @@ pub mod qobject {
         fn set_keys_json(self: &DefaultsBridge) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "populatedSectionsJson"]
-        fn populated_sections_json(self: &DefaultsBridge) -> QString;
+        #[cxx_name = "fieldsJson"]
+        fn fields_json(self: &DefaultsBridge) -> QString;
 
         #[qinvokable]
         #[cxx_name = "updateField"]
@@ -86,9 +83,8 @@ impl qobject::DefaultsBridge {
         cxx_qt_lib::QString::from(&json)
     }
 
-    fn populated_sections_json(&self) -> cxx_qt_lib::QString {
-        let sections = self.data.populated_sections();
-        let json = serde_json::to_string(&sections).unwrap_or_else(|_| "[]".to_string());
+    fn fields_json(&self) -> cxx_qt_lib::QString {
+        let json = serde_json::to_string(FIELDS).unwrap_or_else(|_| "[]".to_string());
         cxx_qt_lib::QString::from(&json)
     }
 
@@ -174,7 +170,7 @@ macro_rules! defaults_get {
             QVariant::from(&($v.unwrap_or($base) as i32)),
         );
     };
-    (json, $m:ident, $key:literal, $v:expr, $base:expr) => {
+    (map, $m:ident, $key:literal, $v:expr, $base:expr) => {
         if let Ok(json) = serde_json::to_string(&$v) {
             $m.insert(QString::from($key), QVariant::from(&QString::from(&*json)));
         }
@@ -200,7 +196,7 @@ macro_rules! defaults_set {
             return true;
         }
     };
-    (json, $d:ident, $key:ident, $value:ident, $lit:literal, $($path:ident).+) => {
+    (map, $d:ident, $key:ident, $value:ident, $lit:literal, $($path:ident).+) => {
         if $key == $lit {
             if let Ok(parsed) = serde_json::from_str($value) {
                 $d.$($path).+ = parsed;
@@ -212,7 +208,7 @@ macro_rules! defaults_set {
 }
 
 macro_rules! defaults_clear {
-    (json, $d:ident, $key:ident, $lit:literal, $($path:ident).+) => {
+    (map, $d:ident, $key:ident, $lit:literal, $($path:ident).+) => {
         if $key == $lit {
             $d.$($path).+.clear();
             return true;
@@ -232,7 +228,7 @@ macro_rules! defaults_diff {
             $k.push($key.into());
         }
     };
-    (json, $k:ident, $d:ident, $key:literal, $base:expr, $($path:ident).+) => {
+    (map, $k:ident, $d:ident, $key:literal, $base:expr, $($path:ident).+) => {
         if !$d.$($path).+.is_empty() {
             $k.push($key.into());
         }
@@ -244,96 +240,37 @@ macro_rules! defaults_diff {
     };
 }
 
+// equality with the baseline default = nothing to undo, no reset badge
 macro_rules! defaults_fields {
-    (bind: $d:ident $w:ident $g:ident $gs:ident $s:ident $l:ident,
-     $( $key:literal => $kind:ident, $($path:ident).+, $base:expr ),* $(,)?) => {
-        fn build_defaults_map($d: &Defaults) -> cxx_qt_lib::QMap<cxx_qt_lib::QMapPair_QString_QVariant> {
+    ($( $key:literal => $kind:ident, $group:ident, $($path:ident).+ ),* $(,)?) => {
+        fn build_defaults_map(d: &Defaults) -> cxx_qt_lib::QMap<cxx_qt_lib::QMapPair_QString_QVariant> {
             use cxx_qt_lib::{QMap, QMapPair_QString_QVariant, QString, QVariant};
 
             let mut m = QMap::<QMapPair_QString_QVariant>::default();
-            let $w = WineConfig::default();
-            let $g = GraphicsConfig::default();
-            let $gs = GamescopeConfig::default();
-            let $s = SystemConfig::default();
-            let $l = LaunchConfig::default();
-
-            $( defaults_get!($kind, m, $key, $d.$($path).+, $base); )*
+            let stock = ConfigSections::default();
+            $( defaults_get!($kind, m, $key, d.$($path).+, stock.$($path).+); )*
             m
         }
 
-        fn apply_to_defaults($d: &mut Defaults, key: &str, value: &str) -> bool {
-            $( defaults_set!($kind, $d, key, value, $key, $($path).+); )*
+        fn apply_to_defaults(d: &mut Defaults, key: &str, value: &str) -> bool {
+            $( defaults_set!($kind, d, key, value, $key, $($path).+); )*
             tracing::warn!("unknown key: {}", key);
             false
         }
 
-        fn clear_in_defaults($d: &mut Defaults, key: &str) -> bool {
-            $( defaults_clear!($kind, $d, key, $key, $($path).+); )*
+        fn clear_in_defaults(d: &mut Defaults, key: &str) -> bool {
+            $( defaults_clear!($kind, d, key, $key, $($path).+); )*
             tracing::warn!("unknown key to reset: {}", key);
             false
         }
 
-        fn collect_set_keys($d: &Defaults) -> Vec<String> {
+        fn collect_set_keys(d: &Defaults) -> Vec<String> {
             let mut k = Vec::new();
-            let $w = WineConfig::default();
-            let $g = GraphicsConfig::default();
-            let $gs = GamescopeConfig::default();
-            let $s = SystemConfig::default();
-            let $l = LaunchConfig::default();
-
-            $( defaults_diff!($kind, k, $d, $key, $base, $($path).+); )*
+            let stock = ConfigSections::default();
+            $( defaults_diff!($kind, k, d, $key, stock.$($path).+, $($path).+); )*
             k
         }
     };
 }
 
-// equality with the baseline default = nothing to undo, no reset badge
-defaults_fields! {
-    bind: d w g gs s l,
-
-    "wine.version" => str, wine.version, w.version,
-    "wine.prefix" => str, wine.prefix, w.prefix,
-    "wine.prefix_arch" => str, wine.prefix_arch, w.prefix_arch,
-    "wine.esync" => bool, wine.esync, w.esync,
-    "wine.fsync" => bool, wine.fsync, w.fsync,
-    "wine.ntsync" => bool, wine.ntsync, w.ntsync,
-    "wine.dxvk" => bool, wine.dxvk, w.dxvk,
-    "wine.dxvk_version" => str, wine.dxvk_version, w.dxvk_version,
-    "wine.vkd3d" => bool, wine.vkd3d, w.vkd3d,
-    "wine.vkd3d_version" => str, wine.vkd3d_version, w.vkd3d_version,
-    "wine.dxvk_nvapi" => bool, wine.dxvk_nvapi, w.dxvk_nvapi,
-    "wine.dxvk_nvapi_version" => str, wine.dxvk_nvapi_version, w.dxvk_nvapi_version,
-    "wine.fsr" => bool, wine.fsr, w.fsr,
-    "wine.battleye" => bool, wine.battleye, w.battleye,
-    "wine.easyanticheat" => bool, wine.easyanticheat, w.easyanticheat,
-    "wine.dpi_scaling" => bool, wine.dpi_scaling, w.dpi_scaling,
-    "wine.dpi" => int, wine.dpi, w.dpi,
-    "wine.audio_driver" => str, wine.audio_driver, w.audio_driver,
-    "wine.graphics_driver" => str, wine.graphics_driver, w.graphics_driver,
-    "wine.dll_overrides" => json, wine.dll_overrides, (),
-
-    "launch.command_prefix" => str, launch.command_prefix, l.command_prefix,
-    "launch.env" => json, launch.env, (),
-
-    "graphics.mangohud" => bool, graphics.mangohud, g.mangohud,
-    "graphics.gpu" => str, graphics.gpu, g.gpu,
-
-    "graphics.gamescope.enabled" => bool, graphics.gamescope.enabled, gs.enabled,
-    "graphics.gamescope.width" => int, graphics.gamescope.width, gs.width,
-    "graphics.gamescope.height" => int, graphics.gamescope.height, gs.height,
-    "graphics.gamescope.game_width" => int, graphics.gamescope.game_width, gs.game_width,
-    "graphics.gamescope.game_height" => int, graphics.gamescope.game_height, gs.game_height,
-    "graphics.gamescope.fps" => int, graphics.gamescope.fps, gs.fps,
-    "graphics.gamescope.refresh_rate" => int, graphics.gamescope.refresh_rate, gs.refresh_rate,
-    "graphics.gamescope.fullscreen" => bool, graphics.gamescope.fullscreen, gs.fullscreen,
-    "graphics.gamescope.borderless" => bool, graphics.gamescope.borderless, gs.borderless,
-    "graphics.gamescope.integer_scaling" => bool, graphics.gamescope.integer_scaling, gs.integer_scaling,
-    "graphics.gamescope.hdr" => bool, graphics.gamescope.hdr, gs.hdr,
-    "graphics.gamescope.filter" => str, graphics.gamescope.filter, gs.filter,
-    "graphics.gamescope.fsr_sharpness" => int, graphics.gamescope.fsr_sharpness, gs.fsr_sharpness,
-
-    "system.gamemode" => bool, system.gamemode, s.gamemode,
-    "system.prevent_sleep" => bool, system.prevent_sleep, s.prevent_sleep,
-    "system.pulse_latency" => bool, system.pulse_latency, s.pulse_latency,
-    "system.cpu_limit" => int, system.cpu_limit, s.cpu_limit,
-}
+omikuji_core::with_default_fields!(defaults_fields);

@@ -24,10 +24,8 @@ Rectangle {
 
     Component.onCompleted: highlighter.attach(area.textDocument)
 
-    MouseArea {
+    WheelSink {
         anchors.fill: parent
-        acceptedButtons: Qt.NoButton
-        onWheel: (wheel) => wheel.accepted = true
     }
 
     ScrollView {

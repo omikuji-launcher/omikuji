@@ -49,10 +49,10 @@ Item {
                 width: parent.width
                 spacing: Theme.space.md
 
-                DlcPicker {
+                ArtCheckList {
                     width: parent.width
                     readOnly: true
-                    dlcs: root.installedDlcs
+                    items: root.installedDlcs
                 }
 
                 NoteChip {

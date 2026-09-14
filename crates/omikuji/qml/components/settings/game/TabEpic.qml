@@ -105,11 +105,11 @@ Item {
             width: parent.width
             visible: root.installedDlcs.length > 0
 
-            DlcPicker {
+            ArtCheckList {
                 width: parent.width
                 readOnly: true
                 removable: true
-                dlcs: root.installedDlcs
+                items: root.installedDlcs
                 onRemoveRequested: (id) => {
                     if (root.gameModel.uninstall_dlc(root.gameId, id)) root.refreshDlcs()
                 }

@@ -11,215 +11,237 @@ DialogCard {
     property var defaults: null
     property var gameModel: null
 
-    property var sectionLabels: ({
-        "wine": qsTr("Wine (version, architecture)"),
-        "sync": qsTr("Sync (esync, fsync, ntsync)"),
-        "translation_layers": qsTr("Translation Layers (DXVK, VKD3D, …)"),
-        "compatibility": qsTr("Compatibility (BattlEye, EAC, FSR)"),
-        "display": qsTr("Display (DPI scaling)"),
-        "drivers": qsTr("Drivers (audio, graphics)"),
-        "dll_overrides": qsTr("DLL Overrides"),
-        "launch": qsTr("Launch (command prefix)"),
-        "environment": qsTr("Environment Variables"),
-        "graphics": qsTr("Graphics (MangoHUD, GPU)"),
-        "gamescope": qsTr("Gamescope"),
-        "performance": qsTr("Performance (gamemode, CPU limit)"),
-        "audio": qsTr("Audio (Pulse latency)"),
-        "power": qsTr("Power (prevent sleep)"),
-        "discord": qsTr("Discord (rich presence)")
-    })
-
-    property var availableSections: []
-    property var checkedSections: []
+    property var fields: []
+    property var groups: []
+    property var games: []
+    property var checkedKeys: []
+    property var checkedGameIds: []
     property bool replaceMaps: false
 
+    readonly property bool mapChecked: fields.some(f => f.is_map && checkedKeys.indexOf(f.key) !== -1)
+
     maxWidth: 520
+    fillHeight: true
+    preferredHeight: 640
     title: qsTr("Apply defaults to existing games")
 
     function show() {
-        if (!defaults) return
-        try { root.availableSections = JSON.parse(defaults.populatedSectionsJson()) }
-        catch (e) { root.availableSections = [] }
-        root.checkedSections = root.availableSections.slice()
+        if (!defaults || !gameModel) return
+        try { root.fields = JSON.parse(defaults.fieldsJson()) }
+        catch (e) { root.fields = [] }
+        try {
+            root.games = JSON.parse(gameModel.gameSummariesJson())
+                .map(g => ({ id: g.id, title: g.name, image: g.coverart }))
+        } catch (e) {
+            root.games = []
+        }
+        root.groups = groupFields(root.fields)
+        root.checkedKeys = []
+        root.checkedGameIds = []
         root.replaceMaps = false
         open()
     }
 
     function hide() { close() }
 
-    function _toggle(sec) {
-        let cur = root.checkedSections.slice()
-        let idx = cur.indexOf(sec)
-        if (idx === -1) cur.push(sec)
-        else cur.splice(idx, 1)
-        root.checkedSections = cur
+    function groupFields(list) {
+        let out = []
+        for (const f of list) {
+            let last = out[out.length - 1]
+            if (!last || last.group !== f.group) {
+                last = { group: f.group, fields: [] }
+                out.push(last)
+            }
+            last.fields.push(f)
+        }
+        return out
+    }
+
+    function toggleKey(key) {
+        root.checkedKeys = checkedKeys.indexOf(key) !== -1
+            ? checkedKeys.filter(k => k !== key)
+            : checkedKeys.concat([key])
     }
 
     function _apply() {
-        if (!gameModel || root.checkedSections.length === 0) {
-            close()
-            return
-        }
-        let csv = root.checkedSections.join(",")
-        gameModel.applyDefaultsToExistingGames(csv, root.replaceMaps)
+        if (checkedKeys.length > 0 && checkedGameIds.length > 0)
+            gameModel.applyDefaultsToExistingGames(checkedKeys.join(","), checkedGameIds.join(","), replaceMaps)
         close()
     }
 
     onCloseRequested: root.close()
 
+    component CheckRow: Item {
+        id: checkRow
+        property bool checked: false
+        property string text: ""
+        property string hint: ""
+        signal clicked()
+
+        width: parent ? parent.width : 0
+        height: Math.max(28, textCol.implicitHeight + Theme.space.sm)
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.radius.sm
+            color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
+            Behavior on color { ColorAnimation { duration: 100 } }
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Theme.space.md
+
+            M3Checkbox {
+                anchors.verticalCenter: parent.verticalCenter
+                checked: checkRow.checked
+            }
+
+            Column {
+                id: textCol
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 1
+                Text {
+                    text: checkRow.text
+                    color: Theme.text
+                    font.pixelSize: Theme.type.label.size
+                }
+                Text {
+                    visible: checkRow.hint !== ""
+                    text: checkRow.hint
+                    color: Theme.textSubtle
+                    font.pixelSize: Theme.type.micro.size
+                }
+            }
+        }
+
+        MouseArea {
+            id: rowArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: checkRow.clicked()
+        }
+    }
+
     body: ColumnLayout {
         width: parent.width
-        spacing: Theme.space.sm
+        height: parent.height
+        spacing: Theme.space.lg
 
         Text {
             Layout.fillWidth: true
-            text: qsTr("Sections you tick will be written to every game's TOML, overwriting their current values for those fields. Untouched sections stay as they are per-game.")
+            text: qsTr("Each ticked setting overwrites every ticked game with the value it holds in the Defaults tab, even if you never changed it.")
             color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.Wrap
             lineHeight: 1.35
         }
 
-        Text {
+        ColumnLayout {
             Layout.fillWidth: true
-            text: qsTr("Nothing to apply - set some fields in the Defaults tab first.")
-            color: Theme.textSubtle
-            font.pixelSize: Theme.type.label.size
-            wrapMode: Text.Wrap
-            visible: root.availableSections.length === 0
-        }
+            Layout.fillHeight: true
+            Layout.preferredHeight: 1
+            spacing: Theme.space.sm
 
-        Flickable {
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(secList.height, 360)
-            contentHeight: secList.height
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: contentHeight > height
-            visible: root.availableSections.length > 0
+            CheckAllHeader {
+                Layout.fillWidth: true
+                title: qsTr("Settings")
+                checked: root.fields.length > 0 && root.checkedKeys.length === root.fields.length
+                indeterminate: root.checkedKeys.length > 0
+                onCheckAllClicked: root.checkedKeys = checked ? [] : root.fields.map(f => f.key)
+            }
 
-            Column {
-                id: secList
-                width: parent.width
-                spacing: 4
+            FieldSurface {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-                Repeater {
-                    model: root.availableSections
+                WheelSink {
+                    anchors.fill: parent
+                }
 
-                    Item {
-                        id: sectionRow
-                        required property var modelData
+                Flickable {
+                    id: fieldList
+                    anchors.fill: parent
+                    anchors.margins: Theme.space.md
+                    contentHeight: groupList.height
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    interactive: contentHeight > height
 
+                    ThinScrollBar.vertical: ThinScrollBar {}
+
+                    Column {
+                        id: groupList
                         width: parent.width
-                        height: 40
+                        spacing: Theme.space.sm
 
-                        readonly property bool selected: root.checkedSections.indexOf(modelData) !== -1
+                        Repeater {
+                            model: root.groups
 
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.radius.sm
-                            color: rowHover.containsMouse
-                                ? Theme.alpha(Theme.text, 0.06)
-                                : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
+                            SettingsSection {
+                                id: groupSection
+                                required property var modelData
+                                label: SettingLabels.groupTitle(modelData.group)
+                                width: parent.width
 
-                        Row {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: Theme.space.md
+                                Column {
+                                    width: parent.width
+                                    spacing: 0
 
-                            M3Checkbox {
-                                anchors.verticalCenter: parent.verticalCenter
-                                checked: sectionRow.selected
-                            }
+                                    Repeater {
+                                        model: groupSection.modelData.fields
 
-                            Text {
-                                text: root.sectionLabels[sectionRow.modelData] || sectionRow.modelData
-                                color: Theme.text
-                                font.pixelSize: Theme.type.body.size
-                                anchors.verticalCenter: parent.verticalCenter
+                                        CheckRow {
+                                            required property var modelData
+                                            text: SettingLabels.label(modelData.key)
+                                            checked: root.checkedKeys.indexOf(modelData.key) !== -1
+                                            onClicked: root.toggleKey(modelData.key)
+                                        }
+                                    }
+                                }
                             }
                         }
-
-                        MouseArea {
-                            id: rowHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root._toggle(sectionRow.modelData)
-                        }
-                    }
-                }
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            visible: root.availableSections.length > 0
-                && (root.checkedSections.indexOf("environment") !== -1
-                 || root.checkedSections.indexOf("dll_overrides") !== -1)
-
-            Rectangle {
-                anchors.fill: parent
-                radius: Theme.radius.sm
-                color: replaceHover.containsMouse
-                    ? Theme.alpha(Theme.text, 0.06)
-                    : "transparent"
-                Behavior on color { ColorAnimation { duration: 100 } }
-            }
-
-            Row {
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: Theme.space.md
-
-                M3Checkbox {
-                    anchors.verticalCenter: parent.verticalCenter
-                    checked: root.replaceMaps
-                }
-
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 1
-                    Text {
-                        text: qsTr("Replace env / DLL tables")
-                        color: Theme.text
-                        font.pixelSize: Theme.type.label.size
-                    }
-                    Text {
-                        text: root.replaceMaps
-                            ? qsTr("wipes the game's keys, then writes the global ones")
-                            : qsTr("merges global keys into the game (game keys win on conflict)")
-                        color: Theme.textSubtle
-                        font.pixelSize: Theme.type.micro.size
                     }
                 }
             }
 
-            MouseArea {
-                id: replaceHover
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
+            CheckRow {
+                Layout.fillWidth: true
+                visible: root.mapChecked
+                text: qsTr("Replace env / DLL tables")
+                hint: root.replaceMaps
+                    ? qsTr("wipes the game's keys, then writes the global ones")
+                    : qsTr("merges global keys into the game (global wins on conflict)")
+                checked: root.replaceMaps
                 onClicked: root.replaceMaps = !root.replaceMaps
             }
         }
 
+        ArtCheckList {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: 1
+            visible: root.games.length > 0
+            title: qsTr("Games")
+            checkAllVisible: true
+            fillHeight: true
+            items: root.games
+            checkedIds: root.checkedGameIds
+            onSelectionRequested: (ids) => root.checkedGameIds = ids
+        }
     }
 
     footerLeft: Text {
         height: 36
         verticalAlignment: Text.AlignVCenter
-        text: root.gameModel ? qsTr("Affects %n game(s)", "", root.gameModel.count) : ""
+        text: qsTr("Affects %n game(s)", "", root.checkedGameIds.length)
         color: Theme.textSubtle
         font.pixelSize: Theme.type.caption.size
-        visible: text.length > 0
     }
 
     actions: Row {
@@ -234,7 +256,7 @@ DialogCard {
         M3Button {
             text: qsTr("Apply")
             variant: "filled"
-            enabled: root.checkedSections.length > 0
+            enabled: root.checkedKeys.length > 0 && root.checkedGameIds.length > 0
             onClicked: root._apply()
         }
     }

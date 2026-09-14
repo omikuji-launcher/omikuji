@@ -201,10 +201,8 @@ Item {
             onTriggered: popup.syncPosition()
         }
 
-        MouseArea {
+        WheelSink {
             anchors.fill: parent
-            acceptedButtons: Qt.NoButton
-            onWheel: (wheel) => wheel.accepted = true
         }
 
         ScrollEdgeFade {

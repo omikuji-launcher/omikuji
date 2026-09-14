@@ -331,10 +331,8 @@ DialogCard {
                 height: 220
                 visible: root.sourceExpanded
 
-                MouseArea {
+                WheelSink {
                     anchors.fill: parent
-                    acceptedButtons: Qt.NoButton
-                    onWheel: (wheel) => wheel.accepted = true
                 }
 
                 Flickable {

@@ -375,31 +375,15 @@ DialogCard {
             }
         }
 
-        ColumnLayout {
+        ArtCheckList {
             Layout.fillWidth: true
-            spacing: Theme.space.sm
             visible: root.dlcs.length > 0
-
-            Text {
-                text: qsTr("DLC")
-                color: Theme.textSubtle
-                font.pixelSize: Theme.type.label.size
-                font.weight: Font.DemiBold
-            }
-
-            DlcPicker {
-                Layout.fillWidth: true
-                dlcs: root.dlcs
-                checkedIds: root.selectedDlcs
-                lockedIds: root.lockedDlcs
-                onToggleRequested: (id) => {
-                    let next = root.selectedDlcs.slice()
-                    let at = next.indexOf(id)
-                    if (at === -1) next.push(id)
-                    else next.splice(at, 1)
-                    root.selectedDlcs = next
-                }
-            }
+            title: qsTr("DLC")
+            checkAllVisible: true
+            items: root.dlcs
+            checkedIds: root.selectedDlcs
+            lockedIds: root.lockedDlcs
+            onSelectionRequested: (ids) => root.selectedDlcs = ids
         }
     }
 
