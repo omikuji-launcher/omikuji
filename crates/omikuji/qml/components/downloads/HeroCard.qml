@@ -123,7 +123,8 @@ Item {
                             font.pixelSize: Theme.type.headline.size
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
-                            Layout.maximumWidth: parent.width * 0.7
+                            Layout.fillWidth: true
+                            Layout.maximumWidth: implicitWidth
                         }
 
                         KindChip { kind: hero.kind }

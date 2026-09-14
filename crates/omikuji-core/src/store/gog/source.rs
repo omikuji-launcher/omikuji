@@ -9,6 +9,7 @@ use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
 use crate::downloads::proxy;
 use crate::downloads::rate::{RateMeter, seeded_update};
+use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
 };
@@ -189,23 +190,31 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     let mut out_lines = BufReader::new(stdout).lines();
     let mut err_lines = BufReader::new(stderr).lines();
 
-    let mut pct: f64 = 0.0;
-    let mut speed_bps: u64 = 0;
-    let mut dl_bytes: u64 = 0;
-    let mut total_bytes: u64 = entry.bytes_total;
+    let mut tally = SessionTally::new(entry.bytes_total);
     let mut meter: Option<RateMeter> = None;
 
     let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
     control_tick.tick().await;
+
+    let mut handle = |line: &str| -> bool {
+        let Some((written, total)) = parse_progress_bytes(line) else {
+            return false;
+        };
+        tally.set_session_total(total);
+        tally.set_session_done(written);
+        if let Some((pct, done, total)) = tally.snapshot() {
+            let speed = seeded_update(&mut meter, tally.session_done());
+            report_progress(&entry.id, pct, done, total, speed);
+        }
+        true
+    };
 
     loop {
         tokio::select! {
             line = out_lines.next_line() => {
                 match line {
                     Ok(Some(l)) => {
-                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            report_progress(&entry.id, pct, dl_bytes, total_bytes, seeded_update(&mut meter, dl_bytes));
-                        }
+                        handle(&l);
                     }
                     Ok(None) | Err(_) => break,
                 }
@@ -213,9 +222,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
             line = err_lines.next_line() => {
                 match line {
                     Ok(Some(l)) => {
-                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            report_progress(&entry.id, pct, dl_bytes, total_bytes, seeded_update(&mut meter, dl_bytes));
-                        } else {
+                        if !handle(&l) {
                             tracing::debug!("{}", l);
                         }
                     }
@@ -418,134 +425,14 @@ fn scan_dir_for_exe(dir: &std::path::Path) -> Option<String> {
         .next()
 }
 
-// [gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474, Running for: .., ETA: ..
-// the older "Downloaded: N MiB / Downlaod\t- N MiB" form stays so we dont regress when gogld updates
-fn parse_into(
-    line: &str,
-    pct: &mut f64,
-    speed_bps: &mut u64,
-    dl_bytes: &mut u64,
-    total_bytes: &mut u64,
-) -> bool {
-    let mut changed = false;
-
-    if let Some((p, dl, total)) = parse_progress_line(line) {
-        *pct = p;
-        if dl > 0 {
-            *dl_bytes = dl;
-        }
-        if total > 0 {
-            *total_bytes = total;
-        }
-        changed = true;
-    }
-    if let Some(s) = parse_speed(line) {
-        *speed_bps = s;
-        changed = true;
-    }
-    if let Some(b) = parse_downloaded(line) {
-        *dl_bytes = b;
-        changed = true;
-    }
-    if let Some(t) = parse_total(line)
-        && *total_bytes == 0
-    {
-        *total_bytes = t;
-        changed = true;
-    }
-
-    changed
-}
-
-fn parse_progress_line(line: &str) -> Option<(f64, u64, u64)> {
+fn parse_progress_bytes(line: &str) -> Option<(u64, u64)> {
     let idx = line.find("Progress:")?;
-    let rest = &line[idx + "Progress:".len()..].trim_start();
-    let first_end = rest
-        .find(|c: char| !c.is_ascii_digit() && c != '.')
-        .unwrap_or(rest.len());
-    let pct: f64 = rest[..first_end].parse().ok()?;
-    let after = rest[first_end..]
+    let (_pct, counts) = line[idx + "Progress:".len()..]
         .trim_start()
-        .trim_start_matches('%')
-        .trim_start();
-    if let Some(slash_idx) = after.find('/') {
-        let dl_str: String = after[..slash_idx]
-            .chars()
-            .take_while(|c| c.is_ascii_digit())
-            .collect();
-        let total_str: String = after[slash_idx + 1..]
-            .chars()
-            .take_while(|c| c.is_ascii_digit())
-            .collect();
-        let dl = dl_str.parse::<u64>().unwrap_or(0);
-        let total = total_str.parse::<u64>().unwrap_or(0);
-        return Some((pct, dl, total));
-    }
-    Some((pct, 0, 0))
-}
-
-fn parse_speed(line: &str) -> Option<u64> {
-    let marker = "Download\t- ";
-    if let Some(idx) = line.find(marker) {
-        let rest = &line[idx + marker.len()..];
-        let num_end = rest
-            .find(|c: char| !c.is_ascii_digit() && c != '.')
-            .unwrap_or(rest.len());
-        if let Ok(v) = rest[..num_end].parse::<f64>() {
-            return Some((v * 1024.0 * 1024.0) as u64);
-        }
-    }
-    for (unit, mult) in &[("MiB/s", 1024.0 * 1024.0), ("MB/s", 1_000_000.0)] {
-        if let Some(idx) = line.find(unit) {
-            let prefix = line[..idx].trim_end();
-            let num_start = prefix
-                .rfind(|c: char| !c.is_ascii_digit() && c != '.')
-                .map(|i| i + 1)
-                .unwrap_or(0);
-            if let Ok(v) = prefix[num_start..].parse::<f64>() {
-                return Some((v * mult) as u64);
-            }
-        }
-    }
-    None
-}
-
-fn parse_downloaded(line: &str) -> Option<u64> {
-    let idx = line.find("Downloaded:")?;
-    let rest = &line[idx + "Downloaded:".len()..].trim_start();
-    let num_end = rest
-        .find(|c: char| !c.is_ascii_digit() && c != '.')
-        .unwrap_or(rest.len());
-    let num: f64 = rest[..num_end].parse().ok()?;
-    let after = rest[num_end..].trim_start();
-    let mult = if after.starts_with("GiB") {
-        1024.0_f64.powi(3)
-    } else if after.starts_with("MiB") {
-        1024.0_f64.powi(2)
-    } else if after.starts_with("KiB") {
-        1024.0
-    } else {
-        return None;
-    };
-    Some((num * mult) as u64)
-}
-
-fn parse_total(line: &str) -> Option<u64> {
-    let slash_idx = line.find('/')?;
-    let after = line[slash_idx + 1..].trim_start();
-    let num_end = after
-        .find(|c: char| !c.is_ascii_digit() && c != '.')
-        .unwrap_or(after.len());
-    let num: f64 = after[..num_end].parse().ok()?;
-    let unit = after[num_end..].trim_start();
-    let mult = if unit.starts_with("GiB") {
-        1024.0_f64.powi(3)
-    } else if unit.starts_with("MiB") {
-        1024.0_f64.powi(2)
-    } else {
-        return None;
-    };
-    Some((num * mult) as u64)
+        .split_once(' ')?;
+    let (written, total) = counts.split_once('/')?;
+    let total = total.split(|c: char| !c.is_ascii_digit()).next()?;
+    Some((written.parse().ok()?, total.parse().ok()?))
 }
 
 #[cfg(test)]
@@ -553,35 +440,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_pct_legacy_with_percent() {
-        let line = "[INFO] Progress: 42.3 % | ETA: 00:05:12";
-        let (p, dl, total) = parse_progress_line(line).unwrap();
-        assert!((p - 42.3).abs() < 0.01);
-        assert_eq!(dl, 0);
-        assert_eq!(total, 0);
-    }
-
-    #[test]
-    fn parse_pct_modern_with_bytes() {
-        let line = "[gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474, Running for: 00:01:57, ETA: 00:00:53";
-        let (p, dl, total) = parse_progress_line(line).unwrap();
-        assert!((p - 68.61).abs() < 0.01);
-        assert_eq!(dl, 15271662900);
-        assert_eq!(total, 22258050474);
-    }
-
-    #[test]
-    fn parse_speed_mib_tab() {
-        let line = "Download\t- 23.45 MiB | Disk\t- 19.23 MiB";
-        assert_eq!(parse_speed(line), Some((23.45 * 1024.0 * 1024.0) as u64));
-    }
-
-    #[test]
-    fn parse_downloaded_mib() {
-        let line = "Downloaded: 512.5 MiB";
+    fn progress_line_gives_written_and_total() {
+        let progress = "[gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474, Running for: 00:01:57, ETA: 00:00:53";
+        let downloaded = "[gogdl] [PROGRESS] INFO: = Downloaded: 512.50 MiB, Written: 480.00 MiB";
         assert_eq!(
-            parse_downloaded(line),
-            Some((512.5 * 1024.0 * 1024.0) as u64)
+            parse_progress_bytes(progress),
+            Some((15271662900, 22258050474))
         );
+        assert_eq!(parse_progress_bytes(downloaded), None);
     }
 }

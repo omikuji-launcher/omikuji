@@ -3,6 +3,7 @@ pub mod limits;
 pub(crate) mod proc_tree;
 pub mod proxy;
 pub mod rate;
+pub mod session;
 pub mod source;
 pub mod throttle;
 

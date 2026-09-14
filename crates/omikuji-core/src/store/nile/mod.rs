@@ -32,6 +32,10 @@ fn installed_json() -> PathBuf {
     config_dir().join("installed.json")
 }
 
+fn manifest_raw(app_id: &str) -> PathBuf {
+    config_dir().join("manifests").join(format!("{app_id}.raw"))
+}
+
 fn current_user_json() -> PathBuf {
     config_dir().join("current_user.json")
 }
@@ -171,6 +175,21 @@ pub fn read_installed() -> HashMap<String, InstalledEntry> {
     }
 }
 
+pub fn clear_orphan_manifest(app_id: &str) {
+    let path = manifest_raw(app_id);
+    if read_installed().contains_key(app_id) || !path.exists() {
+        return;
+    }
+    match std::fs::remove_file(&path) {
+        Ok(()) => tracing::info!("removed orphan nile manifest {}", path.display()),
+        Err(e) => tracing::warn!(
+            "couldn't remove orphan nile manifest {}: {}",
+            path.display(),
+            e
+        ),
+    }
+}
+
 pub use crate::store::registry::InstalledInfo;
 
 pub fn find_installed_info(app_id: &str) -> Option<InstalledInfo> {
@@ -188,6 +207,10 @@ pub fn find_installed_info(app_id: &str) -> Option<InstalledInfo> {
 // nile has no resume marker, it hash-checks at run time
 pub fn inspect_existing_install(_app_id: &str, install_path: &Path) -> (u64, bool) {
     (crate::fs_util::dir_size(install_path), false)
+}
+
+pub fn finished_bytes(install_path: &Path) -> u64 {
+    crate::fs_util::dir_size(install_path).saturating_sub(inflight_bytes(install_path))
 }
 
 // nile writes each file to <name>.patch and deletes it on the next run instead of appending

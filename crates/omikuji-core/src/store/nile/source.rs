@@ -41,6 +41,7 @@ impl DownloadSource for NileSource {
     }
 
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
+        super::clear_orphan_manifest(&entry.app_id);
         run(entry, Verb::Install).await
     }
 
@@ -70,6 +71,10 @@ impl DownloadSource for NileSource {
 }
 
 async fn run(entry: &DownloadEntry, verb: Verb) -> Result<()> {
+    let on_disk = match verb {
+        Verb::Install => super::finished_bytes(&entry.install_path),
+        Verb::Update | Verb::Verify => 0,
+    };
     let child = super::command()?
         .arg(verb.as_arg())
         .arg("--path")
@@ -83,10 +88,15 @@ async fn run(entry: &DownloadEntry, verb: Verb) -> Result<()> {
         .spawn()
         .map_err(|e| anyhow!("failed to spawn nile: {}", e))?;
 
-    run_with_progress(child, entry, verb).await
+    run_with_progress(child, entry, verb, on_disk).await
 }
 
-async fn run_with_progress(mut child: Child, entry: &DownloadEntry, verb: Verb) -> Result<()> {
+async fn run_with_progress(
+    mut child: Child,
+    entry: &DownloadEntry,
+    verb: Verb,
+    on_disk: u64,
+) -> Result<()> {
     if let Some(pid) = child.id() {
         crate::downloads::io_stats::track_child(pid);
     }
@@ -115,15 +125,16 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry, verb: Verb) 
         if line_total > 0 {
             *total = line_total;
         }
+        let done = (downloaded + on_disk).min(*total);
         let pct = if *total > 0 {
-            downloaded as f64 / *total as f64 * 100.0
+            done as f64 / *total as f64 * 100.0
         } else {
             0.0
         };
         report_progress(
             &entry.id,
             pct,
-            downloaded,
+            done,
             *total,
             seeded_update(meter, downloaded),
         );
@@ -168,6 +179,14 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry, verb: Verb) 
             corrupt.len(),
             verb.as_arg(),
             corrupt.join(", ")
+        ));
+    }
+
+    if super::find_installed_info(&entry.app_id).is_none() {
+        return Err(anyhow!(
+            "nile {} exited cleanly but installed.json has no record for {}",
+            verb.as_arg(),
+            entry.app_id
         ));
     }
 

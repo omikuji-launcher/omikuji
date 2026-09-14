@@ -11,6 +11,7 @@ use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
 use crate::downloads::proxy;
 use crate::downloads::rate::{RateMeter, seeded_update};
+use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
 };
@@ -252,25 +253,19 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     let mut out_lines = BufReader::new(stdout).lines();
     let mut err_lines = BufReader::new(stderr).lines();
 
-    let mut pct: f64 = 0.0;
-    let mut speed_bps: u64 = 0;
-    let mut dl_bytes: u64 = 0;
-    let mut total_bytes: u64 = entry.bytes_total;
-    let mut reusable_bytes: u64 = 0;
+    let mut tally = SessionTally::new(entry.bytes_total);
     let mut meter: Option<RateMeter> = None;
 
     let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
     control_tick.tick().await;
 
-    let adjusted = |pct: f64, dl: u64, total: u64, reusable: u64| -> (f64, u64, u64) {
-        if reusable > 0 && total > 0 {
-            let base = reusable as f64 / total as f64;
-            let adj_pct = (base + (1.0 - base) * pct / 100.0) * 100.0;
-            let adj_dl = (adj_pct / 100.0 * total as f64) as u64;
-            (adj_pct, adj_dl, total)
-        } else {
-            (pct, dl, total)
+    let mut handle = |line: &str| -> bool {
+        let parsed = feed_line(&mut tally, line);
+        if parsed && let Some((pct, done, total)) = tally.snapshot() {
+            let speed = seeded_update(&mut meter, tally.session_done());
+            report_progress(&entry.id, pct, done, total, speed);
         }
+        parsed
     };
 
     loop {
@@ -278,11 +273,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
             line = out_lines.next_line() => {
                 match line {
                     Ok(Some(l)) => {
-                        parse_reusable(&l, &mut reusable_bytes);
-                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            let (p, d, t) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes);
-                            report_progress(&entry.id, p, d, t, seeded_update(&mut meter, dl_bytes));
-                        }
+                        handle(&l);
                     }
                     Ok(None) | Err(_) => break,
                 }
@@ -290,11 +281,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
             line = err_lines.next_line() => {
                 match line {
                     Ok(Some(l)) => {
-                        parse_reusable(&l, &mut reusable_bytes);
-                        if parse_into(&l, &mut pct, &mut speed_bps, &mut dl_bytes, &mut total_bytes) {
-                            let (p, d, t) = adjusted(pct, dl_bytes, total_bytes, reusable_bytes);
-                            report_progress(&entry.id, p, d, t, seeded_update(&mut meter, dl_bytes));
-                        } else {
+                        if !handle(&l) {
                             tracing::debug!("{}", l);
                         }
                     }
@@ -322,116 +309,21 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
     Ok(())
 }
 
-// [DLManager][Progress] - Downloaded: 152 MiB, Written: 128 MiB / + Download - 23.45 MiB/s (raw) / - Completed: 1234/5678 chunks (21.74%)
-fn parse_into(
-    line: &str,
-    pct: &mut f64,
-    speed_bps: &mut u64,
-    dl_bytes: &mut u64,
-    total_bytes: &mut u64,
-) -> bool {
-    let mut changed = false;
-
-    if let Some(total) = parse_total_size(line)
-        && total > 0
-        && *total_bytes == 0
-    {
-        *total_bytes = total;
-        changed = true;
+fn feed_line(tally: &mut SessionTally, line: &str) -> bool {
+    if let Some(bytes) = parse_labeled_size(line, "Download size:") {
+        tally.set_session_total(bytes);
+        return true;
     }
-
-    if let Some(p) = parse_percent(line) {
-        *pct = p;
-        changed = true;
+    if let Some(bytes) = parse_labeled_size(line, "Downloaded:") {
+        tally.set_session_done(bytes);
+        return true;
     }
-    if let Some(s) = parse_speed(line) {
-        *speed_bps = s;
-        changed = true;
-    }
-    if let Some((dl, total)) = parse_downloaded(line) {
-        *dl_bytes = dl;
-        if total > 0 {
-            *total_bytes = total;
-        }
-        changed = true;
-    }
-
-    changed
+    false
 }
 
-// "Reusable size: A MiB (chunks) / B MiB (unchanged / skipped)", both parts are done work, summed as the resume base offset
-fn parse_reusable(line: &str, reusable_bytes: &mut u64) {
-    let marker = "Reusable size:";
-    let Some(idx) = line.find(marker) else { return };
-    let rest = &line[idx + marker.len()..];
-    let Some(slash) = rest.find('/') else { return };
-    let chunks = parse_size(rest[..slash].trim()).unwrap_or(0);
-    let skipped = parse_size(rest[slash + 1..].trim()).unwrap_or(0);
-    let total = chunks + skipped;
-    if total > 0 {
-        *reusable_bytes = total;
-    }
-}
-
-fn parse_total_size(line: &str) -> Option<u64> {
-    for marker in &["Install size:", "Download size:"] {
-        if let Some(idx) = line.find(marker) {
-            let rest = &line[idx + marker.len()..];
-            if let Some(size) = parse_size(rest) {
-                return Some(size);
-            }
-        }
-    }
-    None
-}
-
-fn parse_percent(line: &str) -> Option<f64> {
-    let pct_idx = line.find('%')?;
-    let prefix = &line[..pct_idx];
-    let num_start = prefix
-        .rfind(|c: char| !c.is_ascii_digit() && c != '.')
-        .map(|i| i + 1)
-        .unwrap_or(0);
-    prefix[num_start..].trim().parse::<f64>().ok()
-}
-
-// first match wins (raw rate)
-fn parse_speed(line: &str) -> Option<u64> {
-    for (unit, mult) in &[
-        ("MiB/s", 1024.0 * 1024.0),
-        ("MB/s", 1_000_000.0),
-        ("KiB/s", 1024.0),
-        ("KB/s", 1000.0),
-    ] {
-        if let Some(idx) = line.find(unit) {
-            let prefix = line[..idx].trim_end();
-            let num_start = prefix
-                .rfind(|c: char| !c.is_ascii_digit() && c != '.')
-                .map(|i| i + 1)
-                .unwrap_or(0);
-            if let Ok(v) = prefix[num_start..].parse::<f64>() {
-                return Some((v * mult) as u64);
-            }
-        }
-    }
-    None
-}
-
-fn parse_downloaded(line: &str) -> Option<(u64, u64)> {
-    let idx = line.find("Downloaded:")?;
-    let rest = &line[idx + "Downloaded:".len()..];
-
-    // X / Y form: shared unit comes after Y
-    if let Some(slash_idx) = rest.find('/') {
-        let total = parse_size(&rest[slash_idx + 1..])?;
-        let total_part = rest[slash_idx + 1..].trim_start();
-        let unit_mult = unit_multiplier_from_text(total_part)?;
-        let dl_num: f64 = rest[..slash_idx].trim().parse().ok()?;
-        return Some(((dl_num * unit_mult) as u64, total));
-    }
-
-    let dl = parse_size(rest)?;
-    Some((dl, 0))
+fn parse_labeled_size(line: &str, label: &str) -> Option<u64> {
+    let idx = line.find(label)?;
+    parse_size(&line[idx + label.len()..])
 }
 
 fn unit_multiplier(s: &str) -> Option<f64> {
@@ -455,15 +347,6 @@ fn unit_multiplier(s: &str) -> Option<f64> {
     }
 }
 
-fn unit_multiplier_from_text(s: &str) -> Option<f64> {
-    let trimmed = s.trim_start();
-    let num_end = trimmed
-        .find(|c: char| !c.is_ascii_digit() && c != '.')
-        .unwrap_or(trimmed.len());
-    let after = trimmed[num_end..].trim_start();
-    unit_multiplier(after)
-}
-
 fn parse_size(s: &str) -> Option<u64> {
     let trimmed = s.trim_start();
     let num_end = trimmed
@@ -479,72 +362,17 @@ fn parse_size(s: &str) -> Option<u64> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_percent_from_chunks_line() {
-        let line = "[DLManager][Progress] - Completed: 1234/5678 chunks (21.74%)";
-        assert_eq!(parse_percent(line), Some(21.74));
-    }
+    const MIB: u64 = 1024 * 1024;
 
     #[test]
-    fn parse_speed_mib() {
-        let line = "[DLManager][Progress] + Download   - 23.45 MiB/s (raw)";
-        assert_eq!(parse_speed(line), Some((23.45 * 1024.0 * 1024.0) as u64));
-    }
-
-    #[test]
-    fn parse_downloaded_with_total() {
-        let line = "[Progress] Downloaded: 1.5 / 4.0 GiB";
-        let (dl, total) = parse_downloaded(line).unwrap();
-        assert_eq!(dl, (1.5 * 1024.0 * 1024.0 * 1024.0) as u64);
-        assert_eq!(total, (4.0 * 1024.0 * 1024.0 * 1024.0) as u64);
-    }
-
-    #[test]
-    fn parse_downloaded_no_total() {
-        let line = "[DLManager][Progress] - Downloaded: 152 MiB, Written: 128 MiB";
-        let (dl, total) = parse_downloaded(line).unwrap();
-        assert_eq!(dl, 152 * 1024 * 1024);
-        assert_eq!(total, 0);
-    }
-
-    #[test]
-    fn parse_reusable_size_on_resume() {
-        let line =
-            "[cli] INFO: Reusable size: 0.00 MiB (chunks) / 3882.77 MiB (unchanged / skipped)";
-        let mut reusable: u64 = 0;
-        parse_reusable(line, &mut reusable);
-        assert_eq!(reusable, (3882.77 * 1024.0 * 1024.0) as u64);
-    }
-
-    #[test]
-    fn parse_reusable_size_both_parts() {
-        let line =
-            "[cli] INFO: Reusable size: 512.00 MiB (chunks) / 1024.00 MiB (unchanged / skipped)";
-        let mut reusable: u64 = 0;
-        parse_reusable(line, &mut reusable);
-        assert_eq!(reusable, (512.0 + 1024.0) as u64 * 1024 * 1024);
-    }
-
-    #[test]
-    fn parse_reusable_size_zero() {
-        let line = "[cli] INFO: Reusable size: 0.00 MiB (chunks) / 0.00 MiB (unchanged / skipped)";
-        let mut reusable: u64 = 42;
-        parse_reusable(line, &mut reusable);
-        // stays at previous value when both are zero
-        assert_eq!(reusable, 42);
-    }
-
-    #[test]
-    fn parse_install_size_at_start() {
-        let line = "[Core] INFO: Install size: 5.86 GiB";
-        let bytes = parse_total_size(line).unwrap();
-        assert_eq!(bytes, (5.86 * 1024.0 * 1024.0 * 1024.0) as u64);
-    }
-
-    #[test]
-    fn parse_download_size_form() {
-        let line = "[Core] INFO: Download size: 4.32 GiB";
-        let bytes = parse_total_size(line).unwrap();
-        assert_eq!(bytes, (4.32 * 1024.0 * 1024.0 * 1024.0) as u64);
+    fn legendary_resume_lines_feed_the_tally() {
+        let size = "[cli] INFO: Download size: 600.00 MiB (Compression savings: 12.0%)";
+        let downloaded = "[DLManager] INFO: - Downloaded: 100.00 MiB, Written: 120.00 MiB";
+        let install = "[cli] INFO: Install size: 1400.00 MiB";
+        let mut tally = SessionTally::new(1000 * MIB);
+        assert!(feed_line(&mut tally, size));
+        assert!(feed_line(&mut tally, downloaded));
+        assert!(!feed_line(&mut tally, install));
+        assert_eq!(tally.snapshot(), Some((50.0, 500 * MIB, 1000 * MIB)));
     }
 }

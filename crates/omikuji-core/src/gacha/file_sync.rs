@@ -105,8 +105,12 @@ pub fn sanitize_rel(rel: &str) -> PathBuf {
         .collect()
 }
 
+fn size_matches(path: &Path, size: u64) -> bool {
+    matches!(std::fs::metadata(path), Ok(m) if m.len() == size)
+}
+
 pub fn is_stale(path: &Path, size: u64, md5: Option<&str>) -> bool {
-    if !matches!(std::fs::metadata(path), Ok(m) if m.len() == size) {
+    if !size_matches(path, size) {
         return true;
     }
     md5.is_some_and(|want| file_md5(path).map_or(true, |got| got != want))
@@ -163,9 +167,7 @@ pub async fn download_one(
         std::fs::create_dir_all(parent)?;
     }
 
-    if skip == Skip::SameSize
-        && matches!(std::fs::metadata(&dest_path), Ok(m) if m.len() == file.size)
-    {
+    if skip == Skip::SameSize && size_matches(&dest_path, file.size) {
         progress.advance(id, file.size);
         return Ok(());
     }
@@ -225,6 +227,21 @@ pub async fn sync_all(
     progress: Arc<SyncProgress>,
     skip: Skip,
 ) -> Result<bool> {
+    let files = match skip {
+        Skip::SameSize => {
+            let root = dest_root.to_path_buf();
+            let (present, missing): (Vec<_>, Vec<_>) = tokio::task::spawn_blocking(move || {
+                files
+                    .into_iter()
+                    .partition(|f| size_matches(&root.join(sanitize_rel(&f.rel_path)), f.size))
+            })
+            .await?;
+            progress.advance(id, present.iter().map(|f| f.size).sum());
+            missing
+        }
+        Skip::Never => files,
+    };
+
     let stream = futures_util::stream::iter(files.into_iter().map(|file| {
         let id = id.to_string();
         let dest_root = dest_root.to_path_buf();
@@ -233,7 +250,7 @@ pub async fn sync_all(
             if check_control(&id) != ControlSignal::None {
                 return Ok::<_, anyhow::Error>(());
             }
-            download_one(&id, &file, &dest_root, &progress, skip).await
+            download_one(&id, &file, &dest_root, &progress, Skip::Never).await
         }
     }))
     .buffer_unordered(GachaLimits::load().connections);
