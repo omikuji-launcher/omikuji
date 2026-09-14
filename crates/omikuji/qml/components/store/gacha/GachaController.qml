@@ -49,7 +49,7 @@ Item {
             try { m = JSON.parse(raw) } catch (e) { m = null }
             if (m) {
                 ctrl.gameModel.gacha_import_after_install(
-                    m.manifest_id, m.edition_id, displayName,
+                    m.manifest_id, m.edition_id,
                     installPath, runnerVersion, prefixPath, alongside
                 )
             }

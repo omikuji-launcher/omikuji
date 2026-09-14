@@ -181,10 +181,22 @@ Item {
                 }
             }
 
-            SectionHeader {
-                text: qsTr("Completed") + "  ·  " + (root.downloadModel ? root.downloadModel.completedCount : 0)
-                visible: root.downloadModel && root.downloadModel.completedCount > 0
+            RowLayout {
+                Layout.fillWidth: true
                 Layout.topMargin: Theme.space.md
+                visible: root.downloadModel && root.downloadModel.completedCount > 0
+
+                SectionHeader {
+                    Layout.fillWidth: true
+                    text: qsTr("Completed") + "  ·  " + (root.downloadModel ? root.downloadModel.completedCount : 0)
+                }
+
+                M3Button {
+                    small: true
+                    variant: "tonal"
+                    text: qsTr("Clear")
+                    onClicked: root.downloadModel.clear_completed()
+                }
             }
 
             Repeater {

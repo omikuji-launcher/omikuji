@@ -53,6 +53,12 @@ pub struct GachaManifest {
     pub strategy_config: serde_json::Value,
 }
 
+impl GachaManifest {
+    pub fn display_name_for(&self, edition: &ManifestEdition) -> String {
+        format!("{} ({})", self.display_name, edition.label)
+    }
+}
+
 fn default_true() -> bool {
     true
 }

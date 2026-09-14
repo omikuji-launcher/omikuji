@@ -731,32 +731,30 @@ async fn download_and_extract(
     let total_bytes: u64 = files.iter().map(|f| f.package_size).sum();
     let mut so_far: u64 = 0;
 
-    let mut first_segment: Option<std::path::PathBuf> = None;
-    for f in files {
+    let segments: Vec<PathBuf> = files
+        .iter()
+        .map(|f| {
+            crate::http::url_file_name(&f.url)
+                .map(|name| temp_dir.join(name))
+                .ok_or_else(|| anyhow!("no file name in {} url {}", label, f.url))
+        })
+        .collect::<Result<_>>()?;
+
+    for (f, temp_path) in files.iter().zip(&segments) {
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
-        }
-        let filename = f
-            .url
-            .rsplit('/')
-            .next()
-            .unwrap_or("endfield.zip")
-            .to_string();
-        let temp_path = temp_dir.join(&filename);
-        if first_segment.is_none() {
-            first_segment = Some(temp_path.clone());
         }
 
         tracing::debug!(
             "{} segment: {} ({})",
             label,
-            filename,
+            temp_path.display(),
             format_bytes(f.package_size)
         );
 
         crate::gacha::hoyo::source::download_file(
             &f.url,
-            &temp_path,
+            temp_path,
             &entry.id,
             so_far,
             total_bytes,
@@ -770,7 +768,7 @@ async fn download_and_extract(
         return Ok(());
     }
 
-    if let Some(first) = &first_segment {
+    if let Some(first) = segments.first() {
         tracing::info!("extracting {} to {}", label, dest.display());
         crate::notifications::info(
             &entry.display_name,
@@ -788,9 +786,8 @@ async fn download_and_extract(
             password,
         )?;
 
-        for f in files {
-            let fname = f.url.rsplit('/').next().unwrap_or("endfield.zip");
-            let _ = std::fs::remove_file(temp_dir.join(fname));
+        for segment in &segments {
+            let _ = std::fs::remove_file(segment);
         }
     }
 

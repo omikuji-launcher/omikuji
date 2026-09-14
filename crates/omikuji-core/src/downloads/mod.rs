@@ -227,10 +227,7 @@ lazy_static! {
 
         let restored = load_queue();
         if !restored.is_empty() {
-            tracing::info!(
-                "restored {} paused entries from previous session",
-                restored.len()
-            );
+            tracing::info!("restored {} entries from previous session", restored.len());
         }
 
         Arc::new(DownloadManager {
@@ -515,19 +512,31 @@ impl DownloadManager {
     }
 
     pub fn dismiss(&self, id: &str) {
+        self.dismiss_where(|e| e.id == id);
+    }
+
+    pub fn clear_completed(&self) {
+        self.dismiss_where(|e| {
+            matches!(
+                e.status,
+                DownloadStatus::Completed | DownloadStatus::Cancelled
+            )
+        });
+    }
+
+    fn dismiss_where(&self, pred: impl Fn(&DownloadEntry) -> bool) {
         let mut inner = self.inner.lock().unwrap();
-        let Some(idx) = inner.entries.iter().position(|e| e.id == id) else {
+        let (gone, kept): (Vec<_>, Vec<_>) = std::mem::take(&mut inner.entries)
+            .into_iter()
+            .partition(|e| !e.status.is_active() && pred(e));
+        inner.entries = kept;
+        if gone.is_empty() {
             return;
-        };
-        match inner.entries[idx].status {
-            DownloadStatus::Completed | DownloadStatus::Failed(_) | DownloadStatus::Cancelled => {
-                inner.entries.remove(idx);
-                inner
-                    .events
-                    .push_back(DownloadEvent::Removed(id.to_string()));
-            }
-            _ => {}
         }
+        inner
+            .events
+            .extend(gone.into_iter().map(|e| DownloadEvent::Removed(e.id)));
+        save_queue(&inner.entries);
     }
 
     pub fn list(&self) -> Vec<DownloadEntry> {
@@ -920,18 +929,15 @@ fn complete(entry: &DownloadEntry) {
     finish_bar(&entry.id, &entry.display_name, "done");
 }
 
-// active entries are saved to cache/downloads/queue.json so paused/queued
-// downloads survive app restarts. legendary's .resume files handle chunk-level state; we just need to remember what was in
+// every entry is kept, failed ones too, so retry survives a restart
 
 fn queue_path() -> PathBuf {
     crate::cache_dir().join("downloads").join("queue.json")
 }
 
 fn save_queue(entries: &[DownloadEntry]) {
-    let active: Vec<&DownloadEntry> = entries.iter().filter(|e| e.status.is_active()).collect();
-
     let path = queue_path();
-    if active.is_empty() {
+    if entries.is_empty() {
         let _ = std::fs::remove_file(&path);
         return;
     }
@@ -939,7 +945,7 @@ fn save_queue(entries: &[DownloadEntry]) {
     if let Some(parent) = path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
-    match serde_json::to_string_pretty(&active) {
+    match serde_json::to_string_pretty(entries) {
         Ok(json) => {
             if let Err(e) = std::fs::write(&path, json) {
                 tracing::error!("failed to save queue: {}", e);
@@ -963,7 +969,9 @@ fn load_queue() -> Vec<DownloadEntry> {
         }
     };
     for e in &mut entries {
-        e.status = DownloadStatus::Paused;
+        if e.status.is_active() {
+            e.status = DownloadStatus::Paused;
+        }
         e.speed_bps = 0;
     }
     entries

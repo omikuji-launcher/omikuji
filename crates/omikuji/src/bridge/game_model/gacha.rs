@@ -166,7 +166,6 @@ impl super::qobject::GameModel {
         mut self: Pin<&mut Self>,
         manifest_id: &QString,
         edition_id: &QString,
-        display_name: &QString,
         install_path: &QString,
         runner_version: &QString,
         prefix_path: &QString,
@@ -181,7 +180,6 @@ impl super::qobject::GameModel {
         let eid = edition_id.to_string();
         let vars = omikuji_core::template_vars::TemplateVars::global();
         let install_s = vars.expand(&install_path.to_string());
-        let display_s = display_name.to_string();
         let prefix_s = vars.expand(&prefix_path.to_string());
         let runner_s = runner_version.to_string();
 
@@ -193,6 +191,7 @@ impl super::qobject::GameModel {
             tracing::warn!("unknown edition '{}' for '{}'", eid, mid);
             return QString::default();
         };
+        let display_s = manifest.display_name_for(edition);
         let app_id = omikuji_core::gacha::strategies::build_app_id(&manifest, &eid, &[]);
 
         let exe = std::path::Path::new(&install_s).join(&edition.exe_name);

@@ -14,6 +14,16 @@ pub fn client() -> &'static reqwest::Client {
     &CLIENT
 }
 
+// signed cdn urls carry a query, never let it into a file name
+pub fn url_file_name(url: &str) -> Option<String> {
+    reqwest::Url::parse(url)
+        .ok()?
+        .path_segments()?
+        .next_back()
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+}
+
 // on_percent fires at most once per whole percent, size_hint covers servers that send no content-length
 pub async fn download_with_progress(
     url: &str,

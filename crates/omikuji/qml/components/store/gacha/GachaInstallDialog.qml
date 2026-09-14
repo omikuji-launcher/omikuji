@@ -314,7 +314,7 @@ DialogCard {
         let importing = existingInstall
         if (importing && !downloadModel.gacha_supports_import(manifestId)) {
             let gid = gameModel.gacha_import_after_install(
-                manifestId, editionId, displayName, importDir, runner, prefixPath,
+                manifestId, editionId, importDir, runner, prefixPath,
                 companionAccepted
             )
             imported(gid || "")
@@ -323,7 +323,7 @@ DialogCard {
         }
         let id = downloadModel.enqueue_gacha(
             manifestId, editionId, voicesSelected().join(","),
-            displayName, importing ? importDir : effectiveInstallPath,
+            importing ? importDir : effectiveInstallPath,
             runner, prefixPath, tempPath, importing, companionAccepted
         )
         if (id && id.length > 0) installEnqueued(id)

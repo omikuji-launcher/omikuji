@@ -652,7 +652,6 @@ pub mod qobject {
             self: Pin<&mut GameModel>,
             manifest_id: &QString,
             edition_id: &QString,
-            display_name: &QString,
             install_path: &QString,
             runner_version: &QString,
             prefix_path: &QString,

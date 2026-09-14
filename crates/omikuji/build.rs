@@ -295,13 +295,14 @@ fn main() {
         .qsignal_raw("fn download_failed(self: Pin<&mut DownloadModel>, id: &QString, error: &QString);")
         .qsignal_raw("fn state_changed(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw("fn enqueue_epic(self: Pin<&mut DownloadModel>, app_id: &QString, display_name: &QString, banner_url: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString) -> QString;")
-        .custom_invokable_raw("fn enqueue_gacha(self: Pin<&mut DownloadModel>, manifest_id: &QString, edition_id: &QString, voices_csv: &QString, display_name: &QString, install_path: &QString, runner_version: &QString, prefix_path: &QString, temp_path: &QString, import_existing: bool, alongside: bool) -> QString;")
+        .custom_invokable_raw("fn enqueue_gacha(self: Pin<&mut DownloadModel>, manifest_id: &QString, edition_id: &QString, voices_csv: &QString, install_path: &QString, runner_version: &QString, prefix_path: &QString, temp_path: &QString, import_existing: bool, alongside: bool) -> QString;")
         .custom_invokable_raw("fn gacha_supports_import(self: &DownloadModel, manifest_id: &QString) -> bool;")
         .custom_invokable_raw("fn pause(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn resume(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn cancel(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn retry(self: Pin<&mut DownloadModel>, id: &QString);")
         .custom_invokable_raw("fn dismiss(self: Pin<&mut DownloadModel>, id: &QString);")
+        .custom_invokable_raw("fn clear_completed(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw("fn drain_events(self: Pin<&mut DownloadModel>);")
         .custom_invokable_raw(
             "fn source_state_json(self: &DownloadModel, source: &QString) -> QString;",

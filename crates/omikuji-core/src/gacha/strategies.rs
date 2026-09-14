@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow, bail};
 use std::path::{Path, PathBuf};
 
-use super::manifest::GachaManifest;
+use super::manifest::{GachaManifest, ManifestEdition};
 use crate::downloads::{DownloadKind, DownloadRequest};
 
 pub const HOYO_SOPHON: &str = "hoyo_sophon";
@@ -109,18 +109,16 @@ pub fn install_root_for(app_id: &str, exe: &Path) -> Option<PathBuf> {
         .map(Path::to_path_buf)
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn build_install_request(
     manifest: &GachaManifest,
     edition_id: &str,
     voices: &[String],
-    display_name: String,
     install_path: PathBuf,
     prefix_path: Option<PathBuf>,
     runner_version: String,
     temp_dir: Option<PathBuf>,
 ) -> Result<DownloadRequest> {
-    require_edition(manifest, edition_id)?;
+    let edition = require_edition(manifest, edition_id)?;
     let source = source_key(manifest)?.to_string();
     let app_id = build_app_id(manifest, edition_id, voices);
     let banner_url = resolve_poster(manifest);
@@ -128,7 +126,7 @@ pub fn build_install_request(
         source,
         app_id,
         game_id: String::new(),
-        display_name,
+        display_name: manifest.display_name_for(edition),
         banner_url: if banner_url.is_empty() {
             None
         } else {
@@ -159,16 +157,21 @@ pub fn supports_import(manifest: &GachaManifest) -> bool {
         .unwrap_or(false)
 }
 
-fn require_edition(manifest: &GachaManifest, edition_id: &str) -> Result<()> {
-    if manifest.editions.iter().any(|e| e.id == edition_id) {
-        Ok(())
-    } else {
-        Err(anyhow!(
-            "edition '{}' not found in manifest '{}'",
-            edition_id,
-            manifest.id
-        ))
-    }
+fn require_edition<'a>(
+    manifest: &'a GachaManifest,
+    edition_id: &str,
+) -> Result<&'a ManifestEdition> {
+    manifest
+        .editions
+        .iter()
+        .find(|e| e.id == edition_id)
+        .ok_or_else(|| {
+            anyhow!(
+                "edition '{}' not found in manifest '{}'",
+                edition_id,
+                manifest.id
+            )
+        })
 }
 
 pub async fn fetch_install_size(

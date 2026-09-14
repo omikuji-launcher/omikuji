@@ -164,7 +164,6 @@ impl qobject::DownloadModel {
         manifest_id: &QString,
         edition_id: &QString,
         voices_csv: &QString,
-        display_name: &QString,
         install_path: &QString,
         runner_version: &QString,
         prefix_path: &QString,
@@ -193,7 +192,6 @@ impl qobject::DownloadModel {
             &manifest,
             &eid,
             &voices,
-            display_name.to_string(),
             PathBuf::from(install_path.to_string()),
             if prefix.is_empty() {
                 None
@@ -245,6 +243,10 @@ impl qobject::DownloadModel {
 
     fn dismiss(self: Pin<&mut Self>, id: &QString) {
         downloads::manager().dismiss(&id.to_string());
+    }
+
+    fn clear_completed(self: Pin<&mut Self>) {
+        downloads::manager().clear_completed();
     }
 
     fn drain_events(mut self: Pin<&mut Self>) {
