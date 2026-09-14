@@ -9,20 +9,12 @@ BaseCard {
     id: card
 
     property var actions: null
-    property var gameModel: null
     property bool showPlayButton: false
 
     property int cardPlayState: PlayState.Play
 
     function refreshPlayState() {
-        if (!card.gameModel || card.index < 0) {
-            card.cardPlayState = PlayState.Play
-            return
-        }
-        card.cardPlayState = PlayState.stateFor(
-            card.gameModel.is_launching(card.index),
-            card.gameModel.is_running(card.index),
-            false)
+        card.cardPlayState = card.actions ? card.actions.playStateAt(card.index) : PlayState.Play
     }
 
     title: name

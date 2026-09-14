@@ -72,7 +72,6 @@ Item {
             elevation: root.cardElevation && dragProxy.dragCard !== cardDelegate
             cardStyle: root.cardStyle
             actions: root.actions
-            gameModel: root.gameModel
             showPlayButton: root.cardPlayButton
             selected: index === root.selectedIndex
             dimmed: root.dimHidden && hidden

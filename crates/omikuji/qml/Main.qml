@@ -968,7 +968,7 @@ property real cardZoom: appSettings.cardZoom
     GameContextMenu {
         id: gameContextMenu
         gameModel: root.gameModelRef
-        onPlayRequested: (idx) => gameActions.play(idx)
+        actions: gameActions
         onLogsRequested: (gid, gname) => root.openGameLogs(gid, gname)
         onConfigureRequested: (idx) => {
             gameActions.selectedIndex = idx

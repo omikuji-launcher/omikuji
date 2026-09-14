@@ -1,5 +1,6 @@
 import QtQuick
 import omikuji 1.0
+import "../lib/PlayState.js" as PlayState
 
 Item {
     id: ctrl
@@ -7,9 +8,9 @@ Item {
     z: 2000
 
     property var gameModel: null
+    property var actions: null
 
     // emitted for actions that need cross-cutting state changes in Main
-    signal playRequested(int index)
     signal logsRequested(string gameId, string gameName)
     signal configureRequested(int index)
     signal categoriesRequested(int index)
@@ -26,6 +27,14 @@ Item {
     property int _pendingIndex: -1
     property real _pendingX: 0
     property real _pendingY: 0
+
+    function playItem(state) {
+        switch (state) {
+            case PlayState.Launching: return { text: qsTr("Starting"), disabled: true }
+            case PlayState.Stop: return { text: qsTr("Stop"), action: "stop", danger: true }
+            default: return { text: qsTr("Play"), action: "play" }
+        }
+    }
 
     Timer {
         id: delayTimer
@@ -65,7 +74,7 @@ Item {
             }
 
             let built = [
-                { text: qsTr("Play"), action: "play" },
+                ctrl.playItem(ctrl.actions ? ctrl.actions.playStateAt(index) : PlayState.Play),
                 { text: qsTr("Show logs"), action: "logs" },
                 { text: qsTr("Configure"), action: "configure" },
                 { text: qsTr("Categories"), action: "categories" },
@@ -106,8 +115,13 @@ Item {
 
             switch (action) {
                 case "play":
-                    ctrl.playRequested(idx)
+                    if (ctrl.actions) ctrl.actions.play(idx)
                     break
+                case "stop": {
+                    let g = ctrl.gameModel.get_game(idx)
+                    if (ctrl.actions && g && g.gameId) ctrl.actions.stop(g.gameId)
+                    break
+                }
                 case "logs": {
                     let g = ctrl.gameModel.get_game(idx)
                     if (g && g.gameId) ctrl.logsRequested(g.gameId, g.name || g.gameId)

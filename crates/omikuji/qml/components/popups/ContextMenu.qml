@@ -239,7 +239,7 @@ Popup {
                         height: 32
                         radius: Theme.radius.sm
                         // danger items tint red, normal items use ~2x the old 0.08 alpha so light-mode hovers are actually visible
-                        color: hoverArea.containsMouse
+                        color: hoverArea.containsMouse && !itemLoader.modelData.disabled
                             ? (itemLoader.modelData.danger
                                 ? Theme.alpha(Theme.error, 0.18)
                                 : itemLoader.modelData.accent
@@ -259,7 +259,9 @@ Popup {
                             text: (itemLoader.modelData.shiftText && root._shiftDown && hoverArea.containsMouse)
                                 ? itemLoader.modelData.shiftText
                                 : itemLoader.modelData.text
-                            color: itemLoader.modelData.danger
+                            color: itemLoader.modelData.disabled
+                                ? Theme.textSubtle
+                                : itemLoader.modelData.danger
                                 ? Theme.error
                                 : itemLoader.modelData.accent
                                     ? Theme.accent
@@ -286,13 +288,14 @@ Popup {
                             id: hoverArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: itemLoader.modelData.disabled ? Qt.ArrowCursor : Qt.PointingHandCursor
                             onEntered: {
                                 if (itemLoader.modelData.submenu) root._scheduleSubmenu(itemLoader.index, parent)
                                 else root._closeSubmenu()
                             }
                             onPositionChanged: (mouse) => root._shiftDown = (mouse.modifiers & Qt.ShiftModifier) !== 0
                             onClicked: (mouse) => {
+                                if (itemLoader.modelData.disabled) return
                                 if (itemLoader.modelData.submenu) {
                                     root._openSubmenuNow(itemLoader.index, parent)
                                 } else {

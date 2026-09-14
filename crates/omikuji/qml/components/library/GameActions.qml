@@ -38,6 +38,11 @@ QtObject {
             && root.selectedIndex < root.gameModel.count
     }
 
+    function playStateAt(index) {
+        if (root.gameModel === null || index < 0 || index >= root.gameModel.count) return PlayState.Play
+        return PlayState.stateFor(root.gameModel.is_launching(index), root.gameModel.is_running(index), false)
+    }
+
     function refreshRunState() {
         let valid = root.selectionValid()
         root.isRunning = valid && root.gameModel.is_running(root.selectedIndex)
