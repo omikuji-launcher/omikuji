@@ -210,15 +210,21 @@ Wine/proton config. Only shown for Wine games. (we'll see the settings per heade
 
 \- **DXVK**: Direct3D 9/10/11 to Vulkan.
 
-\- **VKD3D**: Direct3D 12 to Vulkan.
+\- **VKD3D**: Direct3D 12 to Vulkan. This is `VKD3D-Proton`, the fork Proton ships, not Wine's own `vkd3d`.
 
 \- **DXVK-NVAPI**: exposes NVIDIA features (DLSS, Reflex).
 
-Toggling a layer shows a dropdown under it. Off disables the layer, and the game falls back to Wine's own Direct3D. `Built-in` leaves the dlls alone. Picking a version makes omikuji install that version.
+Toggling a layer on shows a version dropdown under it. `Built-in` leaves the dlls alone and uses what is already there. Picking a version, instead, makes omikuji install that version.
 
-`Built-in` differs per runner. On Wine it is whatever dlls are already in the prefix. On Proton it is the layer bundled in the runner's files, which Proton deploys into the prefix at launch.
+Off sets the layer's dlls to `Wine`'s builtin ones (`=b`), so the layer's own dlls never load even if they are in the prefix. The game gets wined3d instead of DXVK and Wine's own `d3d12` (built on Wine's `vkd3d`) instead of `VKD3D-Proton`. `DXVK-NVAPI` off leaves no nvapi at all, since Wine has no builtin nvapi. On `Proton` the same overrides are held in place through the runner, explained further down.
 
-Installing a version differs per runner too. On Wine omikuji copies the dlls into the prefix. On Proton it also swaps the dlls inside the runner's files, since Proton redeploys its own bundle over the prefix at launch. The originals are kept and restored when a game on that runner asks for `Built-in` or turns the layer off.
+`VKD3D-Proton` uses `DXVK`'s `DXGI`, so `VKD3D` on with `DXVK` off does not work.
+
+> take these infos a bit careful, I'm pretty confident of all of this but I might be a stupid
+
+`Built-in` differs per runner. On `Wine` it is whatever dlls are already in the prefix. If the prefix has none for that layer, `Built-in` is greyed out if a toggle is on, because Wine would fall back to its own Direct3D without saying so. For a prefix that does not exist yet and you're adding a new game, the note under the dropdown says whether the layer gets installed when the prefix is created at launch, which follows that layer's `auto-install on prefix` setting in `Settings -> Components`. On `Proton` it is the layer bundled in the runner's files, which Proton deploys into the prefix at launch.
+
+Installing a version differs per runner too. On `Wine` omikuji copies the dlls into the prefix. On `Proton` it also swaps the dlls inside the runner's files, since Proton swaps them back with its own bundle over the prefix at launch. The originals are kept and restored when a game on that runner has `Built-in` or the layer's toggle off.
 
 The restore runs at launch, not when a game closes. Two games sharing a runner each set it as they start, and a game launched from another launcher in between uses whatever the last omikuji launch left there.
 

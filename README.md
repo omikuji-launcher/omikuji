@@ -27,6 +27,8 @@ A QtQuick based games/apps launcher for Linux. Built 'cause I couldn't bear havi
 | <img src="docs/screenshots/gacha_store.png"/>    | <img src="docs/screenshots/gacha_store_download.png"/>    |
 | Interface Settings                               | Components Settings                                       |
 | <img src="docs/screenshots/settings_page_interface.png"/> | <img src="docs/screenshots/settings_page_components.png"/> |
+| Omikuji Spirit                               | Omikuji Draw                                       |
+| <img src="docs/screenshots/omikuji_draw.png"/> | <img src="docs/screenshots/omikuji_spirit.png"/> |
 | Console Mode (Aurora background)                 | Console Mode (Sakura background)   
 | <img src="docs/screenshots/console_mode_1.png"/> | <img src="docs/screenshots/console_mode_2.png"/> |
 
