@@ -13,6 +13,19 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.16.2
+
+Added:
+- library cards context menu play button controller (play/stop states)
+
+Changed:
+- toggles animation
+- minor ui tweaks
+
+Removed:
+- qt5-compat dependency
+
+
 ## 0.16.1
 
 Changed:

@@ -65,11 +65,33 @@ jobs:
         working-directory: packaging
         run: ./make-appimage.sh
 
+      # after the AppImage, make-appimage.sh wipes packaging/dist on start
+      - name: Make tarball
+        run: |
+          stage="omikuji-${VERSION#v}-x86_64"
+          mkdir -p "$stage" packaging/dist
+          cp -a --parents \
+            /usr/bin/omikuji \
+            /usr/share/applications/io.github.reakjra.omikuji.desktop \
+            /usr/share/icons/hicolor/512x512/apps/io.github.reakjra.omikuji.png \
+            "$stage"/
+          install -Dm644 packaging/io.github.reakjra.omikuji.metainfo.xml \
+            "$stage/usr/share/metainfo/io.github.reakjra.omikuji.metainfo.xml"
+          install -Dm644 LICENSE "$stage/usr/share/licenses/omikuji/LICENSE"
+          tar -C "$stage" -caf "packaging/dist/$stage.tar.zst" usr
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: AppImage
           path: "packaging/dist/*.AppImage"
+          archive: false
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tarball
+          path: "packaging/dist/*.tar.zst"
           archive: false
 
       - name: Build changelog link
@@ -86,7 +108,9 @@ jobs:
           name: ${{ env.VERSION }}
           target_commitish: ${{ github.sha }}
           body: ${{ steps.notes.outputs.body }}
-          files: "packaging/dist/*.AppImage"
+          files: |
+            packaging/dist/*.AppImage
+            packaging/dist/*.tar.zst
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}

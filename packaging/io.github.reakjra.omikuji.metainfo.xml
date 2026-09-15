@@ -22,6 +22,14 @@
     </p>
   </description>
   <releases>
+    <release version="0.16.2" date="2026-09-15">
+      <description>
+        <ul>
+          <li>minor ui tweaks</li>
+          <li>drop qt5-compat dependency</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.16.1" date="2026-09-14">
       <description>
         <ul>
