@@ -84,7 +84,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: AppImage
-          path: "packaging/dist/*.AppImage"
+          path: |
+            packaging/dist/*.AppImage
+            packaging/dist/*.tar.zst
           archive: false
 
       - name: Upload tarball artifact
