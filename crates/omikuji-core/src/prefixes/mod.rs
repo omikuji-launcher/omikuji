@@ -41,6 +41,29 @@ pub fn syswow64_dir(prefix: &Path) -> PathBuf {
 }
 
 // same test as is_fake_dll in wine's dlls/setupapi/fakedll.c, winebuild stamps every dll wine ships so anything unstamped came from somewhere else
+/*
+
+Builtin:
+000000 4d 5a 90 00 03 00 00 00 04 00 00 00 ff ff 00 00  >MZ..............<
+000010 b8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00  >........@.......<
+000020 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  >................<
+000030 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 00  >................<
+000040 57 69 6e 65 20 62 75 69 6c 74 69 6e 20 44 4c 4c  >Wine builtin DLL<
+000050 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  >................<
+000060 74 20 62 65 20 72 75 6e 20 69 6e 20 44 4f 53 20  >t be run in DOS <
+000070 6d 6f 64 65 2e 0d 0d 0a 24 00 00 00 00 00 00 00  >mode....$.......<
+
+Native:
+000000 4d 5a 90 00 03 00 00 00 04 00 00 00 ff ff 00 00  >MZ..............<
+000010 b8 00 00 00 00 00 00 00 40 00 00 00 00 00 00 00  >........@.......<
+000020 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  >................<
+000030 00 00 00 00 00 00 00 00 00 00 00 00 80 00 00 00  >................<
+000040 0e 1f ba 0e 00 b4 09 cd 21 b8 01 4c cd 21 54 68  >........!..L.!Th<
+000050 69 73 20 70 72 6f 67 72 61 6d 20 63 61 6e 6e 6f  >is program canno<
+000060 74 20 62 65 20 72 75 6e 20 69 6e 20 44 4f 53 20  >t be run in DOS <
+000070 6d 6f 64 65 2e 0d 0d 0a 24 00 00 00 00 00 00 00  >mode....$.......<
+
+*/
 pub fn native_dll_present(dir: &Path, name: &str) -> bool {
     let Ok(mut file) = File::open(dir.join(name)) else {
         return false;
