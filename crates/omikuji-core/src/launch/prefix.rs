@@ -16,11 +16,7 @@ pub fn prefix_path_for(game: &Game) -> PathBuf {
     let dir = crate::prefixes_dir();
 
     // layout: prefixes/{slug}-{id}. if the name slugifies to nothing (e.g. non-ascii title) fall back to just the id so the dir is unique.
-    let slug = if !game.metadata.slug.is_empty() {
-        game.metadata.slug.clone()
-    } else {
-        crate::media::slugify(&game.metadata.name)
-    };
+    let slug = game.slug();
     let folder = if slug.is_empty() {
         game.metadata.id.clone()
     } else {

@@ -332,6 +332,13 @@ impl Metadata {
             categories: Vec::new(),
         }
     }
+    pub fn slug(&self) -> String {
+        if self.slug.trim().is_empty() {
+            crate::media::slugify(&self.name)
+        } else {
+            self.slug.clone()
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -558,6 +565,10 @@ impl Game {
     }
     pub fn exe(&self) -> &PathBuf {
         &self.metadata.exe
+    }
+
+    pub fn slug(&self) -> String {
+        self.metadata.slug()
     }
 
     pub fn added_key(&self) -> (&str, &str) {

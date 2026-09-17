@@ -90,11 +90,7 @@ fn clear_activity_inner() -> Result<()> {
 }
 
 fn image_url_for(game: &Game) -> Option<String> {
-    let key = if !game.metadata.slug.is_empty() {
-        game.metadata.slug.clone()
-    } else {
-        crate::media::slugify(&game.metadata.name)
-    };
+    let key = game.slug();
 
     {
         let cache = url_cache().lock().unwrap();

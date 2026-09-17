@@ -59,15 +59,25 @@ pub fn build_env(
         );
         env.insert(
             "PROTON_VERB".to_string(),
-            ProtonVerb::Run.as_str().to_string(),
+            ProtonVerb::Run.as_str().to_string(), // wow. PROTON_VERB=run makes umu-run not apply protonfixes, so you have to use WaitForExitAndRun but that makes it impossible to run games if something else is already running in the prefix. I might actually start getting homicidal.
         );
-        env.insert(
-            "GAMEID".to_string(),
-            format!(
-                "umu-{}",
-                crate::store::steam::synthetic_appid(&game.metadata.id)
-            ),
-        );
+        match game.source.kind.as_str() {
+            "epic" => {
+                env.insert("STORE".to_string(), "egs".to_string());
+                env.insert("GAMEID".to_string(), game.source.app_id.clone());
+            }
+            "gog" => {
+                env.insert("STORE".to_string(), "gog".to_string());
+                env.insert("GAMEID".to_string(), game.source.app_id.clone());
+            }
+            "nile" => {
+                env.insert("STORE".to_string(), "amazon".to_string());
+                env.insert("GAMEID".to_string(), game.source.app_id.clone());
+            }
+            _ => {
+                env.insert("GAMEID".to_string(), format!("umu-{}", game.slug()));
+            }
+        }
     }
 
     env.insert(

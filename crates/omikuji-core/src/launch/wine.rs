@@ -18,7 +18,7 @@ fn looks_like_proton(s: &str) -> bool {
         || s.starts_with("Proton")
         || s.starts_with("dwproton")
         || s.starts_with("proton")
-}
+} // quite useless might remove one day
 
 impl WineVariant {
     pub fn from_version(version: &str) -> Self {

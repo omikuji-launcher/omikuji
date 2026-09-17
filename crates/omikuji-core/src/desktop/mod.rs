@@ -194,21 +194,8 @@ fn escape_desktop_value(value: &str) -> String {
     value.replace("\\", "\\\\").replace("\n", "\\n")
 }
 
-fn sanitize_slug(name: &str) -> String {
-    name.to_lowercase()
-        .replace(|c: char| !c.is_alphanumeric() && c != ' ', "-")
-        .replace(' ', "-")
-        .replace("--", "-")
-        .trim_matches('-')
-        .to_string()
-}
-
 pub fn game_slug(game: &Game) -> String {
-    if game.metadata.slug.is_empty() {
-        sanitize_slug(&game.metadata.name)
-    } else {
-        game.metadata.slug.clone()
-    }
+    game.slug()
 }
 
 pub fn launch_target(game: &Game) -> String {
@@ -310,14 +297,6 @@ pub fn disk_free_space(path: &str) -> u64 {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-
-    #[test]
-    fn test_sanitize_slug() {
-        assert_eq!(sanitize_slug("Elden Ring"), "elden-ring");
-        assert_eq!(sanitize_slug("Game!!!"), "game");
-        assert_eq!(sanitize_slug("Test  Game"), "test-game");
-        assert_eq!(sanitize_slug("Super Mario 64"), "super-mario-64");
-    }
 
     #[test]
     fn test_desktop_filename() {
