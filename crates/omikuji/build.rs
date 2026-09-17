@@ -154,18 +154,26 @@ fn write_icon_names(names: &[String]) {
     fs::write(&out_path, content).expect("write icon_names.rs");
 }
 
+fn qmake_query(var: &str) -> Option<String> {
+    ["qmake6", "qmake"].into_iter().find_map(|tool| {
+        let out = Command::new(tool).arg("-query").arg(var).output().ok()?;
+        let v = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        (out.status.success() && !v.is_empty()).then_some(v)
+    })
+}
+
 fn qt_version() -> String {
-    for tool in ["qmake6", "qmake"] {
-        if let Ok(out) = Command::new(tool).arg("-query").arg("QT_VERSION").output()
-            && out.status.success()
-        {
-            let v = String::from_utf8_lossy(&out.stdout).trim().to_string();
-            if !v.is_empty() {
-                return v;
-            }
-        }
+    qmake_query("QT_VERSION").unwrap_or_else(|| "unknown".to_string())
+}
+
+fn qt_private_include_dirs() -> Vec<String> {
+    match (qmake_query("QT_INSTALL_HEADERS"), qmake_query("QT_VERSION")) {
+        (Some(headers), Some(version)) => vec![
+            format!("{headers}/QtGui/{version}"),
+            format!("{headers}/QtGui/{version}/QtGui"),
+        ],
+        _ => Vec::new(),
     }
-    "unknown".to_string()
 }
 
 fn main() {
@@ -328,6 +336,7 @@ fn main() {
             "src/bridge/archive_manager.rs",
             "src/bridge/defaults.rs",
             "src/bridge/gamepad.rs",
+            "src/bridge/input_mode.rs",
             "src/bridge/tray.rs",
         ],
         &out_dir,
@@ -375,25 +384,31 @@ fn main() {
     let builder = builder.qt_module("DBus");
     println!("cargo:rustc-link-lib=Qt6DBus");
 
+    const CPP_SOURCES: [&str; 8] = [
+        "src/app_icon.cpp",
+        "src/app_font.cpp",
+        "src/tray_native.cpp",
+        "src/i18n.cpp",
+        "src/hot_reload.cpp",
+        "src/notify.cpp",
+        "src/inhibit.cpp",
+        "src/input.cpp",
+    ];
+    let qt_private_includes = qt_private_include_dirs();
     let builder = unsafe {
-        builder.cc_builder(|cc| {
+        builder.cc_builder(move |cc| {
             cc.flag_if_supported("-Wno-sfinae-incomplete");
-            cc.file("src/app_icon.cpp");
-            cc.file("src/app_font.cpp");
-            cc.file("src/tray_native.cpp");
-            cc.file("src/i18n.cpp");
-            cc.file("src/hot_reload.cpp");
-            cc.file("src/notify.cpp");
-            cc.file("src/inhibit.cpp");
+            for dir in &qt_private_includes {
+                cc.include(dir);
+            }
+            for src in CPP_SOURCES {
+                cc.file(src);
+            }
         })
     };
-    println!("cargo:rerun-if-changed=src/app_icon.cpp");
-    println!("cargo:rerun-if-changed=src/app_font.cpp");
-    println!("cargo:rerun-if-changed=src/tray_native.cpp");
-    println!("cargo:rerun-if-changed=src/i18n.cpp");
-    println!("cargo:rerun-if-changed=src/hot_reload.cpp");
-    println!("cargo:rerun-if-changed=src/notify.cpp");
-    println!("cargo:rerun-if-changed=src/inhibit.cpp");
+    for src in CPP_SOURCES {
+        println!("cargo:rerun-if-changed={src}");
+    }
 
     builder.build();
 }

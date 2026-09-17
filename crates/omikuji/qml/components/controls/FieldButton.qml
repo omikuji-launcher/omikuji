@@ -17,6 +17,10 @@ FieldSurface {
     implicitWidth: 44
     implicitHeight: 44
     opacity: blocked ? 0.4 : 1.0
+    focused: InputMode.keyFocus(root)
+
+    readonly property bool navigable: !blocked
+    function navActivate() { clicked() }
 
     Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
 

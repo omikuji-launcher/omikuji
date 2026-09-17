@@ -56,12 +56,12 @@ Item {
             font.weight: Font.DemiBold
             Behavior on color { ColorAnimation { duration: Theme.dur.xfast } }
 
-            MouseArea {
+            PressArea {
                 id: linkMouseArea
                 anchors.fill: parent
+                anchors.margins: -Theme.space.xs
                 hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: Qt.openUrlExternally(root.loginUrl)
+                onActivated: Qt.openUrlExternally(root.loginUrl)
             }
         }
 

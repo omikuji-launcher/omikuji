@@ -164,12 +164,12 @@ DialogCard {
                             }
                         }
 
-                        MouseArea {
+                        PressArea {
                             id: toolMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.invokeTool(toolCell.modelData.act)
+                            ringRadius: Theme.radius.md
+                            onActivated: root.invokeTool(toolCell.modelData.act)
                         }
                     }
                 }

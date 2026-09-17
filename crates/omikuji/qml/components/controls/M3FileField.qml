@@ -56,6 +56,9 @@ Item {
             height: parent.height
             focused: inputArea.activeFocus
 
+            readonly property bool navigable: !root.readOnly
+            readonly property Item navFocusTarget: inputArea
+
             TextInput {
                 id: inputArea
                 anchors.left: parent.left

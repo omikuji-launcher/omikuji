@@ -115,6 +115,7 @@ DialogCard {
 
         ListView {
             id: scriptList
+            keyNavigationEnabled: false
             anchors.top: searchField.bottom
             anchors.topMargin: Theme.space.md
             anchors.left: parent.left
@@ -234,11 +235,12 @@ DialogCard {
                     }
                 }
 
-                MouseArea {
+                PressArea {
                     id: rowArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: {
+                    ringRadius: scriptCard.radius
+                    onActivated: {
                         if (scriptCard.modelData.remote) {
                             if (root.installingRemote) return
                             root.errorText = ""
@@ -261,7 +263,7 @@ DialogCard {
                     anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
                     visible: !scriptCard.modelData.remote
-                    opacity: rowArea.containsMouse || hovered ? 1 : 0
+                    opacity: rowArea.containsMouse || hovered || InputMode.keyFocus(rowArea) || InputMode.keyFocus(deleteBtn) ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
                     onClicked: {
                         if (root.scriptsBridge.removeScript(scriptCard.modelData.dir))

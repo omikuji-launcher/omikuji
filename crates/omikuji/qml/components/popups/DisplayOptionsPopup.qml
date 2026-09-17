@@ -1,6 +1,7 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
+import "../lib/Nav.js" as Nav
 
 Popup {
     id: root
@@ -41,6 +42,8 @@ Popup {
 
     PopupZoom { target: root }
 
+    PopupFocusReturn { popup: root }
+
     enter: Transition {
         NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
         NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: 120; easing.type: Easing.OutCubic }
@@ -49,10 +52,17 @@ Popup {
         NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 80 }
     }
 
+    onOpened: Nav.focusFirst(contentItem)
+
     contentItem: Item {
+        id: optionsHost
         property bool isDropdownHost: true
         implicitWidth: optionsCol.implicitWidth
         implicitHeight: optionsCol.implicitHeight
+
+        Keys.onPressed: (event) => {
+            event.accepted = Nav.hostKey(event, optionsHost, [optionsHost], optionsHost.Window.activeFocusItem)
+        }
 
         Column {
             id: optionsCol

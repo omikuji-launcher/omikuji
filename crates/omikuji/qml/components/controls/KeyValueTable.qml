@@ -169,12 +169,11 @@ Item {
                 }
             }
 
-            MouseArea {
+            PressArea {
                 id: addArea
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root._addRow()
+                onActivated: root._addRow()
             }
         }
     }

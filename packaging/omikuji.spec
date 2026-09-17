@@ -19,6 +19,7 @@ BuildRequires:  protobuf-compiler
 BuildRequires:  systemd-devel
 BuildRequires:  openssl-devel
 BuildRequires:  qt6-qtbase-devel
+BuildRequires:  qt6-qtbase-private-devel
 BuildRequires:  qt6-qtdeclarative-devel
 BuildRequires:  qt6-qtsvg-devel
 BuildRequires:  qt6-qtshadertools

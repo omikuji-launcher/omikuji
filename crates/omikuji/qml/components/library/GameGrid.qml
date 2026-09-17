@@ -30,6 +30,18 @@ Item {
     signal gameDoubleClicked(int index)
     signal gameRightClicked(int index, real winX, real winY)
     signal backgroundClicked()
+    signal playRequested(int index)
+
+    onSelectedIndexChanged: cardGrid.keyIndex = selectedIndex
+
+    function cardAt(index) {
+        return cardGrid.itemAt(index)
+    }
+
+    Keys.onPressed: (event) => {
+        event.accepted = event.key === Qt.Key_Escape && selectedIndex >= 0
+        if (event.accepted) backgroundClicked()
+    }
 
     EmptyState {
         anchors.fill: parent
@@ -50,7 +62,10 @@ Item {
         cardFlow: root.cardFlow
         cardBaseWidth: root.cardBaseWidth
         cardBaseHeight: root.cardBaseHeight
+        keyIndex: root.selectedIndex
         onBackgroundClicked: root.backgroundClicked()
+        onKeyNavMoved: (index) => root.gameClicked(index)
+        onKeyNavActivated: (index) => root.playRequested(index)
 
         delegate: GameCard {
             id: cardDelegate
@@ -77,7 +92,10 @@ Item {
             dimmed: root.dimHidden && hidden
             cardVisible: !root.view || root.view.passes(index, name, hidden, favourite)
             reorderable: root.reorderActive
-            onClicked: root.gameClicked(index)
+            onClicked: {
+                cardGrid.focusIndex(index)
+                root.gameClicked(index)
+            }
             onDoubleClicked: root.gameDoubleClicked(index)
             onRightClicked: (winX, winY) => root.gameRightClicked(index, winX, winY)
             onReorderStarted: (grabX, grabY) => root._startReorder(cardDelegate, grabX, grabY)

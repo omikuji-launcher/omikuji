@@ -20,6 +20,15 @@ Squircle {
     radius: Theme.radius.md
     fillColor: Theme.alpha(Theme.text, 0.05)
 
+    readonly property bool navigable: options.length > 0
+    readonly property real navRingRadius: radius
+    Keys.onPressed: (event) => {
+        const step = event.key === Qt.Key_Right ? 1 : (event.key === Qt.Key_Left ? -1 : 0)
+        const next = currentIndex + step
+        event.accepted = step !== 0 && next >= 0 && next < options.length
+        if (event.accepted) selected(next)
+    }
+
     Squircle {
         x: root.inset + root.currentIndex * root.segWidth
         y: root.inset

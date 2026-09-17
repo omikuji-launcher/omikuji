@@ -78,12 +78,12 @@ DialogCard {
                             color: popup.selected === iconCell.modelData ? Theme.accent : Theme.icon
                         }
 
-                        MouseArea {
+                        PressArea {
                             id: tapArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            ringRadius: 10
+                            onActivated: {
                                 popup.picked(iconCell.modelData)
                                 popup.hide()
                             }

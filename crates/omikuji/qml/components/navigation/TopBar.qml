@@ -71,6 +71,9 @@ Item {
         focused: searchInput.activeFocus
         visible: root.showSearch
 
+        readonly property bool navigable: true
+        readonly property Item navFocusTarget: searchInput
+
         Row {
             anchors.left: parent.left
             anchors.leftMargin: 12

@@ -157,7 +157,7 @@ Item {
                         onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
                         onPrefixInstallVersionSelected: (tag) => {
                             root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
-                            root.refreshInstalledCounts()
+                            root.loadSources()
                         }
                     }
                 }

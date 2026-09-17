@@ -44,10 +44,10 @@ Item {
         }
     }
 
-    MouseArea {
+    PressArea {
         anchors.fill: checkAll
+        anchors.margins: -Theme.space.xs
         enabled: root.checkAllVisible
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.checkAllClicked()
+        onActivated: root.checkAllClicked()
     }
 }

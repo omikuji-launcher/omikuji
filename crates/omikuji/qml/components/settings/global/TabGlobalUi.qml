@@ -336,6 +336,7 @@ Item {
 
             ListView {
                 id: categoriesList
+                keyNavigationEnabled: false
                 width: parent.width
                 height: contentHeight
                 model: categoriesModel
@@ -541,12 +542,11 @@ Item {
                     }
                 }
 
-                MouseArea {
+                PressArea {
                     id: addHover
                     anchors.fill: parent
                     hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.categoryAddRequested()
+                    onActivated: root.categoryAddRequested()
                 }
             }
         }

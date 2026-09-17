@@ -20,6 +20,18 @@ Item {
     implicitWidth: 200
     implicitHeight: items.length * itemHeight + Math.max(0, items.length - 1) * gap
 
+    readonly property bool navigable: items.length > 0
+    readonly property real navRingRadius: Theme.radius.md
+    function navRectItem() { return pill }
+    Keys.onPressed: (event) => {
+        const step = event.key === Qt.Key_Down ? 1 : (event.key === Qt.Key_Up ? -1 : 0)
+        event.accepted = step !== 0
+        if (step === 0) return
+        const order = topRows.concat(bottomRows).map(r => r.index)
+        const pos = order.indexOf(currentIndex)
+        itemClicked(order[((pos + step) % order.length + order.length) % order.length])
+    }
+
     function _rowsPinned(pinned) {
         let out = []
         for (let i = 0; i < items.length; i++) {
@@ -116,6 +128,7 @@ Item {
     }
 
     Squircle {
+        id: pill
         readonly property int inset: Theme.space.xs
         x: inset
         width: parent.width - inset * 2

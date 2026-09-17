@@ -2,6 +2,7 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
 import QtQuick.Effects
+import "../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -35,6 +36,19 @@ Item {
         onActivated: root.closeRequested()
     }
 
+    function selectTab(i) {
+        if (root.pageItem) root.pageItem.currentTabIndex = i
+        contentFlick.contentY = 0
+    }
+
+    FocusTrap {
+        id: focusTrap
+        host: root
+        scope: cardWrap
+        active: root.shown
+        sections: [rail, contentFlick, actions]
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.55)
@@ -64,6 +78,17 @@ Item {
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.97
         visible: opacity > 0.01
+
+        Keys.onPressed: (event) => {
+            const step = Nav.tabCycleStep(event)
+            const tabs = root.pageItem ? root.pageItem.tabs : []
+            if (step === 0 || tabs.length === 0 || !focusTrap.onTop) {
+                focusTrap.handleKey(event)
+                return
+            }
+            root.selectTab((root.pageItem.currentTabIndex + step + tabs.length) % tabs.length)
+            event.accepted = true
+        }
 
         Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
         Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
@@ -178,10 +203,7 @@ Item {
             width: 184
             items: root.pageItem ? root.pageItem.tabs : []
             currentIndex: root.pageItem ? root.pageItem.currentTabIndex : 0
-            onItemClicked: (i) => {
-                if (root.pageItem) root.pageItem.currentTabIndex = i
-                contentFlick.contentY = 0
-            }
+            onItemClicked: (i) => root.selectTab(i)
         }
 
         Item {

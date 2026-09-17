@@ -20,6 +20,7 @@ Rectangle {
     color: Theme.surface
     radius: Theme.radius.md
     visible: opacity > 0
+    enabled: panelActive
     opacity: panelActive ? 1 : 0
 
     readonly property bool panelActive: viewName === currentView

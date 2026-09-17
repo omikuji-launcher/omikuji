@@ -99,6 +99,14 @@ Item {
         onActivated: root.closeRequested()
     }
 
+    FocusTrap {
+        id: focusTrap
+        host: root
+        scope: cardWrap
+        active: root.shown
+        sections: [bodyFlick, footerLeftLoader, actionsLoader]
+    }
+
     component SidePanel: Item {
         property alias panelContent: panelLoader.sourceComponent
         property real panelWidth: 300
@@ -179,6 +187,8 @@ Item {
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.96
         visible: opacity > 0.01
+
+        Keys.onPressed: (event) => focusTrap.handleKey(event)
 
         readonly property bool footerActive: actionsLoader.active || footerLeftLoader.active
         readonly property real footerHeight: Math.max(

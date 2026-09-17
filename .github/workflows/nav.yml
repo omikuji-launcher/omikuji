@@ -1,0 +1,36 @@
+name: Navigation checks
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'crates/omikuji/qml/**'
+      - 'crates/omikuji/tests/qml/**'
+      - 'scripts/check-nav.sh'
+  pull_request:
+    paths:
+      - 'crates/omikuji/qml/**'
+      - 'crates/omikuji/tests/qml/**'
+      - 'scripts/check-nav.sh'
+  workflow_dispatch:
+
+jobs:
+  nav:
+    runs-on: ubuntu-latest
+
+    container:
+      image: archlinux:latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: pacman -Syu --noconfirm --needed qt6-base qt6-declarative
+
+      - name: Navigation checks
+        run: ./scripts/check-nav.sh

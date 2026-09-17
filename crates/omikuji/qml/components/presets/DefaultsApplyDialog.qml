@@ -71,63 +71,6 @@ DialogCard {
 
     onCloseRequested: root.close()
 
-    component CheckRow: Item {
-        id: checkRow
-        property bool checked: false
-        property string text: ""
-        property string hint: ""
-        signal clicked()
-
-        width: parent ? parent.width : 0
-        height: Math.max(28, textCol.implicitHeight + Theme.space.sm)
-
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.radius.sm
-            color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
-            Behavior on color { ColorAnimation { duration: 100 } }
-        }
-
-        Row {
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.space.md
-
-            M3Checkbox {
-                anchors.verticalCenter: parent.verticalCenter
-                checked: checkRow.checked
-            }
-
-            Column {
-                id: textCol
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 1
-                Text {
-                    text: checkRow.text
-                    color: Theme.text
-                    font.pixelSize: Theme.type.label.size
-                }
-                Text {
-                    visible: checkRow.hint !== ""
-                    text: checkRow.hint
-                    color: Theme.textSubtle
-                    font.pixelSize: Theme.type.micro.size
-                }
-            }
-        }
-
-        MouseArea {
-            id: rowArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: checkRow.clicked()
-        }
-    }
-
     body: ColumnLayout {
         width: parent.width
         height: parent.height
@@ -198,9 +141,11 @@ DialogCard {
 
                                         CheckRow {
                                             required property var modelData
+                                            width: parent.width
+                                            minHeight: 28
                                             text: SettingLabels.label(modelData.key)
                                             checked: root.checkedKeys.indexOf(modelData.key) !== -1
-                                            onClicked: root.toggleKey(modelData.key)
+                                            onToggled: root.toggleKey(modelData.key)
                                         }
                                     }
                                 }
@@ -217,8 +162,9 @@ DialogCard {
                 hint: root.replaceMaps
                     ? qsTr("wipes the game's keys, then writes the global ones")
                     : qsTr("merges global keys into the game (global wins on conflict)")
+                minHeight: 28
                 checked: root.replaceMaps
-                onClicked: root.replaceMaps = !root.replaceMaps
+                onToggled: root.replaceMaps = !root.replaceMaps
             }
         }
 

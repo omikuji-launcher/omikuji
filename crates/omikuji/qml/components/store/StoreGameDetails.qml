@@ -31,12 +31,11 @@ ColumnLayout {
         tone: protonDbHover.containsMouse ? Theme.accent : Theme.textMuted
         text: qsTr("Look it up on ProtonDB")
 
-        MouseArea {
+        PressArea {
             id: protonDbHover
             anchors.fill: parent
             hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: Qt.openUrlExternally(
+            onActivated: Qt.openUrlExternally(
                 "https://www.protondb.com/search?q=" + encodeURIComponent(root.title))
         }
     }

@@ -7,6 +7,7 @@ pub mod epic_model;
 pub mod game_model;
 pub mod gamepad;
 pub mod gog_model;
+pub mod input_mode;
 pub mod library_watcher;
 pub mod log_highlighter;
 pub mod migration;

@@ -16,14 +16,15 @@ Item {
     property bool blocked: false
 
     readonly property bool hovered: hoverArea.containsMouse
+    readonly property bool lit: hovered || InputMode.keyFocus(btn)
 
     readonly property color fill: {
         if (btn.tonal)
             return Theme.alpha(Theme.accent, hoverArea.containsPress ? 0.28
-                : hoverArea.containsMouse ? 0.20 : 0.13)
+                : btn.lit ? 0.20 : 0.13)
         if (hoverArea.containsPress)
             return btn.danger ? Theme.alpha(Theme.error, 0.28) : Theme.statePressed
-        if (hoverArea.containsMouse)
+        if (btn.lit)
             return btn.danger ? Theme.alpha(Theme.error, 0.18) : Theme.stateHover
         return Theme.alpha(Theme.text, 0)
     }
@@ -35,6 +36,10 @@ Item {
 
     opacity: blocked ? 0.35 : 1.0
     Behavior on opacity { NumberAnimation { duration: 140 } }
+
+    readonly property bool navigable: !blocked
+    readonly property real navRingRadius: rounded ? size / 2 : (squircle ? Theme.radius.md : 8)
+    function navActivate() { clicked() }
 
     Item {
         anchors.fill: parent
@@ -72,7 +77,7 @@ Item {
         name: btn.icon
         size: Math.round(btn.size * 0.55)
         color: btn.tonal ? Theme.accent
-            : hoverArea.containsMouse ? (btn.danger ? Theme.error : Theme.iconHover)
+            : btn.lit ? (btn.danger ? Theme.error : Theme.iconHover)
             : Theme.icon
 
         Behavior on color {

@@ -111,57 +111,14 @@ DialogCard {
                 Repeater {
                     model: root.tagCategories
 
-                    Item {
-                        id: tagRow
+                    CheckRow {
                         required property var modelData
 
                         width: parent.width
-                        height: 40
-
-                        readonly property bool selected: root.selectedTags.indexOf(modelData.value) !== -1
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.radius.sm
-                            color: rowHover.containsMouse
-                                ? Theme.alpha(Theme.text, 0.06)
-                                : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-
-                        Row {
-                            anchors.left: parent.left
-                            anchors.leftMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: Theme.space.md
-
-                            M3Checkbox {
-                                anchors.verticalCenter: parent.verticalCenter
-                                checked: tagRow.selected
-                            }
-
-                            SvgIcon {
-                                name: tagRow.modelData.icon
-                                size: 18
-                                color: Theme.icon
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-
-                            Text {
-                                text: tagRow.modelData.name
-                                color: Theme.text
-                                font.pixelSize: Theme.type.body.size
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-
-                        MouseArea {
-                            id: rowHover
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root._toggleTag(tagRow.modelData.value)
-                        }
+                        icon: modelData.icon
+                        text: modelData.name
+                        checked: root.selectedTags.indexOf(modelData.value) !== -1
+                        onToggled: root._toggleTag(modelData.value)
                     }
                 }
             }

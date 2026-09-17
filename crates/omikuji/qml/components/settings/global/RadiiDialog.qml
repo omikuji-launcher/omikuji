@@ -49,8 +49,6 @@ DialogCard {
                 width: parent.width
                 height: 36
 
-                onRoleRadiusChanged: spin.value = roleRadius
-
                 Squircle {
                     id: swatch
                     anchors.left: parent.left
@@ -71,12 +69,11 @@ DialogCard {
                 }
 
                 M3SpinBox {
-                    id: spin
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     from: 0
                     to: 999
-                    Component.onCompleted: value = row.roleRadius
+                    value: row.roleRadius
                     onMoved: (v) => root.applyRadius(row.modelData.key, v)
                 }
             }

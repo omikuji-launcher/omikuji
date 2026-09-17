@@ -137,12 +137,11 @@ DialogCard {
                         color: Theme.accent
                     }
 
-                    MouseArea {
+                    PressArea {
                         id: openHover
                         anchors.fill: parent
                         hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
+                        onActivated: {
                             for (let i = 0; i < root.runners.length; i++) {
                                 if (root.runners[i].name === root.recommendedRunner) {
                                     root.manageRequested("runners", root.runners[i].name, root.runners[i].kind)

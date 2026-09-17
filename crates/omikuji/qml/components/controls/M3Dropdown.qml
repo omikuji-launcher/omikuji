@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
+import "../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -22,41 +23,72 @@ Item {
 
     readonly property bool popupOpen: popup.visible
 
-    property int _savedIndex: 0
+    property int _highlightIndex: -1
 
+    function _selectable(i) {
+        const opt = options[i]
+        return !!opt && !opt.header && opt.disabled !== true
+    }
+    function _select(i) {
+        if (_selectable(i)) selected(options[i].value)
+        popup.close()
+    }
     function openPopup() {
-        _savedIndex = currentIndex
+        _highlightIndex = -1
+        forceActiveFocus()
         popup.open()
     }
     function closePopupCancel() {
-        currentIndex = _savedIndex
         popup.close()
     }
     function closePopupCommit() {
-        selected(currentValue)
-        popup.close()
+        _select(_highlightIndex)
     }
-    function highlightPrev() {
-        if (options.length === 0) return
-        var i = currentIndex
-        for (var c = 0; c < options.length; c++) {
-            i = (i - 1 + options.length) % options.length
-            if (!options[i].header) { currentIndex = i; return }
+    function _stepHighlight(step) {
+        let i = _highlightIndex !== -1 ? _highlightIndex : currentIndex
+        for (let c = 0; c < options.length; c++) {
+            i = ((i + step) % options.length + options.length) % options.length
+            if (_selectable(i)) {
+                _highlightIndex = i
+                return
+            }
         }
     }
-    function highlightNext() {
-        if (options.length === 0) return
-        var i = currentIndex
-        for (var c = 0; c < options.length; c++) {
-            i = (i + 1) % options.length
-            if (!options[i].header) { currentIndex = i; return }
-        }
-    }
+    function highlightPrev() { _stepHighlight(-1) }
+    function highlightNext() { _stepHighlight(1) }
 
     implicitWidth: 200
     readonly property real boxCenterY: button.y + button.height / 2
 
     implicitHeight: label ? labelText.height + 4 + button.height : button.height
+
+    readonly property bool navigable: true
+    function navActivate() { openPopup() }
+
+    function _moveHighlight(step) {
+        _stepHighlight(step)
+        Nav.ensureVisible(popupFlick, optionRepeater.itemAt(_highlightIndex), 0)
+    }
+
+    Keys.onShortcutOverride: (event) => event.accepted = popup.visible && event.key === Qt.Key_Escape
+
+    Keys.onPressed: (event) => {
+        event.accepted = popup.visible
+        if (!popup.visible) return
+        switch (event.key) {
+        case Qt.Key_Up: _moveHighlight(-1); break
+        case Qt.Key_Down: _moveHighlight(1); break
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Space: closePopupCommit(); break
+        case Qt.Key_Escape: closePopupCancel(); break
+        case Qt.Key_Tab:
+        case Qt.Key_Backtab:
+            closePopupCancel()
+            event.accepted = false
+            break
+        }
+    }
 
     Row {
         id: labelText
@@ -86,7 +118,7 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         height: root.fieldHeight
-        focused: popup.visible
+        focused: popup.visible || InputMode.keyFocus(root)
 
         Text {
             anchors.left: parent.left
@@ -125,7 +157,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: popup.visible ? popup.close() : popup.open()
+            onClicked: popup.visible ? root.closePopupCancel() : root.openPopup()
         }
     }
 
@@ -152,9 +184,9 @@ Item {
         visible: popup.visible
         z: popup.z - 1
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onPressed: popup.close()
+        onPressed: root.closePopupCancel()
         onWheel: (wheel) => {
-            popup.close()
+            root.closePopupCancel()
             wheel.accepted = false
         }
     }
@@ -227,6 +259,7 @@ Item {
                 width: popupFlick.width
 
                 Repeater {
+                    id: optionRepeater
                     model: root.options
 
                     Rectangle {
@@ -242,7 +275,8 @@ Item {
                         width: col.width
                         height: isHeader ? (index === 0 ? 22 : 28) : 40
                         radius: Theme.radius.xs
-                        color: selectable && optionMouse.containsMouse
+                        readonly property bool lit: selectable && index === root._highlightIndex
+                        color: lit
                             ? Theme.alpha(tint, index === root.currentIndex ? 0.18 : 0.14)
                             : "transparent"
 
@@ -273,7 +307,7 @@ Item {
                             readonly property real overflow: Math.max(0, optionText.implicitWidth - width)
                             property real pan: 0
                             property bool manualPan: false
-                            readonly property color bg: optionRow.selectable && optionMouse.containsMouse
+                            readonly property color bg: optionRow.lit
                                 ? Theme.mix(popup.color, optionRow.tint,
                                             optionRow.index === root.currentIndex ? 0.18 : 0.14)
                                 : popup.color
@@ -297,7 +331,7 @@ Item {
                             }
 
                             SequentialAnimation {
-                                running: optionMouse.containsMouse && labelClip.overflow > 0 && !labelClip.manualPan
+                                running: optionRow.lit && labelClip.overflow > 0 && !labelClip.manualPan
                                 loops: Animation.Infinite
                                 PauseAnimation { duration: 350 }
                                 NumberAnimation {
@@ -351,13 +385,15 @@ Item {
                             enabled: optionRow.selectable
                             hoverEnabled: optionRow.selectable
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (!optionRow.selectable) return
-                                root.currentIndex = optionRow.index
-                                root.selected(root.options[optionRow.index].value)
-                                popup.close()
+                            onClicked: if (optionRow.selectable) root._select(optionRow.index)
+                            onContainsMouseChanged: {
+                                if (containsMouse) {
+                                    root._highlightIndex = optionRow.index
+                                    return
+                                }
+                                labelClip.reset()
+                                if (root._highlightIndex === optionRow.index) root._highlightIndex = -1
                             }
-                            onContainsMouseChanged: if (!containsMouse) labelClip.reset()
                             onWheel: (wheel) => {
                                 if (optionRow.isHeader || labelClip.overflow <= 0) {
                                     wheel.accepted = false

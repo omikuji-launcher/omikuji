@@ -262,12 +262,11 @@ DialogCard {
                             Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                         }
 
-                        MouseArea {
+                        PressArea {
                             id: sourceHover
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            onActivated: {
                                 if (!sourceRow.current) {
                                     root.selectSource(sourceRow.modelData.name, sourceRow.modelData.kind)
                                 }
@@ -341,6 +340,7 @@ DialogCard {
 
         ListView {
             id: list
+            keyNavigationEnabled: false
             anchors.top: bodyDivider.bottom
             anchors.left: sourceList.right
             anchors.leftMargin: root.showSources ? Theme.space.lg : 0

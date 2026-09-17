@@ -456,6 +456,58 @@ To install one, click the `+` button and select `Install Script` in the tiny pop
 
 Clicking a script pulls it locally and opens a new dialog. The fields in it are all declared in the script's `.toml` file. The only thing that is always present is the `show source` button that expands a code block with the script's source code. For more information, see the [scripts documentation](https://github.com/omikuji-launcher/omikuji-scripts/blob/master/README.md).
 
+## Keyboard and Controller
+
+The whole app can be used without a mouse (hi steam deck user). Pressing an arrow key, `Tab` or any controller button switches to keyboard mode: the mouse cursor hides and the focused element gets an outline. Moving or clicking the mouse switches back. `Enter` and `Space` alone don't switch modes (that'd be dumb wouldn't it.).
+
+### Keyboard
+
+\- **Arrow keys**: move the focus to the nearest element in that direction.
+
+\- **Tab / Shift+Tab**: jump to the next / previous section. In the main window the sections are the sidebar, the top bar, the page content and the game bar at the bottom. In dialogs they're the dialog content and its buttons.
+
+\- **Enter / Space**: press the focused button, toggle the focused switch or open the focused dropdown. On a library card it plays the game, or stops it if it's running. On a store card it opens the install dialog, etc. Actions, whatever you want to call them.
+
+\- **Esc**: closes the open dialog or popup. In the library it deselects the game.
+
+\- **Ctrl+Tab / Ctrl+Shift+Tab**: next / previous sidebar entry (library tabs, stores, downloads, settings, game settings, etc.).
+
+\- **Left / Right** on a slider, number field or segmented control: changes its value.
+
+\- **Dropdowns**: `Up` / `Down` moves the selection on the next / previous item, `Enter` picks, `Esc` closes without changing anything.
+
+\- **Right-click menus**: `Up` / `Down` move, `Enter` picks, `Right` opens a submenu, `Left` goes back to the parent menu.
+
+\- **E**: opens the settings of the selected game.
+
+\- **Q**: opens the wine tools menu of the selected game if available.
+
+\- **F** or the **Menu key**: opens the right-click menu of the selected game.
+
+\- **Ctrl+Plus / Ctrl+Minus / Ctrl+0**: UI scale up / down / reset. `Ctrl+ Arrow Up` and `Ctrl+Arrow Down` too.
+
+`E`, `Q` and `F` only work in the library with a game selected.
+
+### Controller
+
+Buttons are named after the Xbox layout, the position is the same on other controllers of course.
+
+\- **D-pad / Left stick**: same as the arrow keys.
+
+\- **A** (bottom button): same as `Enter`.
+
+\- **B** (right button): same as `Esc`.
+
+\- **RB / LB**: same as `Ctrl+Tab` / `Ctrl+Shift+Tab`.
+
+\- **RT / LT**: same as `Tab` / `Shift+Tab`.
+
+\- **Start**: same as `E`, opens the selected game's settings.
+
+\- **Y** (top button): same as `F`, opens the selected game's right-click menu.
+
+\- **X** (left button): same as `Q`, opens the selected game's wine tools menu.
+
 ---
 
 ## Q&A

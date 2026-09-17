@@ -6,6 +6,7 @@ import QtQuick.Controls
 
 import omikuji 1.0
 import "components/lib/Omikuji.js" as Omikuji
+import "components/lib/Nav.js" as Nav
 
 /*
 yes this is cursed. yes it works. we ballin
@@ -449,6 +450,20 @@ ApplicationWindow {
     onCurrentViewChanged: {
         topBar.searchText = ""
         topBar.defocusSearch()
+        Qt.callLater(root._focusContent)
+    }
+
+    GamepadBridge {
+        synthesizeKeys: true
+        Component.onCompleted: start()
+    }
+
+    FocusHalo {}
+
+    function _focusContent() {
+        if (!windowTrap.onTop) return
+        windowTrap.reset()
+        contentArea.forceActiveFocus()
     }
 
     function minimizeForLaunch() {
@@ -533,6 +548,25 @@ property real cardZoom: appSettings.cardZoom
         width: root.width / root.uiScale
         height: root.height / root.uiScale
         transform: Scale { xScale: root.uiScale; yScale: root.uiScale; origin.x: 0; origin.y: 0 }
+
+    FocusTrap {
+        id: windowTrap
+        host: null
+        scope: scaledRoot
+        active: true
+        sections: [navTabs, topBar, contentArea, libraryView.actionBar]
+    }
+
+    Keys.onPressed: (event) => {
+        if (!windowTrap.onTop) {
+            event.accepted = false
+            return
+        }
+        const step = Nav.tabCycleStep(event)
+        if (step !== 0) navTabs.cycle(step)
+        event.accepted = step !== 0 || libraryView.handleActionKey(event)
+        if (!event.accepted) windowTrap.handleKey(event)
+    }
 
     MouseArea {
         anchors.fill: parent
@@ -701,10 +735,12 @@ property real cardZoom: appSettings.cardZoom
     }
 
     Item {
+        id: contentArea
         anchors.top: topBar.bottom
         anchors.left: navTabs.right
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        Component.onCompleted: forceActiveFocus()
 
         GameLibraryView {
             id: libraryView
@@ -874,6 +910,7 @@ property real cardZoom: appSettings.cardZoom
             color: Theme.surface
             radius: Theme.radius.md
             visible: opacity > 0
+            enabled: root.currentView === "downloads"
             opacity: root.currentView === "downloads" ? 1 : 0
 
             Behavior on opacity {

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import omikuji 1.0
+import "../lib/Nav.js" as Nav
 
 // Flow+Repeater not GridView becuase GridView only repositions on model changes, we need the slide when a card flips visible false for filtering
 Item {
@@ -24,6 +25,74 @@ Item {
 
     // library uses this to clear selection, stores ignore it
     signal backgroundClicked()
+
+    property int keyIndex: -1
+    readonly property bool navFocused: gridFlick.activeFocus
+    readonly property int columns: grid.colsToUse
+
+    signal keyNavMoved(int index)
+    signal keyNavActivated(int index)
+
+    function itemAt(i) {
+        return repeater.itemAt(i)
+    }
+
+    function focusIndex(i) {
+        keyIndex = i
+        gridFlick.forceActiveFocus()
+    }
+
+    function _visibleIndices() {
+        const out = []
+        for (let i = 0; i < repeater.count; i++) {
+            const it = repeater.itemAt(i)
+            if (it && it.cardVisible !== false) out.push(i)
+        }
+        return out
+    }
+
+    function _onScreen(card) {
+        const top = card.mapToItem(gridFlick, 0, 0).y
+        return top + card.height > 0 && top < gridFlick.height
+    }
+
+    function _moveTo(i) {
+        keyIndex = i
+        Nav.ensureVisible(gridFlick, repeater.itemAt(i), 20)
+        keyNavMoved(i)
+    }
+
+    function _step(pos, count, key) {
+        const col = pos % columns
+        switch (key) {
+        case Qt.Key_Left: return col === 0 ? -1 : pos - 1
+        case Qt.Key_Right: return col === columns - 1 || pos === count - 1 ? -1 : pos + 1
+        case Qt.Key_Up: return pos - columns
+        case Qt.Key_Down:
+            if (pos + columns < count) return pos + columns
+            return Math.floor(pos / columns) < Math.floor((count - 1) / columns) ? count - 1 : -1
+        }
+        return -1
+    }
+
+    function _activate(i) {
+        const it = repeater.itemAt(i)
+        if (it && typeof it.primaryAction === "function") it.primaryAction()
+        else keyNavActivated(i)
+    }
+
+    function _handleKey(event) {
+        const vis = _visibleIndices()
+        const pos = vis.indexOf(keyIndex)
+        const isArrow = [Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down].includes(event.key)
+        if (!isArrow || vis.length === 0) {
+            event.accepted = false
+            return
+        }
+        const next = pos === -1 ? 0 : _step(pos, vis.length, event.key)
+        event.accepted = next >= 0
+        if (event.accepted) _moveTo(vis[next])
+    }
 
     Loader {
         id: header
@@ -50,6 +119,28 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         flickDeceleration: 3000
         maximumFlickVelocity: 1500
+
+        readonly property bool navigable: repeater.count > 0
+        function navRectItem() {
+            const vis = root._visibleIndices()
+            if (vis.length === 0) return null
+            return repeater.itemAt(vis.indexOf(root.keyIndex) !== -1 ? root.keyIndex : vis[0])
+        }
+        function navTargets() {
+            return root._visibleIndices().map(i => repeater.itemAt(i)).filter(root._onScreen)
+        }
+        function navEnter(card) {
+            if (card.index !== root.keyIndex) root._moveTo(card.index)
+        }
+        function navActivate() {
+            if (root._visibleIndices().includes(root.keyIndex)) root._activate(root.keyIndex)
+        }
+        Keys.onPressed: (event) => root._handleKey(event)
+        onActiveFocusChanged: {
+            if (!activeFocus) return
+            const vis = root._visibleIndices()
+            if (vis.length > 0 && vis.indexOf(root.keyIndex) === -1) root._moveTo(vis[0])
+        }
 
         ScrollBar.vertical: ThinScrollBar { padding: 4 }
 
@@ -91,6 +182,10 @@ Item {
             Repeater {
                 id: repeater
                 delegate: root.delegate
+                onItemAdded: (index, item) => {
+                    if (item.keyFocused !== undefined)
+                        item.keyFocused = Qt.binding(() => InputMode.keyboard && root.navFocused && root.keyIndex === item.index)
+                }
             }
         }
     }

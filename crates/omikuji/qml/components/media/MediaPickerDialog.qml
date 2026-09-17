@@ -198,12 +198,11 @@ DialogCard {
                             }
                         }
 
-                        MouseArea {
+                        PressArea {
                             id: tapArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            onActivated: {
                                 if (!root.gameModel) return
                                 root.errorText = ""
                                 root.picking = true

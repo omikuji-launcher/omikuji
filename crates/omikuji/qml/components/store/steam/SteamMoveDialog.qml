@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Layouts
 import omikuji 1.0
 
 DialogCard {
@@ -82,66 +83,36 @@ DialogCard {
         Repeater {
             model: root.roots
 
-            Item {
+            CheckRow {
                 id: rootRow
                 required property var modelData
-                readonly property bool selected: root.checkedPaths[modelData[1]] === true
 
                 width: parent.width
-                height: 40
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Theme.radius.sm
-                    color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                checked: root.checkedPaths[modelData[1]] === true
+                onToggled: {
+                    const next = Object.assign({}, root.checkedPaths)
+                    next[modelData[1]] = !checked
+                    root.checkedPaths = next
                 }
 
-                Row {
-                    anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.right: parent.right
-                    anchors.rightMargin: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: Theme.space.md
+                Column {
+                    Layout.fillWidth: true
+                    spacing: 1
 
-                    M3Checkbox {
-                        id: rootCheck
-                        anchors.verticalCenter: parent.verticalCenter
-                        checked: rootRow.selected
+                    Text {
+                        width: parent.width
+                        text: rootRow.modelData[0]
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.caption.size
                     }
 
-                    Column {
-                        width: parent.width - rootCheck.width - Theme.space.md
-                        spacing: 1
-
-                        Text {
-                            width: parent.width
-                            text: rootRow.modelData[0]
-                            color: Theme.textSubtle
-                            font.pixelSize: Theme.type.caption.size
-                        }
-
-                        Text {
-                            width: parent.width
-                            text: rootRow.modelData[1]
-                            color: Theme.text
-                            font.pixelSize: Theme.type.body.size
-                            font.family: Theme.mono
-                            elide: Text.ElideMiddle
-                        }
-                    }
-                }
-
-                MouseArea {
-                    id: rowArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        var c = Object.assign({}, root.checkedPaths)
-                        c[rootRow.modelData[1]] = !(c[rootRow.modelData[1]] === true)
-                        root.checkedPaths = c
+                    Text {
+                        width: parent.width
+                        text: rootRow.modelData[1]
+                        color: Theme.text
+                        font.pixelSize: Theme.type.body.size
+                        font.family: Theme.mono
+                        elide: Text.ElideMiddle
                     }
                 }
             }

@@ -133,11 +133,11 @@ Item {
                 }
             }
 
-            MouseArea {
+            PressArea {
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.activityClicked()
+                ringRadius: parent.radius
+                onActivated: root.activityClicked()
             }
         }
     }

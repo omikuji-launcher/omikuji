@@ -46,8 +46,6 @@ DialogCard {
                 width: parent.width
                 height: Math.max(36, roleLabel.implicitHeight)
 
-                onRoleTypeChanged: spin.value = roleType.size
-
                 Text {
                     id: roleLabel
                     anchors.left: parent.left
@@ -59,12 +57,11 @@ DialogCard {
                 }
 
                 M3SpinBox {
-                    id: spin
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     from: 8
                     to: 40
-                    Component.onCompleted: value = row.roleType.size
+                    value: row.roleType.size
                     onMoved: (v) => root.applySize(row.modelData.key, v)
                 }
             }

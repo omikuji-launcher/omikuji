@@ -140,6 +140,14 @@ QtObject {
         return root.gameModel.stop_game(id)
     }
 
+    function toggle(index) {
+        switch (root.playStateAt(index)) {
+        case PlayState.Play: return root.play(index)
+        case PlayState.Stop: return root.stop(root.gameModel.get_game(index)["gameId"] || "")
+        }
+        return false
+    }
+
     onSelectedIndexChanged: {
         let game = root.selectionValid() ? root.gameModel.get_game(root.selectedIndex) : null
         root.selectedGameId = (game && game["gameId"]) ? game["gameId"] : ""

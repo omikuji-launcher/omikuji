@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
+import "../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -113,6 +114,14 @@ Item {
         if (root.currentStore === "" && root.currentBottom === "") root.tabSelected(idx)
     }
 
+    function cycle(step) {
+        const items = Nav.collect(root)
+            .sort((a, b) => a.mapToItem(null, 0, 0).y - b.mapToItem(null, 0, 0).y)
+        if (items.length === 0) return
+        const cur = items.findIndex(it => it.selected)
+        items[((cur + step) % items.length + items.length) % items.length].activated()
+    }
+
     onAppSettingsChanged: _loadCategories()
     Component.onCompleted: _loadCategories()
 
@@ -141,7 +150,13 @@ Item {
         width: root.width
         height: 40
 
+        readonly property bool navigable: true
+        readonly property real navRingRadius: Theme.radius.pill
+        function navActivate() { activated() }
+        function navRectItem() { return hoverPill }
+
         Rectangle {
+            id: hoverPill
             anchors.centerIn: parent
             width: parent.width - 20
             height: 36
@@ -355,6 +370,7 @@ Item {
 
             ListView {
                 id: tabList
+                keyNavigationEnabled: false
                 anchors.top: libraryHeader.bottom
                 anchors.topMargin: 8
                 anchors.left: parent.left

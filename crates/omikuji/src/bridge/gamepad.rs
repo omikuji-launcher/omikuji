@@ -17,6 +17,7 @@ pub mod qobject {
         #[qobject]
         #[qml_element]
         #[qproperty(QString, controller_kind, cxx_name = "controllerKind")]
+        #[qproperty(bool, synthesize_keys, cxx_name = "synthesizeKeys")]
         type GamepadBridge = super::GamepadBridgeRust;
     }
 
@@ -40,10 +41,96 @@ pub mod qobject {
     impl cxx_qt::Threading for GamepadBridge {}
 }
 
+unsafe extern "C" {
+    fn omikuji_inject_key(key: i32, modifiers: i32, pressed: bool, auto_repeat: bool);
+}
+
 #[derive(Default)]
 pub struct GamepadBridgeRust {
     started: bool,
     controller_kind: QString,
+    synthesize_keys: bool,
+}
+
+mod qt_key {
+    pub const ESCAPE: i32 = 0x0100_0000;
+    pub const TAB: i32 = 0x0100_0001;
+    pub const BACKTAB: i32 = 0x0100_0002;
+    pub const RETURN: i32 = 0x0100_0004;
+    pub const E: i32 = 0x45;
+    pub const F: i32 = 0x46;
+    pub const Q: i32 = 0x51;
+    pub const LEFT: i32 = 0x0100_0012;
+    pub const UP: i32 = 0x0100_0013;
+    pub const RIGHT: i32 = 0x0100_0014;
+    pub const DOWN: i32 = 0x0100_0015;
+    pub const SHIFT_MODIFIER: i32 = 0x0200_0000;
+    pub const CONTROL_MODIFIER: i32 = 0x0400_0000;
+}
+
+fn key_for(name: &str) -> Option<(i32, i32)> {
+    match name {
+        "dpad_up" => Some((qt_key::UP, 0)),
+        "dpad_down" => Some((qt_key::DOWN, 0)),
+        "dpad_left" => Some((qt_key::LEFT, 0)),
+        "dpad_right" => Some((qt_key::RIGHT, 0)),
+        "south" => Some((qt_key::RETURN, 0)),
+        "east" => Some((qt_key::ESCAPE, 0)),
+        "start" => Some((qt_key::E, 0)),
+        "north" => Some((qt_key::F, 0)),
+        "west" => Some((qt_key::Q, 0)),
+        "rb" => Some((qt_key::TAB, qt_key::CONTROL_MODIFIER)),
+        "lb" => Some((
+            qt_key::TAB,
+            qt_key::CONTROL_MODIFIER | qt_key::SHIFT_MODIFIER,
+        )),
+        "rt" => Some((qt_key::TAB, 0)),
+        "lt" => Some((qt_key::BACKTAB, qt_key::SHIFT_MODIFIER)),
+        _ => None,
+    }
+}
+
+fn inject_tap(name: &str, auto_repeat: bool) {
+    if let Some((key, mods)) = key_for(name) {
+        unsafe {
+            omikuji_inject_key(key, mods, true, auto_repeat);
+            omikuji_inject_key(key, mods, false, auto_repeat);
+        }
+    }
+}
+
+fn is_direction(name: &str) -> bool {
+    matches!(name, "dpad_up" | "dpad_down" | "dpad_left" | "dpad_right")
+}
+
+const REPEAT_DELAY: Duration = Duration::from_millis(300);
+const REPEAT_INTERVAL: Duration = Duration::from_millis(140);
+
+struct Repeat {
+    name: &'static str,
+    from_stick: bool,
+    since: Instant,
+    last: Instant,
+}
+
+impl Repeat {
+    fn new(name: &'static str, from_stick: bool) -> Self {
+        let now = Instant::now();
+        Self {
+            name,
+            from_stick,
+            since: now,
+            last: now,
+        }
+    }
+
+    fn due(&mut self) -> bool {
+        let due = self.since.elapsed() >= REPEAT_DELAY && self.last.elapsed() >= REPEAT_INTERVAL;
+        if due {
+            self.last = Instant::now();
+        }
+        due
+    }
 }
 
 fn button_name(button: Button) -> Option<&'static str> {
@@ -122,6 +209,7 @@ impl qobject::GamepadBridge {
         }
         self.as_mut().rust_mut().get_mut().started = true;
 
+        let synthesize = self.synthesize_keys;
         let qt_thread = self.as_mut().qt_thread();
         thread::spawn(move || {
             let mut gilrs = match Gilrs::new() {
@@ -142,12 +230,14 @@ impl qobject::GamepadBridge {
                     .set_controller_kind(QString::from(initial_kind));
             });
 
-            let mut stick_held: Option<&'static str> = None;
-            let mut stick_last_emit = Instant::now();
-            let stick_repeat = Duration::from_millis(150);
             let stick_deadzone = 0.5_f32;
+            let mut stick_held: Option<&'static str> = None;
+            let mut repeat: Option<Repeat> = None;
 
-            let emit_button_press = |name: &'static str| {
+            let press = |name: &'static str, auto_repeat: bool| {
+                if synthesize {
+                    inject_tap(name, auto_repeat);
+                }
                 let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::GamepadBridge>| {
                     obj.as_mut().button_pressed(&QString::from(name));
                 });
@@ -158,11 +248,20 @@ impl qobject::GamepadBridge {
                     match event.event {
                         EventType::ButtonPressed(button, _) => {
                             if let Some(name) = button_name(button) {
-                                emit_button_press(name);
+                                press(name, false);
+                                if is_direction(name) {
+                                    repeat = Some(Repeat::new(name, false));
+                                }
                             }
                         }
                         EventType::ButtonReleased(button, _) => {
                             if let Some(name) = button_name(button) {
+                                if repeat
+                                    .as_ref()
+                                    .is_some_and(|r| !r.from_stick && r.name == name)
+                                {
+                                    repeat = None;
+                                }
                                 let _ = qt_thread.queue(
                                     move |mut obj: Pin<&mut qobject::GamepadBridge>| {
                                         obj.as_mut().button_released(&QString::from(name));
@@ -179,9 +278,15 @@ impl qobject::GamepadBridge {
                             let new_dir = stick_dir(lx, ly, stick_deadzone);
                             if new_dir != stick_held {
                                 stick_held = new_dir;
-                                if let Some(dir) = new_dir {
-                                    emit_button_press(dir);
-                                    stick_last_emit = Instant::now();
+                                match new_dir {
+                                    Some(dir) => {
+                                        press(dir, false);
+                                        repeat = Some(Repeat::new(dir, true));
+                                    }
+                                    None if repeat.as_ref().is_some_and(|r| r.from_stick) => {
+                                        repeat = None;
+                                    }
+                                    None => {}
                                 }
                             }
                         }
@@ -203,11 +308,10 @@ impl qobject::GamepadBridge {
                     }
                 }
 
-                if let Some(dir) = stick_held
-                    && stick_last_emit.elapsed() >= stick_repeat
+                if let Some(r) = &mut repeat
+                    && r.due()
                 {
-                    emit_button_press(dir);
-                    stick_last_emit = Instant::now();
+                    press(r.name, true);
                 }
 
                 thread::sleep(Duration::from_millis(8));

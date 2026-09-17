@@ -26,6 +26,8 @@ QtObject {
     property color accent: _resolve("accent", active.highlight, "#bdc2ff")
     property color accentText: _resolve("accentText", active.highlightedText, "#1d2678")
     property color accentOn: accent.hslLightness > 0.5 ? "#000000" : "#ffffff"
+    property color focusAccent: Qt.hsla(Math.max(0, accent.hslHue), accent.hslSaturation,
+        bg.hslLightness > 0.5 ? Math.min(accent.hslLightness, 0.38) : Math.max(accent.hslLightness, 0.72), 1)
 
     property color bg: _resolve("bg", active.base, "#111111")
     property color bgAlt: Qt.darker(bg, 1.1)

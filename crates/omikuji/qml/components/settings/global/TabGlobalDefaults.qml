@@ -4,6 +4,7 @@ import QtQuick
 import omikuji 1.0
 
 import "../../lib/RunnerGrouping.js" as RG
+import "../../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -53,7 +54,9 @@ Item {
     }
 
     component ResetBadge: IconButton {
+        id: badge
         property string fieldKey: ""
+        function navFallback() { return Nav.collect(badge.parent)[0] || null }
         readonly property bool active: root.isSet(fieldKey)
         icon: "sync"
         opacity: active ? 1 : 0
@@ -479,7 +482,7 @@ Item {
                             stepSize: 1
                             value: root.cfg["graphics.gamescope.fps"] || 0
                             zeroPlaceholder: "—"
-                            onValueChanged: root.update("graphics.gamescope.fps", value)
+                            onMoved: (val) => root.update("graphics.gamescope.fps", val)
                         }
                     }
                     ResetBadge {
@@ -502,7 +505,7 @@ Item {
                             stepSize: 1
                             value: root.cfg["graphics.gamescope.refresh_rate"] || 0
                             zeroPlaceholder: "—"
-                            onValueChanged: root.update("graphics.gamescope.refresh_rate", value)
+                            onMoved: (val) => root.update("graphics.gamescope.refresh_rate", val)
                         }
                     }
                     ResetBadge {

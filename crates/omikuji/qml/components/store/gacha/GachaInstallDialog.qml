@@ -491,37 +491,22 @@ DialogCard {
                 Repeater {
                     model: root.voiceLocales
 
-                    Item {
+                    CheckRow {
                         id: localeRow
                         required property var modelData
                         required property int index
 
                         Layout.fillWidth: true
-                        implicitHeight: Math.max(localeBox.implicitHeight, localeLabel.implicitHeight)
-
-                        M3Checkbox {
-                            id: localeBox
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: root.voiceChecks[localeRow.index] === true
-                        }
+                        minHeight: 0
+                        checked: root.voiceChecks[index] === true
+                        onToggled: root.toggleVoice(index)
 
                         Text {
-                            id: localeLabel
-                            anchors.left: localeBox.right
-                            anchors.leftMargin: Theme.space.sm
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
+                            Layout.fillWidth: true
                             text: localeRow.modelData.label
                             color: Theme.text
                             font.pixelSize: Theme.type.subtitle.size
                             elide: Text.ElideRight
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.toggleVoice(localeRow.index)
                         }
                     }
                 }

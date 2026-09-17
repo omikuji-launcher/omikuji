@@ -19,15 +19,18 @@ Item {
     implicitWidth: boxRow.implicitWidth
     implicitHeight: 36
 
+    readonly property bool navigable: true
+    readonly property Item navFocusTarget: valueInput
+
     readonly property bool _showingPlaceholder: zeroPlaceholder !== "" && value === 0
     readonly property string _displayText: _showingPlaceholder ? zeroPlaceholder : root.value.toFixed(root.decimals)
 
     function _clamp(v) { return Number(Math.max(root.from, Math.min(root.to, v)).toFixed(root.decimals)) }
+    function _commit(next) {
+        if (next !== root.value) root.moved(next)
+    }
     function _bump(delta) {
-        let next = _clamp(root.value + delta * root.stepSize)
-        if (next === root.value) return
-        root.value = next
-        root.moved(next)
+        _commit(_clamp(root.value + delta * root.stepSize))
     }
 
     component StepButton: Item {
@@ -105,15 +108,11 @@ Item {
                 onEditingFinished: {
                     let parsed = parseFloat(text.replace(",", "."))
                     if (isNaN(parsed)) parsed = root.from
-                    let clamped = root._clamp(parsed)
-                    if (clamped !== root.value) {
-                        root.value = clamped
-                        root.moved(clamped)
-                    }
+                    root._commit(root._clamp(parsed))
                     text = Qt.binding(() => root._displayText)
                 }
-                Keys.onUpPressed: root._bump(1)
-                Keys.onDownPressed: root._bump(-1)
+                Keys.onLeftPressed: root._bump(-1)
+                Keys.onRightPressed: root._bump(1)
             }
         }
 

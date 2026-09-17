@@ -60,6 +60,7 @@ Item {
     property color leftIconColor: Theme.icon
 
     property bool selected: false
+    property bool keyFocused: false
     property real selectedBorderWidth: 2
     property color selectedBorderColor: Theme.accent
     property color selectedBgTint: "transparent"
@@ -109,6 +110,7 @@ Item {
 
     implicitWidth: 180
     implicitHeight: 240
+    z: keyFocused ? 2 : hovered ? 1 : 0
 
     opacity: !cardVisible ? 0 : dimmed ? 0.55 : 1
     visible: opacity > 0.01
@@ -117,8 +119,8 @@ Item {
     // declared before frame so it renders under in paint order, only the halo outside the card ends up visible
     RectangularShadow {
         anchors.fill: frame
-        visible: root.elevation && opacity > 0.01
-        opacity: root.elevation ? 1 : 0
+        visible: opacity > 0.01
+        opacity: root.elevation || root.keyFocused ? 1 : 0
         offset.y: 8
         blur: 24
         radius: frame.radius
@@ -137,6 +139,7 @@ Item {
             : Theme.cardBg
         scale: root.reordering ? 1.0
             : cardHover.containsPress ? 0.96
+            : root.keyFocused ? 1.04
             : (root.hovered ? 1.02 : 1.0)
 
         Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
@@ -295,8 +298,8 @@ Item {
             anchors.fill: parent
             radius: Theme.radius.lg
             color: "transparent"
-            border.width: root.selected ? root.selectedBorderWidth : 1
-            border.color: root.selected ? root.selectedBorderColor
+            border.width: root.keyFocused || root.selected ? root.selectedBorderWidth : 1
+            border.color: root.keyFocused || root.selected ? root.selectedBorderColor
                 : root.hovered ? Theme.cardBorderHover : Theme.cardBorder
 
             Behavior on border.color { ColorAnimation { duration: 150 } }

@@ -120,11 +120,11 @@ Item {
                             border.width: 1
                             border.color: Theme.surfaceBorder
 
-                            MouseArea {
+                            PressArea {
                                 anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
+                                ringRadius: parent.radius
                                 enabled: root.appSettings && !root.appSettings.followSystemColors
-                                onClicked: {
+                                onActivated: {
                                     pickerDialog.targetToken = tokenRow.modelData.key
                                     pickerDialog.selectedColor = root._effective(tokenRow.modelData.key)
                                     pickerDialog.open()

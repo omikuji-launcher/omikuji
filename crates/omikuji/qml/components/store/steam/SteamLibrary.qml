@@ -79,21 +79,20 @@ Item {
             cardVisible: root.searchText === ""
                 || (modelData.name || "").toLowerCase().includes(root.searchText.toLowerCase())
 
+            function primaryAction() {
+                if (!root.gameModel || modelData.imported) return
+                if (!root.gameModel.steam_import_game(modelData.appid, modelData.name)) return
+                modelData.imported = true
+                root.gameImported()
+                root.gameModel.steam_sync_playtime()
+                root.loadSteamGames()
+            }
+
             actionComponent: Component {
                 StoreCardAction {
                     icon: steamCard.modelData.imported ? "bookmark_check" : "add"
                     primary: !steamCard.modelData.imported
-                    onClicked: {
-                        if (!root.gameModel) return
-                        let success = root.gameModel.steam_import_game(
-                            steamCard.modelData.appid, steamCard.modelData.name)
-                        if (success) {
-                            steamCard.modelData.imported = true
-                            root.gameImported()
-                            root.gameModel.steam_sync_playtime()
-                            loadSteamGames()
-                        }
-                    }
+                    onClicked: steamCard.primaryAction()
                 }
             }
         }

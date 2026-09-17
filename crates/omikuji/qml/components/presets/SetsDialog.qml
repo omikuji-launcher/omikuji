@@ -200,69 +200,37 @@ DialogCard {
             Repeater {
                 model: root.sets
 
-                delegate: Item {
+                delegate: CheckRow {
                     id: setRow
                     required property var modelData
                     required property int index
 
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 46
-
-                    readonly property bool selected: root.checkedIds.indexOf(modelData.id) !== -1
                     readonly property bool synced: root.syncedIds.indexOf(modelData.id) !== -1
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Theme.radius.sm
-                        color: rowHover.containsMouse ? Theme.alpha(Theme.text, 0.06) : "transparent"
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                    Layout.fillWidth: true
+                    minHeight: 46
+                    showCheck: !root.manageOnly
+                    text: modelData.name
+                    checked: root.checkedIds.indexOf(modelData.id) !== -1
+                    onToggled: root.manageOnly ? root._enterEdit(index) : root._toggleCheck(modelData.id)
+
+                    Text {
+                        text: qsTr("%1 vars").arg(setRow.modelData.vars ? setRow.modelData.vars.length : 0)
+                        color: Theme.textSubtle
+                        font.pixelSize: Theme.type.caption.size
                     }
 
-                    MouseArea {
-                        id: rowHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.manageOnly ? root._enterEdit(setRow.index) : root._toggleCheck(setRow.modelData.id)
+                    M3Button {
+                        visible: !root.manageOnly
+                        text: setRow.synced ? qsTr("Unsync") : qsTr("Sync")
+                        variant: "tonal"
+                        danger: setRow.synced
+                        onClicked: root._toggleSync(setRow.modelData.id)
                     }
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 6
-                        spacing: Theme.space.md
-
-                        M3Checkbox {
-                            visible: !root.manageOnly
-                            checked: setRow.selected
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: setRow.modelData.name
-                            color: Theme.text
-                            font.pixelSize: Theme.type.body.size
-                            elide: Text.ElideRight
-                        }
-
-                        Text {
-                            text: qsTr("%1 vars").arg(setRow.modelData.vars ? setRow.modelData.vars.length : 0)
-                            color: Theme.textSubtle
-                            font.pixelSize: Theme.type.caption.size
-                        }
-
-                        M3Button {
-                            visible: !root.manageOnly
-                            text: setRow.synced ? qsTr("Unsync") : qsTr("Sync")
-                            variant: "tonal"
-                            danger: setRow.synced
-                            onClicked: root._toggleSync(setRow.modelData.id)
-                        }
-
-                        IconButton {
-                            icon: "edit"
-                            onClicked: root._enterEdit(setRow.index)
-                        }
+                    IconButton {
+                        icon: "edit"
+                        onClicked: root._enterEdit(setRow.index)
                     }
                 }
             }

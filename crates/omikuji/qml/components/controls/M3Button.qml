@@ -30,6 +30,10 @@ Item {
     implicitWidth: Math.max(small ? 0 : 72, content.implicitWidth + (small ? Theme.space.md : Theme.space.lg) * 2)
     opacity: enabled ? 1 : 0.45
 
+    readonly property bool navigable: true
+    readonly property real navRingRadius: radius
+    function navActivate() { clicked() }
+
     Squircle {
         id: bg
         anchors.fill: parent

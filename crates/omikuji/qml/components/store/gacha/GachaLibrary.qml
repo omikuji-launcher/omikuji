@@ -116,11 +116,15 @@ Item {
             cardVisible: root.searchText === ""
                 || (modelData.display_name || "").toLowerCase().includes(root.searchText.toLowerCase())
 
+            function primaryAction() {
+                if (!isDownloading) root.installRequested(modelData.id)
+            }
+
             actionComponent: Component {
                 StoreCardAction {
                     icon: "add"
                     visible: !gachaCard.isDownloading
-                    onClicked: root.installRequested(gachaCard.modelData.id)
+                    onClicked: gachaCard.primaryAction()
                 }
             }
 

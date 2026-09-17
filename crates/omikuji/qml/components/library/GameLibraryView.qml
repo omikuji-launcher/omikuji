@@ -32,12 +32,38 @@ Rectangle {
     property bool doubleClickLaunches: false
 
     readonly property alias wineToolsAnchor: floatingBar.wineToolsAnchor
+    readonly property alias actionBar: floatingBar
 
     signal gameRightClicked(int index, real winX, real winY)
     signal selectionChanged()
     signal settingsRequested(int index)
     signal downloadActivityClicked()
     signal wineToolsRequested()
+
+    function handleActionKey(event) {
+        if (!root.active || !root.actions || !root.actions.hasSelection || event.modifiers !== Qt.NoModifier) return false
+        switch (event.key) {
+        case Qt.Key_E:
+            root.settingsRequested(root.actions.selectedIndex)
+            return true
+        case Qt.Key_Q:
+            if (!floatingBar.wineToolsAnchor.visible) return false
+            root.wineToolsRequested()
+            return true
+        case Qt.Key_F:
+        case Qt.Key_Menu:
+            return root._openCardMenu(root.actions.selectedIndex)
+        }
+        return false
+    }
+
+    function _openCardMenu(index) {
+        const card = gameGrid.cardAt(index)
+        if (!card) return false
+        const p = card.mapToItem(null, card.width / 2, card.height / 2)
+        root.gameRightClicked(index, p.x, p.y)
+        return true
+    }
 
     // memoized top 10 by lastPlayed desc, recomputes when the model changes or kind flips to recent
     property var _recentIds: ({})
@@ -107,6 +133,7 @@ Rectangle {
     color: Theme.surface
     radius: Theme.radius.md
     visible: opacity > 0
+    enabled: root.active
     opacity: root.active ? 1 : 0
 
     Behavior on opacity {
@@ -150,6 +177,7 @@ Rectangle {
             if (root.doubleClickLaunches && root.actions) root.actions.play(index)
         }
         onGameRightClicked: (index, winX, winY) => root.gameRightClicked(index, winX, winY)
+        onPlayRequested: (index) => { if (root.actions) root.actions.toggle(index) }
         onBackgroundClicked: {
             if (root.actions) root.actions.selectedIndex = -1
             root.selectionChanged()

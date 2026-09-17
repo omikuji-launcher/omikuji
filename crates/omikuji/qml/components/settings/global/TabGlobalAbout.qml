@@ -117,6 +117,7 @@ Item {
                     id: sysText
                     width: parent.width
                     readOnly: true
+                    activeFocusOnTab: false
                     wrapMode: TextArea.Wrap
                     selectByMouse: true
                     color: Theme.text

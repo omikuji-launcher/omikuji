@@ -84,6 +84,7 @@ DialogCard {
                     { label: qsTr("Game"), value: "game" },
                     { label: qsTr("Application"), value: "app" }
                 ]
+                currentIndex: Math.max(0, options.findIndex(o => o.value === root.setValue))
                 onSelected: (v) => root.setValue = v
                 Component.onCompleted: root.setValue = currentValue
             }

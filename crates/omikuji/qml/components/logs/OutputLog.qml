@@ -36,6 +36,7 @@ Rectangle {
         TextArea {
             id: area
             readOnly: true
+            activeFocusOnTab: false
             wrapMode: TextArea.Wrap
             selectByMouse: true
             color: Theme.textMuted

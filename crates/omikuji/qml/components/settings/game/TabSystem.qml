@@ -202,7 +202,7 @@ Item {
                         stepSize: 1
                         value: root.config["graphics.gamescope.fps"] || 0
                         zeroPlaceholder: "—"
-                        onValueChanged: root.updateField("graphics.gamescope.fps", value)
+                        onMoved: (val) => root.updateField("graphics.gamescope.fps", val)
                     }
                 }
 
@@ -216,7 +216,7 @@ Item {
                         stepSize: 1
                         value: root.config["graphics.gamescope.refresh_rate"] || 0
                         zeroPlaceholder: "—"
-                        onValueChanged: root.updateField("graphics.gamescope.refresh_rate", value)
+                        onMoved: (val) => root.updateField("graphics.gamescope.refresh_rate", val)
                     }
                 }
 

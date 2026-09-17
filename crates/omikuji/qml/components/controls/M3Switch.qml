@@ -10,6 +10,10 @@ Item {
     implicitWidth: 44
     implicitHeight: 26
 
+    readonly property bool navigable: true
+    readonly property real navRingRadius: height / 2
+    function navActivate() { toggled(!checked) }
+
     property real _progress: checked ? 1 : 0
     property real _press: mouseArea.pressed ? 1 : 0
 
@@ -52,9 +56,6 @@ Item {
         anchors.fill: parent
         anchors.margins: -4
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            root.checked = !root.checked
-            root.toggled(root.checked)
-        }
+        onClicked: root.navActivate()
     }
 }

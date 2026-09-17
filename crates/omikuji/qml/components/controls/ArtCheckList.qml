@@ -67,6 +67,7 @@ Item {
 
             ListView {
                 id: list
+                keyNavigationEnabled: false
                 anchors.fill: parent
                 anchors.topMargin: Theme.space.sm
                 anchors.bottomMargin: Theme.space.sm
@@ -172,7 +173,7 @@ Item {
                         anchors.right: parent.right
                         anchors.rightMargin: Theme.space.md
                         anchors.verticalCenter: parent.verticalCenter
-                        opacity: rowArea.containsMouse || hovered ? 1 : 0
+                        opacity: rowArea.containsMouse || hovered || InputMode.keyFocus(rowArea) || InputMode.keyFocus(removeBtn) ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
                         onClicked: root.removeRequested(itemRow.modelData.id)
                     }
@@ -186,13 +187,13 @@ Item {
                         checked: itemRow.selected
                     }
 
-                    MouseArea {
+                    PressArea {
                         id: rowArea
                         anchors.fill: parent
                         enabled: (!root.readOnly || root.removable) && !itemRow.locked
                         hoverEnabled: enabled
                         cursorShape: (root.readOnly || itemRow.locked) ? Qt.ArrowCursor : Qt.PointingHandCursor
-                        onClicked: if (!root.readOnly) root.toggle(itemRow.modelData.id)
+                        onActivated: if (!root.readOnly) root.toggle(itemRow.modelData.id)
                     }
                 }
             }

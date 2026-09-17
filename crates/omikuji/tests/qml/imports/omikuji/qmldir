@@ -1,0 +1,3 @@
+module omikuji
+singleton OverlayStack 1.0 ../../../../qml/components/singletons/OverlayStack.qml
+FocusTrap 1.0 ../../../../qml/components/dialogs/FocusTrap.qml

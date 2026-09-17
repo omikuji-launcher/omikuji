@@ -246,7 +246,10 @@ DialogCard {
                 property var input
                 label: input?.label || ""
                 options: (input?.options || []).map(o => ({ label: o, value: o }))
-                currentIndex: Math.max(0, (input?.options || []).indexOf(root.values[input?.id]))
+                currentIndex: {
+                    root.valuesRev
+                    return Math.max(0, (input?.options || []).indexOf(root.values[input?.id]))
+                }
                 onSelected: (v) => root.setValue(input.id, v)
             }
         }

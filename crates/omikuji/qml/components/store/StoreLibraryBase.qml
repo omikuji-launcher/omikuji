@@ -106,6 +106,12 @@ Item {
             cardVisible: root.searchText === ""
                 || (modelData.title || "").toLowerCase().includes(root.searchText.toLowerCase())
 
+            function primaryAction() {
+                if (isDownloading) return
+                if (cardState === "needs-import") root.importRequested(index)
+                else root.installRequested(index)
+            }
+
             actionComponent: Component {
                 StoreCardAction {
                     icon: {
@@ -114,13 +120,7 @@ Item {
                         return "bookmark_check"
                     }
                     visible: !storeCard.isDownloading
-                    onClicked: {
-                        if (storeCard.cardState === "needs-import") {
-                            root.importRequested(storeCard.index)
-                        } else {
-                            root.installRequested(storeCard.index)
-                        }
-                    }
+                    onClicked: storeCard.primaryAction()
                 }
             }
 

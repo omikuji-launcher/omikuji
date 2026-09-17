@@ -23,6 +23,9 @@ Item {
 
     onTextChanged: if (input.text !== text) input.text = text
 
+    readonly property bool navigable: !readOnly
+    readonly property Item navFocusTarget: input
+
     Text {
         id: labelText
         text: root.label

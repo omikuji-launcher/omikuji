@@ -30,6 +30,18 @@ Item {
         ? header.height + 8 + slider.height
         : slider.height
 
+    readonly property bool navigable: true
+    readonly property real navRingRadius: outerRadius
+    function navRectItem() { return slider }
+    Keys.onPressed: (event) => {
+        const dir = event.key === Qt.Key_Left ? -1 : (event.key === Qt.Key_Right ? 1 : 0)
+        event.accepted = dir !== 0
+        if (dir === 0) return
+        const step = root.stepSize > 0 ? root.stepSize : (root.to - root.from) / 100
+        const next = Math.max(root.from, Math.min(root.to, root.value + dir * step))
+        if (next !== root.value) root.moved(next)
+    }
+
     Item {
         id: header
         visible: root.label !== "" || root.showValue
