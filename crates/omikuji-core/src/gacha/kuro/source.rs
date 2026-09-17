@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use super::api;
 use crate::downloads::{DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, set_status};
 use crate::gacha::file_sync::{self, Skip, SyncFile, SyncProgress};
+use crate::gacha::state;
 
 pub struct KuroSource;
 
@@ -59,7 +60,7 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
         match api::fetch_patch_index(&index_url).await {
             Ok(pidx) => match super::patcher::run_patch_update(entry, &info, pc, &pidx).await {
                 Ok(true) => {
-                    super::set_installed_version(&game_slug, &edition_id, &info.version);
+                    state::write_installed_version(&game_slug, &edition_id, &info.version);
                     return Ok(());
                 }
                 Ok(false) => return Ok(()),
@@ -118,6 +119,6 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
             let _ = std::fs::remove_file(&p);
         }
     }
-    super::set_installed_version(&game_slug, &edition_id, &info.version);
+    state::write_installed_version(&game_slug, &edition_id, &info.version);
     Ok(())
 }

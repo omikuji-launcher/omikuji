@@ -122,11 +122,9 @@ pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePa
         .into_iter()
         .filter(|p| !p.url.is_empty())
         .filter_map(|p| {
-            let locale = VoiceLocale::all()
-                .iter()
-                .find(|vl| vl.api_name() == p.language)?;
+            let locale = VoiceLocale::from_api_name(&p.language)?;
             Some(AudioPackage {
-                locale: *locale,
+                locale,
                 file: PackageFile {
                     url: p.url,
                     md5: p.md5,

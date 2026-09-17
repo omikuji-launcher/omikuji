@@ -1,32 +1,24 @@
 use std::path::{Path, PathBuf};
 
-pub fn game_state_dir(publisher_slug: &str, game_slug: &str) -> PathBuf {
-    crate::gachas_dir().join(publisher_slug).join(game_slug)
+pub fn game_state_dir(game_slug: &str) -> PathBuf {
+    flatten_publisher_dirs_once();
+    crate::gachas_dir().join(game_slug)
 }
 
-pub fn version_file(publisher_slug: &str, game_slug: &str, edition_id: &str) -> PathBuf {
-    game_state_dir(publisher_slug, game_slug).join(format!("{}.version", edition_id))
+pub fn version_file(game_slug: &str, edition_id: &str) -> PathBuf {
+    game_state_dir(game_slug).join(format!("{}.version", edition_id))
 }
 
-pub fn read_installed_version(
-    publisher_slug: &str,
-    game_slug: &str,
-    edition_id: &str,
-) -> Option<String> {
-    let path = version_file(publisher_slug, game_slug, edition_id);
+pub fn read_installed_version(game_slug: &str, edition_id: &str) -> Option<String> {
+    let path = version_file(game_slug, edition_id);
     std::fs::read_to_string(&path)
         .ok()
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
 }
 
-pub fn write_installed_version(
-    publisher_slug: &str,
-    game_slug: &str,
-    edition_id: &str,
-    version: &str,
-) {
-    let path = version_file(publisher_slug, game_slug, edition_id);
+pub fn write_installed_version(game_slug: &str, edition_id: &str, version: &str) {
+    let path = version_file(game_slug, edition_id);
     if let Some(parent) = path.parent()
         && let Err(e) = std::fs::create_dir_all(parent)
     {
@@ -36,6 +28,39 @@ pub fn write_installed_version(
     if let Err(e) = std::fs::write(&path, version) {
         tracing::error!("write({}) failed: {}", path.display(), e);
     }
+}
+
+// TODO: cleanup in 1/2 releases
+pub fn flatten_publisher_dirs_once() {
+    static FLATTENED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    FLATTENED.get_or_init(|| {
+        let root = crate::gachas_dir();
+        let Ok(entries) = std::fs::read_dir(&root) else {
+            return;
+        };
+        for publisher in entries.flatten().map(|e| e.path()) {
+            if !publisher.is_dir() || publisher.join("manifest.json").exists() {
+                continue;
+            }
+            let Ok(games) = std::fs::read_dir(&publisher) else {
+                continue;
+            };
+            for game in games.flatten().map(|e| e.path()).filter(|p| p.is_dir()) {
+                let Some(name) = game.file_name() else {
+                    continue;
+                };
+                let dest = root.join(name);
+                match crate::fs_util::move_dir_all(&game, &dest) {
+                    Ok(()) => {
+                        let _ = std::fs::remove_dir(&game);
+                        tracing::info!("moved {} to {}", game.display(), dest.display());
+                    }
+                    Err(e) => tracing::warn!("couldn't move {}: {}", game.display(), e),
+                }
+            }
+            let _ = std::fs::remove_dir(&publisher);
+        }
+    });
 }
 
 pub fn read_install_dotversion(install_path: &Path) -> Option<String> {

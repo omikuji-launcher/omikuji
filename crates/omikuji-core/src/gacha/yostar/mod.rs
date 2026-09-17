@@ -7,8 +7,6 @@ use anyhow::{Result, anyhow, bail};
 
 use crate::gacha::manifest::GachaManifest;
 
-const PUBLISHER_SLUG: &str = "yostar";
-
 #[derive(Debug, Clone)]
 pub struct EditionApi {
     pub api_url: String,
@@ -18,17 +16,7 @@ pub struct EditionApi {
 }
 
 pub fn edition_api(manifest: &GachaManifest, edition_id: &str) -> Result<EditionApi> {
-    let edition = manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
-        .ok_or_else(|| {
-            anyhow!(
-                "edition '{}' not found in manifest '{}'",
-                edition_id,
-                manifest.id
-            )
-        })?;
+    let edition = manifest.require_edition(edition_id)?;
 
     let field = |name: &str| -> Result<String> {
         cfg_str(&edition.strategy_config, name)
@@ -89,9 +77,7 @@ pub fn verify_edition_on_disk(
         return Ok(());
     };
     let expected = manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
+        .edition(edition_id)
         .and_then(|e| cfg_str(&e.strategy_config, "game_tag"))
         .unwrap_or_default();
     if !expected.is_empty() && found != expected {
@@ -103,14 +89,6 @@ pub fn verify_edition_on_disk(
         );
     }
     Ok(())
-}
-
-pub fn installed_version(game_slug: &str, edition: &str) -> Option<String> {
-    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition)
-}
-
-pub fn set_installed_version(game_slug: &str, edition: &str, version: &str) {
-    crate::gacha::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition, version);
 }
 
 // no unity fallback: package and client versions differ, a wrong stamp = phantom update

@@ -455,12 +455,12 @@ impl super::qobject::GameModel {
         if game.source.kind != "gacha" {
             return false;
         }
-        let Some((manifest, _, _)) =
+        let Some((manifest, edition_id, _)) =
             omikuji_core::gacha::strategies::find_for_app_id(&game.source.app_id)
         else {
             return false;
         };
-        match omikuji_core::gacha::strategies::source_key(&manifest) {
+        match omikuji_core::gacha::strategies::source_key(&manifest, &edition_id) {
             Ok(key) => omikuji_core::downloads::manager().source_supports_repair(key),
             Err(_) => false,
         }
@@ -498,13 +498,13 @@ impl super::qobject::GameModel {
 }
 
 fn resolve_gacha_source(app_id: &str) -> Option<(String, Option<String>)> {
-    let Some((manifest, _edition_id, _voices)) =
+    let Some((manifest, edition_id, _voices)) =
         omikuji_core::gacha::strategies::find_for_app_id(app_id)
     else {
         tracing::error!("no gacha manifest for app_id '{}'", app_id);
         return None;
     };
-    let src = match omikuji_core::gacha::strategies::source_key(&manifest) {
+    let src = match omikuji_core::gacha::strategies::source_key(&manifest, &edition_id) {
         Ok(s) => s.to_string(),
         Err(e) => {
             tracing::error!("unknown strategy for '{}': {}", manifest.id, e);

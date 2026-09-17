@@ -220,9 +220,10 @@ impl qobject::DownloadModel {
         QString::from(&id)
     }
 
-    fn gacha_supports_import(&self, manifest_id: &QString) -> bool {
-        omikuji_core::gacha::manifest::find(&manifest_id.to_string())
-            .is_some_and(|m| omikuji_core::gacha::strategies::supports_import(&m))
+    fn gacha_supports_import(&self, manifest_id: &QString, edition_id: &QString) -> bool {
+        omikuji_core::gacha::manifest::find(&manifest_id.to_string()).is_some_and(|m| {
+            omikuji_core::gacha::strategies::supports_import(&m, &edition_id.to_string())
+        })
     }
 
     fn pause(self: Pin<&mut Self>, id: &QString) {

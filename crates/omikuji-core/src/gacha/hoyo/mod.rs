@@ -3,8 +3,10 @@ pub mod sophon;
 pub mod source;
 pub mod update;
 
+use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+
+use crate::gacha::manifest::GachaManifest;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum HoyoEdition {
@@ -13,6 +15,21 @@ pub enum HoyoEdition {
 }
 
 impl HoyoEdition {
+    pub fn from_id(id: &str) -> Result<Self> {
+        match id {
+            "global" => Ok(Self::Global),
+            "china" => Ok(Self::China),
+            other => bail!("unknown hoyo edition: {}", other),
+        }
+    }
+
+    pub fn id(&self) -> &'static str {
+        match self {
+            Self::Global => "global",
+            Self::China => "china",
+        }
+    }
+
     pub fn display_name(&self) -> &'static str {
         match self {
             Self::Global => "Global",
@@ -48,6 +65,10 @@ impl VoiceLocale {
         &[Self::English, Self::Japanese, Self::Korean, Self::Chinese]
     }
 
+    pub fn from_api_name(name: &str) -> Option<Self> {
+        Self::all().iter().find(|v| v.api_name() == name).copied()
+    }
+
     pub fn api_name(&self) -> &'static str {
         match self {
             Self::English => "en-us",
@@ -76,30 +97,19 @@ impl VoiceLocale {
     }
 }
 
-const PUBLISHER_SLUG: &str = "hoyoverse";
-
-fn edition_id(edition: HoyoEdition) -> &'static str {
-    match edition {
-        HoyoEdition::Global => "global",
-        HoyoEdition::China => "china",
-    }
-}
-
-pub fn version_file(game_slug: &str, edition: HoyoEdition) -> PathBuf {
-    crate::gacha::state::version_file(PUBLISHER_SLUG, game_slug, edition_id(edition))
-}
-
-pub fn installed_version(game_slug: &str, edition: HoyoEdition) -> Option<String> {
-    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition_id(edition))
-}
-
-pub fn set_installed_version(game_slug: &str, edition: HoyoEdition, version: &str) {
-    crate::gacha::state::write_installed_version(
-        PUBLISHER_SLUG,
-        game_slug,
-        edition_id(edition),
-        version,
-    );
+pub fn biz_id(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
+    manifest
+        .edition(edition_id)
+        .and_then(|e| e.strategy_config.get("biz_id"))
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+        .ok_or_else(|| {
+            anyhow!(
+                "no biz_id in manifest {} for edition {}",
+                manifest.id,
+                edition_id
+            )
+        })
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {

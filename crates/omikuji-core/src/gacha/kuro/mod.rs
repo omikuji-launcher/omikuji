@@ -9,9 +9,7 @@ use anyhow::{Result, anyhow};
 
 pub fn index_url_from_manifest(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
     manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
+        .edition(edition_id)
         .and_then(|e| e.strategy_config.get("index_url"))
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
@@ -37,16 +35,6 @@ pub fn parse_app_id(app_id: &str) -> Result<(String, String)> {
         .ok_or_else(|| anyhow::anyhow!("invalid kuro app_id: {}", app_id))?
         .to_string();
     Ok((game, edition))
-}
-
-const PUBLISHER_SLUG: &str = "kurogame";
-
-pub fn installed_version(game_slug: &str, edition: &str) -> Option<String> {
-    crate::gacha::state::read_installed_version(PUBLISHER_SLUG, game_slug, edition)
-}
-
-pub fn set_installed_version(game_slug: &str, edition: &str, version: &str) {
-    crate::gacha::state::write_installed_version(PUBLISHER_SLUG, game_slug, edition, version);
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {

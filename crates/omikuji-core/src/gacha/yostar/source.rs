@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use super::api;
 use crate::downloads::{DownloadEntry, DownloadKind, DownloadSource};
 use crate::gacha::file_sync::{self, SyncProgress};
+use crate::gacha::state;
 
 pub struct YostarSource;
 
@@ -65,6 +66,6 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
         return Ok(());
     }
 
-    super::set_installed_version(&manifest.game_slug, &edition_id, &config.version);
+    state::write_installed_version(&manifest.game_slug, &edition_id, &config.version);
     Ok(())
 }

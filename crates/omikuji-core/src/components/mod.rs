@@ -82,8 +82,10 @@ pub fn nile_tools() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
-pub fn gacha_tools(publisher_slug: &str) -> Vec<&'static ComponentSpec> {
-    let needs_hpatchz = matches!(publisher_slug, "hoyoverse" | "hypergryph");
+pub fn gacha_tools(
+    strategy: crate::gacha::strategies::InstallStrategy,
+) -> Vec<&'static ComponentSpec> {
+    let needs_hpatchz = strategy.needs_hpatchz();
     specs::all()
         .iter()
         .filter(|s| match s.settings_key {

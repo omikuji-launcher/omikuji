@@ -1,25 +1,16 @@
 use anyhow::Result;
 
+use super::HoyoEdition;
 use super::sophon;
-use super::{HoyoEdition, installed_version};
-
-#[derive(Debug, Clone)]
-pub struct UpdateInfo {
-    pub game_slug: String,
-    pub edition: HoyoEdition,
-    pub from_version: String,
-    pub to_version: String,
-    pub download_size: u64,
-    pub can_diff: bool,
-    pub delta_supported: bool,
-}
+use crate::gacha::state;
+use crate::gacha::strategies::UpdateCheck;
 
 pub async fn check_for_update(
     biz_id: &str,
     game_slug: &str,
     edition: HoyoEdition,
-) -> Result<Option<UpdateInfo>> {
-    let Some(from_version) = installed_version(game_slug, edition) else {
+) -> Result<Option<UpdateCheck>> {
+    let Some(from_version) = state::read_installed_version(game_slug, edition.id()) else {
         return Ok(None);
     };
 
@@ -58,9 +49,7 @@ pub async fn check_for_update(
 
     let delta_supported = !main.diff_tags.is_empty();
 
-    Ok(Some(UpdateInfo {
-        game_slug: game_slug.to_string(),
-        edition,
+    Ok(Some(UpdateCheck {
         from_version,
         to_version: main.tag.clone(),
         download_size,

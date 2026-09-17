@@ -4,16 +4,10 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 struct IndexFile {
     schema_version: u32,
-    gachas: Vec<IndexEntry>,
+    gachas: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
-struct IndexEntry {
-    publisher: String,
-    game: String,
-}
-
-const INDEX_SCHEMA_VERSION: u32 = 1;
+const INDEX_SCHEMA_VERSION: u32 = 2;
 
 pub async fn ensure_all_fetched() -> Result<u32> {
     let base = crate::settings::get().assets.fetch_url.trim().to_string();
@@ -23,14 +17,15 @@ pub async fn ensure_all_fetched() -> Result<u32> {
         ));
     }
 
+    super::state::flatten_publisher_dirs_once();
     let client = crate::http::client();
     let index = fetch_index(client, &base).await?;
 
     let mut written: u32 = 0;
-    for entry in &index.gachas {
-        match fetch_one(client, &base, &entry.publisher, &entry.game).await {
+    for game in &index.gachas {
+        match fetch_one(client, &base, game).await {
             Ok(()) => written += 1,
-            Err(e) => tracing::error!("{}/{}: {}", entry.publisher, entry.game, e),
+            Err(e) => tracing::error!("{}: {}", game, e),
         }
     }
     Ok(written)
@@ -57,16 +52,10 @@ async fn fetch_index(client: &reqwest::Client, base: &str) -> Result<IndexFile> 
     Ok(parsed)
 }
 
-async fn fetch_one(
-    client: &reqwest::Client,
-    base: &str,
-    publisher: &str,
-    game: &str,
-) -> Result<()> {
+async fn fetch_one(client: &reqwest::Client, base: &str, game: &str) -> Result<()> {
     let url = format!(
-        "{}/gacha/{}/{}/manifest.json",
+        "{}/gacha/{}/manifest.json",
         base.trim_end_matches('/'),
-        publisher,
         game
     );
     let body = client
@@ -81,10 +70,7 @@ async fn fetch_one(
     let _parsed: super::manifest::GachaManifest = serde_json::from_slice(&body)
         .map_err(|e| anyhow!("invalid manifest from {}: {}", url, e))?;
 
-    let path = crate::gachas_dir()
-        .join(publisher)
-        .join(game)
-        .join("manifest.json");
+    let path = crate::gachas_dir().join(game).join("manifest.json");
     crate::fs_util::write_atomic(&path, &body)?;
     Ok(())
 }

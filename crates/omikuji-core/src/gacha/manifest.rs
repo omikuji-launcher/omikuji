@@ -1,6 +1,8 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
+use super::strategies::InstallStrategy;
+
 pub const SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,13 +11,12 @@ pub struct GachaManifest {
 
     pub id: String,
 
-    pub publisher_slug: String,
     pub game_slug: String,
 
     pub display_name: String,
     pub publisher: String,
 
-    pub install_strategy: String,
+    pub install_strategy: InstallStrategy,
 
     pub app_id_prefix: String,
 
@@ -56,6 +57,19 @@ pub struct GachaManifest {
 impl GachaManifest {
     pub fn display_name_for(&self, edition: &ManifestEdition) -> String {
         format!("{} ({})", self.display_name, edition.label)
+    }
+
+    pub fn edition(&self, id: &str) -> Option<&ManifestEdition> {
+        self.editions.iter().find(|e| e.id == id)
+    }
+
+    pub fn require_edition(&self, id: &str) -> anyhow::Result<&ManifestEdition> {
+        self.edition(id)
+            .ok_or_else(|| anyhow::anyhow!("edition '{}' not found in manifest '{}'", id, self.id))
+    }
+
+    pub fn strategy_for(&self, edition: &ManifestEdition) -> InstallStrategy {
+        edition.install_strategy.unwrap_or(self.install_strategy)
     }
 }
 
@@ -127,6 +141,11 @@ pub struct ManifestEdition {
     pub data_folder: String,
 
     #[serde(default)]
+    pub install_strategy: Option<InstallStrategy>,
+    #[serde(default)]
+    pub uses_temp_dir: Option<bool>,
+
+    #[serde(default)]
     pub strategy_config: serde_json::Value,
 }
 
@@ -139,6 +158,7 @@ pub struct ManifestVoice {
 
 pub fn load_all() -> Vec<GachaManifest> {
     use std::collections::HashMap;
+    super::state::flatten_publisher_dirs_once();
     let mut by_id: HashMap<String, GachaManifest> = HashMap::new();
     for m in walk_manifests(&crate::gachas_dir()) {
         by_id.insert(m.id.clone(), m);
@@ -157,36 +177,22 @@ pub fn find(id: &str) -> Option<GachaManifest> {
 }
 
 fn walk_manifests(root: &std::path::Path) -> Vec<GachaManifest> {
-    let Ok(publishers) = std::fs::read_dir(root) else {
+    let Ok(games) = std::fs::read_dir(root) else {
         return Vec::new();
     };
     let mut out = Vec::new();
-    for pub_entry in publishers.flatten() {
-        let pub_path = pub_entry.path();
-        if !pub_path.is_dir() {
-            continue;
-        }
-        let Ok(games) = std::fs::read_dir(&pub_path) else {
+    for manifest_path in games.flatten().map(|e| e.path().join("manifest.json")) {
+        let Ok(data) = std::fs::read_to_string(&manifest_path) else {
             continue;
         };
-        for game_entry in games.flatten() {
-            let game_path = game_entry.path();
-            if !game_path.is_dir() {
-                continue;
-            }
-            let manifest_path = game_path.join("manifest.json");
-            let Ok(data) = std::fs::read_to_string(&manifest_path) else {
-                continue;
-            };
-            match serde_json::from_str::<GachaManifest>(&data) {
-                Ok(m) if m.schema_version == SCHEMA_VERSION => out.push(m),
-                Ok(m) => tracing::warn!(
-                    "skipping {}: unsupported schema_version {}",
-                    manifest_path.display(),
-                    m.schema_version
-                ),
-                Err(e) => tracing::warn!("skipping {}: {}", manifest_path.display(), e),
-            }
+        match serde_json::from_str::<GachaManifest>(&data) {
+            Ok(m) if m.schema_version == SCHEMA_VERSION => out.push(m),
+            Ok(m) => tracing::warn!(
+                "skipping {}: unsupported schema_version {}",
+                manifest_path.display(),
+                m.schema_version
+            ),
+            Err(e) => tracing::warn!("skipping {}: {}", manifest_path.display(), e),
         }
     }
     out
@@ -202,17 +208,18 @@ mod tests {
         GachaManifest {
             schema_version: SCHEMA_VERSION,
             id: "test.game".into(),
-            publisher_slug: "test".into(),
             game_slug: "game".into(),
             display_name: "Test Game".into(),
             publisher: "Test Publisher".into(),
-            install_strategy: "hoyo_sophon".into(),
+            install_strategy: InstallStrategy::HoyoSophon,
             app_id_prefix: "game".into(),
             editions: vec![ManifestEdition {
                 id: "global".into(),
                 label: "Global".into(),
                 exe_name: "Game.exe".into(),
                 data_folder: "Game_Data".into(),
+                install_strategy: None,
+                uses_temp_dir: None,
                 strategy_config: serde_json::Value::Null,
             }],
             voice_locales: vec![],
@@ -232,10 +239,10 @@ mod tests {
     }
 
     #[test]
-    fn walks_nested_layout() {
+    fn walks_flat_layout() {
         let tmp = tempdir().unwrap();
         let m = example_manifest();
-        let dir = tmp.path().join(&m.publisher_slug).join(&m.game_slug);
+        let dir = tmp.path().join(&m.game_slug);
         fs::create_dir_all(&dir).unwrap();
         fs::write(
             dir.join("manifest.json"),
@@ -253,7 +260,7 @@ mod tests {
         let tmp = tempdir().unwrap();
         let mut m = example_manifest();
         m.schema_version = 99;
-        let dir = tmp.path().join(&m.publisher_slug).join(&m.game_slug);
+        let dir = tmp.path().join(&m.game_slug);
         fs::create_dir_all(&dir).unwrap();
         fs::write(
             dir.join("manifest.json"),

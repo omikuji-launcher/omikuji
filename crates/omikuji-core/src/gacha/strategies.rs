@@ -1,13 +1,34 @@
-use anyhow::{Result, anyhow, bail};
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-use super::manifest::{GachaManifest, ManifestEdition};
+use super::hoyo::{HoyoEdition, VoiceLocale};
+use super::manifest::GachaManifest;
 use crate::downloads::{DownloadKind, DownloadRequest};
 
-pub const HOYO_SOPHON: &str = "hoyo_sophon";
-pub const GRYPHLINE_RESOURCE_PATCH: &str = "gryphline_resource_patch";
-pub const KURO_RESOURCE_INDEX: &str = "kuro_resource_index";
-pub const YOSTAR_FILE_INDEX: &str = "yostar_file_index";
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InstallStrategy {
+    HoyoSophon,
+    GryphlineResourcePatch,
+    KuroResourceIndex,
+    YostarFileIndex,
+}
+
+impl InstallStrategy {
+    pub fn source_key(self) -> &'static str {
+        match self {
+            Self::HoyoSophon => "hoyo",
+            Self::GryphlineResourcePatch => "endfield",
+            Self::KuroResourceIndex => "kuro",
+            Self::YostarFileIndex => "yostar",
+        }
+    }
+
+    pub fn needs_hpatchz(self) -> bool {
+        matches!(self, Self::HoyoSophon | Self::GryphlineResourcePatch)
+    }
+}
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct InstallSize {
@@ -21,6 +42,15 @@ pub struct ExistingInstallInfo {
     pub segments: u32,
     pub has_install: bool,
     pub installed_version: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UpdateCheck {
+    pub from_version: String,
+    pub to_version: String,
+    pub download_size: u64,
+    pub can_diff: bool,
+    pub delta_supported: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -42,14 +72,14 @@ pub fn normalize_version(v: &str) -> String {
     parts.join(".")
 }
 
-pub fn source_key(manifest: &GachaManifest) -> Result<&'static str> {
-    match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => Ok("hoyo"),
-        GRYPHLINE_RESOURCE_PATCH => Ok("endfield"),
-        KURO_RESOURCE_INDEX => Ok("kuro"),
-        YOSTAR_FILE_INDEX => Ok("yostar"),
-        other => bail!("unknown install_strategy: {}", other),
-    }
+pub fn strategy(manifest: &GachaManifest, edition_id: &str) -> Result<InstallStrategy> {
+    manifest
+        .require_edition(edition_id)
+        .map(|e| manifest.strategy_for(e))
+}
+
+pub fn source_key(manifest: &GachaManifest, edition_id: &str) -> Result<&'static str> {
+    strategy(manifest, edition_id).map(InstallStrategy::source_key)
 }
 
 /// app_id format: "{app_id_prefix}:{edition_id}" or "{app_id_prefix}:{edition_id}:{voices_csv}"
@@ -91,9 +121,7 @@ pub fn find_for_app_id(app_id: &str) -> Option<(GachaManifest, String, Vec<Strin
 
 pub fn edition_exe_name<'a>(manifest: &'a GachaManifest, edition_id: &str) -> Option<&'a str> {
     manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
+        .edition(edition_id)
         .map(|e| e.exe_name.as_str())
         .filter(|s| !s.is_empty())
 }
@@ -118,8 +146,8 @@ pub fn build_install_request(
     runner_version: String,
     temp_dir: Option<PathBuf>,
 ) -> Result<DownloadRequest> {
-    let edition = require_edition(manifest, edition_id)?;
-    let source = source_key(manifest)?.to_string();
+    let edition = manifest.require_edition(edition_id)?;
+    let source = manifest.strategy_for(edition).source_key().to_string();
     let app_id = build_app_id(manifest, edition_id, voices);
     let banner_url = resolve_poster(manifest);
     Ok(DownloadRequest {
@@ -145,33 +173,17 @@ pub fn build_install_request(
 }
 
 pub fn detect_edition(manifest: &GachaManifest, install_path: &Path) -> Option<String> {
-    match manifest.install_strategy.as_str() {
-        YOSTAR_FILE_INDEX => crate::gacha::yostar::detect_edition(manifest, install_path),
-        _ => None,
-    }
-}
-
-pub fn supports_import(manifest: &GachaManifest) -> bool {
-    source_key(manifest)
-        .map(|k| crate::downloads::manager().source_supports_import(k))
-        .unwrap_or(false)
-}
-
-fn require_edition<'a>(
-    manifest: &'a GachaManifest,
-    edition_id: &str,
-) -> Result<&'a ManifestEdition> {
     manifest
         .editions
         .iter()
-        .find(|e| e.id == edition_id)
-        .ok_or_else(|| {
-            anyhow!(
-                "edition '{}' not found in manifest '{}'",
-                edition_id,
-                manifest.id
-            )
-        })
+        .any(|e| manifest.strategy_for(e) == InstallStrategy::YostarFileIndex)
+        .then(|| crate::gacha::yostar::detect_edition(manifest, install_path))
+        .flatten()
+}
+
+pub fn supports_import(manifest: &GachaManifest, edition_id: &str) -> bool {
+    source_key(manifest, edition_id)
+        .is_ok_and(|k| crate::downloads::manager().source_supports_import(k))
 }
 
 pub async fn fetch_install_size(
@@ -179,12 +191,14 @@ pub async fn fetch_install_size(
     edition_id: &str,
     voices: &[String],
 ) -> Result<InstallSize> {
-    require_edition(manifest, edition_id)?;
-    match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => {
-            let edition = hoyo_edition_from_id(edition_id)?;
-            let biz_id = hoyo_biz_id(manifest, edition_id)?;
-            let voice_locales = hoyo_voices_from_ids(voices);
+    match strategy(manifest, edition_id)? {
+        InstallStrategy::HoyoSophon => {
+            let edition = HoyoEdition::from_id(edition_id)?;
+            let biz_id = crate::gacha::hoyo::biz_id(manifest, edition_id)?;
+            let voice_locales: Vec<_> = voices
+                .iter()
+                .filter_map(|v| VoiceLocale::from_api_name(v))
+                .collect();
             let s = crate::gacha::hoyo::api::fetch_install_size(&biz_id, edition, &voice_locales)
                 .await?;
             Ok(InstallSize {
@@ -192,24 +206,23 @@ pub async fn fetch_install_size(
                 install_bytes: s.install_bytes,
             })
         }
-        GRYPHLINE_RESOURCE_PATCH => {
+        InstallStrategy::GryphlineResourcePatch => {
             let s = crate::gacha::gryphline::api::fetch_install_size(manifest, edition_id).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
             })
         }
-        KURO_RESOURCE_INDEX => {
+        InstallStrategy::KuroResourceIndex => {
             let s = crate::gacha::kuro::api::fetch_install_size(manifest, edition_id).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
             })
         }
-        YOSTAR_FILE_INDEX => {
+        InstallStrategy::YostarFileIndex => {
             crate::gacha::yostar::api::fetch_install_size(manifest, edition_id).await
         }
-        other => bail!("unknown install_strategy: {}", other),
     }
 }
 
@@ -217,88 +230,33 @@ pub async fn check_for_update(
     manifest: &GachaManifest,
     edition_id: &str,
 ) -> Option<GachaUpdateInfo> {
-    require_edition(manifest, edition_id).ok()?;
-    match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => {
-            let edition = hoyo_edition_from_id(edition_id).ok()?;
-            let biz_id = hoyo_biz_id(manifest, edition_id).ok()?;
-            let info =
-                crate::gacha::hoyo::update::check_for_update(&biz_id, &manifest.game_slug, edition)
-                    .await
-                    .ok()??;
-            Some(GachaUpdateInfo {
-                manifest_id: manifest.id.clone(),
-                edition_id: edition_id.to_string(),
-                from_version: info.from_version,
-                to_version: info.to_version,
-                download_size: info.download_size,
-                can_diff: info.can_diff,
-                delta_supported: info.delta_supported,
-            })
-        }
-        GRYPHLINE_RESOURCE_PATCH => {
-            let info = crate::gacha::gryphline::update::check_for_update(manifest, edition_id)
+    let check = match strategy(manifest, edition_id).ok()? {
+        InstallStrategy::HoyoSophon => {
+            let edition = HoyoEdition::from_id(edition_id).ok()?;
+            let biz_id = crate::gacha::hoyo::biz_id(manifest, edition_id).ok()?;
+            crate::gacha::hoyo::update::check_for_update(&biz_id, &manifest.game_slug, edition)
                 .await
-                .ok()??;
-            Some(GachaUpdateInfo {
-                manifest_id: manifest.id.clone(),
-                edition_id: edition_id.to_string(),
-                from_version: info.from_version,
-                to_version: info.to_version,
-                download_size: info.download_size,
-                can_diff: info.can_diff,
-                delta_supported: info.delta_supported,
-            })
         }
-        YOSTAR_FILE_INDEX => {
-            let info = crate::gacha::yostar::update::check_for_update(manifest, edition_id)
-                .await
-                .ok()??;
-            Some(GachaUpdateInfo {
-                manifest_id: manifest.id.clone(),
-                edition_id: edition_id.to_string(),
-                from_version: info.from_version,
-                to_version: info.to_version,
-                download_size: info.download_size,
-                can_diff: info.can_diff,
-                delta_supported: info.delta_supported,
-            })
+        InstallStrategy::GryphlineResourcePatch => {
+            crate::gacha::gryphline::update::check_for_update(manifest, edition_id).await
         }
-        KURO_RESOURCE_INDEX => {
-            let info = crate::gacha::kuro::update::check_for_update(manifest, edition_id)
-                .await
-                .ok()??;
-            Some(GachaUpdateInfo {
-                manifest_id: manifest.id.clone(),
-                edition_id: edition_id.to_string(),
-                from_version: info.from_version,
-                to_version: info.to_version,
-                download_size: info.download_size,
-                can_diff: info.can_diff,
-                delta_supported: info.delta_supported,
-            })
+        InstallStrategy::YostarFileIndex => {
+            crate::gacha::yostar::update::check_for_update(manifest, edition_id).await
         }
-        _ => None,
+        InstallStrategy::KuroResourceIndex => {
+            crate::gacha::kuro::update::check_for_update(manifest, edition_id).await
+        }
     }
-}
-
-pub fn installed_version(manifest: &GachaManifest, edition_id: &str) -> Option<String> {
-    match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => {
-            let edition = hoyo_edition_from_id(edition_id).ok()?;
-            crate::gacha::hoyo::installed_version(&manifest.game_slug, edition)
-        }
-        GRYPHLINE_RESOURCE_PATCH => {
-            crate::gacha::gryphline::installed_version(&manifest.game_slug, edition_id)
-        }
-        KURO_RESOURCE_INDEX => {
-            crate::gacha::kuro::installed_version(&manifest.game_slug, edition_id)
-        }
-        YOSTAR_FILE_INDEX => {
-            crate::gacha::yostar::installed_version(&manifest.game_slug, edition_id)
-        }
-        _ => None,
-    }
+    .ok()??;
+    Some(GachaUpdateInfo {
+        manifest_id: manifest.id.clone(),
+        edition_id: edition_id.to_string(),
+        from_version: check.from_version,
+        to_version: check.to_version,
+        download_size: check.download_size,
+        can_diff: check.can_diff,
+        delta_supported: check.delta_supported,
+    })
 }
 
 pub fn read_install_version(
@@ -306,19 +264,21 @@ pub fn read_install_version(
     edition_id: &str,
     install_path: &Path,
 ) -> Option<String> {
-    let edition = manifest.editions.iter().find(|e| e.id == edition_id)?;
-    match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => crate::gacha::hoyo::read_install_version(install_path, &edition.data_folder),
-        GRYPHLINE_RESOURCE_PATCH => {
-            crate::gacha::gryphline::read_install_version(install_path, &edition.data_folder)
+    let edition = manifest.edition(edition_id)?;
+    let data_folder = &edition.data_folder;
+    match manifest.strategy_for(edition) {
+        InstallStrategy::HoyoSophon => {
+            crate::gacha::hoyo::read_install_version(install_path, data_folder)
         }
-        KURO_RESOURCE_INDEX => {
-            crate::gacha::kuro::read_install_version(install_path, &edition.data_folder)
+        InstallStrategy::GryphlineResourcePatch => {
+            crate::gacha::gryphline::read_install_version(install_path, data_folder)
         }
-        YOSTAR_FILE_INDEX => {
-            crate::gacha::yostar::read_install_version(install_path, &edition.data_folder)
+        InstallStrategy::KuroResourceIndex => {
+            crate::gacha::kuro::read_install_version(install_path, data_folder)
         }
-        _ => None,
+        InstallStrategy::YostarFileIndex => {
+            crate::gacha::yostar::read_install_version(install_path, data_folder)
+        }
     }
 }
 
@@ -328,9 +288,12 @@ pub fn inspect_existing(
     install_path: &Path,
     temp_dir: Option<&Path>,
 ) -> ExistingInstallInfo {
+    let Ok(strategy) = strategy(manifest, edition_id) else {
+        return ExistingInstallInfo::default();
+    };
     let app_id = build_app_id(manifest, edition_id, &[]);
-    let mut info = match manifest.install_strategy.as_str() {
-        HOYO_SOPHON => {
+    let mut info = match strategy {
+        InstallStrategy::HoyoSophon => {
             let (bytes, segments) =
                 crate::gacha::hoyo::source::inspect_hoyo_temp(&app_id, install_path, temp_dir);
             let has_install = edition_exe_name(manifest, edition_id)
@@ -342,7 +305,7 @@ pub fn inspect_existing(
                 installed_version: None,
             }
         }
-        GRYPHLINE_RESOURCE_PATCH => {
+        InstallStrategy::GryphlineResourcePatch => {
             let (bytes, segments) = crate::gacha::gryphline::source::inspect_gryphline_temp(
                 &app_id,
                 install_path,
@@ -358,7 +321,7 @@ pub fn inspect_existing(
                 installed_version: None,
             }
         }
-        KURO_RESOURCE_INDEX | YOSTAR_FILE_INDEX => {
+        InstallStrategy::KuroResourceIndex | InstallStrategy::YostarFileIndex => {
             let has_install = edition_exe_name(manifest, edition_id)
                 .is_some_and(|exe| install_path.join(exe).exists());
             ExistingInstallInfo {
@@ -368,7 +331,6 @@ pub fn inspect_existing(
                 installed_version: None,
             }
         }
-        _ => ExistingInstallInfo::default(),
     };
     if info.has_install {
         info.installed_version = read_install_version(manifest, edition_id, install_path);
@@ -378,42 +340,4 @@ pub fn inspect_existing(
 
 pub fn resolve_poster(manifest: &GachaManifest) -> String {
     crate::gacha::art::resolve_art(manifest, "grid")
-}
-
-fn hoyo_edition_from_id(id: &str) -> Result<crate::gacha::hoyo::HoyoEdition> {
-    use crate::gacha::hoyo::HoyoEdition;
-    match id {
-        "global" => Ok(HoyoEdition::Global),
-        "china" => Ok(HoyoEdition::China),
-        other => bail!("no hoyo edition for id: {}", other),
-    }
-}
-
-fn hoyo_voices_from_ids(ids: &[String]) -> Vec<crate::gacha::hoyo::VoiceLocale> {
-    use crate::gacha::hoyo::VoiceLocale;
-    ids.iter()
-        .filter_map(|id| {
-            VoiceLocale::all()
-                .iter()
-                .find(|v| v.api_name() == id)
-                .copied()
-        })
-        .collect()
-}
-
-fn hoyo_biz_id(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
-    manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
-        .and_then(|e| e.strategy_config.get("biz_id"))
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .ok_or_else(|| {
-            anyhow!(
-                "no biz_id in manifest {} for edition {}",
-                manifest.id,
-                edition_id
-            )
-        })
 }

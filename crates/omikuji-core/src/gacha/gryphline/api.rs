@@ -17,9 +17,7 @@ pub struct EditionConfig {
 impl EditionConfig {
     pub fn from_manifest(manifest: &GachaManifest, edition_id: &str) -> Result<Self> {
         let cfg = manifest
-            .editions
-            .iter()
-            .find(|e| e.id == edition_id)
+            .edition(edition_id)
             .map(|e| &e.strategy_config)
             .ok_or_else(|| anyhow!("edition {} not in manifest {}", edition_id, manifest.id))?;
         let s = |k: &str| -> Result<String> {

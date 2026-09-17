@@ -9,22 +9,21 @@ const KINDS: &[(&str, MediaType)] = &[
     ("icon", MediaType::Icon),
 ];
 
-fn asset_url(publisher_slug: &str, game_slug: &str, kind: &str) -> String {
+fn asset_url(game_slug: &str, kind: &str) -> String {
     let base = crate::settings::get().assets.fetch_url.trim().to_string();
     if base.is_empty() {
         return String::new();
     }
     format!(
-        "{}/gacha/{}/{}/{}.png",
+        "{}/gacha/{}/{}.png",
         base.trim_end_matches('/'),
-        publisher_slug,
         game_slug,
         kind
     )
 }
 
 pub fn resolve_art(manifest: &GachaManifest, kind: &str) -> String {
-    asset_url(&manifest.publisher_slug, &manifest.game_slug, kind)
+    asset_url(&manifest.game_slug, kind)
 }
 
 pub fn fetch_into_library_cache(
@@ -46,7 +45,7 @@ pub fn fetch_into_library_cache(
     };
 
     for (kind, lib_type) in KINDS {
-        let url = asset_url(&manifest.publisher_slug, &manifest.game_slug, kind);
+        let url = resolve_art(manifest, kind);
         if url.is_empty() {
             tracing::error!("assets.fetch_url is empty");
             return;

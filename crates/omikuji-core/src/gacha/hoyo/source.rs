@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::sophon;
 use super::{HoyoEdition, VoiceLocale};
+use crate::gacha::state;
 
 struct ParsedHoyoApp {
     biz_id: String,
@@ -167,7 +168,7 @@ impl DownloadSource for HoyoSource {
             }
         }
 
-        super::set_installed_version(&parsed.game_slug, parsed.edition, &target_version);
+        state::write_installed_version(&parsed.game_slug, parsed.edition.id(), &target_version);
 
         let _ = std::fs::remove_dir_all(&temp_root);
 
@@ -243,7 +244,7 @@ impl DownloadSource for HoyoSource {
             return Ok(());
         }
 
-        super::set_installed_version(&parsed.game_slug, parsed.edition, &target_version);
+        state::write_installed_version(&parsed.game_slug, parsed.edition.id(), &target_version);
         let total = total_bytes_arc.load(Ordering::SeqCst);
         report_progress(&entry.id, 100.0, total, total, 0);
         tracing::info!(
@@ -750,32 +751,11 @@ fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
     let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
 
-    let edition = match edition_id.as_str() {
-        "global" => HoyoEdition::Global,
-        "china" => HoyoEdition::China,
-        other => return Err(anyhow!("unknown hoyo edition: {}", other)),
-    };
-
-    let biz_id = manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
-        .and_then(|e| e.strategy_config.get("biz_id"))
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| {
-            anyhow!(
-                "no biz_id in manifest for {} edition {}",
-                manifest.id,
-                edition_id
-            )
-        })?
-        .to_string();
-
     Ok(ParsedHoyoApp {
-        biz_id,
+        biz_id: super::biz_id(&manifest, &edition_id)?,
         game_slug: manifest.game_slug.clone(),
         display_name: manifest.display_name.clone(),
-        edition,
+        edition: HoyoEdition::from_id(&edition_id)?,
     })
 }
 
@@ -784,12 +764,7 @@ fn parse_voice_locales(s: &str) -> Vec<VoiceLocale> {
         return Vec::new();
     }
     s.split(',')
-        .filter_map(|name| {
-            VoiceLocale::all()
-                .iter()
-                .find(|vl| vl.api_name() == name)
-                .copied()
-        })
+        .filter_map(VoiceLocale::from_api_name)
         .collect()
 }
 

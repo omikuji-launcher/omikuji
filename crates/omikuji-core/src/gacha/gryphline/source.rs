@@ -12,6 +12,7 @@ use crate::downloads::{
     report_progress, set_status,
 };
 use crate::gacha::manifest::GachaManifest;
+use crate::gacha::state;
 
 const PATCH_STAGING: &str = ".omikuji-patch";
 const PATCH_SCRATCH: &str = ".hpatchz";
@@ -29,9 +30,7 @@ fn parse_app_id(app_id: &str) -> Result<ParsedGryphlineApp> {
     let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
     let edition_label = manifest
-        .editions
-        .iter()
-        .find(|e| e.id == edition_id)
+        .edition(&edition_id)
         .map(|e| e.label.clone())
         .unwrap_or_else(|| edition_id.clone());
     let cfg = api::EditionConfig::from_manifest(&manifest, &edition_id)?;
@@ -77,7 +76,7 @@ impl DownloadSource for GryphlineSource {
             return Ok(());
         }
 
-        super::set_installed_version(
+        state::write_installed_version(
             &parsed.manifest.game_slug,
             &parsed.edition_id,
             &target_version,
@@ -144,7 +143,7 @@ impl DownloadSource for GryphlineSource {
             return Ok(());
         }
 
-        super::set_installed_version(
+        state::write_installed_version(
             &parsed.manifest.game_slug,
             &parsed.edition_id,
             &target_version,

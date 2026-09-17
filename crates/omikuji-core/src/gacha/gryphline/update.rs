@@ -1,23 +1,14 @@
 use anyhow::Result;
 
-use super::installed_version;
 use crate::gacha::manifest::GachaManifest;
-
-#[derive(Debug, Clone)]
-pub struct UpdateInfo {
-    pub edition_id: String,
-    pub from_version: String,
-    pub to_version: String,
-    pub download_size: u64,
-    pub can_diff: bool,
-    pub delta_supported: bool,
-}
+use crate::gacha::state;
+use crate::gacha::strategies::UpdateCheck;
 
 pub async fn check_for_update(
     manifest: &GachaManifest,
     edition_id: &str,
-) -> Result<Option<UpdateInfo>> {
-    let Some(from_version) = installed_version(&manifest.game_slug, edition_id) else {
+) -> Result<Option<UpdateCheck>> {
+    let Some(from_version) = state::read_installed_version(&manifest.game_slug, edition_id) else {
         return Ok(None);
     };
 
@@ -33,8 +24,7 @@ pub async fn check_for_update(
         .map(|p| p.package_size)
         .sum();
 
-    Ok(Some(UpdateInfo {
-        edition_id: edition_id.to_string(),
+    Ok(Some(UpdateCheck {
         from_version,
         to_version,
         download_size,
