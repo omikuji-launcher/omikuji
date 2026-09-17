@@ -1,3 +1,4 @@
+mod app_log;
 mod bridge;
 mod cli;
 mod hot_reload;
@@ -29,13 +30,7 @@ unsafe extern "C" {
 async fn main() {
     unsafe { std::env::set_var("QT_QUICK_CONTROLS_STYLE", "Basic") };
 
-    tracing_subscriber::fmt()
-        .event_format(log_fmt::ShortTarget)
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("warn")),
-        )
-        .init();
+    app_log::init();
 
     let action = cli::dispatch();
 
@@ -62,8 +57,11 @@ async fn main() {
         None => format!("qrc:/qt/qml/omikuji/{qml_rel}"),
     };
 
-    if !matches!(action, cli::CliAction::RunExe(_)) && !single_instance::check().await {
-        return;
+    if !matches!(action, cli::CliAction::RunExe(_)) {
+        if !single_instance::check().await {
+            return;
+        }
+        app_log::start_session();
     }
 
     unsafe { omikuji_app_init() };

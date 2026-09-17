@@ -384,7 +384,7 @@ fn main() {
     let builder = builder.qt_module("DBus");
     println!("cargo:rustc-link-lib=Qt6DBus");
 
-    const CPP_SOURCES: [&str; 8] = [
+    const CPP_SOURCES: [&str; 9] = [
         "src/app_icon.cpp",
         "src/app_font.cpp",
         "src/tray_native.cpp",
@@ -393,6 +393,7 @@ fn main() {
         "src/notify.cpp",
         "src/inhibit.cpp",
         "src/input.cpp",
+        "src/qt_log.cpp",
     ];
     let qt_private_includes = qt_private_include_dirs();
     let builder = unsafe {

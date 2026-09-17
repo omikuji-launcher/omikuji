@@ -84,6 +84,13 @@ pub fn logs_dir() -> PathBuf {
     cache_dir().join("logs")
 }
 
+pub fn stamped_log_path(stem: &str) -> PathBuf {
+    logs_dir().join(format!(
+        "{stem}_{}.log",
+        chrono::Local::now().format("%Y%m%d_%H%M%S")
+    ))
+}
+
 pub fn runtime_dir() -> PathBuf {
     settings::expand(&settings::get().paths.runtime_dir)
 }

@@ -108,11 +108,7 @@ impl ProcessManager {
             .save_game_logs;
         let log_path = if save_to_disk {
             tokio::fs::create_dir_all(&self.logs_dir).await.ok();
-            self.logs_dir.join(format!(
-                "{}_{}.log",
-                config.game_id,
-                chrono::Local::now().format("%Y%m%d_%H%M%S")
-            ))
+            crate::stamped_log_path(&config.game_id)
         } else {
             // placeholder only, never opened
             self.logs_dir

@@ -23,7 +23,6 @@ layers_dir = "/home/reakjra/.local/share/omikuji/components/layers"
 tools_dir = "/home/reakjra/.local/share/omikuji/components/tools"
 prefixes_dir = "/home/reakjra/.local/share/omikuji/prefixes"
 cache_dir = "/home/reakjra/.local/share/omikuji/cache"
-logs_dir = "/home/reakjra/.local/share/omikuji/logs"
 runtime_dir = "/home/reakjra/.local/share/omikuji/runtime"
 scripts_dir = "/home/reakjra/.local/share/omikuji/scripts"
 ```

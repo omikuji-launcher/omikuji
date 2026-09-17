@@ -316,11 +316,7 @@ impl super::qobject::GameModel {
             tracing::error!("couldn't create {}: {}", dir.display(), e);
             return QString::from("");
         }
-        let ts = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        let file = dir.join(format!("{}_{}.log", id, ts));
+        let file = omikuji_core::stamped_log_path(&id);
         match std::fs::write(&file, body) {
             Ok(_) => QString::from(file.to_string_lossy().as_ref()),
             Err(e) => {

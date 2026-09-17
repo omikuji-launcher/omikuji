@@ -540,7 +540,7 @@ Everything omikuji creates or edits, grouped by where it lives. Paths under `~/.
 
 \- `cache/`: stores' libraries, cover art, and `cache/downloads/queue.json` (downloads page entries).
 
-\- `logs/`: game logs, when saving them to disk is enabled.
+\- `cache/logs/`: omikuji's own log for the last 3 sessions (`omikuji_<date>_<time>.log`, the newest one is the current session), and game logs when saving them to disk is enabled. Game logs are never deleted automatically.
 
 #### Runner folders
 

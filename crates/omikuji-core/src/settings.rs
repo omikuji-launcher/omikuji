@@ -61,7 +61,6 @@ pub struct PathsSettings {
     pub tools_dir: String,
     pub prefixes_dir: String,
     pub cache_dir: String,
-    pub logs_dir: String,
     pub runtime_dir: String,
     pub scripts_dir: String,
 }
@@ -82,7 +81,6 @@ impl Default for PathsSettings {
             tools_dir: s("components/tools"),
             prefixes_dir: s("prefixes"),
             cache_dir: s("cache"),
-            logs_dir: s("logs"),
             runtime_dir: s("runtime"),
             scripts_dir: s("scripts"),
         }
