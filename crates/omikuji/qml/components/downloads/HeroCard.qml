@@ -124,7 +124,7 @@ Item {
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                             Layout.fillWidth: true
-                            Layout.maximumWidth: implicitWidth
+                            Layout.maximumWidth: Math.ceil(implicitWidth)
                         }
 
                         KindChip { kind: hero.kind }
