@@ -442,7 +442,7 @@ Right clicking on a game card will open a context menu. Its entries are:
 
 \- **Sort by**: dropdown for sorting the cards. `Custom` allows to hold a card with the left-click and drag it to reorder. `Date added`, `Name A-Z`, `Name Z-A`
 
-\- **Card style**: dropdown for the card style. `Normal`, `Fit`, `Frameless`.
+\- **Card style**: dropdown for the card style. `Normal`, `Fit`, `Frameless`, `Vignette` (default), `Poster`.
 
 \- **Show hidden games**: toggle for showing hidden games.
 

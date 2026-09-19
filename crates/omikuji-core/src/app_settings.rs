@@ -316,7 +316,7 @@ impl Default for DisplaySettings {
             show_steam_prefixes: false,
             card_flow: "center".into(),
             card_sort: "default".into(),
-            card_style: "normal".into(),
+            card_style: "vignette".into(),
             card_play_button: false,
             highlight_logs: true,
             log_rules: Vec::new(),
