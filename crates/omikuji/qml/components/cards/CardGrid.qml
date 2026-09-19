@@ -136,11 +136,6 @@ Item {
             if (root._visibleIndices().includes(root.keyIndex)) root._activate(root.keyIndex)
         }
         Keys.onPressed: (event) => root._handleKey(event)
-        onActiveFocusChanged: {
-            if (!activeFocus) return
-            const vis = root._visibleIndices()
-            if (vis.length > 0 && vis.indexOf(root.keyIndex) === -1) root._moveTo(vis[0])
-        }
 
         ScrollBar.vertical: ThinScrollBar { padding: 4 }
 
