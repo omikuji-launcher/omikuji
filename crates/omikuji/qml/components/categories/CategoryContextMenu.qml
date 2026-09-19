@@ -12,6 +12,7 @@ Item {
     signal editRequested(int index, var entry)
     signal deleteRequested(int index, var entry)
     signal hideRequested(int index)
+    signal moveRequested(int index)
 
     function show(index, x, y) {
         ctrl._pendingIndex = index
@@ -25,10 +26,14 @@ Item {
     property real _pendingX: 0
     property real _pendingY: 0
 
+    function _entries() {
+        if (!ctrl.appSettings) return []
+        try { return JSON.parse(ctrl.appSettings.categoriesJson()) } catch (e) { return [] }
+    }
+
     function _entry(index) {
-        if (!ctrl.appSettings || index < 0) return null
-        let entries = []
-        try { entries = JSON.parse(ctrl.appSettings.categoriesJson()) } catch (e) { entries = [] }
+        if (index < 0) return null
+        const entries = ctrl._entries()
         return index < entries.length ? entries[index] : null
     }
 
@@ -44,13 +49,15 @@ Item {
 
         function setPosition(index, mouseX, mouseY) {
             if (!ctrl._entry(index)) return
-            items = [
-                { text: qsTr("New category"), action: "add" },
-                { text: qsTr("Edit"), action: "edit" },
-                { text: qsTr("Hide"), action: "hide" },
-                { text: qsTr("Delete"), action: "delete", danger: true }
-            ]
-            currentIndex = index
+            const canMove = InputMode.keyboard && ctrl._entries().filter(e => e.enabled !== false).length > 1
+            menu.items = [{ text: qsTr("New category"), action: "add" }]
+                .concat(canMove ? [{ text: qsTr("Move"), action: "move" }] : [])
+                .concat([
+                    { text: qsTr("Edit"), action: "edit" },
+                    { text: qsTr("Hide"), action: "hide" },
+                    { text: qsTr("Delete"), action: "delete", danger: true }
+                ])
+            menu.currentIndex = index
             openAtCursor(mouseX, mouseY)
         }
 
@@ -68,6 +75,9 @@ Item {
                     break
                 case "hide":
                     ctrl.hideRequested(idx)
+                    break
+                case "move":
+                    ctrl.moveRequested(idx)
                     break
                 case "delete":
                     ctrl.deleteRequested(idx, entry)

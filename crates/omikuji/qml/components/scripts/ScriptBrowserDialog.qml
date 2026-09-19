@@ -116,6 +116,7 @@ DialogCard {
         ListView {
             id: scriptList
             keyNavigationEnabled: false
+            currentIndex: -1
             anchors.top: searchField.bottom
             anchors.topMargin: Theme.space.md
             anchors.left: parent.left

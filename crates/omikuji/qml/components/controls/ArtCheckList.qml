@@ -68,6 +68,7 @@ Item {
             ListView {
                 id: list
                 keyNavigationEnabled: false
+                currentIndex: -1
                 anchors.fill: parent
                 anchors.topMargin: Theme.space.sm
                 anchors.bottomMargin: Theme.space.sm

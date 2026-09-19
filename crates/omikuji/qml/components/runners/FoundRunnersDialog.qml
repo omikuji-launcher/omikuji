@@ -83,6 +83,7 @@ DialogCard {
         ListView {
             id: list
             keyNavigationEnabled: false
+            currentIndex: -1
             anchors.top: bodyDivider.bottom
             anchors.left: parent.left
             anchors.right: parent.right

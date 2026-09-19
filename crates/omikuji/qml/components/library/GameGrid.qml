@@ -38,6 +38,10 @@ Item {
         return cardGrid.itemAt(index)
     }
 
+    function liftCard(index) {
+        return cardGrid.liftAt(index)
+    }
+
     Keys.onPressed: (event) => {
         event.accepted = event.key === Qt.Key_Escape && selectedIndex >= 0
         if (event.accepted) backgroundClicked()
@@ -63,9 +67,15 @@ Item {
         cardBaseWidth: root.cardBaseWidth
         cardBaseHeight: root.cardBaseHeight
         keyIndex: root.selectedIndex
+        reorderEnabled: root.reorderActive
         onBackgroundClicked: root.backgroundClicked()
         onKeyNavMoved: (index) => root.gameClicked(index)
         onKeyNavActivated: (index) => root.playRequested(index)
+        onReorderMoveRequested: (from, to) => {
+            root.gameModel.moveGame(from, to)
+            root.gameClicked(to)
+        }
+        onReorderCommitted: root.gameModel.commitOrder()
 
         delegate: GameCard {
             id: cardDelegate

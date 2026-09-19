@@ -90,6 +90,24 @@ Item {
         _loadCategories()
     }
 
+    // persisting rebuilds every delegate, so the row that was just dropped has to be focused again
+    function _persistReorder(row) {
+        _persistOrder()
+        Qt.callLater(() => {
+            const item = tabList.itemAtIndex(row)
+            if (item) item.forceActiveFocus(Qt.TabFocusReason)
+        })
+    }
+
+    function liftCategory(sourceIndex) {
+        for (let i = 0; i < tabsModel.count; i++) {
+            if (tabsModel.get(i).sourceIndex !== sourceIndex) continue
+            const item = tabList.itemAtIndex(i)
+            if (item) item.lift()
+            return
+        }
+    }
+
     function _loadCategories() {
         if (!appSettings) return
         let raw = appSettings.categoriesJson()
@@ -150,10 +168,18 @@ Item {
         width: root.width
         height: 40
 
+        property bool hasMenu: false
+
         readonly property bool navigable: true
         readonly property real navRingRadius: Theme.radius.pill
         function navActivate() { activated() }
         function navRectItem() { return hoverPill }
+        function navMenu() {
+            if (!navItem.hasMenu) return false
+            const p = navItem.mapToItem(null, navItem.width / 2, navItem.height / 2)
+            navItem.menuRequested(p.x, p.y)
+            return true
+        }
 
         Rectangle {
             id: hoverPill
@@ -371,6 +397,7 @@ Item {
             ListView {
                 id: tabList
                 keyNavigationEnabled: false
+                currentIndex: -1
                 anchors.top: libraryHeader.bottom
                 anchors.topMargin: 8
                 anchors.left: parent.left
@@ -387,16 +414,39 @@ Item {
                 }
 
                 delegate: NavItem {
+                    id: tabItem
                     required property int index
                     required property var model
+                    readonly property bool raised: reordering || keyReorder.lifted
 
                     label: model.label
                     icon: model.icon
+                    hasMenu: true
                     reorderable: tabsModel.count > 1
                     selected: index === root.currentIndex && root.currentStore === "" && root.currentBottom === ""
-                    z: reordering ? 2 : 0
-                    scale: reordering ? 1.03 : 1.0
-                    opacity: reordering ? 0.92 : 1.0
+                    z: raised ? 2 : 0
+                    scale: raised ? 1.03 : 1.0
+                    opacity: raised ? 0.92 : 1.0
+
+                    function lift() {
+                        forceActiveFocus(Qt.TabFocusReason)
+                        keyReorder.lift()
+                    }
+
+                    KeyReorder {
+                        id: keyReorder
+                        index: tabItem.index
+                        count: tabsModel.count
+                        onMoveRequested: (from, to) => {
+                            tabsModel.move(from, to, 1)
+                            root._syncFromModel()
+                        }
+                        onCommitted: root._persistReorder(tabItem.index)
+                    }
+
+                    Keys.onShortcutOverride: (event) => keyReorder.handleShortcutOverride(event)
+                    Keys.onPressed: (event) => keyReorder.handleKey(event)
+                    onActiveFocusChanged: if (!activeFocus) keyReorder.drop(false)
                     Behavior on scale { NumberAnimation { duration: 120 } }
                     Behavior on opacity { NumberAnimation { duration: 120 } }
 

@@ -336,6 +336,7 @@ Item {
             ListView {
                 id: categoriesList
                 keyNavigationEnabled: false
+                currentIndex: -1
                 width: parent.width
                 height: contentHeight
                 model: categoriesModel
@@ -369,14 +370,9 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         height: 52
 
-                        Drag.active: dragArea.held
-                        Drag.source: wrapper
-                        Drag.hotSpot.x: width / 2
-                        Drag.hotSpot.y: height / 2
-
-                        scale: dragArea.held ? 1.02 : 1.0
-                        opacity: dragArea.held ? 0.92 : 1.0
-                        z: dragArea.held ? 2 : 0
+                        scale: dragArea.raised ? 1.02 : 1.0
+                        opacity: dragArea.raised ? 0.92 : 1.0
+                        z: dragArea.raised ? 2 : 0
                         Behavior on scale { NumberAnimation { duration: 120 } }
                         Behavior on opacity { NumberAnimation { duration: 120 } }
 
@@ -398,10 +394,11 @@ Item {
                             spacing: 14
 
                             SvgIcon {
+                                id: gripIcon
                                 anchors.verticalCenter: parent.verticalCenter
                                 name: "drag_indicator"
                                 size: 20
-                                color: dragArea.held || dragArea.containsMouse ? Theme.iconHover : Theme.icon
+                                color: dragArea.raised || dragArea.containsMouse ? Theme.iconHover : Theme.icon
                             }
 
                             SvgIcon {
@@ -472,19 +469,27 @@ Item {
                         }
                     }
 
-                    DropArea {
-                        anchors.fill: parent
-                        anchors.margins: 4
-                        onEntered: (drag) => {
-                            let from = drag.source.index
-                            let to = wrapper.index
-                            if (from !== to) categoriesModel.move(from, to, 1)
-                        }
-                    }
-
                     MouseArea {
                         id: dragArea
                         property bool held: false
+                        readonly property bool raised: held || keyReorder.lifted
+
+                        readonly property bool navigable: true
+                        readonly property real navRingRadius: Theme.radius.sm
+                        function navRectItem() { return gripIcon }
+                        function navActivate() { keyReorder.lift() }
+
+                        KeyReorder {
+                            id: keyReorder
+                            index: wrapper.index
+                            count: categoriesModel.count
+                            onMoveRequested: (from, to) => categoriesModel.move(from, to, 1)
+                            onCommitted: root._persistFromModel()
+                        }
+
+                        Keys.onShortcutOverride: (event) => keyReorder.handleShortcutOverride(event)
+                        Keys.onPressed: (event) => keyReorder.handleKey(event)
+                        onActiveFocusChanged: if (!activeFocus) keyReorder.drop(false)
 
                         anchors.left: parent.left
                         anchors.top: parent.top
@@ -499,6 +504,11 @@ Item {
                         drag.axis: Drag.YAxis
 
                         onPressAndHold: held = true
+                        onPositionChanged: {
+                            if (!held) return
+                            const slot = Math.max(0, Math.min(categoriesModel.count - 1, Math.floor((content.y + content.height / 2) / wrapper.height)))
+                            if (slot !== wrapper.index) categoriesModel.move(wrapper.index, slot, 1)
+                        }
                         onReleased: {
                             if (held) root._persistFromModel()
                             held = false

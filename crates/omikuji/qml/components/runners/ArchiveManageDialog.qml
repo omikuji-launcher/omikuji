@@ -341,6 +341,7 @@ DialogCard {
         ListView {
             id: list
             keyNavigationEnabled: false
+            currentIndex: -1
             anchors.top: bodyDivider.bottom
             anchors.left: sourceList.right
             anchors.leftMargin: root.showSources ? Theme.space.lg : 0

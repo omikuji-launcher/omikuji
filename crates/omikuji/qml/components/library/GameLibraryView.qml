@@ -57,6 +57,12 @@ Rectangle {
         return false
     }
 
+    readonly property bool reorderActive: gameGrid.reorderActive
+
+    function liftCard(index) {
+        return gameGrid.liftCard(index)
+    }
+
     function _openCardMenu(index) {
         const card = gameGrid.cardAt(index)
         if (!card) return false

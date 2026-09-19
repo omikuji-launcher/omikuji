@@ -557,6 +557,12 @@ property real cardZoom: appSettings.cardZoom
         sections: [navTabs, topBar, contentArea, libraryView.actionBar]
     }
 
+    function _openFocusedMenu(event) {
+        if (event.key !== Qt.Key_F && event.key !== Qt.Key_Menu) return false
+        const owner = Nav.navigableOwner(root.activeFocusItem, scaledRoot)
+        return !!owner && typeof owner.navMenu === "function" && owner.navMenu() === true
+    }
+
     Keys.onPressed: (event) => {
         if (!windowTrap.onTop) {
             event.accepted = false
@@ -564,7 +570,7 @@ property real cardZoom: appSettings.cardZoom
         }
         const step = Nav.tabCycleStep(event)
         if (step !== 0) navTabs.cycle(step)
-        event.accepted = step !== 0 || libraryView.handleActionKey(event)
+        event.accepted = step !== 0 || scaledRoot._openFocusedMenu(event) || libraryView.handleActionKey(event)
         if (!event.accepted) windowTrap.handleKey(event)
     }
 
@@ -1012,6 +1018,8 @@ property real cardZoom: appSettings.cardZoom
             root.settingsGameIndex = idx
             root.activeModal = "gameSettings"
         }
+        canMove: libraryView.reorderActive
+        onMoveRequested: (idx) => libraryView.liftCard(idx)
         onCategoriesRequested: (idx) => categoriesController.showForGame(idx)
         onRemoveRequested: (idx) => {
             if (gameActions.selectedIndex === idx) gameActions.selectedIndex = -1
@@ -1128,6 +1136,7 @@ property real cardZoom: appSettings.cardZoom
         onEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)
         onDeleteRequested: (idx, entry) => categoriesController.showDelete(idx, entry)
         onHideRequested: (idx) => categoriesController.setEnabled(idx, false)
+        onMoveRequested: (idx) => navTabs.liftCategory(idx)
     }
 
     ArchiveManageDialog {

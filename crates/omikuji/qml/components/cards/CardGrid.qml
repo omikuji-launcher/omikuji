@@ -33,6 +33,29 @@ Item {
     signal keyNavMoved(int index)
     signal keyNavActivated(int index)
 
+    property bool reorderEnabled: false
+    readonly property bool reordering: keyReorder.lifted
+    signal reorderMoveRequested(int from, int to)
+    signal reorderCommitted()
+
+    function liftAt(index) {
+        if (!root.reorderEnabled) return false
+        root.keyIndex = index
+        gridFlick.forceActiveFocus(Qt.TabFocusReason)
+        keyReorder.lift()
+        return true
+    }
+
+    KeyReorder {
+        id: keyReorder
+        index: root.keyIndex
+        count: repeater.count
+        rowStep: root.columns
+        horizontal: true
+        onMoveRequested: (from, to) => root.reorderMoveRequested(from, to)
+        onCommitted: root.reorderCommitted()
+    }
+
     function itemAt(i) {
         return repeater.itemAt(i)
     }
@@ -135,7 +158,9 @@ Item {
         function navActivate() {
             if (root._visibleIndices().includes(root.keyIndex)) root._activate(root.keyIndex)
         }
-        Keys.onPressed: (event) => root._handleKey(event)
+        Keys.onShortcutOverride: (event) => keyReorder.handleShortcutOverride(event)
+        Keys.onPressed: (event) => keyReorder.lifted ? keyReorder.handleKey(event) : root._handleKey(event)
+        onActiveFocusChanged: if (!activeFocus) keyReorder.drop(false)
 
         ScrollBar.vertical: ThinScrollBar { padding: 4 }
 

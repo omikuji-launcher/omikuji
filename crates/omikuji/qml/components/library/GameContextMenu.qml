@@ -9,12 +9,14 @@ Item {
 
     property var gameModel: null
     property var actions: null
+    property bool canMove: false
 
     // emitted for actions that need cross-cutting state changes in Main
     signal logsRequested(string gameId, string gameName)
     signal configureRequested(int index)
     signal categoriesRequested(int index)
     signal removeRequested(int index)
+    signal moveRequested(int index)
 
     function show(index, x, y) {
         ctrl._pendingIndex = index
@@ -84,6 +86,9 @@ Item {
                 { text: qsTr("Shortcuts"), submenu: shortcuts },
                 { text: qsTr("Duplicate"), action: "duplicate" }
             ]
+            if (InputMode.keyboard && ctrl.canMove) {
+                built.push({ text: qsTr("Move"), action: "move" })
+            }
             if (isEpic || isGog || isNile) {
                 built.push({ text: qsTr("Check for updates"), action: "check_update", accent: true })
             }
@@ -127,6 +132,9 @@ Item {
                     if (g && g.gameId) ctrl.logsRequested(g.gameId, g.name || g.gameId)
                     break
                 }
+                case "move":
+                    ctrl.moveRequested(idx)
+                    break
                 case "configure":
                     ctrl.configureRequested(idx)
                     break

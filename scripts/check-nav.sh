@@ -71,6 +71,12 @@ check_list_key_navigation() {
     done < <(blocks ListView | grep -v "keyNavigationEnabled: false" | cut -f1 | relative | grep -Ev '^qml/components/(popups/ToastManager|consolemode/)' || true)
 }
 
+check_list_current_index() {
+    while IFS= read -r hit; do
+        fail "$hit: ListView keeps currentIndex 0, a model move or remove hands focus to its current item, set currentIndex: -1"
+    done < <(blocks ListView | grep "keyNavigationEnabled: false" | grep -v "currentIndex: -1" | cut -f1 | relative || true)
+}
+
 run_tests() {
     local runner
     runner="$(qmake6 -query QT_INSTALL_BINS)/qmltestrunner"
@@ -81,6 +87,7 @@ check_raw_clickables
 check_spinbox_value_changed
 check_controlled_values
 check_list_key_navigation
+check_list_current_index
 run_tests
 
 if [ "$failures" -gt 0 ]; then
