@@ -51,6 +51,14 @@ impl ProtonVerb {
             Self::RunInPrefix => "runinprefix",
         }
     }
+
+    pub fn for_prefix(prefix: &std::path::Path, busy: Self) -> Self {
+        if super::prefix::wineserver_alive(prefix) {
+            busy
+        } else {
+            Self::WaitForExitAndRun
+        }
+    }
 }
 
 // for proton this returns umu-run, not wine; the actual proton path is set via PROTONPATH env in build_env

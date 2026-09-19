@@ -8,7 +8,17 @@ use crate::library::Game;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvPurpose {
     Session,
+    Companion,
     Tool,
+}
+
+impl EnvPurpose {
+    fn busy_verb(self) -> ProtonVerb {
+        match self {
+            Self::Companion => ProtonVerb::RunInPrefix,
+            _ => ProtonVerb::Run,
+        }
+    }
 }
 
 const BATTLEYE_RUNTIME_APPID: &str = "1161040";
@@ -59,7 +69,9 @@ pub fn build_env(
         );
         env.insert(
             "PROTON_VERB".to_string(),
-            ProtonVerb::Run.as_str().to_string(), // wow. PROTON_VERB=run makes umu-run not apply protonfixes, so you have to use WaitForExitAndRun but that makes it impossible to run games if something else is already running in the prefix. I might actually start getting homicidal.
+            ProtonVerb::for_prefix(&prefix, purpose.busy_verb())
+                .as_str()
+                .to_string(),
         );
         match game.source.kind.as_str() {
             "epic" => {
@@ -157,7 +169,7 @@ pub fn build_env(
         append_dll_override(&mut env, "winepulse.drv=d");
     }
 
-    if purpose == EnvPurpose::Session && game.wine.graphics_driver == "wayland" {
+    if purpose != EnvPurpose::Tool && game.wine.graphics_driver == "wayland" {
         if variant == WineVariant::Proton {
             env.insert("PROTON_ENABLE_WAYLAND".to_string(), "1".to_string());
         } else {

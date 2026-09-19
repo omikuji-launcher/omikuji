@@ -157,14 +157,8 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     let env = vars.expand_env(env);
     let args: Vec<String> = args.into_iter().map(|a| vars.expand(&a)).collect();
 
-    let verb =
-        (variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver)).then(|| {
-            if crate::process::is_game_running(&g.metadata.id) {
-                ProtonVerb::Run
-            } else {
-                ProtonVerb::WaitForExitAndRun
-            }
-        });
+    let verb = (variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver))
+        .then(|| ProtonVerb::for_prefix(&crate::launch::resolve_prefix(g), ProtonVerb::Run));
     let cmd = wine_command(&program, &env, variant, verb, &args);
 
     tracing::debug!("{:?} :: {} {}", tool, program.display(), args.join(" "));

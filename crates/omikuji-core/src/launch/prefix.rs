@@ -39,6 +39,35 @@ pub fn effective_prefix(game: &Game) -> Option<PathBuf> {
     }
 }
 
+fn server_lock_paths(prefix: &Path) -> Vec<PathBuf> {
+    use std::os::unix::fs::MetadataExt;
+
+    let base = std::env::temp_dir().join(format!(".wine-{}", unsafe { libc::getuid() }));
+    [prefix.to_path_buf(), prefix.join("pfx")]
+        .iter()
+        .filter_map(|dir| dir.metadata().ok())
+        .map(|meta| {
+            base.join(format!("server-{:x}-{:x}", meta.dev(), meta.ino()))
+                .join("lock")
+        })
+        .collect()
+}
+
+pub fn wineserver_alive(prefix: &Path) -> bool {
+    use std::os::unix::io::AsRawFd;
+
+    server_lock_paths(prefix).iter().any(|lock| {
+        let Ok(file) = std::fs::File::open(lock) else {
+            return false;
+        };
+        let taken = unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0;
+        if taken {
+            unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_UN) };
+        }
+        !taken
+    })
+}
+
 pub fn resolve_prefix(game: &Game) -> PathBuf {
     let prefix = prefix_path_for(game);
     if game.wine.prefix.is_empty()

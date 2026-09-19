@@ -52,7 +52,7 @@ impl ResolvedLaunch {
     }
 }
 
-pub(super) fn assemble_launch(game: &Game) -> Result<ResolvedLaunch> {
+pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<ResolvedLaunch> {
     let working_dir = resolve_working_dir(game);
 
     match game.runner.runner_type.as_str() {
@@ -64,7 +64,7 @@ pub(super) fn assemble_launch(game: &Game) -> Result<ResolvedLaunch> {
 
     let variant = WineVariant::from_version(&game.wine.version);
     let wine_exe = resolve_wine_exe(variant, &game.wine.version)?;
-    let mut env = build_env(game, variant, &wine_exe, EnvPurpose::Session);
+    let mut env = build_env(game, variant, &wine_exe, purpose);
 
     if variant == WineVariant::Proton
         && let Err(e) = crate::desktop::ensure_steam_icon(game)

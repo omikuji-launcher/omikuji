@@ -15,7 +15,9 @@ mod wine;
 pub use assemble::ResolvedLaunch;
 pub use command::wine_command;
 pub use env::{EnvPurpose, build_env};
-pub use prefix::{effective_prefix, prefix_path_for, prepare_epic_prefix, resolve_prefix};
+pub use prefix::{
+    effective_prefix, prefix_path_for, prepare_epic_prefix, resolve_prefix, wineserver_alive,
+};
 pub use wine::{
     ProtonVerb, WineVariant, find_umu_run, missing_component, resolve_wine_exe, umu_system_path,
 };
@@ -36,7 +38,7 @@ impl std::fmt::Display for ComponentMissing {
 impl std::error::Error for ComponentMissing {}
 
 pub fn prepare_launch(game: &Game) -> Result<ResolvedLaunch> {
-    let config = assemble_launch(game)?;
+    let config = assemble_launch(game, EnvPurpose::Session)?;
     reject_slop_env(&config)?;
     run_pre_launch_script(game, &config);
     validate_exe(game)?;
@@ -44,7 +46,11 @@ pub fn prepare_launch(game: &Game) -> Result<ResolvedLaunch> {
 }
 
 pub fn build_launch(game: &Game) -> Result<ResolvedLaunch> {
-    let config = assemble_launch(game)?;
+    build_launch_as(game, EnvPurpose::Session)
+}
+
+pub fn build_launch_as(game: &Game, purpose: EnvPurpose) -> Result<ResolvedLaunch> {
+    let config = assemble_launch(game, purpose)?;
     reject_slop_env(&config)?;
     validate_exe(game)?;
     Ok(config)

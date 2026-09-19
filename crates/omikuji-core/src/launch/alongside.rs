@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
-use super::{ProtonVerb, WineVariant, build_launch};
+use super::{EnvPurpose, build_launch_as};
 use crate::library::{AlongsideWhen, Game};
 use crate::template_vars::TemplateVars;
 
@@ -94,17 +94,15 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
     let mut tool = Game::with_options(
         name,
         exe,
-        (!source.wine.prefix.is_empty()).then(|| source.wine.prefix.clone()),
+        Some(super::resolve_prefix(source).to_string_lossy().into_owned()),
         Some("wine".to_string()),
         (!source.wine.version.is_empty()).then(|| source.wine.version.clone()),
     );
     tool.launch.args = game.launch.alongside_args.clone();
+    tool.source = game.source.clone();
+    tool.metadata.slug = game.slug();
 
-    let mut cmd = build_launch(&tool)?.to_command()?;
-    if WineVariant::from_version(&tool.wine.version) == WineVariant::Proton {
-        cmd.env("PROTON_VERB", ProtonVerb::RunInPrefix.as_str());
-    }
-    Ok(cmd)
+    build_launch_as(&tool, EnvPurpose::Companion)?.to_command()
 }
 
 fn companion_of(game: &Game) -> Option<String> {
