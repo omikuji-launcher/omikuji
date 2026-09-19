@@ -215,7 +215,6 @@ Item {
 
             SettingsRow {
                 label: qsTr("Card style")
-                description: qsTr("Normal crops to fill, Fit shows the whole image, Frameless makes the image the card, Vignette puts the name on the art")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
 

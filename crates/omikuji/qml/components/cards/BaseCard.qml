@@ -29,8 +29,11 @@ Item {
         aspectHeight: false,
         nameOnArt: false,
         nameMargin: 8,
-        nameBottomMargin: 10
+        nameBottomMargin: 10,
+        hoverReveal: false
     })
+
+    readonly property var onArtSpec: ({ artBottomGap: 16, nameOnArt: true, nameMargin: 16, nameBottomMargin: 16 })
 
     readonly property var styleOverrides: ({
         fit: { baseHeight: 290, fitImage: true },
@@ -41,7 +44,8 @@ Item {
             artClipBleed: true,
             aspectHeight: true
         },
-        vignette: { artBottomGap: 16, nameOnArt: true, nameMargin: 16, nameBottomMargin: 16 }
+        vignette: root.onArtSpec,
+        poster: Object.assign({ hoverReveal: true }, root.onArtSpec)
     })
 
     readonly property var spec: Object.assign({}, root.styleDefaults,
@@ -80,6 +84,9 @@ Item {
     readonly property alias bannerArea: bannerClip
     readonly property alias hovered: cardHoverHandler.hovered
     readonly property alias labelArea: nameRow
+
+    property real onArtOpacity: !root.spec.hoverReveal || root.hovered || root.keyFocused ? 1 : 0
+    Behavior on onArtOpacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Easing.OutCubic } }
 
     readonly property real overlayBottomInset: root.spec.nameOnArt
         ? root.height - nameRow.y
@@ -189,6 +196,7 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     visible: root.spec.nameOnArt
+                    opacity: root.onArtOpacity
                     gradient: Gradient {
                         GradientStop { position: 0.5; color: "transparent" }
                         GradientStop { position: 0.78; color: Qt.rgba(0, 0, 0, 0.42) }
@@ -230,6 +238,7 @@ Item {
                 radius: Theme.radius.md
                 fillColor: Qt.rgba(0, 0, 0, 0.45)
                 visible: root.spec.nameOnArt && root.leftIconName !== ""
+                opacity: root.onArtOpacity
 
                 SvgIcon {
                     anchors.centerIn: parent
@@ -249,6 +258,7 @@ Item {
             anchors.leftMargin: root.spec.nameMargin
             anchors.rightMargin: root.spec.nameMargin
             height: 20
+            opacity: root.onArtOpacity
 
             SvgIcon {
                 id: leftIcon
