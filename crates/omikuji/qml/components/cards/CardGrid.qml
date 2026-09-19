@@ -46,13 +46,21 @@ Item {
         return true
     }
 
+    SmoothScroll {
+        id: scroller
+        flick: gridFlick
+    }
+
     KeyReorder {
         id: keyReorder
         index: root.keyIndex
         count: repeater.count
         rowStep: root.columns
         horizontal: true
-        onMoveRequested: (from, to) => root.reorderMoveRequested(from, to)
+        onMoveRequested: (from, to) => {
+            scroller.revealItem(repeater.itemAt(to), 20)
+            root.reorderMoveRequested(from, to)
+        }
         onCommitted: root.reorderCommitted()
     }
 

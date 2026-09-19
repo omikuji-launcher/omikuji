@@ -56,6 +56,11 @@ Item {
 
     ListModel { id: tabsModel }
 
+    SmoothScroll {
+        id: railScroller
+        flick: navScroll
+    }
+
     property bool _selfApplying: false
 
     function _syncFromModel() {
@@ -438,6 +443,7 @@ Item {
                         index: tabItem.index
                         count: tabsModel.count
                         onMoveRequested: (from, to) => {
+                            railScroller.revealItem(tabList.itemAtIndex(to), 8)
                             tabsModel.move(from, to, 1)
                             root._syncFromModel()
                         }

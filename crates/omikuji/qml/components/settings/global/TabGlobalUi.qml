@@ -1,5 +1,6 @@
 import QtQuick
 import omikuji 1.0
+import "../../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -36,6 +37,11 @@ Item {
     function _refreshLanguageOptions() { _languageOptions = _buildLanguageOptions() }
 
     ListModel { id: categoriesModel }
+
+    SmoothScroll {
+        id: pageScroller
+        Component.onCompleted: flick = Nav.scrollParent(root)
+    }
 
     function _loadCategories() {
         if (!appSettings) return
@@ -483,7 +489,10 @@ Item {
                             id: keyReorder
                             index: wrapper.index
                             count: categoriesModel.count
-                            onMoveRequested: (from, to) => categoriesModel.move(from, to, 1)
+                            onMoveRequested: (from, to) => {
+                                pageScroller.revealItem(categoriesList.itemAtIndex(to), 8)
+                                categoriesModel.move(from, to, 1)
+                            }
                             onCommitted: root._persistFromModel()
                         }
 

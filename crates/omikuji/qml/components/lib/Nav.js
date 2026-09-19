@@ -221,6 +221,13 @@ function ensureVisible(flick, item, margin) {
         flick.contentY = Math.min(maxY, r.y + r.height - flick.height + pad)
 }
 
+function scrollParent(item) {
+    for (let cur = item ? item.parent : null; cur; cur = cur.parent) {
+        if (_isFlickable(cur)) return cur
+    }
+    return null
+}
+
 function revealAncestors(item, stopAt) {
     const owner = navigableOwner(item, stopAt)
     for (let cur = owner ? owner.parent : null; cur && cur !== stopAt; cur = cur.parent) {
