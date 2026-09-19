@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import "../lib/PlayState.js" as PlayState
+import "../lib/RunnerGrouping.js" as RG
 
 // dont re-declare required props here, QML rejects the redeclaration and model roles never reach the card
 BaseCard {
@@ -19,10 +20,7 @@ BaseCard {
 
     title: name
     imageSource: coverart || banner
-    leftIconName: runnerType === "steam" ? "steam"
-                : runnerType === "flatpak" ? ""
-                : runnerType === "native" ? "terminal"
-                : "wine_bar"
+    leftIconName: RG.runnerIcon(runnerType)
     leftIconSize: 20
     clickable: true
     contextEnabled: true

@@ -137,7 +137,7 @@ Item {
 
             SettingsSection {
                 label: "Wine"
-                icon: "wine_bar"
+                icon: "wine"
                 width: parent.width
 
                 M3Dropdown {

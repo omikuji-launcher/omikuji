@@ -191,7 +191,7 @@ Item {
 
             IconButton {
                 id: wineToolsBtn
-                icon: "wine_bar"
+                icon: "wine"
                 size: 40
                 rounded: true
                 visible: !root.displayedGame || (root.displayedGame.runnerType !== "native" && root.displayedGame.runnerType !== "flatpak")

@@ -115,7 +115,7 @@ fn default_categories() -> Vec<CategoryEntry> {
         CategoryEntry {
             enabled: true,
             name: "Wine".into(),
-            icon: "wine_bar".into(),
+            icon: "wine".into(),
             kind: "runner".into(),
             value: "wine".into(),
             auto_name: Some(true),

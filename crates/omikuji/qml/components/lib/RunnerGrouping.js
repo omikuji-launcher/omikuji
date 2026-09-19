@@ -120,6 +120,10 @@ function runnerBucket(runnerType) {
     return "wine"
 }
 
+function runnerIcon(runnerType) {
+    return ({ steam: "steam", flatpak: "flatpak", native: "code_xml", wine: "wine" })[runnerBucket(runnerType)]
+}
+
 function pickPreferred(options, substrings) {
     if (!substrings || substrings.length === 0) return firstNonHeader(options)
     for (var s = 0; s < substrings.length; s++) {

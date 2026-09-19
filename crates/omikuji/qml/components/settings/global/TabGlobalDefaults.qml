@@ -145,7 +145,7 @@ Item {
 
         SettingsSection {
             label: SettingLabels.groupTitle("wine")
-            icon: "wine_bar"
+            icon: "wine"
             width: parent.width
 
             Row {

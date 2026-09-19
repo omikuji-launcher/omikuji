@@ -1,5 +1,6 @@
 import QtQuick
 import omikuji 1.0
+import "../lib/RunnerGrouping.js" as RG
 
 Item {
     id: root
@@ -35,7 +36,7 @@ Item {
     property var tabs: {
         let base = [
             { label: qsTr("Game Info"), kind: "info",   icon: "sports_esports" },
-            { label: qsTr("Runner"),    kind: "runner", icon: "wine_bar" }
+            { label: qsTr("Runner"),    kind: "runner", icon: RG.runnerIcon(root.config["runner.type"]) }
         ]
         let isFlatpakLauncher = gameModel ? gameModel.is_flatpak() : false
         let isSteamGame = root.config["runner.type"] === "steam"
