@@ -37,6 +37,23 @@ impl std::fmt::Display for ComponentMissing {
 
 impl std::error::Error for ComponentMissing {}
 
+#[derive(Debug)]
+pub struct StoreSignedOut {
+    pub store: String,
+}
+
+impl std::fmt::Display for StoreSignedOut {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "You are signed out of {}, so it cannot start the game.",
+            self.store
+        )
+    }
+}
+
+impl std::error::Error for StoreSignedOut {}
+
 pub fn prepare_launch(game: &Game) -> Result<ResolvedLaunch> {
     let config = assemble_launch(game, EnvPurpose::Session)?;
     reject_slop_env(&config)?;

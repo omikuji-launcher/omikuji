@@ -13,6 +13,12 @@ DialogCard {
     property string message: ""
     property string action: ""
 
+    readonly property var actionLabels: ({
+        open_game_settings: qsTr("Open Settings"),
+        open_global_settings: qsTr("Open Settings"),
+        open_epic_store: qsTr("Sign in")
+    })
+
     signal actionRequested(string action, string gameId)
     signal dismissed()
 
@@ -123,7 +129,7 @@ DialogCard {
             onClicked: { root.dismissed(); root.close() }
         }
         M3Button {
-            text: qsTr("Open Settings")
+            text: root.actionLabels[root.action] || qsTr("Open Settings")
             variant: "filled"
             visible: root.action.length > 0
             onClicked: { root.actionRequested(root.action, root.gameId); root.close() }

@@ -578,14 +578,7 @@ fn refuse_if_busy(game: &Game) -> bool {
 
 fn notify_launch_failed(game_id: String, e: &omikuji_core::anyhow::Error) {
     omikuji_core::process::notify_game_exited(&game_id);
-    let action = if e
-        .downcast_ref::<omikuji_core::launch::ComponentMissing>()
-        .is_some()
-    {
-        omikuji_core::process::ErrorAction::OpenGlobalSettings
-    } else {
-        omikuji_core::process::ErrorAction::OpenGameSettings
-    };
+    let action = omikuji_core::process::ErrorAction::for_launch_error(e);
     omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
         game_id,
         title: "Couldn't launch".to_string(),

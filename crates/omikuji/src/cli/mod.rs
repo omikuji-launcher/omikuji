@@ -241,7 +241,7 @@ fn launch_and_wait(game: &Game, report: &Report) -> i32 {
             report.error(
                 "Couldn't launch",
                 e.to_string(),
-                ErrorAction::OpenGameSettings,
+                ErrorAction::for_launch_error(&e),
             );
             return 1;
         }
@@ -266,7 +266,7 @@ fn launch_and_wait(game: &Game, report: &Report) -> i32 {
         report.error(
             "Couldn't launch",
             e.to_string(),
-            ErrorAction::OpenGameSettings,
+            ErrorAction::for_launch_error(&e),
         );
         return 1;
     }

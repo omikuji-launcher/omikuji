@@ -123,6 +123,26 @@ ApplicationWindow {
         }
     }
 
+    function openStore(storeName) {
+        navTabs.currentBottom = ""
+        if (storeName === "Steam") {
+            navTabs.currentStore = "Steam"
+            root.currentView = "steam"
+        } else if (storeName === "Epic") {
+            navTabs.currentStore = "Epic"
+            root.currentView = "epic"
+        } else if (storeName === "GOG") {
+            navTabs.currentStore = "GOG"
+            root.currentView = "gog"
+        } else if (storeName === "Nile") {
+            navTabs.currentStore = "Nile"
+            root.currentView = "nile"
+        } else if (storeName === "HoYo") {
+            navTabs.currentStore = "HoYo"
+            root.currentView = "hoyo"
+        }
+    }
+
     function launchFromTray(gameId) {
         if (!gameId) return
         for (let i = 0; i < gameModel.count; i++) {
@@ -611,25 +631,7 @@ property real cardZoom: appSettings.cardZoom
 
         onCategoryMenuRequested: (sourceIndex, x, y) => categoryMenu.show(sourceIndex, x, y)
 
-        onStoreSelected: (storeName) => {
-            navTabs.currentBottom = ""
-            if (storeName === "Steam") {
-                navTabs.currentStore = "Steam"
-                root.currentView = "steam"
-            } else if (storeName === "Epic") {
-                navTabs.currentStore = "Epic"
-                root.currentView = "epic"
-            } else if (storeName === "GOG") {
-                navTabs.currentStore = "GOG"
-                root.currentView = "gog"
-            } else if (storeName === "Nile") {
-                navTabs.currentStore = "Nile"
-                root.currentView = "nile"
-            } else if (storeName === "HoYo") {
-                navTabs.currentStore = "HoYo"
-                root.currentView = "hoyo"
-            }
-        }
+        onStoreSelected: (storeName) => root.openStore(storeName)
 
         onTabSelected: (index) => {
             navTabs.currentStore = ""
@@ -1327,6 +1329,8 @@ property real cardZoom: appSettings.cardZoom
                 }
             } else if (act === "open_global_settings") {
                 root.activeModal = "globalSettings"
+            } else if (act === "open_epic_store") {
+                root.openStore("Epic")
             }
         }
     }

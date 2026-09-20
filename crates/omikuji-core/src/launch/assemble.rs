@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use super::ComponentMissing;
 use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
 use super::wine::{WineVariant, resolve_wine_exe};
+use super::{ComponentMissing, StoreSignedOut};
 use crate::library::Game;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::template_vars::TemplateVars;
@@ -78,6 +78,11 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
                 name: "Legendary".to_string(),
             })
         })?;
+        if !crate::store::epic::logged_in() {
+            return Err(anyhow::Error::new(StoreSignedOut {
+                store: "Epic Games".to_string(),
+            }));
+        }
         let prefix = resolve_prefix(game);
         // legendary wants the source app_id, falling back to metadata.id for games impoted before the source section existed
         let app_id = if !game.source.app_id.is_empty() {

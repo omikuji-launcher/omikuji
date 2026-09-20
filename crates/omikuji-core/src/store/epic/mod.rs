@@ -31,7 +31,7 @@ impl EpicStore {
     }
 
     pub fn is_logged_in(&self) -> bool {
-        legendary_user_json().map(|p| p.exists()).unwrap_or(false)
+        logged_in()
     }
 
     pub fn get_login_url() -> String {
@@ -182,6 +182,10 @@ impl EpicStore {
 
 fn legendary_user_json() -> Option<PathBuf> {
     Some(dirs::config_dir()?.join("legendary").join("user.json"))
+}
+
+pub fn logged_in() -> bool {
+    legendary_user_json().is_some_and(|p| p.exists())
 }
 
 fn read_display_name() -> Option<String> {

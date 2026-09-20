@@ -500,14 +500,29 @@ pub enum ErrorAction {
     None,
     OpenGameSettings,
     OpenGlobalSettings,
+    OpenEpicStore,
 }
 
 impl ErrorAction {
+    pub fn for_launch_error(e: &anyhow::Error) -> Self {
+        if e.downcast_ref::<crate::launch::StoreSignedOut>().is_some() {
+            Self::OpenEpicStore
+        } else if e
+            .downcast_ref::<crate::launch::ComponentMissing>()
+            .is_some()
+        {
+            Self::OpenGlobalSettings
+        } else {
+            Self::OpenGameSettings
+        }
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::None => "",
             Self::OpenGameSettings => "open_game_settings",
             Self::OpenGlobalSettings => "open_global_settings",
+            Self::OpenEpicStore => "open_epic_store",
         }
     }
 }
