@@ -13,6 +13,27 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.17.0
+Added:
+- Controller and Keyboard navigation 
+- Poster card style
+- Gachas manifest's installation options (e.g, Zenless Zone Zero DirectX 12 toggle)
+- Launcher session logs files
+
+Changed:
+- Vignette card style as default
+- Reworked gachas manifests and tree
+- Dynamic PROTON_VERB 
+- GAMEID and STORE envs for protonfixes (smh)
+- Flatpak, wine and runner icons restyle
+
+Fixes:
+- Epic's logged out error dialog when running a game
+- Play button state for repairing GOG/Epic games
+- Downloading game name ellpsis
+- AppImage portal platform theme env
+- socket=x11 for Flatpak
+
 ## 0.16.2
 
 Added:

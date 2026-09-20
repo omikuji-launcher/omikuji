@@ -22,6 +22,22 @@
     </p>
   </description>
   <releases>
+    <release version="0.17.0" date="2026-09-20">
+      <description>
+        <ul>
+          <li>Controller and keyboard navigation</li>
+          <li>poster card style</li>
+          <li>gachas manifest's installation options</li>
+          <li>launcher session logs files</li>
+          <li>vignette card style as default</li>
+          <li>reworked gachas manifests and tree</li>
+          <li>dynamic proton_verb</li>
+          <li>minor ui tweaks</li>
+          <li>appimage portal platform theme env</li>
+          <li>socket=x11 for flatpak (rather than fallback-x11)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.16.2" date="2026-09-15">
       <description>
         <ul>

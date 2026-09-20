@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.16.2
+Version:        0.17.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,18 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Sun Sep 20 2026 reakjra <reakjra@proton.me> - 0.17.0-1
+- Controller and keyboard navigation
+- poster card style
+- gachas manifest's installation options
+- launcher session logs files
+- vignette card style as default
+- reworked gachas manifests and tree
+- dynamic proton_verb
+- minor ui tweaks
+- appimage portal platform theme env
+- socket=x122 for flatpak (rather than fallback-x11)
+
 * Tue Sep 15 2026 reakjra <reakjra@proton.me> - 0.16.2-1
 - minor ui tweaks
 - drop qt5-compat dependency
