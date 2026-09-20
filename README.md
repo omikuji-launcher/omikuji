@@ -196,7 +196,7 @@ mhhhhhhhh).
 
 \- **Console mode**: controller driven UI. With glsl shaders backgrounds! crazy right?
 
-\- **Other things that dont need a mention**: SteamGridDB art fetch, shortcuts, Discord RPC, dll/env sets (i love these i need to flex them), cards order/filters, logs regex highlight, customizable look (svgs fill, modals sizes, colors, fonts, etc.), customizable paths (runners, prefixes, scripts, cache, etc.)
+\- **Other things that dont need a mention**: SteamGridDB art fetch, shortcuts, Discord RPC, dll/env sets (i love these i need to flex them), cards order/filters, logs regex highlight, customizable look (svgs fill, modals sizes, colors, fonts, etc.), customizable paths (runners, prefixes, scripts, cache, etc.), keyboard & controller navigation
 
 #### CLI commands
 

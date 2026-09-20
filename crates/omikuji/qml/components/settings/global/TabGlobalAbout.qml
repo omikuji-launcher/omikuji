@@ -36,7 +36,7 @@ Item {
                 spacing: 6
 
                 Text {
-                    text: qsTr("A Qt/QML based wine apps launcher for Linux.")
+                    text: qsTr("QtQuick based game launcher for Linux.")
                     color: Theme.text
                     font.pixelSize: Theme.type.subtitle.size
                 }
