@@ -1,3 +1,13 @@
+use cxx_qt_lib::QString;
+
+pub fn csv_ids(csv: &QString) -> Vec<String> {
+    csv.to_string()
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
 pub mod app_settings;
 pub mod archive_manager;
 pub mod components;

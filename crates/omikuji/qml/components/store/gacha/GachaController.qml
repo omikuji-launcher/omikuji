@@ -37,7 +37,7 @@ Item {
 
     Connections {
         target: ctrl.downloadModel
-        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs, alongside) {
+        function onDownload_completed(id, source, appId, displayName, installPath, prefixPath, runnerVersion, dlcs, optionsCsv) {
             if (!ctrl.gameModel) return
             if (["hoyo", "endfield", "kuro", "yostar"].indexOf(source) === -1) return
             let raw = ctrl.gameModel.gacha_manifest_for_app_id(appId)
@@ -50,7 +50,7 @@ Item {
             if (m) {
                 ctrl.gameModel.gacha_import_after_install(
                     m.manifest_id, m.edition_id,
-                    installPath, runnerVersion, prefixPath, alongside
+                    installPath, runnerVersion, prefixPath, optionsCsv
                 )
             }
         }

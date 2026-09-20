@@ -169,7 +169,7 @@ impl super::qobject::GameModel {
         install_path: &QString,
         runner_version: &QString,
         prefix_path: &QString,
-        alongside: bool,
+        options_csv: &QString,
     ) -> QString {
         use omikuji_core::library::{
             GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
@@ -239,10 +239,8 @@ impl super::qobject::GameModel {
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };
-        let companion = alongside.then(|| manifest.alongside.clone()).flatten();
-        if let Some(spec) = &companion {
-            spec.apply_to(&mut game.launch);
-        }
+        let accepted = crate::bridge::csv_ids(options_csv);
+        let companion = manifest.apply_options(&accepted, &mut game.launch).cloned();
         game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {

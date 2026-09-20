@@ -143,7 +143,7 @@ pub fn enqueue_install(source: &str, game: &StoreGame, opts: &InstallOptions) ->
         destructive_cleanup: !opts.is_import && !opts.import_existing,
         start_paused: false,
         dlcs: serde_json::from_str(&opts.dlcs.to_string()).unwrap_or_default(),
-        alongside: false,
+        options: Vec::new(),
     };
 
     QString::from(&downloads::manager().enqueue(req))

@@ -655,7 +655,7 @@ pub mod qobject {
             install_path: &QString,
             runner_version: &QString,
             prefix_path: &QString,
-            alongside: bool,
+            options_csv: &QString,
         ) -> QString;
 
         #[qinvokable]

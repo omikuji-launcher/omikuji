@@ -9,6 +9,8 @@ use omikuji_core::downloads::{
     self, DownloadEntry, DownloadEvent, DownloadKind, DownloadRequest, DownloadStatus,
 };
 
+use super::csv_ids;
+
 include!(concat!(env!("OUT_DIR"), "/download_model_bridge.rs"));
 
 fn status_label(s: &DownloadStatus) -> &'static str {
@@ -153,7 +155,7 @@ impl qobject::DownloadModel {
             destructive_cleanup: true,
             start_paused: false,
             dlcs: Vec::new(),
-            alongside: false,
+            options: Vec::new(),
         };
         let id = downloads::manager().enqueue(req);
         QString::from(&id)
@@ -169,7 +171,7 @@ impl qobject::DownloadModel {
         prefix_path: &QString,
         temp_path: &QString,
         import_existing: bool,
-        alongside: bool,
+        options_csv: &QString,
     ) -> QString {
         use omikuji_core::gacha::{manifest as gm, strategies};
 
@@ -179,12 +181,7 @@ impl qobject::DownloadModel {
             return QString::default();
         };
         let eid = edition_id.to_string();
-        let voices: Vec<String> = voices_csv
-            .to_string()
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
+        let voices = csv_ids(voices_csv);
         let prefix = prefix_path.to_string();
         let temp = temp_path.to_string();
 
@@ -211,7 +208,7 @@ impl qobject::DownloadModel {
                 return QString::default();
             }
         };
-        req.alongside = alongside;
+        req.options = csv_ids(options_csv);
         if import_existing {
             req.kind = downloads::DownloadKind::ImportExisting;
             req.destructive_cleanup = false;
@@ -302,7 +299,7 @@ impl qobject::DownloadModel {
                     prefix_path,
                     runner_version,
                     dlcs,
-                    alongside,
+                    options,
                 } => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
                         let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
@@ -331,7 +328,7 @@ impl qobject::DownloadModel {
                         &QString::from(
                             &serde_json::to_string(&dlcs).unwrap_or_else(|_| "[]".to_string()),
                         ),
-                        alongside,
+                        &QString::from(&options.join(",")),
                     );
                 }
                 DownloadEvent::Failed(id, err) => {

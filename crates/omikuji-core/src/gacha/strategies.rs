@@ -168,7 +168,7 @@ pub fn build_install_request(
         destructive_cleanup: true,
         start_paused: false,
         dlcs: Vec::new(),
-        alongside: false,
+        options: Vec::new(),
     })
 }
 

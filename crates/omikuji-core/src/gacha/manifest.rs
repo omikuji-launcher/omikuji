@@ -40,7 +40,7 @@ pub struct GachaManifest {
     #[serde(default)]
     pub telemetry_block: Vec<String>,
     #[serde(default)]
-    pub alongside: Option<ManifestAlongside>,
+    pub options: Vec<ManifestOption>,
     #[serde(default)]
     pub env: IndexMap<String, String>,
 
@@ -71,6 +71,37 @@ impl GachaManifest {
     pub fn strategy_for(&self, edition: &ManifestEdition) -> InstallStrategy {
         edition.install_strategy.unwrap_or(self.install_strategy)
     }
+
+    pub fn apply_options(
+        &self,
+        accepted: &[String],
+        launch: &mut crate::library::LaunchConfig,
+    ) -> Option<&ManifestAlongside> {
+        let mut companion = None;
+        for opt in self
+            .options
+            .iter()
+            .filter(|o| accepted.iter().any(|a| a == &o.id))
+        {
+            launch.args.extend(opt.args.iter().cloned());
+            launch
+                .env
+                .extend(opt.env.iter().map(|(k, v)| (k.clone(), v.clone())));
+
+            let Some(spec) = &opt.alongside else { continue };
+            if companion.is_some() {
+                tracing::warn!(
+                    "manifest '{}': option '{}' brings a second companion, only one is supported",
+                    self.id,
+                    opt.id
+                );
+                continue;
+            }
+            spec.apply_to(launch);
+            companion = Some(spec);
+        }
+        companion
+    }
 }
 
 fn default_true() -> bool {
@@ -78,10 +109,22 @@ fn default_true() -> bool {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ManifestOption {
+    pub id: String,
+    pub label: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub env: IndexMap<String, String>,
+    #[serde(default)]
+    pub alongside: Option<ManifestAlongside>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ManifestAlongside {
     pub name: String,
-    #[serde(default)]
-    pub label: String,
     pub repo: String,
     pub exe: String,
     #[serde(default)]
@@ -93,14 +136,6 @@ pub struct ManifestAlongside {
 }
 
 impl ManifestAlongside {
-    pub fn label(&self) -> &str {
-        if self.label.is_empty() {
-            &self.name
-        } else {
-            &self.label
-        }
-    }
-
     pub fn install_dir(&self) -> std::path::PathBuf {
         crate::tools_dir().join(&self.name)
     }
@@ -230,7 +265,7 @@ mod tests {
             anti_cheat: String::new(),
             runner: String::new(),
             telemetry_block: vec![],
-            alongside: None,
+            options: vec![],
             env: IndexMap::new(),
             letter_fallback: "T".into(),
             uses_temp_dir: true,

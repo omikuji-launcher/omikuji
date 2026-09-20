@@ -44,8 +44,15 @@ DialogCard {
     property string manifestId: ""
     property var manifest: null
 
-    readonly property var companion: manifest && manifest.alongside ? manifest.alongside : null
-    property bool companionAccepted: false
+    readonly property var optionRows:
+        root.manifest && root.manifest.options ? root.manifest.options : []
+    property var acceptedOptions: ({})
+
+    function optionsCsv() {
+        return Object.keys(root.acceptedOptions)
+            .filter(id => root.acceptedOptions[id])
+            .join(",")
+    }
 
     signal installEnqueued(string downloadId)
     signal imported(string gameId)
@@ -204,7 +211,7 @@ DialogCard {
         runnerPhase = ""
         runnerPercent = 0
         runnerError = ""
-        companionAccepted = false
+        acceptedOptions = ({})
         sizeFetchDebounce.stop()
     }
 
@@ -315,7 +322,7 @@ DialogCard {
         if (importing && !downloadModel.gacha_supports_import(manifestId, editionId)) {
             let gid = gameModel.gacha_import_after_install(
                 manifestId, editionId, importDir, runner, prefixPath,
-                companionAccepted
+                optionsCsv()
             )
             imported(gid || "")
             close()
@@ -324,7 +331,7 @@ DialogCard {
         let id = downloadModel.enqueue_gacha(
             manifestId, editionId, voicesSelected().join(","),
             importing ? importDir : effectiveInstallPath,
-            runner, prefixPath, tempPath, importing, companionAccepted
+            runner, prefixPath, tempPath, importing, optionsCsv()
         )
         if (id && id.length > 0) installEnqueued(id)
         close()
@@ -697,16 +704,27 @@ DialogCard {
         DialogSection {
             Layout.fillWidth: true
             label: qsTr("Misc")
-            visible: root.companion !== null
+            visible: root.optionRows.length > 0
 
-            SwitchField {
-                width: parent.width
-                label: root.companion ? (root.companion.label || root.companion.name) : ""
-                description: root.companion
-                    ? (root.companion.repo || "").replace(/^https?:\/\//, "")
-                    : ""
-                checked: root.companionAccepted
-                onToggled: (val) => root.companionAccepted = val
+            Repeater {
+                model: root.optionRows
+
+                SwitchField {
+                    required property var modelData
+                    width: parent.width
+                    label: modelData.label
+                    description: modelData.description !== ""
+                        ? modelData.description
+                        : (modelData.alongside
+                            ? modelData.alongside.repo.replace(/^https?:\/\//, "")
+                            : "")
+                    checked: root.acceptedOptions[modelData.id] === true
+                    onToggled: (val) => {
+                        let next = Object.assign({}, root.acceptedOptions)
+                        next[modelData.id] = val
+                        root.acceptedOptions = next
+                    }
+                }
             }
         }
     }
