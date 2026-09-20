@@ -2,6 +2,7 @@ use crate::media::slugify;
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -351,10 +352,8 @@ impl Library {
         crate::library_dir()
     }
 
-    // scan library/ for entries matching the given source kind and return their app_ids.
-    // cheap-ish directory scan; callers can spawn-blocking if needed off the ui thread.
-    pub fn app_ids_for_source(kind: &str) -> Vec<String> {
-        let mut out = Vec::new();
+    pub fn game_ids_by_app_id(kind: &str) -> HashMap<String, String> {
+        let mut out = HashMap::new();
         let dir = Self::library_dir();
         let Ok(entries) = std::fs::read_dir(&dir) else {
             return out;
@@ -371,7 +370,7 @@ impl Library {
                 continue;
             };
             if game.source.kind == kind && !game.source.app_id.is_empty() {
-                out.push(game.source.app_id);
+                out.insert(game.source.app_id, game.metadata.id);
             }
         }
         out

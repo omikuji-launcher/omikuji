@@ -3,7 +3,7 @@ use cxx_qt_lib::{
 };
 use omikuji_core::downloads::{self, DownloadKind, DownloadRequest};
 use omikuji_core::store::StoreGame;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 enum Role {
@@ -41,7 +41,12 @@ pub fn role_names() -> QHash<QHashPair_i32_QByteArray> {
     roles
 }
 
-pub fn role_data(games: &[StoreGame], imported: &HashSet<String>, row: i32, role: i32) -> QVariant {
+pub fn role_data(
+    games: &[StoreGame],
+    library_ids: &HashMap<String, String>,
+    row: i32,
+    role: i32,
+) -> QVariant {
     let Some(game) = usize::try_from(row).ok().and_then(|i| games.get(i)) else {
         return QVariant::default();
     };
@@ -60,7 +65,7 @@ pub fn role_data(games: &[StoreGame], imported: &HashSet<String>, row: i32, role
         }
         r if r == Role::IsInstalled as i32 => QVariant::from(&game.is_installed),
         r if r == Role::HasLibraryEntry as i32 => {
-            QVariant::from(&imported.contains(&game.app_name))
+            QVariant::from(&library_ids.contains_key(&game.app_name))
         }
         r if r == Role::InstallPath as i32 => {
             QVariant::from(&QString::from(&install_path_string(game)))
@@ -71,7 +76,7 @@ pub fn role_data(games: &[StoreGame], imported: &HashSet<String>, row: i32, role
 
 pub fn game_map(
     games: &[StoreGame],
-    imported: &HashSet<String>,
+    library_ids: &HashMap<String, String>,
     index: i32,
 ) -> QMap<QMapPair_QString_QVariant> {
     let mut m = QMap::<QMapPair_QString_QVariant>::default();
@@ -97,7 +102,7 @@ pub fn game_map(
         ("isInstalled", QVariant::from(&g.is_installed)),
         (
             "hasLibraryEntry",
-            QVariant::from(&imported.contains(&g.app_name)),
+            QVariant::from(&library_ids.contains_key(&g.app_name)),
         ),
         (
             "installPath",
@@ -116,6 +121,7 @@ pub struct InstallOptions<'a> {
     pub is_import: bool,
     pub import_existing: bool,
     pub dlcs: &'a QString,
+    pub game_id: &'a str,
 }
 
 pub fn enqueue_install(source: &str, game: &StoreGame, opts: &InstallOptions) -> QString {
@@ -124,7 +130,7 @@ pub fn enqueue_install(source: &str, game: &StoreGame, opts: &InstallOptions) ->
     let req = DownloadRequest {
         source: source.to_string(),
         app_id: game.app_name.clone(),
-        game_id: String::new(),
+        game_id: opts.game_id.to_string(),
         display_name: game.title.clone(),
         banner_url: game.coverart.clone().or(game.banner.clone()),
         install_path: PathBuf::from(opts.install_path.to_string()),

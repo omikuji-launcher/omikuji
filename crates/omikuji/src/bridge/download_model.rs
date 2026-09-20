@@ -5,9 +5,7 @@ use std::path::PathBuf;
 use cxx_qt::CxxQtType;
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 
-use omikuji_core::downloads::{
-    self, DownloadEntry, DownloadEvent, DownloadKind, DownloadRequest, DownloadStatus,
-};
+use omikuji_core::downloads::{self, DownloadEntry, DownloadEvent, DownloadKind, DownloadStatus};
 
 use super::csv_ids;
 
@@ -122,45 +120,6 @@ fn recompute(entries: &[DownloadEntry], prev_hero: &str) -> Counts {
 }
 
 impl qobject::DownloadModel {
-    fn enqueue_epic(
-        self: Pin<&mut Self>,
-        app_id: &QString,
-        display_name: &QString,
-        banner_url: &QString,
-        install_path: &QString,
-        prefix_path: &QString,
-        runner_version: &QString,
-    ) -> QString {
-        let banner = banner_url.to_string();
-        let prefix = prefix_path.to_string();
-        let req = DownloadRequest {
-            source: "epic".to_string(),
-            app_id: app_id.to_string(),
-            game_id: String::new(),
-            display_name: display_name.to_string(),
-            banner_url: if banner.is_empty() {
-                None
-            } else {
-                Some(banner)
-            },
-            install_path: PathBuf::from(install_path.to_string()),
-            prefix_path: if prefix.is_empty() {
-                None
-            } else {
-                Some(PathBuf::from(prefix))
-            },
-            runner_version: runner_version.to_string(),
-            temp_dir: None,
-            kind: omikuji_core::downloads::DownloadKind::Install,
-            destructive_cleanup: true,
-            start_paused: false,
-            dlcs: Vec::new(),
-            options: Vec::new(),
-        };
-        let id = downloads::manager().enqueue(req);
-        QString::from(&id)
-    }
-
     fn enqueue_gacha(
         self: Pin<&mut Self>,
         manifest_id: &QString,

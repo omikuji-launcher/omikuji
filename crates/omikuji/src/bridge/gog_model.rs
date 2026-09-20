@@ -6,7 +6,7 @@ use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
 use omikuji_core::store::StoreGame;
 use omikuji_core::store::gog::GogStore;
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -108,7 +108,7 @@ pub mod qobject {
 
 pub struct GogModelRust {
     pub games: Vec<StoreGame>,
-    pub imported: HashSet<String>,
+    pub library_ids: HashMap<String, String>,
     pub is_logged_in: bool,
     pub is_refreshing: bool,
     pub display_name: QString,
@@ -125,7 +125,7 @@ impl Default for GogModelRust {
 
         Self {
             games: Vec::new(),
-            imported: HashSet::new(),
+            library_ids: HashMap::new(),
             is_logged_in,
             is_refreshing: false,
             display_name,
@@ -145,7 +145,12 @@ impl qobject::GogModel {
     }
 
     pub fn data(&self, index: &QModelIndex, role: i32) -> QVariant {
-        store_model::role_data(&self.rust().games, &self.rust().imported, index.row(), role)
+        store_model::role_data(
+            &self.rust().games,
+            &self.rust().library_ids,
+            index.row(),
+            role,
+        )
     }
 
     pub fn get_login_url(&self) -> QString {
@@ -214,7 +219,7 @@ impl qobject::GogModel {
                 obj.as_mut().begin_reset_model();
                 let rust = obj.as_mut().rust_mut().get_mut();
                 rust.games.clear();
-                rust.imported.clear();
+                rust.library_ids.clear();
                 obj.as_mut().end_reset_model();
             });
         });
@@ -228,13 +233,10 @@ impl qobject::GogModel {
         let qt_thread = self.as_mut().qt_thread();
 
         tokio::spawn(async move {
-            let (cached, imported_pre) = tokio::task::spawn_blocking(|| {
+            let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
                 let games = omikuji_core::store::gog::load_cached_library();
-                let imported: HashSet<String> =
-                    omikuji_core::library::Library::app_ids_for_source("gog")
-                        .into_iter()
-                        .collect();
-                (games, imported)
+                let ids = omikuji_core::library::Library::game_ids_by_app_id("gog");
+                (games, ids)
             })
             .await
             .unwrap_or_default();
@@ -247,7 +249,7 @@ impl qobject::GogModel {
                     obj.as_mut().begin_reset_model();
                     let rust = obj.as_mut().rust_mut().get_mut();
                     rust.games = cached;
-                    rust.imported = imported_pre;
+                    rust.library_ids = ids_pre;
                     obj.as_mut().end_reset_model();
                 });
             }
@@ -259,22 +261,20 @@ impl qobject::GogModel {
 
             match result {
                 Ok(games) => {
-                    let imported: HashSet<String> = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::app_ids_for_source("gog")
-                            .into_iter()
-                            .collect()
+                    let ids = tokio::task::spawn_blocking(|| {
+                        omikuji_core::library::Library::game_ids_by_app_id("gog")
                     })
                     .await
                     .unwrap_or_default();
 
                     let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::GogModel>| {
                         let unchanged =
-                            obj.as_ref().games == games && obj.as_ref().imported == imported;
+                            obj.as_ref().games == games && obj.as_ref().library_ids == ids;
                         if !unchanged {
                             obj.as_mut().begin_reset_model();
                             let rust = obj.as_mut().rust_mut().get_mut();
                             rust.games = games;
-                            rust.imported = imported;
+                            rust.library_ids = ids;
                             obj.as_mut().end_reset_model();
                         }
                         obj.as_mut().set_is_refreshing(false);
@@ -308,6 +308,13 @@ impl qobject::GogModel {
             return QString::default();
         };
 
+        let game_id = self
+            .rust()
+            .library_ids
+            .get(&game.app_name)
+            .cloned()
+            .unwrap_or_default();
+
         store_model::enqueue_install(
             "gog",
             game,
@@ -318,6 +325,7 @@ impl qobject::GogModel {
                 is_import,
                 import_existing,
                 dlcs,
+                game_id: &game_id,
             },
         )
     }
@@ -326,6 +334,6 @@ impl qobject::GogModel {
         &self,
         index: i32,
     ) -> cxx_qt_lib::QMap<cxx_qt_lib::QMapPair_QString_QVariant> {
-        store_model::game_map(&self.rust().games, &self.rust().imported, index)
+        store_model::game_map(&self.rust().games, &self.rust().library_ids, index)
     }
 }

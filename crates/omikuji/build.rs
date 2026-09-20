@@ -302,7 +302,6 @@ fn main() {
         .qsignal_raw("fn download_completed(self: Pin<&mut DownloadModel>, id: &QString, source: &QString, app_id: &QString, display_name: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString, dlcs: &QString, options_csv: &QString);")
         .qsignal_raw("fn download_failed(self: Pin<&mut DownloadModel>, id: &QString, error: &QString);")
         .qsignal_raw("fn state_changed(self: Pin<&mut DownloadModel>);")
-        .custom_invokable_raw("fn enqueue_epic(self: Pin<&mut DownloadModel>, app_id: &QString, display_name: &QString, banner_url: &QString, install_path: &QString, prefix_path: &QString, runner_version: &QString) -> QString;")
         .custom_invokable_raw("fn enqueue_gacha(self: Pin<&mut DownloadModel>, manifest_id: &QString, edition_id: &QString, voices_csv: &QString, install_path: &QString, runner_version: &QString, prefix_path: &QString, temp_path: &QString, import_existing: bool, options_csv: &QString) -> QString;")
         .custom_invokable_raw("fn gacha_supports_import(self: &DownloadModel, manifest_id: &QString, edition_id: &QString) -> bool;")
         .custom_invokable_raw("fn pause(self: Pin<&mut DownloadModel>, id: &QString);")
