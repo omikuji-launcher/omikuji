@@ -112,8 +112,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn gacha_detect_edition(&self, manifest_id: &QString, install_path: &QString) -> QString {
-        let path =
-            omikuji_core::template_vars::TemplateVars::global().expand(&install_path.to_string());
+        let path = crate::bridge::expand_path(install_path);
         omikuji_core::gacha::manifest::find(&manifest_id.to_string())
             .and_then(|m| {
                 omikuji_core::gacha::strategies::detect_edition(&m, std::path::Path::new(&path))
@@ -131,9 +130,8 @@ impl super::qobject::GameModel {
     ) -> QString {
         let mid = manifest_id.to_string();
         let eid = edition_id.to_string();
-        let vars = omikuji_core::template_vars::TemplateVars::global();
-        let path_s = vars.expand(&install_path.to_string());
-        let temp_s = vars.expand(&temp_path.to_string());
+        let path_s = crate::bridge::expand_path(install_path);
+        let temp_s = crate::bridge::expand_path(temp_path);
         if path_s.trim().is_empty() {
             return QString::from(r#"{"bytes":0,"segments":0,"has_install":false}"#);
         }
@@ -178,9 +176,8 @@ impl super::qobject::GameModel {
 
         let mid = manifest_id.to_string();
         let eid = edition_id.to_string();
-        let vars = omikuji_core::template_vars::TemplateVars::global();
-        let install_s = vars.expand(&install_path.to_string());
-        let prefix_s = vars.expand(&prefix_path.to_string());
+        let install_s = crate::bridge::expand_path(install_path);
+        let prefix_s = prefix_path.to_string();
         let runner_s = runner_version.to_string();
 
         let Some(manifest) = omikuji_core::gacha::manifest::find(&mid) else {

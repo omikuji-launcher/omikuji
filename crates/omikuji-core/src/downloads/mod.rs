@@ -353,7 +353,7 @@ impl DownloadManager {
             display_name: req.display_name,
             banner_url: req.banner_url,
             install_path: expand_path(req.install_path),
-            prefix_path: req.prefix_path.map(expand_path),
+            prefix_path: req.prefix_path,
             runner_version: req.runner_version,
             temp_dir: req.temp_dir.map(expand_path),
             kind: req.kind,

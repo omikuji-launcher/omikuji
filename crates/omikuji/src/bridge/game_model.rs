@@ -2214,7 +2214,7 @@ impl qobject::GameModel {
     }
 
     fn disk_free_space(&self, path: &QString) -> QString {
-        let bytes = omikuji_core::desktop::disk_free_space(&path.to_string());
+        let bytes = omikuji_core::desktop::disk_free_space(&crate::bridge::expand_path(path));
         QString::from(&bytes.to_string())
     }
 

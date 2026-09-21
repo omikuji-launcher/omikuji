@@ -50,15 +50,20 @@ pub fn execute<F: FnMut(&str)>(
         .join(format!("{slug}-{id}"));
     std::fs::create_dir_all(&cache)?;
 
-    let prefix = match script.prefix_input() {
+    let (prefix, prefix_literal) = match script.prefix_input() {
         Some(input) => {
             let v = vars.get(&input.id).map(String::as_str).unwrap_or_default();
             if v.trim().is_empty() {
                 bail!("no value for prefix input \"{}\"", input.id);
             }
-            PathBuf::from(v)
+            let literal = sel.get(&input.id).cloned().unwrap_or_else(|| v.to_string());
+            (PathBuf::from(v), literal)
         }
-        None => crate::prefixes_dir().join(format!("{slug}-{id}")),
+        None => {
+            let generated = crate::prefixes_dir().join(format!("{slug}-{id}"));
+            let literal = generated.to_string_lossy().into_owned();
+            (generated, literal)
+        }
     };
 
     vars.insert("prefix".into(), prefix.to_string_lossy().into_owned());
@@ -171,7 +176,7 @@ pub fn execute<F: FnMut(&str)>(
             // a non-wine runner has no prefix of ours to point at, so both stay unset
             if is_wine {
                 game = game
-                    .with_prefix(prefix.to_string_lossy())
+                    .with_prefix(prefix_literal.as_str())
                     .with_runner_version(wine_version.unwrap_or_default());
             }
             game.metadata.id = id;

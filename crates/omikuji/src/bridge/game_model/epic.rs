@@ -13,7 +13,7 @@ impl super::qobject::GameModel {
         install_path: &QString,
     ) -> QString {
         let app_s = app_name.to_string();
-        let install_s = install_path.to_string();
+        let install_s = crate::bridge::expand_path(install_path);
         if app_s.is_empty() || install_s.trim().is_empty() {
             return QString::from(r#"{"bytes":0,"hasResume":false}"#);
         }
@@ -53,7 +53,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn epic_dir_has_game(&self, launch_exe: &QString, install_path: &QString) -> bool {
-        let path = install_path.to_string();
+        let path = crate::bridge::expand_path(install_path);
         if path.trim().is_empty() {
             return false;
         }
