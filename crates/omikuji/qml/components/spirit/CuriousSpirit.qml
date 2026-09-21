@@ -27,7 +27,7 @@ Item {
         PauseAnimation { duration: 900 }
         NumberAnimation { to: 1; duration: 700; easing.type: Easing.OutBack }
         PauseAnimation { duration: 2400 }
-        NumberAnimation { to: 0; duration: 900; easing.type: Easing.InOutQuad }
+        NumberAnimation { to: 0; duration: 800; easing.type: Easing.InBack }
         PauseAnimation { duration: 1500 }
     }
 

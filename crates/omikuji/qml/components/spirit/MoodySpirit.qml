@@ -7,6 +7,8 @@ Item {
     property color accentColor: Theme.accent
     property color markColor: Theme.error
     property real lid: 0.25
+    property real dread: 1
+    property string mark: "bang"
     property bool animated: true
 
     implicitWidth: 62
@@ -32,11 +34,11 @@ Item {
 
         anchors.fill: parent
         anchors.topMargin: Math.round(root.height * 0.03)
-        anchors.rightMargin: Math.round(root.width * 0.18)
+        anchors.rightMargin: root.mark === "bang" ? Math.round(root.width * 0.18) : 0
         accentColor: root.accentColor
         animated: root.animated
         lookUp: -1
-        dread: 1
+        dread: root.dread
         squeeze: Math.max(root.lid, root._blink)
 
         transform: Scale {
@@ -48,9 +50,11 @@ Item {
     }
 
     Text {
-        id: mark
+        id: bang
 
         x: root.width * 0.54
+        y: -root.height * 0.04
+        visible: root.mark === "bang"
         text: "!"
         color: root.markColor
         font.pixelSize: Math.round(root.height * 0.52)
@@ -58,15 +62,24 @@ Item {
 
         transform: [
             Scale {
-                origin.x: mark.width / 2
-                origin.y: mark.height
+                origin.x: bang.width / 2
+                origin.y: bang.height
                 xScale: 1.35
             },
             Rotation {
-                origin.x: mark.width / 2
-                origin.y: mark.height
+                origin.x: bang.width / 2
+                origin.y: bang.height
                 angle: 8
             }
         ]
+    }
+
+    AngerMark {
+        x: root.width * 0.60
+        y: root.height * 0.19
+        width: Math.round(root.height * 0.26)
+        height: width
+        visible: root.mark === "anger"
+        markColor: root.markColor
     }
 }

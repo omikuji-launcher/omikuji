@@ -63,11 +63,11 @@ DialogCard {
             Layout.fillWidth: true
             spacing: Theme.space.sm
 
-            ScaredSpirit {
-                id: scared
+            MoodySpirit {
+                id: moody
 
-                Layout.preferredWidth: scared.implicitWidth
-                Layout.preferredHeight: scared.implicitHeight
+                Layout.preferredWidth: moody.implicitWidth
+                Layout.preferredHeight: moody.implicitHeight
                 Layout.alignment: Qt.AlignVCenter
                 animated: root.shown
             }

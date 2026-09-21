@@ -26,8 +26,8 @@ DialogCard {
 
     function reveal(index) {
         root.drawnIndex = index
-        root.phase = "shaking"
-        root.ritualStart()
+        root.phase = index >= 0 ? "shaking" : "revealed"
+        if (index >= 0) root.ritualStart()
     }
 
     function tierLabel(tier) {
@@ -107,10 +107,12 @@ DialogCard {
             visible: root.phase === "revealed"
 
             Behavior on unroll {
+                enabled: root.game !== null
                 NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
             }
 
             Behavior on stamp {
+                enabled: root.game !== null
                 SequentialAnimation {
                     PauseAnimation { duration: 280 }
                     NumberAnimation { duration: 300; easing.type: Easing.OutBack }
@@ -130,12 +132,22 @@ DialogCard {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
+                    visible: root.reading !== null
                     text: root.reading ? Omikuji.TIERS[root.reading.tier].kanji : ""
                     color: root.tierColor
                     font.pixelSize: 72
                     font.weight: Font.DemiBold
                     opacity: slip.stamp
                     scale: 1.3 - 0.3 * slip.stamp
+                }
+
+                MoodySpirit {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: 150
+                    Layout.preferredHeight: 165
+                    visible: root.reading === null
+                    mark: "anger"
+                    dread: 0
                 }
 
                 Text {
