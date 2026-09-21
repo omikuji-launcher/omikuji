@@ -103,6 +103,7 @@ Item {
                 description: qsTr("Restart to apply")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 220
@@ -183,6 +184,7 @@ Item {
                 label: qsTr("Card flow")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 200
@@ -205,6 +207,7 @@ Item {
                 label: qsTr("Library sort")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 200
@@ -223,6 +226,7 @@ Item {
                 label: qsTr("Card style")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 200
@@ -236,6 +240,7 @@ Item {
                 label: qsTr("Action bar style")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 200
@@ -329,6 +334,7 @@ Item {
                 label: qsTr("Progress style")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
+                contentRightMargin: 74
 
                 M3Dropdown {
                     width: 200
