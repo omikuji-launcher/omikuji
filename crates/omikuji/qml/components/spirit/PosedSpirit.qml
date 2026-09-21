@@ -11,6 +11,7 @@ Item {
     property real wobble: 0
     property real blush: 1
     property real strain: 0
+    property real dread: 0
     property bool animated: true
 
     implicitWidth: 136
@@ -28,6 +29,7 @@ Item {
         property real wobble: root.wobble
         property real blush: root.blush
         property real strain: root.strain
+        property real dread: root.dread
         property size resolution: Qt.size(fx.width, fx.height)
         property color accentColor: root.accentColor
         property color coreColor: root.coreColor

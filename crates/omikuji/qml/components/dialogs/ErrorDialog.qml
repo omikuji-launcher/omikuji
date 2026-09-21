@@ -63,18 +63,13 @@ DialogCard {
             Layout.fillWidth: true
             spacing: Theme.space.sm
 
-            Rectangle {
-                width: 36; height: 36; radius: 18
-                color: Theme.alpha(Theme.error, 0.18)
-                Text {
-                    anchors.fill: parent
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    text: "!"
-                    color: Theme.error
-                    font.pixelSize: 20
-                    font.weight: Font.Bold
-                }
+            ScaredSpirit {
+                id: scared
+
+                Layout.preferredWidth: scared.implicitWidth
+                Layout.preferredHeight: scared.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+                animated: root.shown
             }
 
             ColumnLayout {

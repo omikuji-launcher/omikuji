@@ -9,6 +9,7 @@ layout(std140, binding = 0) uniform buf {
     float wobble;
     float blush;
     float strain;
+    float dread;
     vec2 resolution;
     vec4 accentColor;
     vec4 coreColor;
@@ -84,6 +85,15 @@ void main() {
 
     float strain = clamp(ubuf.strain, 0.0, 1.0);
     col = mix(col, vec3(0.15, 0.12, 0.16), mix(pupil, chevron, strain));
+
+    float dread = clamp(ubuf.dread, 0.0, 1.0);
+    col = mix(col, col * 0.42, smoothstep(0.010, 0.190, p.y) * dread);
+
+    float u = (p.x - p.y * 0.325) / 0.048;
+    float hatch = 1.0 - smoothstep(0.10, 0.20, abs(fract(u + 0.5) - 0.5));
+    hatch *= 1.0 - smoothstep(0.075, 0.135, abs(p.x));
+    hatch *= smoothstep(0.070, 0.100, p.y) * (1.0 - smoothstep(0.150, 0.190, p.y));
+    col = mix(col, vec3(0.35, 0.45, 0.85), hatch * dread * 0.85);
 
     fragColor = vec4(col, 1.0) * mask * ubuf.qt_Opacity;
 }
