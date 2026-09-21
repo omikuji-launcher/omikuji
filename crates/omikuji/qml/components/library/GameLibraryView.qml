@@ -44,7 +44,7 @@ Rectangle {
     signal wineToolsRequested()
 
     function handleActionKey(event) {
-        if (!root.active || !root.actions || !root.actions.hasSelection || event.modifiers !== Qt.NoModifier) return false
+        if (!root.active || !root.selectionVisible || event.modifiers !== Qt.NoModifier) return false
         switch (event.key) {
         case Qt.Key_E:
             root.settingsRequested(root.actions.selectedIndex)
@@ -87,6 +87,23 @@ Rectangle {
         return root.passes(index, game.name || "", game.hidden === true, game.favourite === true)
             ? game
             : null
+    }
+
+    property int modelRevision: 0
+
+    readonly property bool selectionVisible: {
+        root.modelRevision
+        return root.actions !== null
+            && root.actions.hasSelection
+            && root._passingGame(root.actions.selectedIndex) !== null
+    }
+
+    Connections {
+        target: root.gameModel
+        function onDataChanged() {
+            root.modelRevision++
+            root._recomputeEmpty()
+        }
     }
 
     function drawPool(excluded) {
@@ -218,7 +235,7 @@ Rectangle {
         surfaceRadius: root.radius
         actions: root.actions
         selectedGame: root.actions ? root.actions.selectedGame : null
-        hasSelection: root.actions ? root.actions.hasSelection : false
+        hasSelection: root.selectionVisible
         isRunning: root.actions ? root.actions.isRunning : false
         isLaunching: root.actions ? root.actions.isLaunching : false
         runnerUpdating: root.actions ? root.actions.runnerUpdating : false
