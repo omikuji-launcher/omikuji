@@ -1011,6 +1011,19 @@
     </message>
 </context>
 <context>
+    <name>FloatingBarStyles</name>
+    <message>
+        <location filename="../qml/components/singletons/FloatingBarStyles.qml" line="8"/>
+        <source>Floating</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/FloatingBarStyles.qml" line="9"/>
+        <source>Docked</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>FontSizesDialog</name>
     <message>
         <location filename="../qml/components/settings/global/FontSizesDialog.qml" line="11"/>
@@ -2021,174 +2034,174 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="944"/>
+        <location filename="../qml/Main.qml" line="947"/>
         <source>This will stop &quot;%1&quot; and delete the partially downloaded files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="949"/>
+        <location filename="../qml/Main.qml" line="952"/>
         <source>Nile cannot resume a partial file. Pausing &quot;%1&quot; throws away the %2 it is currently writing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1035"/>
+        <location filename="../qml/Main.qml" line="1038"/>
         <source>Cancel download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1036"/>
+        <location filename="../qml/Main.qml" line="1039"/>
         <source>Cancel &amp; delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1037"/>
+        <location filename="../qml/Main.qml" line="1040"/>
         <source>Keep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1045"/>
+        <location filename="../qml/Main.qml" line="1048"/>
         <source>Pause download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1046"/>
+        <location filename="../qml/Main.qml" line="1049"/>
         <source>Pause anyway</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1047"/>
+        <location filename="../qml/Main.qml" line="1050"/>
         <source>Keep downloading</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1055"/>
+        <location filename="../qml/Main.qml" line="1058"/>
         <source>Refetch art from SGDB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1056"/>
+        <location filename="../qml/Main.qml" line="1059"/>
         <source>Replaces the cached banner, cover art, and icon with a fresh pull from SteamGridDB. Manual overrides you&apos;ve set won&apos;t be touched.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1057"/>
+        <location filename="../qml/Main.qml" line="1060"/>
         <source>Refetch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1058"/>
-        <location filename="../qml/Main.qml" line="1420"/>
+        <location filename="../qml/Main.qml" line="1061"/>
+        <location filename="../qml/Main.qml" line="1423"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1065"/>
+        <location filename="../qml/Main.qml" line="1068"/>
         <source>Art preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1089"/>
+        <location filename="../qml/Main.qml" line="1092"/>
         <source>Environment sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1090"/>
+        <location filename="../qml/Main.qml" line="1093"/>
         <source>Manage env sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1101"/>
+        <location filename="../qml/Main.qml" line="1104"/>
         <source>DLL override sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1102"/>
+        <location filename="../qml/Main.qml" line="1105"/>
         <source>Manage DLL sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1173"/>
+        <location filename="../qml/Main.qml" line="1176"/>
         <source>Removes &quot;%1&quot; from your sources. Installed versions stay on disk and keep working; adding a source with the same name picks them up again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1201"/>
+        <location filename="../qml/Main.qml" line="1204"/>
         <source>Couldn&apos;t delete runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1202"/>
+        <location filename="../qml/Main.qml" line="1205"/>
         <source>%1 deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1215"/>
+        <location filename="../qml/Main.qml" line="1218"/>
         <source>Couldn&apos;t update Steam links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1220"/>
+        <location filename="../qml/Main.qml" line="1223"/>
         <source>Steam links updated for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1220"/>
-        <location filename="../qml/Main.qml" line="1231"/>
+        <location filename="../qml/Main.qml" line="1223"/>
+        <location filename="../qml/Main.qml" line="1234"/>
         <source>Restart Steam to see it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1231"/>
+        <location filename="../qml/Main.qml" line="1234"/>
         <source>%1 moved to Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1239"/>
+        <location filename="../qml/Main.qml" line="1242"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1244"/>
+        <location filename="../qml/Main.qml" line="1247"/>
         <source>Couldn&apos;t remove source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1269"/>
+        <location filename="../qml/Main.qml" line="1272"/>
         <source>Update queued</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1271"/>
+        <location filename="../qml/Main.qml" line="1274"/>
         <source>Update failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1271"/>
+        <location filename="../qml/Main.qml" line="1274"/>
         <source>Could not enqueue update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1310"/>
+        <location filename="../qml/Main.qml" line="1313"/>
         <source>Installing umu-run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1311"/>
+        <location filename="../qml/Main.qml" line="1314"/>
         <source>See Downloads for progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1360"/>
+        <location filename="../qml/Main.qml" line="1363"/>
         <source>Game added</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1387"/>
+        <location filename="../qml/Main.qml" line="1390"/>
         <source>Translation layers changed</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1389"/>
+        <location filename="../qml/Main.qml" line="1392"/>
         <source>Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.
 
 So %n Proton game(s) would start running on Wine&apos;s own Direct3D instead of what they use today. Turning those toggles back on keeps them exactly as they are.
@@ -2202,17 +2215,17 @@ Each one is set to Built-in, so it uses the DLLs the runner already ships. Nothi
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1390"/>
+        <location filename="../qml/Main.qml" line="1393"/>
         <source>Update games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1391"/>
+        <location filename="../qml/Main.qml" line="1394"/>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1403"/>
+        <location filename="../qml/Main.qml" line="1406"/>
         <source>This deletes the prefix and everything in it. %n game(s) use it, and it won&apos;t be recoverable.</source>
         <translation type="unfinished">
             <numerusform></numerusform>
@@ -2220,57 +2233,57 @@ Each one is set to Built-in, so it uses the DLLs the runner already ships. Nothi
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1404"/>
+        <location filename="../qml/Main.qml" line="1407"/>
         <source>This deletes the prefix and everything in it. It won&apos;t be recoverable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1418"/>
+        <location filename="../qml/Main.qml" line="1421"/>
         <source>Delete prefix?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1419"/>
+        <location filename="../qml/Main.qml" line="1422"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1464"/>
+        <location filename="../qml/Main.qml" line="1467"/>
         <source>Configure (winecfg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1466"/>
+        <location filename="../qml/Main.qml" line="1469"/>
         <source>Registry (regedit)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1467"/>
+        <location filename="../qml/Main.qml" line="1470"/>
         <source>Command Prompt (cmd)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1468"/>
+        <location filename="../qml/Main.qml" line="1471"/>
         <source>File Explorer (explorer)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1469"/>
+        <location filename="../qml/Main.qml" line="1472"/>
         <source>Run EXE in prefix…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1470"/>
+        <location filename="../qml/Main.qml" line="1473"/>
         <source>Run wine command…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1471"/>
+        <location filename="../qml/Main.qml" line="1474"/>
         <source>Kill wineserver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1489"/>
+        <location filename="../qml/Main.qml" line="1492"/>
         <source>Select EXE to run in prefix</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4430,182 +4443,197 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="123"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="124"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="127"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="128"/>
         <source>UI zoom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="143"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="144"/>
         <source>Card size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="158"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="159"/>
         <source>Card spacing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="173"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="174"/>
         <source>Card shadow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="183"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="184"/>
         <source>Card flow</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="190"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="192"/>
         <source>Left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="191"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="193"/>
         <source>Center</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="192"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="194"/>
         <source>Right</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="205"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="207"/>
         <source>Library sort</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="212"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="215"/>
         <source>Date added</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="213"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="216"/>
         <source>Name A-Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="214"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="217"/>
         <source>Name Z-A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="215"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="218"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="223"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="226"/>
         <source>Card style</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="236"/>
-        <source>Play button on cards</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="240"/>
+        <source>Action bar style</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="237"/>
-        <source>Show a play button on a library card while hovering it</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="247"/>
-        <source>Show hidden games</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="248"/>
-        <source>Keep games marked as hidden visible in the library</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="258"/>
-        <source>Dim hidden games</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="259"/>
-        <source>Fade hidden games so they stand out while shown</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="254"/>
+        <source>Action bar height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="269"/>
-        <source>Muted icons</source>
+        <source>Opaque action bar</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="270"/>
-        <source>Dim icons to ~55% instead of full contrast</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="279"/>
+        <source>Play button on cards</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="280"/>
-        <source>Filled icons</source>
+        <source>Show a play button on a library card while hovering it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="281"/>
-        <source>Use the filled Material Symbols variants</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="290"/>
+        <source>Show hidden games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="291"/>
-        <source>Progress style</source>
+        <source>Keep games marked as hidden visible in the library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="304"/>
-        <source>Highlight logs</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="301"/>
+        <source>Dim hidden games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="305"/>
-        <source>Color error, fixme and warning lines in log output</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="302"/>
+        <source>Fade hidden games so they stand out while shown</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="317"/>
-        <source>Manage colors</source>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="312"/>
+        <source>Muted icons</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="313"/>
+        <source>Dim icons to ~55% instead of full contrast</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="323"/>
+        <source>Filled icons</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="324"/>
+        <source>Use the filled Material Symbols variants</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="334"/>
+        <source>Progress style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="348"/>
+        <source>Highlight logs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="349"/>
+        <source>Color error, fixme and warning lines in log output</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="361"/>
+        <source>Manage colors</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="368"/>
         <source>Interaction</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="328"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="372"/>
         <source>Double-click card to launch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="339"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="383"/>
         <source>Library categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="546"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="590"/>
         <source>Add category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="564"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="608"/>
         <source>Store tabs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="598"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="642"/>
         <source>Amazon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="608"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="652"/>
         <source>Gachas</source>
         <translation type="unfinished"></translation>
     </message>
