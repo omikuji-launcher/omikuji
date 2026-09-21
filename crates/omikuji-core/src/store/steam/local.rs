@@ -1,3 +1,4 @@
+use crate::library::SourceKind;
 use anyhow::{Context, Result, anyhow};
 use std::collections::HashMap;
 use std::fs;
@@ -653,7 +654,7 @@ pub fn resolve_or_default_proton(name: Option<&str>) -> Option<PathBuf> {
 }
 
 pub fn with_steam_wine(game: &crate::library::Game) -> Result<Option<crate::library::Game>> {
-    if game.source.kind != "steam" || game.source.app_id.is_empty() {
+    if game.source.kind != SourceKind::Steam || game.source.app_id.is_empty() {
         return Ok(None);
     }
 

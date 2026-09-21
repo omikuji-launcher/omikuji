@@ -3,6 +3,7 @@ use std::pin::Pin;
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
+use omikuji_core::library::SourceKind;
 use omikuji_core::media::{self, MediaType};
 
 impl super::qobject::GameModel {
@@ -11,7 +12,7 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return false;
         };
-        if game.source.kind != "epic" {
+        if game.source.kind != SourceKind::Epic {
             return false;
         }
         let id = game.metadata.id.clone();
@@ -49,7 +50,7 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return false;
         };
-        if game.source.kind != "nile" {
+        if game.source.kind != SourceKind::Nile {
             return false;
         }
         let id = game.metadata.id.clone();
@@ -87,7 +88,7 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return false;
         };
-        if game.source.kind != "gog" {
+        if game.source.kind != SourceKind::Gog {
             return false;
         }
         let id = game.metadata.id.clone();
@@ -197,7 +198,7 @@ impl super::qobject::GameModel {
         }
 
         struct ScanCandidate {
-            source: String,
+            source: SourceKind,
             app_id: String,
             game_id: String,
             display_name: String,
@@ -213,8 +214,10 @@ impl super::qobject::GameModel {
             .game
             .iter()
             .filter(|g| {
-                matches!(g.source.kind.as_str(), "epic" | "gog" | "nile")
-                    && !g.source.app_id.is_empty()
+                matches!(
+                    g.source.kind,
+                    SourceKind::Epic | SourceKind::Gog | SourceKind::Nile
+                ) && !g.source.app_id.is_empty()
             })
             .map(|g| {
                 let install_path = std::path::PathBuf::from(&g.metadata.exe)
@@ -234,7 +237,7 @@ impl super::qobject::GameModel {
                     Some(std::path::PathBuf::from(&g.wine.prefix))
                 };
                 ScanCandidate {
-                    source: g.source.kind.clone(),
+                    source: g.source.kind,
                     app_id: g.source.app_id.clone(),
                     game_id: g.metadata.id.clone(),
                     display_name: g.metadata.name.clone(),
@@ -251,7 +254,7 @@ impl super::qobject::GameModel {
             .library
             .game
             .iter()
-            .filter(|g| g.source.kind == "gacha" && !g.source.app_id.is_empty())
+            .filter(|g| g.source.kind == SourceKind::Gacha && !g.source.app_id.is_empty())
             .cloned()
             .collect();
 
@@ -262,10 +265,10 @@ impl super::qobject::GameModel {
         let sender = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             // epic batches one assets refresh up front, gog as no batch step
-            if candidates.iter().any(|c| c.source == "epic") {
+            if candidates.iter().any(|c| c.source == SourceKind::Epic) {
                 let _ = omikuji_core::store::epic::updates::refresh_assets_cache();
             }
-            if candidates.iter().any(|c| c.source == "nile") {
+            if candidates.iter().any(|c| c.source == SourceKind::Nile) {
                 let _ = omikuji_core::store::nile::updates::refresh_updates_cache();
             }
 
@@ -284,16 +287,18 @@ impl super::qobject::GameModel {
                 if existing_app_ids.contains(&candidate.app_id) {
                     continue;
                 }
-                let from_version = match candidate.source.as_str() {
-                    "epic" => {
+                let from_version = match candidate.source {
+                    SourceKind::Epic => {
                         omikuji_core::store::epic::updates::find_update_for(&candidate.app_id)
                             .map(|i| i.from_version)
                     }
-                    "gog" => omikuji_core::store::gog::updates::blocking_check_gog_update(
-                        &candidate.app_id,
-                    )
-                    .map(|i| i.from_version),
-                    "nile" => {
+                    SourceKind::Gog => {
+                        omikuji_core::store::gog::updates::blocking_check_gog_update(
+                            &candidate.app_id,
+                        )
+                        .map(|i| i.from_version)
+                    }
+                    SourceKind::Nile => {
                         omikuji_core::store::nile::updates::find_update_for(&candidate.app_id)
                             .map(|i| i.from_version)
                     }
@@ -304,7 +309,7 @@ impl super::qobject::GameModel {
                 };
 
                 let req = omikuji_core::downloads::DownloadRequest {
-                    source: candidate.source.clone(),
+                    source: candidate.source.as_str().to_string(),
                     app_id: candidate.app_id,
                     game_id: candidate.game_id,
                     display_name: format!("{} · update", candidate.display_name),
@@ -321,10 +326,10 @@ impl super::qobject::GameModel {
                 };
 
                 let _ = omikuji_core::downloads::manager().enqueue(req);
-                match candidate.source.as_str() {
-                    "epic" => epic_count += 1,
-                    "gog" => gog_count += 1,
-                    "nile" => nile_count += 1,
+                match candidate.source {
+                    SourceKind::Epic => epic_count += 1,
+                    SourceKind::Gog => gog_count += 1,
+                    SourceKind::Nile => nile_count += 1,
                     _ => {}
                 }
             }
@@ -398,37 +403,25 @@ impl super::qobject::GameModel {
             return QString::from("");
         };
 
-        let (source_key, banner_url) = if game.source.kind == "gacha" {
+        let (source_key, banner_url) = if game.source.kind == SourceKind::Gacha {
             let Some(resolved) = resolve_gacha_source(&game.source.app_id) else {
                 return QString::from("");
             };
             resolved
-        } else if game.source.kind == "epic" {
+        } else if matches!(
+            game.source.kind,
+            SourceKind::Epic | SourceKind::Gog | SourceKind::Nile
+        ) {
             let resolved =
                 media::resolve_image(&game.metadata.id, &game.metadata.banner, &MediaType::Banner);
             (
-                "epic".to_string(),
-                if resolved.is_empty() {
-                    None
-                } else {
-                    Some(resolved)
-                },
-            )
-        } else if game.source.kind == "gog" {
-            let resolved =
-                media::resolve_image(&game.metadata.id, &game.metadata.banner, &MediaType::Banner);
-            (
-                "gog".to_string(),
-                if resolved.is_empty() {
-                    None
-                } else {
-                    Some(resolved)
-                },
+                game.source.kind.as_str().to_string(),
+                (!resolved.is_empty()).then_some(resolved),
             )
         } else {
             tracing::error!(
                 "unsupported source.kind '{}' for game '{}'",
-                game.source.kind,
+                game.source.kind.as_str(),
                 gid
             );
             return QString::from("");
@@ -452,7 +445,7 @@ impl super::qobject::GameModel {
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return false;
         };
-        if game.source.kind != "gacha" {
+        if game.source.kind != SourceKind::Gacha {
             return false;
         }
         let Some((manifest, edition_id, _)) =
@@ -474,7 +467,7 @@ impl super::qobject::GameModel {
             return QString::from("");
         };
 
-        if game.source.kind != "gacha" {
+        if game.source.kind != SourceKind::Gacha {
             tracing::error!("enqueue_game_repair: '{}' is not a gacha game", gid);
             return QString::from("");
         }
@@ -530,7 +523,7 @@ fn build_download_request(
     label: &str,
 ) -> omikuji_core::downloads::DownloadRequest {
     let exe = &game.metadata.exe;
-    let install_path = (game.source.kind == "gacha")
+    let install_path = (game.source.kind == SourceKind::Gacha)
         .then(|| omikuji_core::gacha::strategies::install_root_for(&game.source.app_id, exe))
         .flatten()
         .or_else(|| exe.parent().map(|p| p.to_path_buf()))

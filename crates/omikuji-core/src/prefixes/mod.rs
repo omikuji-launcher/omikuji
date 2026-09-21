@@ -1,7 +1,7 @@
 pub mod registry;
 
 use crate::launch::prefix_path_for;
-use crate::library::Library;
+use crate::library::{Library, SourceKind};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Read;
@@ -149,7 +149,7 @@ pub fn list_steam_prefixes() -> Vec<PrefixInfo> {
     let mut acc: BTreeMap<PathBuf, Acc> = BTreeMap::new();
 
     for game in &games {
-        if game.source.kind != "steam" || game.source.app_id.is_empty() {
+        if game.source.kind != SourceKind::Steam || game.source.app_id.is_empty() {
             continue;
         }
         let Some(pfx) = crate::store::steam::local::find_steam_prefix(&game.source.app_id) else {

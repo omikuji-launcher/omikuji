@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 
-use omikuji_core::library::{Game, Library};
+use omikuji_core::library::{Game, Library, SourceKind};
 use omikuji_core::media;
 
 impl super::qobject::GameModel {
@@ -112,7 +112,7 @@ impl super::qobject::GameModel {
                 ..Metadata::new(app_name_s.clone(), title.clone(), info.executable.clone())
             },
             source: SourceConfig {
-                kind: "epic".to_string(),
+                kind: SourceKind::Epic,
                 app_id: app_name_s.clone(),
                 dlcs: serde_json::from_str(&dlcs.to_string()).unwrap_or_default(),
                 ..SourceConfig::default()
@@ -167,7 +167,7 @@ impl super::qobject::GameModel {
             tracing::warn!("game '{}' not found", id);
             return false;
         };
-        if game.source.kind != "epic" || game.source.app_id.is_empty() {
+        if game.source.kind != SourceKind::Epic || game.source.app_id.is_empty() {
             tracing::warn!("game '{}' is not an epic entry", id);
             return false;
         }

@@ -3,7 +3,7 @@ use std::path::Path;
 
 use super::prefix::resolve_prefix;
 use super::wine::{ProtonVerb, WineVariant};
-use crate::library::Game;
+use crate::library::{Game, SourceKind};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvPurpose {
@@ -73,20 +73,12 @@ pub fn build_env(
                 .as_str()
                 .to_string(),
         );
-        match game.source.kind.as_str() {
-            "epic" => {
-                env.insert("STORE".to_string(), "egs".to_string());
+        match game.source.kind.umu_store() {
+            Some(store) => {
+                env.insert("STORE".to_string(), store.to_string());
                 env.insert("GAMEID".to_string(), game.source.app_id.clone());
             }
-            "gog" => {
-                env.insert("STORE".to_string(), "gog".to_string());
-                env.insert("GAMEID".to_string(), game.source.app_id.clone());
-            }
-            "nile" => {
-                env.insert("STORE".to_string(), "amazon".to_string());
-                env.insert("GAMEID".to_string(), game.source.app_id.clone());
-            }
-            _ => {
+            None => {
                 env.insert("GAMEID".to_string(), format!("umu-{}", game.slug()));
             }
         }
@@ -211,7 +203,7 @@ pub fn build_env(
 }
 
 fn nile_sdk_env(game: &Game) -> Vec<(String, String)> {
-    if game.source.kind != "nile" || game.source.app_id.is_empty() {
+    if game.source.kind != SourceKind::Nile || game.source.app_id.is_empty() {
         return Vec::new();
     }
     let sdk = crate::store::nile::sdk_dir().join("Amazon Games Services");

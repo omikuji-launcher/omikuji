@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
-use omikuji_core::library::{Game, Library};
+use omikuji_core::library::{Game, Library, SourceKind};
 use omikuji_core::media;
 
 impl super::qobject::GameModel {
@@ -105,7 +105,7 @@ impl super::qobject::GameModel {
                 ..Metadata::new(app_name_s.clone(), title.clone(), info.executable.clone())
             },
             source: SourceConfig {
-                kind: "nile".to_string(),
+                kind: SourceKind::Nile,
                 app_id: app_name_s.clone(),
                 ..SourceConfig::default()
             },
@@ -170,7 +170,7 @@ impl super::qobject::GameModel {
             tracing::error!("game '{}' not found", id);
             return false;
         };
-        if game.source.kind != "nile" || game.source.app_id.is_empty() {
+        if game.source.kind != SourceKind::Nile || game.source.app_id.is_empty() {
             tracing::error!("game '{}' is not a nile entry", id);
             return false;
         }

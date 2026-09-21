@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
-use omikuji_core::library::{Game, Library};
+use omikuji_core::library::{Game, Library, SourceKind};
 
 impl super::qobject::GameModel {
     pub fn list_gachas(&self) -> QString {
@@ -200,7 +200,7 @@ impl super::qobject::GameModel {
             .library
             .game
             .iter()
-            .any(|g| g.source.kind == "gacha" && g.metadata.exe == exe)
+            .any(|g| g.source.kind == SourceKind::Gacha && g.metadata.exe == exe)
         {
             tracing::info!("already in library: {}", exe.display());
             return QString::default();
@@ -219,7 +219,7 @@ impl super::qobject::GameModel {
                 ..Metadata::new(game_id.clone(), display_s.clone(), exe)
             },
             source: SourceConfig {
-                kind: "gacha".to_string(),
+                kind: SourceKind::Gacha,
                 app_id: app_id.clone(),
                 patch: manifest.launch_patch.clone(),
                 ..SourceConfig::default()

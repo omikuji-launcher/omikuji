@@ -59,10 +59,72 @@ pub struct Metadata {
     pub categories: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum SourceKind {
+    #[default]
+    Manual,
+    Epic,
+    Steam,
+    Gog,
+    Nile,
+    Gacha,
+}
+
+impl SourceKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Manual => "",
+            Self::Epic => "epic",
+            Self::Steam => "steam",
+            Self::Gog => "gog",
+            Self::Nile => "nile",
+            Self::Gacha => "gacha",
+        }
+    }
+
+    // the STORE value umu wants, so protonfixes can match the game
+    pub fn umu_store(self) -> Option<&'static str> {
+        match self {
+            Self::Epic => Some("egs"),
+            Self::Gog => Some("gog"),
+            Self::Nile => Some("amazon"),
+            _ => None,
+        }
+    }
+}
+
+impl std::str::FromStr for SourceKind {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "epic" => Ok(Self::Epic),
+            "steam" => Ok(Self::Steam),
+            "gog" => Ok(Self::Gog),
+            "nile" => Ok(Self::Nile),
+            "gacha" => Ok(Self::Gacha),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Serialize for SourceKind {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(self.as_str())
+    }
+}
+
+// a typo in the toml reads as manual instead of failing the whole game load
+impl<'de> Deserialize<'de> for SourceKind {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        Ok(String::deserialize(d)?.parse().unwrap_or_default())
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct SourceConfig {
     #[serde(default)]
-    pub kind: String,
+    pub kind: SourceKind,
     #[serde(default)]
     pub app_id: String,
     // eos overlay installs into the prefix and enables per-prefix; only relevant when kind == "epic"
@@ -401,7 +463,7 @@ impl Library {
         crate::library_dir()
     }
 
-    pub fn game_ids_by_app_id(kind: &str) -> HashMap<String, String> {
+    pub fn game_ids_by_app_id(kind: SourceKind) -> HashMap<String, String> {
         let mut out = HashMap::new();
         let dir = Self::library_dir();
         let Ok(entries) = std::fs::read_dir(&dir) else {
@@ -642,7 +704,7 @@ impl Game {
 
     // epic games are launched via legendary, not wine directly, i mean still wine but through legendary
     pub fn is_epic(&self) -> bool {
-        self.source.kind == "epic"
+        self.source.kind == SourceKind::Epic
     }
 
     // steam/flatpak/native launch outside wine, so they don't use an omikuji-managed prefix, damn gaijin...

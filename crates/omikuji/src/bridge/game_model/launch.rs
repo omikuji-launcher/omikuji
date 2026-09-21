@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt_lib::QString;
 
 use omikuji_core::components_config::ArchiveSource;
-use omikuji_core::library::{Game, RunnerType};
+use omikuji_core::library::{Game, RunnerType, SourceKind};
 
 impl super::qobject::GameModel {
     pub fn launch_game(mut self: Pin<&mut Self>, index: i32) -> bool {
@@ -363,8 +363,8 @@ pub(crate) fn pre_launch_update_check(
         }
     };
     let behavior = || omikuji_core::app_settings::AppSettings::load().behavior;
-    match game.source.kind.as_str() {
-        "gacha" => {
+    match game.source.kind {
+        SourceKind::Gacha => {
             let info = blocking_check_gacha_update(&game.source.app_id)?;
             Some(notif(
                 info.from_version,
@@ -374,7 +374,7 @@ pub(crate) fn pre_launch_update_check(
                 info.delta_supported,
             ))
         }
-        "epic" if behavior().auto_check_epic_updates_on_launch => {
+        SourceKind::Epic if behavior().auto_check_epic_updates_on_launch => {
             let info = omikuji_core::store::epic::updates::blocking_check_epic_update(
                 &game.source.app_id,
             )?;
@@ -386,7 +386,7 @@ pub(crate) fn pre_launch_update_check(
                 true,
             ))
         }
-        "gog" if behavior().auto_check_gog_updates_on_launch => {
+        SourceKind::Gog if behavior().auto_check_gog_updates_on_launch => {
             let info =
                 omikuji_core::store::gog::updates::blocking_check_gog_update(&game.source.app_id)?;
             Some(notif(

@@ -756,7 +756,7 @@ use cxx_qt_lib::{
 };
 
 use omikuji_core::app_settings::AppSettings;
-use omikuji_core::library::{Game, Library, rfc3339_now};
+use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
 
 const ROLE_ID: i32 = 0x0100;
@@ -1022,7 +1022,7 @@ game_fields! {
     "meta.hidden" => bool, metadata.hidden,
     "meta.categories" => json, metadata.categories,
 
-    "source.kind" => str readonly, source.kind,
+    "source.kind" => choice readonly, source.kind,
     "source.app_id" => str, source.app_id,
     "source.eos_overlay" => bool readonly, source.eos_overlay,
     "source.cloud_saves" => bool readonly, source.cloud_saves,
@@ -1581,11 +1581,11 @@ impl qobject::GameModel {
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return QString::from("[]");
         };
-        let json = match game.source.kind.as_str() {
-            "epic" => serde_json::to_string(&omikuji_core::store::epic::installed_dlcs(
+        let json = match game.source.kind {
+            SourceKind::Epic => serde_json::to_string(&omikuji_core::store::epic::installed_dlcs(
                 &game.source.app_id,
             )),
-            "gog" => serde_json::to_string(&omikuji_core::store::gog::installed_dlcs(
+            SourceKind::Gog => serde_json::to_string(&omikuji_core::store::gog::installed_dlcs(
                 &game.source.app_id,
             )),
             _ => return QString::from("[]"),
@@ -1599,7 +1599,7 @@ impl qobject::GameModel {
         let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == gid) else {
             return false;
         };
-        if self.library.game[idx].source.kind != "epic" {
+        if self.library.game[idx].source.kind != SourceKind::Epic {
             tracing::warn!("uninstall_dlc: only epic can remove a single dlc");
             return false;
         }
@@ -1846,7 +1846,7 @@ impl qobject::GameModel {
         // (e.g., epic uninstall only shows for epic games)
         map.insert(
             QString::from("sourceKind"),
-            QVariant::from(&QString::from(&*game.source.kind)),
+            QVariant::from(&QString::from(game.source.kind.as_str())),
         );
         map.insert(
             QString::from("sourceAppId"),
@@ -1947,12 +1947,13 @@ impl qobject::GameModel {
             return;
         };
         let name = game.metadata.name.clone();
-        let gacha_manifest = if game.source.kind == "gacha" {
+        let gacha_manifest = if game.source.kind == SourceKind::Gacha {
             omikuji_core::gacha::strategies::find_for_app_id(&game.source.app_id).map(|(m, _, _)| m)
         } else {
             None
         };
-        let steam_appid = (game.source.kind == "steam").then(|| game.source.app_id.clone());
+        let steam_appid =
+            (game.source.kind == SourceKind::Steam).then(|| game.source.app_id.clone());
 
         let qt_thread = self.as_mut().qt_thread();
         let on_asset = media_changed_notifier(qt_thread, id.clone());

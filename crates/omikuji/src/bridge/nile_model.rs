@@ -4,6 +4,7 @@ use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
+use omikuji_core::library::SourceKind;
 use omikuji_core::store::StoreGame;
 use omikuji_core::store::nile::NileStore;
 use std::collections::HashMap;
@@ -277,7 +278,7 @@ impl qobject::NileModel {
         tokio::spawn(async move {
             let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
                 let games = omikuji_core::store::nile::load_cached_library();
-                let ids = omikuji_core::library::Library::game_ids_by_app_id("nile");
+                let ids = omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Nile);
                 (games, ids)
             })
             .await
@@ -304,7 +305,7 @@ impl qobject::NileModel {
             match result {
                 Ok(games) => {
                     let ids = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::game_ids_by_app_id("nile")
+                        omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Nile)
                     })
                     .await
                     .unwrap_or_default();

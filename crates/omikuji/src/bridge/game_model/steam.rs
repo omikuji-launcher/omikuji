@@ -4,7 +4,7 @@ use std::pin::Pin;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 
-use omikuji_core::library::{Game, Library};
+use omikuji_core::library::{Game, Library, SourceKind};
 use omikuji_core::media;
 
 impl super::qobject::GameModel {
@@ -56,7 +56,7 @@ impl super::qobject::GameModel {
         let mut game = Game {
             metadata: Metadata::new(appid_str.clone(), name_str.clone(), PathBuf::new()),
             source: SourceConfig {
-                kind: "steam".to_string(),
+                kind: SourceKind::Steam,
                 app_id: appid_str.clone(),
                 ..SourceConfig::default()
             },

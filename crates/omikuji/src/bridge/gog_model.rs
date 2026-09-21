@@ -4,6 +4,7 @@ use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
+use omikuji_core::library::SourceKind;
 use omikuji_core::store::StoreGame;
 use omikuji_core::store::gog::GogStore;
 use std::collections::HashMap;
@@ -235,7 +236,7 @@ impl qobject::GogModel {
         tokio::spawn(async move {
             let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
                 let games = omikuji_core::store::gog::load_cached_library();
-                let ids = omikuji_core::library::Library::game_ids_by_app_id("gog");
+                let ids = omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Gog);
                 (games, ids)
             })
             .await
@@ -262,7 +263,7 @@ impl qobject::GogModel {
             match result {
                 Ok(games) => {
                     let ids = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::game_ids_by_app_id("gog")
+                        omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Gog)
                     })
                     .await
                     .unwrap_or_default();

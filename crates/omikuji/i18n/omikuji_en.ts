@@ -308,67 +308,72 @@
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="25"/>
-        <source>Recent</source>
+        <source>Hidden</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="26"/>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="170"/>
-        <source>Runner</source>
+        <source>Recent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="27"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="171"/>
+        <source>Runner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="28"/>
         <source>Tag</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="51"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="52"/>
         <source>Add category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="51"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="52"/>
         <source>Edit category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="101"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="102"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="111"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="112"/>
         <source>Icon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="138"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="139"/>
         <source>Change</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="150"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="151"/>
         <source>Kind</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="160"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="161"/>
         <source>Tag value</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="161"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="162"/>
         <source>e.g. anime, speedrun</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="181"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="182"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="187"/>
+        <location filename="../qml/components/categories/CategoryEditDialog.qml" line="188"/>
         <source>Save</source>
         <translation type="unfinished"></translation>
     </message>
@@ -387,18 +392,53 @@
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="11"/>
+        <source>Hidden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="12"/>
         <source>Recent</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/singletons/CategoryLabels.qml" line="13"/>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="14"/>
         <source>Wine</source>
         <comment>runner name, a proper noun; leave untranslated</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/singletons/CategoryLabels.qml" line="14"/>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="15"/>
         <source>Native</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="23"/>
+        <source>all games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="24"/>
+        <source>favourites</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="25"/>
+        <source>hidden games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="26"/>
+        <source>recent (top 10)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="27"/>
+        <source>runner: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/singletons/CategoryLabels.qml" line="28"/>
+        <source>tag: %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -513,22 +553,22 @@
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="55"/>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="60"/>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="69"/>
-        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="215"/>
+        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="188"/>
         <source>Library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="317"/>
+        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="290"/>
         <source>%1 hrs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="328"/>
+        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="301"/>
         <source>Last played %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="328"/>
+        <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="301"/>
         <source>Never played</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1494,6 +1534,26 @@
     <message>
         <location filename="../qml/components/library/GameGrid.qml" line="58"/>
         <source>pick a store on the left to install games, or add one yourself with the + button up top</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/GameGrid.qml" line="76"/>
+        <source>nothing matches that</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/GameGrid.qml" line="76"/>
+        <source>well, this looks like a desert</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/GameGrid.qml" line="78"/>
+        <source>try fewer letters, or clear the search to get the library back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/GameGrid.qml" line="79"/>
+        <source>no game in your library fits this category yet</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -4530,47 +4590,22 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="430"/>
-        <source>runner: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="431"/>
-        <source>tag: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="432"/>
-        <source>favourites</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="433"/>
-        <source>recent (top 10)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="434"/>
-        <source>all games</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="555"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="546"/>
         <source>Add category</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="573"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="564"/>
         <source>Store tabs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="607"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="598"/>
         <source>Amazon</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="617"/>
+        <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="608"/>
         <source>Gachas</source>
         <translation type="unfinished"></translation>
     </message>
