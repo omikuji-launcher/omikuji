@@ -13,6 +13,15 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.18.0
+Added:
+- Hidden category kind 
+- Spirit for empty category filter
+- Action bar styling
+
+Fixed:
+- Amazon games updates
+
 ## 0.17.0
 Added:
 - Controller and Keyboard navigation 

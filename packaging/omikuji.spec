@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.17.0
+Version:        0.18.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,11 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Mon Sep 21 2026 reakjra <reakjra@proton.me> - 0.18.0-1
+- hidden cateogry + empty category spirit
+- fix amazon games updates
+- action bar styling
+
 * Sun Sep 20 2026 reakjra <reakjra@proton.me> - 0.17.0-1
 - Controller and keyboard navigation
 - poster card style

@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.18.0" date="2026-09-21">
+      <description>
+        <ul>
+          <li>hidden cateogry + empty category spirit</li>
+          <li>fix amazon games updates</li>
+          <li>action bar styling</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.17.0" date="2026-09-20">
       <description>
         <ul>
