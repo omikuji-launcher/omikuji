@@ -18,6 +18,47 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst))
 }
 
+fn prepare_runtime(game: &crate::library::Game, env: &HashMap<String, String>) {
+    if game.is_epic() {
+        let wine_exe = env
+            .get("WINE")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| std::path::PathBuf::from("wine"));
+        let _ = crate::launch::prepare_epic_prefix(game, &wine_exe, env);
+    }
+
+    // steam manages its own prefix, skip dll injection for it
+    if !game.runner.runner_type.is_steam()
+        && let Err(e) = crate::dll_packs::inject_all(game, env)
+    {
+        tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
+    }
+
+    if !game.runner.runner_type.is_steam()
+        && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
+        && !crate::store::steam::local::under_steamapps_common(&runner_dir)
+        && let Err(e) = crate::runners::dll_override::apply_for_launch(&runner_dir, game, env)
+    {
+        tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
+    }
+
+    if env.contains_key(crate::runners::proton_monkey_patch::PIN_VAR)
+        && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
+    {
+        crate::runners::proton_monkey_patch::ensure_installed(&runner_dir);
+    }
+
+    // download saves before the game opens its save files
+    if game.is_epic()
+        && game.source.cloud_saves
+        && !game.source.save_path.is_empty()
+        && let Err(e) =
+            crate::store::epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
+    {
+        tracing::warn!("cloud save download failed: {} (launching anyway)", e);
+    }
+}
+
 // yes pump as in the sexual joke ghaha yeah mature of me
 fn pump_lines(pipe: impl std::io::Read + Send + 'static, tx: std::sync::mpsc::Sender<String>) {
     std::thread::spawn(move || {
@@ -66,48 +107,7 @@ impl ProcessManager {
         let game = crate::library::Library::load_game_by_id(&config.game_id)?
             .ok_or_else(|| anyhow::anyhow!("game not found in library"))?;
 
-        if game.is_epic() {
-            let wine_exe = config
-                .env
-                .get("WINE")
-                .map(std::path::PathBuf::from)
-                .unwrap_or_else(|| std::path::PathBuf::from("wine"));
-            let _ = crate::launch::prepare_epic_prefix(&game, &wine_exe, &config.env);
-        }
-
-        // steam manages its own prefix, skip dll injection for it
-        if !game.runner.runner_type.is_steam()
-            && let Err(e) = crate::dll_packs::inject_all(&game, &config.env)
-        {
-            tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
-        }
-
-        if !game.runner.runner_type.is_steam()
-            && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
-            && !crate::store::steam::local::under_steamapps_common(&runner_dir)
-            && let Err(e) =
-                crate::runners::dll_override::apply_for_launch(&runner_dir, &game, &config.env)
-        {
-            tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
-        }
-
-        if config
-            .env
-            .contains_key(crate::runners::proton_monkey_patch::PIN_VAR)
-            && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
-        {
-            crate::runners::proton_monkey_patch::ensure_installed(&runner_dir);
-        }
-
-        // download saves before the game opens its save files
-        if game.is_epic()
-            && game.source.cloud_saves
-            && !game.source.save_path.is_empty()
-            && let Err(e) =
-                crate::store::epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
-        {
-            tracing::warn!("cloud save download failed: {} (launching anyway)", e);
-        }
+        prepare_runtime(&game, &config.env);
 
         // drop stale in-memory log from the previous session before streaming new lines
         crate::game_logs::reset_log(&config.game_id);
@@ -216,6 +216,19 @@ impl ProcessManager {
             sessions.insert(proc_id, session);
         }
 
+        self.spawn_exit_watcher(child, pid, proc_id, started_at, config);
+
+        Ok(proc_id)
+    }
+
+    fn spawn_exit_watcher(
+        &self,
+        mut child: std::process::Child,
+        pid: u32,
+        proc_id: ProcessId,
+        started_at: Instant,
+        config: &crate::launch::ResolvedLaunch,
+    ) {
         let sessions = self.sessions.clone();
         let game_id = config.game_id.clone();
         let post_exit_script = config.post_exit_script.clone();
@@ -311,8 +324,6 @@ impl ProcessManager {
                 }
             }
         });
-
-        Ok(proc_id)
     }
 
     pub fn find_by_game_id(&self, game_id: &str) -> Option<GameSession> {
@@ -553,8 +564,8 @@ pub fn is_game_running(game_id: &str) -> bool {
     manager().find_by_game_id(game_id).is_some() || running_marked_ids().contains(game_id)
 }
 
-// non-blocking stop. schedules SIGTERM on the whole session, then SIGKILL 3s
-//later if anything survives. returns true if a tracked session was found.
+// non-blocking. SIGTERM the whole session, SIGKILL 3s later if anything survives.
+// true means a session was found, not that it stopped.
 pub fn stop_game(game_id: &str) -> bool {
     let session_pid = match manager().find_by_game_id(game_id).map(|s| s.state) {
         Some(ProcessState::Running { pid, .. }) => Some(pid),
