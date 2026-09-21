@@ -770,6 +770,9 @@ property real cardZoom: appSettings.cardZoom
             cardSort: appSettings.cardSort
             cardPlayButton: appSettings.cardPlayButton
             doubleClickLaunches: appSettings.doubleClickLaunches
+            barStyle: appSettings.floatingBarStyle
+            barHeight: appSettings.floatingBarHeight
+            barOpaque: appSettings.floatingBarOpaque
             onSelectionChanged: topBar.defocusSearch()
             onGameRightClicked: (index, winX, winY) => gameContextMenu.show(index, winX, winY)
             onSettingsRequested: (index) => {

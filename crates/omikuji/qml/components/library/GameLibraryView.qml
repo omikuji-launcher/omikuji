@@ -30,6 +30,9 @@ Rectangle {
     property string cardSort: "default"
     property bool cardPlayButton: false
     property bool doubleClickLaunches: false
+    property string barStyle: "floating"
+    property int barHeight: 56
+    property bool barOpaque: false
 
     readonly property alias wineToolsAnchor: floatingBar.wineToolsAnchor
     readonly property alias actionBar: floatingBar
@@ -178,6 +181,10 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
+        barStyle: root.barStyle
+        barHeight: root.barHeight
+        barOpaque: root.barOpaque
+        surfaceRadius: root.radius
         actions: root.actions
         selectedGame: root.actions ? root.actions.selectedGame : null
         hasSelection: root.actions ? root.actions.hasSelection : false

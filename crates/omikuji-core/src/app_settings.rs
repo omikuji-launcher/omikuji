@@ -300,6 +300,9 @@ pub struct DisplaySettings {
     pub card_sort: String,
     pub card_style: String,
     pub card_play_button: bool,
+    pub floating_bar_style: String,
+    pub floating_bar_height: i32,
+    pub floating_bar_opaque: bool,
     pub highlight_logs: bool,
     pub log_rules: Vec<LogRule>,
 }
@@ -318,6 +321,9 @@ impl Default for DisplaySettings {
             card_sort: "default".into(),
             card_style: "vignette".into(),
             card_play_button: false,
+            floating_bar_style: "floating".into(),
+            floating_bar_height: 56,
+            floating_bar_opaque: false,
             highlight_logs: true,
             log_rules: Vec::new(),
         }

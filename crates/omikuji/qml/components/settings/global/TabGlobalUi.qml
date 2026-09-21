@@ -233,6 +233,44 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Action bar style")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+
+                M3Dropdown {
+                    width: 200
+                    options: FloatingBarStyles.options()
+                    currentIndex: Math.max(0, options.findIndex(o => o.value === (appSettings ? appSettings.floatingBarStyle : "floating")))
+                    onSelected: (value) => appSettings.applyFloatingBarStyle(value)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Action bar height")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                contentRightMargin: 74
+
+                M3SpinBox {
+                    from: 44
+                    to: 120
+                    stepSize: 2
+                    value: appSettings ? appSettings.floatingBarHeight : 56
+                    onMoved: (val) => appSettings.applyFloatingBarHeight(val)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Opaque action bar")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.floatingBarOpaque : false
+                    onToggled: (val) => appSettings.applyFloatingBarOpaque(val)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Play button on cards")
                 description: qsTr("Show a play button on a library card while hovering it")
                 labelWidth: root.rowLabelWidth

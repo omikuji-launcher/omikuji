@@ -3,11 +3,41 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Effects
+import QtQuick.Shapes
 import "../lib/PlayState.js" as PlayState
 
 
 Item {
     id: root
+
+    property string barStyle: "floating"
+
+    // the hug cuts the surface corner, so it has to match the radius that drew it
+    property real surfaceRadius: Theme.radius.md
+
+    property int barHeight: 56
+    property bool barOpaque: false
+
+    readonly property var styleDefaults: ({
+        sideInset: 16,
+        bottomGap: 14,
+        radius: Theme.radius.lg,
+        shadow: true,
+        hug: false
+    })
+
+    readonly property var styleOverrides: ({
+        docked: {
+            sideInset: 0,
+            bottomGap: 0,
+            radius: 0,
+            shadow: false,
+            hug: true
+        }
+    })
+
+    readonly property var spec: Object.assign({}, root.styleDefaults,
+        root.styleOverrides[root.barStyle] || ({}))
 
     property var selectedGame: null
     property bool hasSelection: false
@@ -124,7 +154,7 @@ Item {
         }
     }
 
-    height: 56
+    height: root.barHeight
 
     RectangularShadow {
         anchors.fill: bar
@@ -134,23 +164,63 @@ Item {
         radius: bar.radius
         color: Qt.rgba(0, 0, 0, 0.45)
         opacity: bar.opacity
-        visible: bar.visible
+        visible: bar.visible && root.spec.shadow
     }
 
     Squircle {
         id: bar
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 14
-        width: parent.width - 32
-        height: 56
-        radius: Theme.radius.lg
-        fillColor: Theme.barBg
+        anchors.bottomMargin: root.spec.bottomGap
+        width: parent.width - root.spec.sideInset * 2
+        height: root.barHeight
+        radius: root.spec.radius
+        fillColor: root.barOpaque ? Theme.bg : Theme.barBg
         opacity: root.hasSelection ? 1 : 0
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        }
+
+        Repeater {
+            model: root.spec.hug ? [0, 1] : []
+
+            Item {
+                id: patch
+                required property int modelData
+                readonly property real r: root.surfaceRadius
+
+                x: modelData === 0 ? 0 : bar.width - r
+                y: -r
+                width: r
+                height: r
+                transform: Scale { xScale: patch.modelData === 0 ? 1 : -1; origin.x: patch.r / 2 }
+
+                Shape {
+                    anchors.fill: parent
+                    antialiasing: true
+                    preferredRendererType: Shape.CurveRenderer
+
+                    ShapePath {
+                        fillColor: bar.fillColor
+                        strokeColor: "transparent"
+                        startX: 0
+                        startY: 0
+
+                        PathLine { x: 0; y: patch.r }
+                        PathLine { x: patch.r; y: patch.r }
+                        PathAngleArc {
+                            centerX: patch.r
+                            centerY: 0
+                            radiusX: patch.r
+                            radiusY: patch.r
+                            startAngle: 90
+                            sweepAngle: 90
+                        }
+                    }
+                }
+            }
         }
 
         Item {
