@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.18.1" date="2026-09-22">
+      <description>
+        <ul>
+          <li>minor ui tweaks</li>
+          <li>template literals seeding expanded paths for prefixes on games/scripts installation (now keeps the var)</li>
+          <li>installation dialogs not expanding template literals used in the installation path field for disk's space check</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.18.0" date="2026-09-21">
       <description>
         <ul>

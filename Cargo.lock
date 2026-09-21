@@ -1582,7 +1582,7 @@ dependencies = [
 
 [[package]]
 name = "omikuji"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "cc",
  "clap",
@@ -1606,7 +1606,7 @@ dependencies = [
 
 [[package]]
 name = "omikuji-core"
-version = "0.18.0"
+version = "0.18.1"
 dependencies = [
  "anyhow",
  "ash",

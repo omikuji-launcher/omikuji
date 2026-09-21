@@ -13,6 +13,14 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.18.1
+Changed:
+- Minor ui tweaks
+
+Fixed:
+- Template literals seeding expanded paths for prefixes on games/scripts installation (now keeps the var)
+- Installation dialogs not expanding template literals used in the installation path field for disk's space check
+
 ## 0.18.0
 Added:
 - Hidden category kind 
