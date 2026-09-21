@@ -101,15 +101,9 @@ pub struct OfudaRust {
 }
 
 fn prefix_game(path: &QString, runner: &QString) -> omikuji_core::library::Game {
-    let prefix = path.to_string();
-    let runner = runner.to_string();
-    omikuji_core::library::Game::with_options(
-        "Ofuda".to_string(),
-        std::path::PathBuf::new(),
-        (!prefix.is_empty()).then_some(prefix),
-        Some(omikuji_core::library::RunnerType::Wine),
-        (!runner.is_empty()).then_some(runner),
-    )
+    omikuji_core::library::Game::new("Ofuda".to_string(), std::path::PathBuf::new())
+        .with_prefix(path.to_string())
+        .with_runner_version(runner.to_string())
 }
 
 fn prefixes_json(list: Vec<core_prefixes::PrefixInfo>, kind: &str) -> QString {

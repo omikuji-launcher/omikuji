@@ -640,31 +640,30 @@ pub fn generate_id() -> String {
 
 impl Game {
     pub fn new(name: String, exe: PathBuf) -> Self {
-        Self::with_options(name, exe, None, Some(RunnerType::Wine), None)
-    }
-
-    pub fn with_options(
-        name: String,
-        exe: PathBuf,
-        prefix: Option<String>,
-        runner_type: Option<RunnerType>,
-        runner_version: Option<String>,
-    ) -> Self {
         Self {
             metadata: Metadata::new(generate_id(), name, exe),
             source: SourceConfig::default(),
-            runner: RunnerConfig {
-                runner_type: runner_type.unwrap_or_default(),
-            },
-            wine: WineConfig {
-                version: runner_version.unwrap_or_default(),
-                prefix: prefix.unwrap_or_default(),
-                ..WineConfig::default()
-            },
+            runner: RunnerConfig::default(),
+            wine: WineConfig::default(),
             launch: LaunchConfig::default(),
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         }
+    }
+
+    pub fn with_prefix(mut self, prefix: impl Into<String>) -> Self {
+        self.wine.prefix = prefix.into();
+        self
+    }
+
+    pub fn with_runner(mut self, runner_type: RunnerType) -> Self {
+        self.runner.runner_type = runner_type;
+        self
+    }
+
+    pub fn with_runner_version(mut self, version: impl Into<String>) -> Self {
+        self.wine.version = version.into();
+        self
     }
 
     pub fn id(&self) -> &str {

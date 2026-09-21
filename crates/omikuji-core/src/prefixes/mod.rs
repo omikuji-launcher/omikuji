@@ -235,13 +235,9 @@ pub fn create_prefix<F: FnMut(&str)>(
     let dir = crate::prefixes_dir().join(&folder);
     std::fs::create_dir_all(&dir)?;
 
-    let game = crate::library::Game::with_options(
-        "Ofuda".to_string(),
-        PathBuf::new(),
-        Some(dir.to_string_lossy().into_owned()),
-        Some(crate::library::RunnerType::Wine),
-        (!runner.is_empty()).then(|| runner.to_string()),
-    );
+    let game = crate::library::Game::new("Ofuda".to_string(), PathBuf::new())
+        .with_prefix(dir.to_string_lossy())
+        .with_runner_version(runner);
 
     crate::wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)?;
     crate::dll_packs::install_prefix_defaults(&dir)

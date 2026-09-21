@@ -77,13 +77,9 @@ pub fn execute<F: FnMut(&str)>(
             .filter(|g| !g.wine_version.is_empty())
             .map(|g| g.wine_version.clone()),
     };
-    let tool_game = Game::with_options(
-        script.script.name.clone(),
-        PathBuf::new(),
-        Some(prefix.to_string_lossy().into_owned()),
-        Some(RunnerType::Wine),
-        wine_version.clone(),
-    );
+    let tool_game = Game::new(script.script.name.clone(), PathBuf::new())
+        .with_prefix(prefix.to_string_lossy())
+        .with_runner_version(wine_version.clone().unwrap_or_default());
 
     let steps: Vec<&Step> = script
         .steps
@@ -171,13 +167,13 @@ pub fn execute<F: FnMut(&str)>(
 
             let runner: RunnerType = spec.runner.parse().unwrap_or_default();
             let is_wine = runner == RunnerType::Wine;
-            let mut game = Game::with_options(
-                spec.name.clone(),
-                exe,
-                is_wine.then(|| prefix.to_string_lossy().into_owned()),
-                Some(runner),
-                if is_wine { wine_version } else { None },
-            );
+            let mut game = Game::new(spec.name.clone(), exe).with_runner(runner);
+            // a non-wine runner has no prefix of ours to point at, so both stay unset
+            if is_wine {
+                game = game
+                    .with_prefix(prefix.to_string_lossy())
+                    .with_runner_version(wine_version.unwrap_or_default());
+            }
             game.metadata.id = id;
             for (k, v) in &spec.env {
                 game.launch.env.insert(k.clone(), interpolate(v, &vars)?);

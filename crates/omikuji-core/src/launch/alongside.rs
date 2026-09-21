@@ -4,7 +4,7 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use super::{EnvPurpose, build_launch_as};
-use crate::library::{AlongsideWhen, Game, RunnerType};
+use crate::library::{AlongsideWhen, Game};
 use crate::template_vars::TemplateVars;
 
 pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
@@ -92,13 +92,9 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
         .unwrap_or("Program")
         .to_string();
 
-    let mut tool = Game::with_options(
-        name,
-        exe,
-        Some(super::resolve_prefix(source).to_string_lossy().into_owned()),
-        Some(RunnerType::Wine),
-        (!source.wine.version.is_empty()).then(|| source.wine.version.clone()),
-    );
+    let mut tool = Game::new(name, exe)
+        .with_prefix(super::resolve_prefix(source).to_string_lossy())
+        .with_runner_version(source.wine.version.clone());
     tool.launch.args = game.launch.alongside_args.clone();
     tool.source = game.source.clone();
     tool.metadata.slug = game.slug();

@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt_lib::QString;
 
 use omikuji_core::components_config::ArchiveSource;
-use omikuji_core::library::{Game, RunnerType, SourceKind};
+use omikuji_core::library::{Game, SourceKind};
 
 impl super::qobject::GameModel {
     pub fn launch_game(mut self: Pin<&mut Self>, index: i32) -> bool {
@@ -54,15 +54,9 @@ impl super::qobject::GameModel {
             .and_then(|n| n.to_str())
             .unwrap_or("Program")
             .to_string();
-        let runner_v = runner.to_string();
-        let prefix_v = prefix.to_string();
-        let game = Game::with_options(
-            name,
-            exe_path,
-            (!prefix_v.is_empty()).then_some(prefix_v),
-            Some(RunnerType::Wine),
-            (!runner_v.is_empty()).then_some(runner_v),
-        );
+        let game = Game::new(name, exe_path)
+            .with_prefix(prefix.to_string())
+            .with_runner_version(runner.to_string());
         let config = match omikuji_core::launch::build_launch(&game) {
             Ok(c) => c,
             Err(e) => {
