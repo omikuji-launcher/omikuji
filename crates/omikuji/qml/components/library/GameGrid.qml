@@ -67,7 +67,7 @@ Item {
         readonly property bool searching: root.searchText !== ""
 
         anchors.fill: parent
-        visible: root.gameModel && root.gameModel.count > 0 && cardGrid.laidOutEmpty
+        visible: root.gameModel && root.gameModel.count > 0 && !!root.view && root.view.filterEmpty
         icon: searching ? "search" : ""
         artComponent: searching ? null : curiousSpirit
         artSize: 72

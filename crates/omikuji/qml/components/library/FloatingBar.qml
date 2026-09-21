@@ -20,7 +20,7 @@ Item {
 
     readonly property var styleDefaults: ({
         sideInset: 16,
-        bottomGap: 14,
+        bottomGap: 8,
         radius: Theme.radius.lg,
         shadow: true,
         hug: false

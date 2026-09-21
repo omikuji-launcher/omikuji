@@ -81,18 +81,45 @@ Rectangle {
         root._recentIds = CF.computeRecent(root.gameModel)
     }
 
+    function _passingGame(index) {
+        const game = root.gameModel ? root.gameModel.get_game(index) : null
+        if (!game) return null
+        return root.passes(index, game.name || "", game.hidden === true, game.favourite === true)
+            ? game
+            : null
+    }
+
     function drawPool(excluded) {
         let pool = []
         if (!root.gameModel) return pool
         for (let i = 0; i < root.gameModel.count; i++) {
-            let game = root.gameModel.get_game(i)
+            const game = root._passingGame(i)
             if (!game) continue
             if (excluded && excluded[game.gameId]) continue
-            if (root.passes(i, game.name || "", game.hidden === true, game.favourite === true)) {
-                pool.push(i)
-            }
+            pool.push(i)
         }
         return pool
+    }
+
+    property bool filterEmpty: false
+
+    function _recomputeEmpty() {
+        if (!root.gameModel) {
+            root.filterEmpty = false
+            return
+        }
+        for (let i = 0; i < root.gameModel.count; i++) {
+            if (root._passingGame(i)) {
+                root.filterEmpty = false
+                return
+            }
+        }
+        root.filterEmpty = true
+    }
+
+    function _refreshDerived() {
+        if (root.filterKind === "recent") root._recomputeRecent()
+        root._recomputeEmpty()
     }
 
     function hiddenSplit(hidden) {
@@ -112,13 +139,17 @@ Rectangle {
         return CF.gameVerdict(root.filterKind, root.filterValue, game, root._recentIds)
     }
 
-    onFilterKindChanged: if (root.filterKind === "recent") root._recomputeRecent()
+    onFilterKindChanged: root._refreshDerived()
+    onFilterValueChanged: root._recomputeEmpty()
+    onSearchTextChanged: root._recomputeEmpty()
+    onShowHiddenChanged: root._recomputeEmpty()
+    Component.onCompleted: root._refreshDerived()
 
     Connections {
         target: root.gameModel
-        function onDataChanged() { if (root.filterKind === "recent") root._recomputeRecent() }
-        function onRowsInserted() { if (root.filterKind === "recent") root._recomputeRecent() }
-        function onRowsRemoved() { if (root.filterKind === "recent") root._recomputeRecent() }
+        function onDataChanged() { root._refreshDerived() }
+        function onRowsInserted() { root._refreshDerived() }
+        function onRowsRemoved() { root._refreshDerived() }
     }
 
     anchors.fill: parent

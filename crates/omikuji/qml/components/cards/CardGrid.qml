@@ -29,7 +29,6 @@ Item {
     property int keyIndex: -1
     readonly property bool navFocused: gridFlick.activeFocus
     readonly property int columns: grid.colsToUse
-    readonly property bool laidOutEmpty: grid.height === 0
 
     signal keyNavMoved(int index)
     signal keyNavActivated(int index)
@@ -197,7 +196,8 @@ Item {
             property int avail: Math.max(0, parent.width - sidePad * 2)
             property int maxCols: Math.max(1, Math.floor((avail + root.cardSpacing) / (cardW + root.cardSpacing)))
             property int colsToUse: Math.max(1, Math.min(maxCols, repeater.count))
-            width: colsToUse * cardW + (colsToUse - 1) * root.cardSpacing
+            // a Flow never reflows children hidden while it was, the spare pixel forces it on show
+            width: colsToUse * cardW + (colsToUse - 1) * root.cardSpacing + (root.visible ? 0 : 1)
             x: {
                 if (root.cardFlow === "left") return sidePad
                 if (root.cardFlow === "right") return Math.max(sidePad, parent.width - width - sidePad)
