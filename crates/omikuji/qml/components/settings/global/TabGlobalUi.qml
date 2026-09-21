@@ -424,16 +424,7 @@ Item {
                                     font.pixelSize: Theme.type.subtitle.size
                                 }
                                 Text {
-                                    text: {
-                                        let k = wrapper.kind
-                                        let v = wrapper.value || ""
-                                        if (k === "runner")    return qsTr("runner: %1").arg(v)
-                                        if (k === "tag")       return qsTr("tag: %1").arg(v)
-                                        if (k === "favourite") return qsTr("favourites")
-                                        if (k === "recent")    return qsTr("recent (top 10)")
-                                        if (k === "all")       return qsTr("all games")
-                                        return k
-                                    }
+                                    text: CategoryLabels.subtitle(wrapper)
                                     color: Theme.textSubtle
                                     font.pixelSize: Theme.type.caption.size
                                 }

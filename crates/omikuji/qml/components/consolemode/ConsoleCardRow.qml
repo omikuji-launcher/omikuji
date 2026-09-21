@@ -1,7 +1,7 @@
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
-import "../lib/RunnerGrouping.js" as RG
+import "../lib/CategoryFilter.js" as CF
 
 Item {
     id: row
@@ -74,45 +74,18 @@ Item {
     }
 
     function _recomputeRecent() {
-        _recentIds = {}
-        if (!gameModelRef) return
-        let dated = []
-        for (let i = 0; i < gameModelRef.count; i++) {
-            let g = gameModelRef.get_game(i)
-            if (!g) continue
-            let ts = Date.parse(g.lastPlayed || "") || 0
-            if (ts > 0) dated.push({ id: g.gameId, ts: ts })
-        }
-        dated.sort((a, b) => b.ts - a.ts)
-        let next = {}
-        for (let i = 0; i < Math.min(10, dated.length); i++) next[dated[i].id] = true
-        _recentIds = next
+        _recentIds = CF.computeRecent(gameModelRef)
     }
 
     function _matches(g) {
         if (!g) return false
-
-        let q = (searchText || "").trim().toLowerCase()
-        if (q.length > 0) {
-            let name = (g.name || "").toLowerCase()
-            if (name.indexOf(q) === -1) return false
-        }
+        if (!CF.nameMatches(g.name, searchText)) return false
 
         let cat = _currentCategory
         let kind = cat.kind || "all"
-        let value = cat.value || ""
-        switch (kind) {
-            case "all":       return true
-            case "favourite": return g.favourite === true
-            case "recent":    return _recentIds[g.gameId] === true
-            case "runner":    return RG.runnerBucket(g.runnerType) === value
-            case "tag": {
-                let cats = []
-                try { cats = JSON.parse(g.categories || "[]") } catch (e) { cats = [] }
-                return cats.indexOf(value) !== -1
-            }
-            default: return true
-        }
+        let verdict = CF.cardVerdict(kind, g.hidden === true, g.favourite === true)
+        if (verdict !== null) return verdict
+        return CF.gameVerdict(kind, cat.value || "", g, _recentIds)
     }
 
     function _rebuildFilter() {

@@ -22,6 +22,7 @@ DialogCard {
     readonly property var kindOptions: [
         { label: qsTr("All games"),  value: "all" },
         { label: qsTr("Favourites"), value: "favourite" },
+        { label: qsTr("Hidden"),     value: "hidden" },
         { label: qsTr("Recent"),     value: "recent" },
         { label: qsTr("Runner"),     value: "runner" },
         { label: qsTr("Tag"),        value: "tag" }

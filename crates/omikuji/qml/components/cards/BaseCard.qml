@@ -70,6 +70,7 @@ Item {
     property color selectedBgTint: "transparent"
 
     property bool cardVisible: true
+    property bool animateVisibility: true
     property bool dimmed: false
 
     property bool elevation: false
@@ -120,7 +121,7 @@ Item {
     z: keyFocused ? 2 : hovered ? 1 : 0
 
     opacity: !cardVisible ? 0 : dimmed ? 0.55 : 1
-    visible: opacity > 0.01
+    visible: animateVisibility ? opacity > 0.01 : cardVisible
     Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
     // declared before frame so it renders under in paint order, only the halo outside the card ends up visible

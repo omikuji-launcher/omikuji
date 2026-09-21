@@ -29,6 +29,7 @@ Item {
     property int keyIndex: -1
     readonly property bool navFocused: gridFlick.activeFocus
     readonly property int columns: grid.colsToUse
+    readonly property bool laidOutEmpty: grid.height === 0
 
     signal keyNavMoved(int index)
     signal keyNavActivated(int index)

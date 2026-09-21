@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import "../lib/RunnerGrouping.js" as RG
+import "../lib/CategoryFilter.js" as CF
 
 
 Rectangle {
@@ -75,17 +75,7 @@ Rectangle {
     property var _recentIds: ({})
 
     function _recomputeRecent() {
-        let dated = []
-        for (let i = 0; i < root.gameModel.count; i++) {
-            let g = root.gameModel.get_game(i)
-            if (!g) continue
-            let ts = Date.parse(g.lastPlayed || "") || 0
-            if (ts > 0) dated.push({ id: g.gameId, ts: ts })
-        }
-        dated.sort((a, b) => b.ts - a.ts)
-        let next = {}
-        for (let i = 0; i < Math.min(10, dated.length); i++) next[dated[i].id] = true
-        root._recentIds = next
+        root._recentIds = CF.computeRecent(root.gameModel)
     }
 
     function drawPool(excluded) {
@@ -102,28 +92,21 @@ Rectangle {
         return pool
     }
 
+    function hiddenSplit(hidden) {
+        return CF.hiddenSplit(root.filterKind, hidden, root.showHidden)
+    }
+
     function passes(index, name, hidden, favourite) {
-        if (root.searchText !== "" && !name.toLowerCase().includes(root.searchText.toLowerCase())) {
-            return false
-        }
-        if (!root.showHidden && hidden) return false
-        if (root.filterKind === "all") return true
-        if (root.filterKind === "favourite") return favourite
+        if (!CF.nameMatches(name, root.searchText)) return false
+        if (root.hiddenSplit(hidden)) return false
+
+        let verdict = CF.cardVerdict(root.filterKind, hidden, favourite)
+        if (verdict !== null) return verdict
         if (!root.gameModel) return true
 
         let game = root.gameModel.get_game(index)
         if (!game) return false
-
-        switch (root.filterKind) {
-            case "recent": return root._recentIds[game.gameId] === true
-            case "runner": return RG.runnerBucket(game.runnerType) === root.filterValue
-            case "tag": {
-                let cats = []
-                try { cats = JSON.parse(game.categories || "[]") } catch (e) { cats = [] }
-                return cats.indexOf(root.filterValue) !== -1
-            }
-            default: return true
-        }
+        return CF.gameVerdict(root.filterKind, root.filterValue, game, root._recentIds)
     }
 
     onFilterKindChanged: if (root.filterKind === "recent") root._recomputeRecent()

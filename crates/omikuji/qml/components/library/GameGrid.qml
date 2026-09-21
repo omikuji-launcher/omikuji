@@ -58,6 +58,27 @@ Item {
         hint: qsTr("pick a store on the left to install games, or add one yourself with the + button up top")
     }
 
+    Component {
+        id: curiousSpirit
+        CuriousSpirit {}
+    }
+
+    EmptyState {
+        readonly property bool searching: root.searchText !== ""
+
+        anchors.fill: parent
+        visible: root.gameModel && root.gameModel.count > 0 && cardGrid.laidOutEmpty
+        icon: searching ? "search" : ""
+        artComponent: searching ? null : curiousSpirit
+        artSize: 72
+        textSize: Theme.type.title.size
+        hintSize: Theme.type.body.size
+        text: searching ? qsTr("nothing matches that") : qsTr("well, this looks like a desert")
+        hint: searching
+            ? qsTr("try fewer letters, or clear the search to get the library back")
+            : qsTr("no game in your library fits this category yet")
+    }
+
     CardGrid {
         id: cardGrid
         anchors.fill: parent
@@ -101,6 +122,7 @@ Item {
             selected: index === root.selectedIndex
             dimmed: root.dimHidden && hidden
             cardVisible: !root.view || root.view.passes(index, name, hidden, favourite)
+            animateVisibility: !root.view || !root.view.hiddenSplit(hidden)
             reorderable: root.reorderActive
             onClicked: {
                 cardGrid.focusIndex(index)

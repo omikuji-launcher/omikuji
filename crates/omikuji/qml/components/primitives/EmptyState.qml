@@ -8,6 +8,7 @@ Item {
     id: root
 
     property string icon: ""
+    property Component artComponent: null
     property url art
     property string text: ""
     property string hint: ""
@@ -21,6 +22,12 @@ Item {
     Column {
         anchors.centerIn: parent
         spacing: 10
+
+        Loader {
+            anchors.horizontalCenter: parent.horizontalCenter
+            active: root.artComponent !== null
+            sourceComponent: root.artComponent
+        }
 
         SvgIcon {
             anchors.horizontalCenter: parent.horizontalCenter
