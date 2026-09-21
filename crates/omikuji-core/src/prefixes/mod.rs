@@ -239,7 +239,7 @@ pub fn create_prefix<F: FnMut(&str)>(
         "Ofuda".to_string(),
         PathBuf::new(),
         Some(dir.to_string_lossy().into_owned()),
-        Some("wine".to_string()),
+        Some(crate::library::RunnerType::Wine),
         (!runner.is_empty()).then(|| runner.to_string()),
     );
 

@@ -834,10 +834,16 @@ impl Default for GameModelRust {
 }
 
 fn runner_display(game: &Game) -> String {
-    match game.runner.runner_type.as_str() {
-        "steam" if !game.source.app_id.is_empty() => format!("steam:{}", game.source.app_id),
-        "flatpak" if !game.source.app_id.is_empty() => format!("flatpak:{}", game.source.app_id),
-        "native" => "Native".to_string(),
+    use omikuji_core::library::RunnerType;
+    match game.runner.runner_type {
+        RunnerType::Steam | RunnerType::Flatpak if !game.source.app_id.is_empty() => {
+            format!(
+                "{}:{}",
+                game.runner.runner_type.as_str(),
+                game.source.app_id
+            )
+        }
+        RunnerType::Native => "Native".to_string(),
         _ => omikuji_core::runners::display_name(&game.wine.version),
     }
 }
@@ -1023,7 +1029,7 @@ game_fields! {
     "source.save_path" => str, source.save_path,
     "source.patch" => str readonly, source.patch,
 
-    "runner.type" => str, runner.runner_type,
+    "runner.type" => choice, runner.runner_type,
 
     "wine.version" => str, wine.version,
     "wine.prefix" => str, wine.prefix,
@@ -1194,7 +1200,6 @@ impl qobject::GameModel {
             return QVariant::default();
         };
 
-        // debug: log first data() call per game
         if role == ROLE_NAME {
             tracing::debug!(
                 "row={} name='{}' coverart='{}'",
@@ -1241,7 +1246,7 @@ impl qobject::GameModel {
             }
             ROLE_FAVOURITE => QVariant::from(&game.metadata.favourite),
             ROLE_HIDDEN => QVariant::from(&game.metadata.hidden),
-            ROLE_RUNNER_TYPE => QVariant::from(&QString::from(&*game.runner.runner_type)),
+            ROLE_RUNNER_TYPE => QVariant::from(&QString::from(game.runner.runner_type.as_str())),
             ROLE_CATEGORIES => match serde_json::to_string(&game.metadata.categories) {
                 Ok(json) => QVariant::from(&QString::from(&json)),
                 Err(_) => QVariant::from(&QString::from("[]")),
@@ -1780,7 +1785,7 @@ impl qobject::GameModel {
         );
         map.insert(
             QString::from("runnerType"),
-            QVariant::from(&QString::from(&*game.runner.runner_type)),
+            QVariant::from(&QString::from(game.runner.runner_type.as_str())),
         );
         map.insert(
             QString::from("exe"),

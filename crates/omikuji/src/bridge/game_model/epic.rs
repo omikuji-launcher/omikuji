@@ -74,8 +74,8 @@ impl super::qobject::GameModel {
         dlcs: &QString,
     ) -> QString {
         use omikuji_core::library::{
-            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
-            WineConfig,
+            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, RunnerType, SourceConfig,
+            SystemConfig, WineConfig,
         };
 
         let app_name_s = app_name.to_string();
@@ -118,7 +118,7 @@ impl super::qobject::GameModel {
                 ..SourceConfig::default()
             },
             runner: RunnerConfig {
-                runner_type: "wine".to_string(),
+                runner_type: RunnerType::Wine,
             },
             wine: WineConfig {
                 version: runner_str,

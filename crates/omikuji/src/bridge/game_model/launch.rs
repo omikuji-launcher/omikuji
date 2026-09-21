@@ -3,7 +3,7 @@ use std::pin::Pin;
 use cxx_qt_lib::QString;
 
 use omikuji_core::components_config::ArchiveSource;
-use omikuji_core::library::Game;
+use omikuji_core::library::{Game, RunnerType};
 
 impl super::qobject::GameModel {
     pub fn launch_game(mut self: Pin<&mut Self>, index: i32) -> bool {
@@ -60,7 +60,7 @@ impl super::qobject::GameModel {
             name,
             exe_path,
             (!prefix_v.is_empty()).then_some(prefix_v),
-            Some("wine".to_string()),
+            Some(RunnerType::Wine),
             (!runner_v.is_empty()).then_some(runner_v),
         );
         let config = match omikuji_core::launch::build_launch(&game) {
@@ -443,7 +443,7 @@ fn do_spawn_launch(game: &Game) -> bool {
         return true;
     }
 
-    if game.runner.runner_type == "steam" {
+    if game.runner.runner_type.is_steam() {
         omikuji_core::notifications::info(
             &game.metadata.name,
             "Launching through Steam... any errors will show in Steam itself",

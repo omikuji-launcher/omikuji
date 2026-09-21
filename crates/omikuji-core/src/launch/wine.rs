@@ -101,10 +101,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
 }
 
 pub fn missing_component(game: &Game) -> Option<String> {
-    if matches!(
-        game.runner.runner_type.as_str(),
-        "steam" | "flatpak" | "native"
-    ) {
+    if !game.uses_wine_prefix() {
         return None;
     }
     let version = &game.wine.version;

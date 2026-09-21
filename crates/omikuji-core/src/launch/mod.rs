@@ -2,7 +2,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 use crate::fs_util::is_executable;
-use crate::library::Game;
+use crate::library::{Game, RunnerType};
 use crate::template_vars::TemplateVars;
 
 pub mod alongside;
@@ -108,9 +108,9 @@ fn run_pre_launch_script(game: &Game, config: &ResolvedLaunch) {
 
 fn validate_exe(game: &Game) -> Result<()> {
     let exe = &game.metadata.exe;
-    match game.runner.runner_type.as_str() {
-        "steam" | "flatpak" => Ok(()),
-        "native" => {
+    match game.runner.runner_type {
+        RunnerType::Steam | RunnerType::Flatpak => Ok(()),
+        RunnerType::Native => {
             if exe.as_os_str().is_empty() {
                 anyhow::bail!("Native runner requires an executable");
             }
@@ -125,7 +125,7 @@ fn validate_exe(game: &Game) -> Result<()> {
             }
             Ok(())
         }
-        _ => {
+        RunnerType::Wine => {
             if !game.is_epic() && !exe.as_os_str().is_empty() && !exe.exists() {
                 anyhow::bail!("Game executable not found at `{}`", exe.display());
             }

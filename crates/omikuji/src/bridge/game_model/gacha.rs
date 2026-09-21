@@ -172,8 +172,8 @@ impl super::qobject::GameModel {
         options_csv: &QString,
     ) -> QString {
         use omikuji_core::library::{
-            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
-            WineConfig,
+            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, RunnerType, SourceConfig,
+            SystemConfig, WineConfig,
         };
 
         let mid = manifest_id.to_string();
@@ -225,7 +225,7 @@ impl super::qobject::GameModel {
                 ..SourceConfig::default()
             },
             runner: RunnerConfig {
-                runner_type: "wine".to_string(),
+                runner_type: RunnerType::Wine,
             },
             wine: WineConfig {
                 version: runner_s,

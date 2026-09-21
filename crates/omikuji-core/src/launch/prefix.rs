@@ -5,7 +5,7 @@ use std::process::Stdio;
 
 use super::wine::{ProtonVerb, WineVariant};
 use super::wine_command;
-use crate::library::Game;
+use crate::library::{Game, RunnerType};
 use crate::template_vars::TemplateVars;
 
 pub fn prefix_path_for(game: &Game) -> PathBuf {
@@ -26,16 +26,16 @@ pub fn prefix_path_for(game: &Game) -> PathBuf {
 }
 
 pub fn effective_prefix(game: &Game) -> Option<PathBuf> {
-    match game.runner.runner_type.as_str() {
-        "native" | "flatpak" => None,
-        "steam" => {
+    match game.runner.runner_type {
+        RunnerType::Native | RunnerType::Flatpak => None,
+        RunnerType::Steam => {
             if game.source.app_id.is_empty() {
                 None
             } else {
                 crate::store::steam::local::find_steam_prefix(&game.source.app_id)
             }
         }
-        _ => Some(prefix_path_for(game)),
+        RunnerType::Wine => Some(prefix_path_for(game)),
     }
 }
 

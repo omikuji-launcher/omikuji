@@ -18,6 +18,16 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst))
 }
 
+// yes pump as in the sexual joke ghaha yeah mature of me
+fn pump_lines(pipe: impl std::io::Read + Send + 'static, tx: std::sync::mpsc::Sender<String>) {
+    std::thread::spawn(move || {
+        use std::io::{BufRead, BufReader};
+        for line in BufReader::new(pipe).lines().map_while(|l| l.ok()) {
+            let _ = tx.send(line);
+        }
+    });
+}
+
 #[derive(Debug, Clone)]
 pub enum ProcessState {
     Running {
@@ -66,13 +76,13 @@ impl ProcessManager {
         }
 
         // steam manages its own prefix, skip dll injection for it
-        if game.runner.runner_type != "steam"
+        if !game.runner.runner_type.is_steam()
             && let Err(e) = crate::dll_packs::inject_all(&game, &config.env)
         {
             tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
         }
 
-        if game.runner.runner_type != "steam"
+        if !game.runner.runner_type.is_steam()
             && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
             && !crate::store::steam::local::under_steamapps_common(&runner_dir)
             && let Err(e) =
@@ -102,7 +112,7 @@ impl ProcessManager {
         // drop stale in-memory log from the previous session before streaming new lines
         crate::game_logs::reset_log(&config.game_id);
 
-        // save_game_logs is opt-in; we still run ther reader so the log viewer works
+        // save_game_logs is opt-in; we still run the reader so the log viewer works
         let save_to_disk = crate::app_settings::AppSettings::load()
             .behavior
             .save_game_logs;
@@ -136,7 +146,7 @@ impl ProcessManager {
         // setsid makes the child the session leader so we can kill the entire tree (wine, proton, umu-run, the actual game) by sid later.
         // steam manages its own lifecycle, breaks with session detachment.
         #[cfg(unix)]
-        if game.runner.runner_type != "steam" {
+        if !game.runner.runner_type.is_steam() {
             use std::os::unix::process::CommandExt;
             unsafe {
                 cmd.pre_exec(|| {
@@ -184,24 +194,10 @@ impl ProcessManager {
             });
         }
         if let Some(stdout) = stdout_pipe {
-            let tx = log_tx.clone();
-            std::thread::spawn(move || {
-                use std::io::{BufRead, BufReader};
-                let reader = BufReader::new(stdout);
-                for line in reader.lines().map_while(|l| l.ok()) {
-                    let _ = tx.send(line);
-                }
-            });
+            pump_lines(stdout, log_tx.clone());
         }
         if let Some(stderr) = stderr_pipe {
-            let tx = log_tx;
-            std::thread::spawn(move || {
-                use std::io::{BufRead, BufReader};
-                let reader = BufReader::new(stderr);
-                for line in reader.lines().map_while(|l| l.ok()) {
-                    let _ = tx.send(line);
-                }
-            });
+            pump_lines(stderr, log_tx);
         }
 
         let proc_id = next_id();
@@ -234,7 +230,7 @@ impl ProcessManager {
             // tracked parent. legendary and umu-run hand off to wine, so the
             // parent exits early while the real game is still running.
             if let Ok(Some(game)) = crate::library::Library::load_game_by_id(&game_id) {
-                if game.runner.runner_type != "steam" {
+                if !game.runner.runner_type.is_steam() {
                     while session_has_live_process(pid) {
                         std::thread::sleep(Duration::from_millis(500));
                     }
@@ -573,7 +569,7 @@ pub fn stop_game(game_id: &str) -> bool {
     let is_steam = crate::library::Library::load_game_by_id(game_id)
         .ok()
         .flatten()
-        .map(|g| g.runner.runner_type == "steam")
+        .map(|g| g.runner.runner_type.is_steam())
         .unwrap_or(false);
 
     tracing::info!("stopping game '{}' (pid: {:?})", game_id, session_pid);

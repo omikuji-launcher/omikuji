@@ -107,7 +107,7 @@ fn prefix_game(path: &QString, runner: &QString) -> omikuji_core::library::Game 
         "Ofuda".to_string(),
         std::path::PathBuf::new(),
         (!prefix.is_empty()).then_some(prefix),
-        Some("wine".to_string()),
+        Some(omikuji_core::library::RunnerType::Wine),
         (!runner.is_empty()).then_some(runner),
     )
 }

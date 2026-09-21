@@ -131,7 +131,7 @@ pub fn get_game_browse_dir(game: &Game) -> Option<PathBuf> {
         }
     }
 
-    if game.runner.runner_type == "steam" {
+    if game.runner.runner_type.is_steam() {
         return crate::store::steam::local::get_game_install_dir(&game.metadata.id);
     }
 

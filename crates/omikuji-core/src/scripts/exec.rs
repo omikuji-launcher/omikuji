@@ -1,5 +1,5 @@
 use super::{InputKind, Script, Step, StepAction, interpolate};
-use crate::library::Game;
+use crate::library::{Game, RunnerType};
 use crate::wine_tools::WineTool;
 use anyhow::{Context, Result, bail};
 use regex::Regex;
@@ -81,7 +81,7 @@ pub fn execute<F: FnMut(&str)>(
         script.script.name.clone(),
         PathBuf::new(),
         Some(prefix.to_string_lossy().into_owned()),
-        Some("wine".to_string()),
+        Some(RunnerType::Wine),
         wine_version.clone(),
     );
 
@@ -169,17 +169,13 @@ pub fn execute<F: FnMut(&str)>(
                 on_line(&format!("game exe not found at {}", exe.display()));
             }
 
-            let runner = if spec.runner.is_empty() {
-                "wine"
-            } else {
-                &spec.runner
-            };
-            let is_wine = runner == "wine";
+            let runner: RunnerType = spec.runner.parse().unwrap_or_default();
+            let is_wine = runner == RunnerType::Wine;
             let mut game = Game::with_options(
                 spec.name.clone(),
                 exe,
                 is_wine.then(|| prefix.to_string_lossy().into_owned()),
-                Some(runner.to_string()),
+                Some(runner),
                 if is_wine { wine_version } else { None },
             );
             game.metadata.id = id;

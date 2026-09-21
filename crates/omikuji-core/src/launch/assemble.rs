@@ -7,7 +7,7 @@ use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
 use super::wine::{WineVariant, resolve_wine_exe};
 use super::{ComponentMissing, StoreSignedOut};
-use crate::library::Game;
+use crate::library::{Game, RunnerType};
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::template_vars::TemplateVars;
 
@@ -55,11 +55,11 @@ impl ResolvedLaunch {
 pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<ResolvedLaunch> {
     let working_dir = resolve_working_dir(game);
 
-    match game.runner.runner_type.as_str() {
-        "steam" => return build_steam_launch(game, working_dir),
-        "flatpak" => return build_flatpak_launch(game, working_dir),
-        "native" => return build_native_launch(game, working_dir),
-        _ => {}
+    match game.runner.runner_type {
+        RunnerType::Steam => return build_steam_launch(game, working_dir),
+        RunnerType::Flatpak => return build_flatpak_launch(game, working_dir),
+        RunnerType::Native => return build_native_launch(game, working_dir),
+        RunnerType::Wine => {}
     }
 
     let variant = WineVariant::from_version(&game.wine.version);

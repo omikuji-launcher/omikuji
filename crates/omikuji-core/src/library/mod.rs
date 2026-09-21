@@ -59,11 +59,6 @@ pub struct Metadata {
     pub categories: Vec<String>,
 }
 
-// drives detection (epic legendary wrapping, store-specific launch flows) and the ui badge/icon.
-// orthogonal to runner: an epic game still uses runner_type="wine", source.kind="epic".
-// kind values: "" (manual), "epic", "steam", "gog", "gacha"...
-// honestly idk if i should use the relative epic/gog/gacha badges in the library for these games. cause for steam *steam* launches them, while installing these three latter stores you're still launching
-// them on local with your own custom wine stuff, so i wonder... i wonder i wonder i wonder
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct SourceConfig {
     #[serde(default)]
@@ -87,10 +82,64 @@ pub struct SourceConfig {
     pub dlcs: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum RunnerType {
+    #[default]
+    Wine,
+    Steam,
+    Flatpak,
+    Native,
+}
+
+impl RunnerType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Wine => "wine",
+            Self::Steam => "steam",
+            Self::Flatpak => "flatpak",
+            Self::Native => "native",
+        }
+    }
+
+    pub fn is_steam(self) -> bool {
+        self == Self::Steam
+    }
+
+    pub fn on_host(self) -> bool {
+        matches!(self, Self::Native | Self::Flatpak)
+    }
+}
+
+impl std::str::FromStr for RunnerType {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "steam" => Ok(Self::Steam),
+            "flatpak" => Ok(Self::Flatpak),
+            "native" => Ok(Self::Native),
+            _ => Err(()),
+        }
+    }
+}
+
+impl Serialize for RunnerType {
+    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(self.as_str())
+    }
+}
+
+// a typo in the toml falls back to wine instead of failing the whole game load
+impl<'de> Deserialize<'de> for RunnerType {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        Ok(String::deserialize(d)?.parse().unwrap_or_default())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct RunnerConfig {
     #[serde(alias = "runner_type", rename = "type", default)]
-    pub runner_type: String, // "wine", "steam", "flatpak"
+    pub runner_type: RunnerType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -467,7 +516,7 @@ impl Library {
         let path = match Self::find_game_file_by_id(&game.metadata.id) {
             Ok(Some(existing_path)) => existing_path,
             _ => {
-                let filename = if game.runner.runner_type == "steam" {
+                let filename = if game.runner.runner_type.is_steam() {
                     format!("steam_{}.toml", game.metadata.id)
                 } else {
                     format!("{}_{}.toml", slugify(&game.metadata.name), game.metadata.id)
@@ -529,14 +578,14 @@ pub fn generate_id() -> String {
 
 impl Game {
     pub fn new(name: String, exe: PathBuf) -> Self {
-        Self::with_options(name, exe, None, Some("wine".to_string()), None)
+        Self::with_options(name, exe, None, Some(RunnerType::Wine), None)
     }
 
     pub fn with_options(
         name: String,
         exe: PathBuf,
         prefix: Option<String>,
-        runner_type: Option<String>,
+        runner_type: Option<RunnerType>,
         runner_version: Option<String>,
     ) -> Self {
         Self {
@@ -598,10 +647,7 @@ impl Game {
 
     // steam/flatpak/native launch outside wine, so they don't use an omikuji-managed prefix, damn gaijin...
     pub fn uses_wine_prefix(&self) -> bool {
-        !matches!(
-            self.runner.runner_type.as_str(),
-            "steam" | "flatpak" | "native"
-        )
+        self.runner.runner_type == RunnerType::Wine
     }
 
     // skips fields the caller already set so per-source picks (steam:appid etc) survive

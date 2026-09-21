@@ -76,6 +76,6 @@ impl super::qobject::GameModel {
 
     pub fn steam_shortcut_available(&self, index: i32) -> bool {
         self.game_at(index)
-            .is_some_and(|game| game.runner.runner_type != "steam" && steam::available())
+            .is_some_and(|game| !game.runner.runner_type.is_steam() && steam::available())
     }
 }

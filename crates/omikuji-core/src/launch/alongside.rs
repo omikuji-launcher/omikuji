@@ -4,7 +4,7 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use super::{EnvPurpose, build_launch_as};
-use crate::library::{AlongsideWhen, Game};
+use crate::library::{AlongsideWhen, Game, RunnerType};
 use crate::template_vars::TemplateVars;
 
 pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
@@ -41,9 +41,10 @@ fn spawn_logged(game: &Game, host_env: &HashMap<String, String>, target: &str) {
 }
 
 fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Result<u32> {
-    let mut cmd = match game.runner.runner_type.as_str() {
-        "native" | "flatpak" => host_command(game, host_env, target),
-        _ => prefix_command(game, target)?,
+    let mut cmd = if game.runner.runner_type.on_host() {
+        host_command(game, host_env, target)
+    } else {
+        prefix_command(game, target)?
     };
     cmd.env(crate::process::GAME_ID_VAR, &game.metadata.id);
     cmd.stdin(Stdio::null());
@@ -95,7 +96,7 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
         name,
         exe,
         Some(super::resolve_prefix(source).to_string_lossy().into_owned()),
-        Some("wine".to_string()),
+        Some(RunnerType::Wine),
         (!source.wine.version.is_empty()).then(|| source.wine.version.clone()),
     );
     tool.launch.args = game.launch.alongside_args.clone();

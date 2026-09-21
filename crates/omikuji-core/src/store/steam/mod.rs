@@ -56,11 +56,11 @@ pub fn apply_playtime_data(
     let steam_game_count = library
         .game
         .iter()
-        .filter(|g| g.runner.runner_type == "steam")
+        .filter(|g| g.runner.runner_type.is_steam())
         .count();
 
     for game in &mut library.game {
-        if game.runner.runner_type != "steam" {
+        if !game.runner.runner_type.is_steam() {
             continue;
         }
 

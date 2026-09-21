@@ -49,8 +49,8 @@ impl super::qobject::GameModel {
         }
 
         use omikuji_core::library::{
-            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, SourceConfig, SystemConfig,
-            WineConfig,
+            GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, RunnerType, SourceConfig,
+            SystemConfig, WineConfig,
         };
 
         let mut game = Game {
@@ -61,7 +61,7 @@ impl super::qobject::GameModel {
                 ..SourceConfig::default()
             },
             runner: RunnerConfig {
-                runner_type: "steam".to_string(),
+                runner_type: RunnerType::Steam,
             },
             wine: WineConfig {
                 version: format!("steam:{}", appid_str),
@@ -127,7 +127,7 @@ impl super::qobject::GameModel {
 
                 let mut saved = 0;
                 for game in &library.game {
-                    if game.runner.runner_type == "steam" {
+                    if game.runner.runner_type.is_steam() {
                         if let Err(e) = Library::save_game_static(game) {
                             tracing::error!("failed to save {}: {}", game.metadata.id, e);
                         } else {
