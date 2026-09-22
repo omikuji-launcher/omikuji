@@ -26,6 +26,7 @@ Item {
         Loader {
             anchors.horizontalCenter: parent.horizontalCenter
             active: root.artComponent !== null
+            visible: active
             sourceComponent: root.artComponent
         }
 
