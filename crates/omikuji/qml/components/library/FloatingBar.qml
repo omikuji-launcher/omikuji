@@ -44,7 +44,6 @@ Item {
     property bool isRunning: false
     property bool runnerUpdating: false
     property bool isLaunching: false
-    property int launchShowDelay: 120
 
     // non-null when theres an active download, launching mid-patch reads files the patcher is rewriting
     property var downloadActivity: null
@@ -66,7 +65,6 @@ Item {
     readonly property bool displayedHasActivity:
         displayedActivity !== null && displayedActivity !== undefined
 
-    property bool _launchVisible: false
     property bool _barHidden: true
     // prevents the 150ms button crossfade from playing visibly through the 200ms bar fade-in
     property bool _suppressButtonAnim: false
@@ -105,12 +103,11 @@ Item {
         if (_canSync()) displayedIsRunning = isRunning
     }
     function _syncIsLaunching() {
-        if (_canSync()) displayedIsLaunching = _launchVisible
+        if (_canSync()) displayedIsLaunching = launchShown.value
     }
     function _adoptLaunchState() {
-        launchShowTimer.stop()
-        _launchVisible = isLaunching
-        displayedIsLaunching = _launchVisible
+        launchShown.settle()
+        displayedIsLaunching = launchShown.value
     }
     function _syncActivity() {
         if (_canSync()) displayedActivity = downloadActivity
@@ -122,22 +119,12 @@ Item {
     onDownloadActivityChanged: Qt.callLater(_syncActivity)
     onRunnerUpdatingChanged: Qt.callLater(_syncRunnerUpdating)
 
-    onIsLaunchingChanged: {
-        if (isLaunching) {
-            launchShowTimer.restart()
-            return
-        }
-        launchShowTimer.stop()
-        _launchVisible = false
-        Qt.callLater(_syncIsLaunching)
-    }
-
-    Timer {
-        id: launchShowTimer
-        interval: root.launchShowDelay
-        onTriggered: {
-            root._launchVisible = true
-            root._syncIsLaunching()
+    DelayedFlag {
+        id: launchShown
+        source: root.isLaunching
+        onValueChanged: {
+            if (value) root._syncIsLaunching()
+            else Qt.callLater(root._syncIsLaunching)
         }
     }
 

@@ -914,28 +914,9 @@ property real cardZoom: appSettings.cardZoom
             }
         }
 
-        Rectangle {
+        FadePanel {
             id: downloadsPanel
-            property bool isDropdownHost: true
-            anchors.fill: parent
-            color: Theme.surface
-            radius: Theme.radius.md
-            visible: opacity > 0
-            enabled: root.currentView === "downloads"
-            opacity: root.currentView === "downloads" ? 1 : 0
-
-            Behavior on opacity {
-                NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-            }
-
-            Rectangle {
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                width: parent.radius
-                height: parent.radius
-                color: parent.color
-                visible: parent.visible
-            }
+            shown: root.currentView === "downloads"
 
             DownloadsPage {
                 anchors.fill: parent

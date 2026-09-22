@@ -30,6 +30,10 @@ Item {
     readonly property bool navFocused: gridFlick.activeFocus
     readonly property int columns: grid.colsToUse
 
+    // the first layout after a reveal places cards built while hidden
+    property bool _laidOutVisible: false
+    onVisibleChanged: if (!visible) _laidOutVisible = false
+
     signal keyNavMoved(int index)
     signal keyNavActivated(int index)
 
@@ -204,7 +208,10 @@ Item {
                 return Math.max(sidePad, (parent.width - width) / 2)
             }
 
+            onPositioningComplete: root._laidOutVisible = root.visible
+
             move: Transition {
+                enabled: root._laidOutVisible
                 NumberAnimation { properties: "x,y"; duration: 200; easing.type: Easing.OutCubic }
             }
 

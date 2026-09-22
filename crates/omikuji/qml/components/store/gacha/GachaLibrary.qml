@@ -128,7 +128,11 @@ Item {
                 }
             }
 
-            overlayComponent: Component {
+            overlayComponent: isDownloading ? progressOverlay : null
+
+            Component {
+                id: progressOverlay
+
                 Item {
                     Rectangle {
                         anchors.bottom: parent.bottom
@@ -138,7 +142,6 @@ Item {
                         height: 24
                         radius: 10
                         color: Theme.alpha(Theme.accent, 0.9)
-                        visible: gachaCard.isDownloading
 
                         Text {
                             anchors.centerIn: parent

@@ -1,7 +1,7 @@
 import QtQuick
 import omikuji 1.0
 
-Rectangle {
+FadePanel {
     id: panel
 
     property string viewName: ""
@@ -9,36 +9,14 @@ Rectangle {
     property bool unloadIdle: true
     property alias sourceComponent: loader.sourceComponent
 
-    // M3Dropdown walks up looking for this flag to reparent its popup
-    property bool isDropdownHost: true
-
     signal activated()
     signal deactivated()
     signal idleUnloaded()
 
-    anchors.fill: parent
-    color: Theme.surface
-    radius: Theme.radius.md
-    visible: opacity > 0
-    enabled: panelActive
-    opacity: panelActive ? 1 : 0
+    shown: panelActive
 
     readonly property bool panelActive: viewName === currentView
     property bool keepAlive: panelActive
-
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
-
-    // corner mask so the rounded bottom-right doesnt let content bleed
-    Rectangle {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: parent.radius
-        height: parent.radius
-        color: parent.color
-        visible: parent.visible
-    }
 
     onPanelActiveChanged: {
         if (panelActive) {

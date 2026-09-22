@@ -230,22 +230,26 @@ Item {
                 visible: !bannerImg.visible
             }
 
-            Squircle {
+            Loader {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.margins: 8
-                width: root.leftIconSize + 10
-                height: width
-                radius: Theme.radius.md
-                fillColor: Qt.rgba(0, 0, 0, 0.45)
-                visible: root.spec.nameOnArt && root.leftIconName !== ""
-                opacity: root.onArtOpacity
+                active: root.spec.nameOnArt && root.leftIconName !== ""
+                visible: active
 
-                SvgIcon {
-                    anchors.centerIn: parent
-                    name: root.leftIconName
-                    size: root.leftIconSize
-                    color: root.onArtColor
+                sourceComponent: Squircle {
+                    width: root.leftIconSize + 10
+                    height: width
+                    radius: Theme.radius.md
+                    fillColor: Qt.rgba(0, 0, 0, 0.45)
+                    opacity: root.onArtOpacity
+
+                    SvgIcon {
+                        anchors.centerIn: parent
+                        name: root.leftIconName
+                        size: root.leftIconSize
+                        color: root.onArtColor
+                    }
                 }
             }
         }

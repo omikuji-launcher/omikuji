@@ -5,10 +5,8 @@ import omikuji 1.0
 import "../lib/CategoryFilter.js" as CF
 
 
-Rectangle {
+FadePanel {
     id: root
-
-    property bool isDropdownHost: true
 
     property var gameModel: null
     property var actions: null
@@ -169,25 +167,7 @@ Rectangle {
         function onRowsRemoved() { root._refreshDerived() }
     }
 
-    anchors.fill: parent
-    color: Theme.surface
-    radius: Theme.radius.md
-    visible: opacity > 0
-    enabled: root.active
-    opacity: root.active ? 1 : 0
-
-    Behavior on opacity {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
-
-    Rectangle {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: parent.radius
-        height: parent.radius
-        color: parent.color
-        visible: parent.visible
-    }
+    shown: root.active
 
     GameGrid {
         id: gameGrid

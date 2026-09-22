@@ -35,112 +35,152 @@ Item {
             storeModel.refresh()
         }
     }
-    Component.onCompleted: _maybeRefresh()
+    Component.onCompleted: {
+        _maybeRefresh()
+        _syncRows()
+    }
     onVisibleChanged: if (visible) _maybeRefresh()
 
-    // cardGrid stays mounted so cached cards paint during live refresh; overlays sit on top (z:90)
+    property bool hasRows: false
+
+    function _syncRows() {
+        root.hasRows = !!root.storeModel && root.storeModel.rowCount() > 0
+    }
+
+    onStoreModelChanged: _syncRows()
+
+    Connections {
+        target: root.storeModel
+        function onModelReset() { root._syncRows() }
+        function onRowsInserted() { root._syncRows() }
+        function onRowsRemoved() { root._syncRows() }
+    }
+
+    // the grid stays mounted so cached cards paint during live refresh; overlays sit on top (z:90)
     readonly property bool isLoggedIn: storeModel && storeModel.isLoggedIn
     readonly property bool isRefreshing: storeModel && storeModel.isRefreshing === true
+    readonly property bool gridReady: gridLoader.status === Loader.Ready
 
-    CardGrid {
-        id: cardGrid
+    Loader {
+        id: gridLoader
         anchors.fill: parent
-        visible: root.isLoggedIn
-        enabled: visible
+        asynchronous: true
+        active: root.isLoggedIn && (root.hasRows || !root.isRefreshing)
+        opacity: root.gridReady ? 1 : 0
+        visible: opacity > 0
+        sourceComponent: gridComponent
 
-        model: root.storeModel
-        cardZoom: root.cardZoom
-        cardSpacing: root.cardSpacing
-        cardFlow: root.cardFlow
-
-        headerComponent: Component {
-            RowLayout {
-                anchors.fill: parent
-                spacing: 8
-
-                Text {
-                    text: qsTr("Logged in as: %1").arg(root.storeModel ? root.storeModel.displayName : "")
-                    color: Theme.textMuted
-                    font.pixelSize: Theme.type.label.size
-                }
-
-                Item { Layout.fillWidth: true }
-
-                IconButton {
-                    icon: "sync"
-                    size: 32
-                    onClicked: root.storeModel.refresh()
-                }
-
-                IconButton {
-                    icon: "logout"
-                    size: 32
-                    onClicked: root.storeModel.logout()
-                }
-            }
+        Behavior on opacity {
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
         }
+    }
 
-        delegate: BaseCard {
-            id: storeCard
-            required property var modelData
-            required property int index
+    Component {
+        id: gridComponent
 
-            width: 180 * root.cardZoom
-            height: styledHeight
-            cardStyle: root.cardStyle
-            elevation: root.cardElevation
+        CardGrid {
+            model: root.storeModel
+            cardZoom: root.cardZoom
+            cardSpacing: root.cardSpacing
+            cardFlow: root.cardFlow
 
-            property bool isInstalled: modelData.isInstalled
-            property bool hasLibraryEntry: modelData.hasLibraryEntry === true
-            property bool isDownloading: root.activeDownloads[modelData.appName] !== undefined
-            property string cardState: !isInstalled ? "uninstalled"
-                : (hasLibraryEntry ? "imported" : "needs-import")
+            headerComponent: Component {
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 8
 
-            title: modelData.title
-            imageSource: modelData.coverart || ""
-            imageOpacity: isInstalled ? 1.0 : 0.6
-            leftIconName: root.iconName
-            leftIconSize: 20
-            selected: isInstalled
-            clickable: false
-            cardVisible: root.searchText === ""
-                || (modelData.title || "").toLowerCase().includes(root.searchText.toLowerCase())
-
-            function primaryAction() {
-                if (isDownloading) return
-                if (cardState === "needs-import") root.importRequested(index)
-                else root.installRequested(index)
-            }
-
-            actionComponent: Component {
-                StoreCardAction {
-                    icon: {
-                        if (storeCard.cardState === "uninstalled") return "add"
-                        if (storeCard.cardState === "needs-import") return "download"
-                        return "bookmark_check"
+                    Text {
+                        text: qsTr("Logged in as: %1").arg(root.storeModel ? root.storeModel.displayName : "")
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.type.label.size
                     }
-                    visible: !storeCard.isDownloading
-                    onClicked: storeCard.primaryAction()
+
+                    Item { Layout.fillWidth: true }
+
+                    IconButton {
+                        icon: "sync"
+                        size: 32
+                        onClicked: root.storeModel.refresh()
+                    }
+
+                    IconButton {
+                        icon: "logout"
+                        size: 32
+                        onClicked: root.storeModel.logout()
+                    }
                 }
             }
 
-            overlayComponent: Component {
-                CardProgressOverlay {
-                    readonly property var download: root.activeDownloads[storeCard.modelData.appName]
-                    visible: storeCard.isDownloading && download !== undefined
-                    bannerArea: storeCard.bannerArea
-                    bottomInset: storeCard.overlayBottomInset
-                    status: download ? download.status : ""
-                    progress: download ? download.progress : 0
+            delegate: BaseCard {
+                id: storeCard
+                required property var modelData
+                required property int index
+
+                width: 180 * root.cardZoom
+                height: styledHeight
+                cardStyle: root.cardStyle
+                elevation: root.cardElevation
+
+                property bool isInstalled: modelData.isInstalled
+                property bool hasLibraryEntry: modelData.hasLibraryEntry === true
+                property bool isDownloading: root.activeDownloads[modelData.appName] !== undefined
+                property string cardState: !isInstalled ? "uninstalled"
+                    : (hasLibraryEntry ? "imported" : "needs-import")
+
+                title: modelData.title
+                imageSource: modelData.coverart || ""
+                imageOpacity: isInstalled ? 1.0 : 0.6
+                leftIconName: root.iconName
+                leftIconSize: 20
+                selected: isInstalled
+                clickable: false
+                cardVisible: root.searchText === ""
+                    || (modelData.title || "").toLowerCase().includes(root.searchText.toLowerCase())
+
+                function primaryAction() {
+                    if (isDownloading) return
+                    if (cardState === "needs-import") root.importRequested(index)
+                    else root.installRequested(index)
+                }
+
+                actionComponent: Component {
+                    StoreCardAction {
+                        icon: {
+                            if (storeCard.cardState === "uninstalled") return "add"
+                            if (storeCard.cardState === "needs-import") return "download"
+                            return "bookmark_check"
+                        }
+                        visible: !storeCard.isDownloading
+                        onClicked: storeCard.primaryAction()
+                    }
+                }
+
+                overlayComponent: isDownloading ? progressOverlay : null
+
+                Component {
+                    id: progressOverlay
+
+                    CardProgressOverlay {
+                        readonly property var download: root.activeDownloads[storeCard.modelData.appName]
+                        bannerArea: storeCard.bannerArea
+                        bottomInset: storeCard.overlayBottomInset
+                        status: download ? download.status : ""
+                        progress: download ? download.progress : 0
+                    }
                 }
             }
         }
     }
 
+    DelayedFlag {
+        id: loadingShown
+        source: root.isLoggedIn && (!root.gridReady || root.isRefreshing && !root.hasRows)
+    }
+
     Item {
         id: loadingOverlay
         anchors.fill: parent
-        visible: root.isLoggedIn && root.isRefreshing && cardGrid.count === 0
+        visible: loadingShown.value
         z: 90
 
         LoadingSpirit {
@@ -154,7 +194,7 @@ Item {
     Item {
         id: emptyOverlay
         anchors.fill: parent
-        visible: root.isLoggedIn && !root.isRefreshing && cardGrid.count === 0
+        visible: root.isLoggedIn && root.gridReady && !root.isRefreshing && !root.hasRows
         z: 90
 
         EmptyState {
