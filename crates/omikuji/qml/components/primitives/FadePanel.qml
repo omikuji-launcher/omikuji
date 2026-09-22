@@ -16,6 +16,7 @@ Rectangle {
     enabled: shown
     opacity: shown ? 1 : 0
     layer.enabled: fade.running
+    layer.live: shown
 
     Behavior on opacity {
         NumberAnimation { id: fade; duration: 200; easing.type: Easing.OutCubic }
