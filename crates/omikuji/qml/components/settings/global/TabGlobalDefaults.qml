@@ -53,11 +53,16 @@ Item {
         function onChanged() { root.refresh() }
     }
 
+    readonly property int badgeSize: 32
+    readonly property int badgeGap: 8
+    readonly property int badgeSlot: badgeSize + badgeGap
+
     component ResetBadge: IconButton {
         id: badge
         property string fieldKey: ""
         function navFallback() { return Nav.collect(badge.parent)[0] || null }
         readonly property bool active: root.isSet(fieldKey)
+        size: root.badgeSize
         icon: "sync"
         opacity: active ? 1 : 0
         enabled: active
@@ -97,12 +102,12 @@ Item {
         property string kind: ""
 
         width: parent.width
-        spacing: 8
+        spacing: root.badgeGap
 
         M3Dropdown {
             id: layerDd
             label: SettingLabels.label(layerRow.fieldKey)
-            width: parent.width - 32
+            width: parent.width - root.badgeSlot
             options: {
                 let installed = []
                 try {
@@ -150,11 +155,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3Dropdown {
                     id: versionDd
                     label: SettingLabels.label("wine.version")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     options: {
                         let runners = root.gameModel ? JSON.parse(root.gameModel.list_runners()) : []
                         return RG.runnerOptions(runners, root.cfg["wine.version"] || "", {
@@ -178,14 +183,14 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3FileField {
                     id: prefixField
                     label: SettingLabels.label("wine.prefix")
                     placeholder: qsTr("empty = auto-create per game")
                     text: root.cfg["wine.prefix"] || ""
                     selectFolder: true
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     gameModel: root.gameModel
                     onTextEdited: (t) => root.update("wine.prefix", t)
                     onAccepted: (p) => root.update("wine.prefix", p)
@@ -198,11 +203,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3Dropdown {
                     id: archDd
                     label: SettingLabels.label("wine.prefix_arch")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     options: [
                         { label: qsTr("64-bit (win64)"), value: "win64" },
                         { label: qsTr("32-bit (win32)"), value: "win32" }
@@ -267,11 +272,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 visible: root.cfg["wine.dpi_scaling"] === true
                 SettingsRow {
                     label: SettingLabels.label("wine.dpi")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     contentRightMargin: 78
                     M3SpinBox {
                         from: 72
@@ -295,11 +300,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3Dropdown {
                     id: audioDd
                     label: SettingLabels.label("wine.audio_driver")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     options: [
                         { label: qsTr("Default"), value: "" },
                         { label: "PulseAudio", value: "pulse" },
@@ -321,11 +326,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3Dropdown {
                     id: gfxDd
                     label: SettingLabels.label("wine.graphics_driver")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     options: [
                         { label: qsTr("Default"), value: "" },
                         { label: "X11", value: "x11" },
@@ -353,10 +358,10 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 KeyValueTable {
                     id: dllKvt
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     json: root.cfg["wine.dll_overrides"] || "{}"
                     keyPlaceholder: "dll_name"
                     valuePlaceholder: "n,b"
@@ -378,13 +383,13 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3TextField {
                     id: cmdPrefixTf
                     label: SettingLabels.label("launch.command_prefix")
                     placeholder: qsTr("prepended to every game's command")
                     text: root.cfg["launch.command_prefix"] || ""
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     gameModel: root.gameModel
                     onTextEdited: (t) => root.update("launch.command_prefix", t)
                 }
@@ -402,10 +407,10 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 KeyValueTable {
                     id: envKvt
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     json: root.cfg["launch.env"] || "{}"
                     keyPlaceholder: "VAR_NAME"
                     valuePlaceholder: "value"
@@ -430,11 +435,11 @@ Item {
 
             Row {
                 width: parent.width
-                spacing: 8
+                spacing: root.badgeGap
                 M3Dropdown {
                     id: gpuDd
                     label: SettingLabels.label("graphics.gpu")
-                    width: parent.width - 32
+                    width: parent.width - root.badgeSlot
                     options: root.gameModel ? JSON.parse(root.gameModel.list_gpus()).map(g => ({ label: g[0], value: g[1] })) : [{ label: qsTr("Default"), value: "" }]
                     currentIndex: {
                         let v = root.cfg["graphics.gpu"] || ""
@@ -470,10 +475,10 @@ Item {
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    spacing: root.badgeGap
                     SettingsRow {
                         label: SettingLabels.label("graphics.gamescope.fps")
-                        width: parent.width - 32
+                        width: parent.width - root.badgeSlot
                         contentRightMargin: 78
                         M3SpinBox {
                             id: fpsSpinBox
@@ -493,10 +498,10 @@ Item {
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    spacing: root.badgeGap
                     SettingsRow {
                         label: SettingLabels.label("graphics.gamescope.refresh_rate")
-                        width: parent.width - 32
+                        width: parent.width - root.badgeSlot
                         contentRightMargin: 78
                         M3SpinBox {
                             id: refreshRateSpinBox
@@ -516,11 +521,11 @@ Item {
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    spacing: root.badgeGap
                     M3Dropdown {
                         id: filterDd
                         label: SettingLabels.label("graphics.gamescope.filter")
-                        width: parent.width - 32
+                        width: parent.width - root.badgeSlot
                         options: [
                             { label: qsTr("None"), value: "" },
                             { label: qsTr("Nearest"), value: "nearest" },
@@ -544,7 +549,7 @@ Item {
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    spacing: root.badgeGap
                     visible: (root.cfg["graphics.gamescope.filter"] || "") === "fsr"
                     M3Slider {
                         id: sharpSlider
@@ -553,7 +558,7 @@ Item {
                         to: 20
                         stepSize: 1
                         value: root.cfg["graphics.gamescope.fsr_sharpness"] || 0
-                        width: parent.width - 32
+                        width: parent.width - root.badgeSlot
                         onMoved: (val) => root.update("graphics.gamescope.fsr_sharpness", Math.round(val))
                     }
                     ResetBadge {

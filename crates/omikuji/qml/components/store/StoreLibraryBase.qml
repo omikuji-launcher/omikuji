@@ -41,10 +41,11 @@ Item {
     }
     onVisibleChanged: if (visible) _maybeRefresh()
 
-    property bool hasRows: false
+    property int rowCount: 0
+    readonly property bool hasRows: rowCount > 0
 
     function _syncRows() {
-        root.hasRows = !!root.storeModel && root.storeModel.rowCount() > 0
+        root.rowCount = root.storeModel ? root.storeModel.rowCount() : 0
     }
 
     onStoreModelChanged: _syncRows()
@@ -96,6 +97,12 @@ Item {
                     }
 
                     Item { Layout.fillWidth: true }
+
+                    Text {
+                        text: qsTr("Games found") + "  ·  " + root.rowCount
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.type.label.size
+                    }
 
                     IconButton {
                         icon: "sync"
