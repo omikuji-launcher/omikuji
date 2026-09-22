@@ -22,6 +22,14 @@
     </p>
   </description>
   <releases>
+    <release version="0.18.2" date="2026-09-22">
+      <description>
+        <ul>
+          <li>minor ui tweaks</li>
+          <li>fixed lagging store pages loadings</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.18.1" date="2026-09-22">
       <description>
         <ul>

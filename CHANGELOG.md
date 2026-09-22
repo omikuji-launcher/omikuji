@@ -13,6 +13,17 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.18.2
+Added:
+- Games count on store pages (Epic, GOG, Amazon)
+
+Changed:
+- Minor ui tweaks (lmao)
+
+Fixed:
+- Lagging store pages loading
+
+
 ## 0.18.1
 Changed:
 - Minor ui tweaks

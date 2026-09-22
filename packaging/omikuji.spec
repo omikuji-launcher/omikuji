@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.18.1
+Version:        0.18.2
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,10 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Tue Sep 22 2026 reakjra <reakjra@proton.me> - 0.18.2-1
+- minor ui tweaks
+- fixed lagging store pages loadings
+
 * Tue Sep 22 2026 reakjra <reakjra@proton.me> - 0.18.1-1
 - minor ui tweaks
 - template literals seeding expanded paths for prefixes on games/scripts installation (now keeps the var)
