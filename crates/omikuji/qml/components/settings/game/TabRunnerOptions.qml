@@ -25,9 +25,6 @@ Item {
 
     readonly property string protonPatchState: gameModel && isProtonWine ? gameModel.proton_patch_state(config["wine.version"] || "") : "not_proton"
 
-    readonly property var layerKeys: ["dxvk", "vkd3d", "dxvk_nvapi"]
-    readonly property bool hasPinnedLayer: layerKeys.some(k => config["wine." + k] === true && (config["wine." + k + "_version"] || "") !== "builtin")
-    readonly property bool hasDisabledLayer: config["wine.dxvk"] !== true || config["wine.vkd3d"] !== true
 
     function isProtonVersion(version) {
         return gameModel.runner_is_proton(String(version || ""))
@@ -284,18 +281,12 @@ Item {
 
                 NoteChip {
                     width: parent.width
-                    visible: root.isProtonWine && root.hasPinnedLayer
-                    text: qsTr("With Proton, picking a version swaps the .dll files inside the runner itself. Switching back to Built-in restores them on the next launch.")
-                }
-
-                NoteChip {
-                    width: parent.width
                     visible: root.protonPatchState === "foreign" || root.protonPatchState === "unsupported"
                     icon: "warning"
                     tone: Theme.error
                     text: root.protonPatchState === "foreign"
-                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles will not apply. See Translation Layers in the Usage Guide.")
-                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles will not apply. See Translation Layers in the Usage Guide.")
+                        ? qsTr("The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles and versions will not apply. See Translation Layers in the Usage Guide.")
+                        : qsTr("The Proton build this game uses does not expose the hook Omikuji needs, so these toggles and versions will not apply. See Translation Layers in the Usage Guide.")
                 }
             }
 

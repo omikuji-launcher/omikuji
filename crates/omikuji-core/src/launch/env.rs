@@ -3,7 +3,9 @@ use std::path::Path;
 
 use super::prefix::resolve_prefix;
 use super::wine::{ProtonVerb, WineVariant};
+use crate::dll_packs::{DllKind, Layer, resolved_layer};
 use crate::library::{Game, SourceKind};
+use crate::runners::proton_monkey_patch;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvPurpose {
@@ -23,10 +25,6 @@ impl EnvPurpose {
 
 const BATTLEYE_RUNTIME_APPID: &str = "1161040";
 const EAC_RUNTIME_APPID: &str = "1826330";
-
-const DXVK_DLLS: &str = "d3d11,d3d10core,d3d9,d3d8,dxgi";
-const VKD3D_DLLS: &str = "d3d12,d3d12core";
-const NVAPI_DLLS: &str = "nvapi,nvapi64,nvofapi64";
 
 pub fn build_env(
     game: &Game,
@@ -107,27 +105,29 @@ pub fn build_env(
         );
     }
 
-    let layers = [
-        (DXVK_DLLS, game.wine.dxvk),
-        (VKD3D_DLLS, game.wine.vkd3d),
-        (NVAPI_DLLS, game.wine.dxvk_nvapi),
-    ];
+    let layers = DllKind::ALL.map(|k| (k, resolved_layer(game, k)));
     if variant == WineVariant::Proton {
-        let pins: Vec<String> = layers
+        let dlls_where = |pick: fn(&Layer) -> bool| -> Vec<&str> {
+            layers
+                .iter()
+                .filter(|(_, layer)| pick(layer))
+                .map(|(k, _)| k.dlls())
+                .collect()
+        };
+        let pins: Vec<String> = dlls_where(|l| *l == Layer::Off)
             .iter()
-            .filter(|(_, enabled)| !enabled)
-            .map(|(dlls, _)| format!("{dlls}=b"))
+            .map(|dlls| format!("{dlls}=b"))
             .collect();
-        if !pins.is_empty() {
-            env.insert(
-                crate::runners::proton_monkey_patch::PIN_VAR.to_string(),
-                pins.join(";"),
-            );
-        }
+        insert_non_empty(&mut env, proton_monkey_patch::PIN_VAR, pins.join(";"));
+        insert_non_empty(
+            &mut env,
+            proton_monkey_patch::SKIP_VAR,
+            dlls_where(|l| matches!(l, Layer::Pack(_))).join(","),
+        );
     } else {
-        for (dlls, enabled) in layers {
-            let form = if enabled { "n,b" } else { "b" };
-            append_dll_override(&mut env, &format!("{dlls}={form}"));
+        for (k, layer) in &layers {
+            let form = if *layer == Layer::Off { "b" } else { "n,b" };
+            append_dll_override(&mut env, &format!("{}={form}", k.dlls()));
         }
     }
 
@@ -288,6 +288,12 @@ fn append_dll_override(env: &mut HashMap<String, String>, entry: &str) {
         format!("{};{}", existing, entry)
     };
     env.insert("WINEDLLOVERRIDES".to_string(), new_value);
+}
+
+fn insert_non_empty(env: &mut HashMap<String, String>, key: &str, value: String) {
+    if !value.is_empty() {
+        env.insert(key.to_string(), value);
+    }
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{LazyLock, Mutex};
 
-pub mod dll_override;
+pub mod bundled_layers;
 pub mod proton_monkey_patch;
 
 pub fn runners_dir() -> PathBuf {

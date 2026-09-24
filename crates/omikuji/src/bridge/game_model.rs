@@ -2128,10 +2128,12 @@ impl qobject::GameModel {
     }
 
     fn prefix_layer(&self, prefix: &QString, kind: &QString) -> QString {
-        unit_variant_name(&omikuji_core::dll_packs::prefix_layer(
-            std::path::Path::new(&prefix.to_string()),
-            &kind.to_string(),
-        ))
+        use omikuji_core::dll_packs::{DllKind, PrefixLayer, prefix_layer};
+        let state = DllKind::from_pack_kind(&kind.to_string())
+            .map_or(PrefixLayer::Present, |kind| {
+                prefix_layer(std::path::Path::new(&prefix.to_string()), kind)
+            });
+        unit_variant_name(&state)
     }
 
     fn list_gpus(&self) -> QString {

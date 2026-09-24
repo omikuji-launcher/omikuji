@@ -36,13 +36,14 @@ fn prepare_runtime(game: &crate::library::Game, env: &HashMap<String, String>) {
 
     if !game.runner.runner_type.is_steam()
         && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
-        && !crate::store::steam::local::under_steamapps_common(&runner_dir)
-        && let Err(e) = crate::runners::dll_override::apply_for_launch(&runner_dir, game, env)
+        && let Err(e) = crate::runners::bundled_layers::apply_for_launch(&runner_dir, game, env)
     {
         tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
     }
 
-    if env.contains_key(crate::runners::proton_monkey_patch::PIN_VAR)
+    if crate::runners::proton_monkey_patch::VARS
+        .iter()
+        .any(|var| env.contains_key(*var))
         && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
     {
         crate::runners::proton_monkey_patch::ensure_installed(&runner_dir);

@@ -40,6 +40,54 @@ pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {
 
 pub const BUILTIN: &str = "builtin";
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DllKind {
+    Dxvk,
+    Vkd3d,
+    Nvapi,
+}
+
+impl DllKind {
+    pub const ALL: [DllKind; 3] = [DllKind::Dxvk, DllKind::Vkd3d, DllKind::Nvapi];
+
+    pub fn from_pack_kind(kind: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|k| k.pack_kind() == kind)
+    }
+
+    pub fn pack_kind(self) -> &'static str {
+        match self {
+            DllKind::Dxvk => "dxvk",
+            DllKind::Vkd3d => "vkd3d",
+            DllKind::Nvapi => "dxvk_nvapi",
+        }
+    }
+
+    pub fn bundle_subdir(self) -> &'static str {
+        match self {
+            DllKind::Dxvk => "dxvk",
+            DllKind::Vkd3d => "vkd3d-proton",
+            DllKind::Nvapi => "nvapi",
+        }
+    }
+
+    pub fn dlls(self) -> &'static str {
+        match self {
+            DllKind::Dxvk => "d3d11,d3d10core,d3d9,d3d8,dxgi",
+            DllKind::Vkd3d => "d3d12,d3d12core",
+            DllKind::Nvapi => "nvapi,nvapi64,nvofapi64",
+        }
+    }
+
+    pub fn probe_dll(self, is_64bit: bool) -> &'static str {
+        match self {
+            DllKind::Dxvk => "d3d11.dll",
+            DllKind::Vkd3d => "d3d12.dll",
+            DllKind::Nvapi if is_64bit => "nvapi64.dll",
+            DllKind::Nvapi => "nvapi.dll",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Layer {
     Off,
@@ -47,23 +95,20 @@ pub enum Layer {
     Pack(String),
 }
 
-fn game_layer<'a>(game: &'a Game, kind: &str) -> Option<(bool, &'a str)> {
+fn game_layer(game: &Game, kind: DllKind) -> (bool, &str) {
     match kind {
-        "dxvk" => Some((game.wine.dxvk, game.wine.dxvk_version.as_str())),
-        "vkd3d" => Some((game.wine.vkd3d, game.wine.vkd3d_version.as_str())),
-        "dxvk_nvapi" => Some((game.wine.dxvk_nvapi, game.wine.dxvk_nvapi_version.as_str())),
-        _ => None,
+        DllKind::Dxvk => (game.wine.dxvk, game.wine.dxvk_version.as_str()),
+        DllKind::Vkd3d => (game.wine.vkd3d, game.wine.vkd3d_version.as_str()),
+        DllKind::Nvapi => (game.wine.dxvk_nvapi, game.wine.dxvk_nvapi_version.as_str()),
     }
 }
 
-pub fn resolved_layer(game: &Game, kind: &str) -> Layer {
-    let Some((enabled, pinned)) = game_layer(game, kind) else {
-        return Layer::Off;
-    };
+pub fn resolved_layer(game: &Game, kind: DllKind) -> Layer {
+    let (enabled, pinned) = game_layer(game, kind);
     if !enabled {
         return Layer::Off;
     }
-    if pack_dir(kind, pinned).is_some() {
+    if pack_dir(kind.pack_kind(), pinned).is_some() {
         Layer::Pack(pinned.to_string())
     } else {
         Layer::Builtin
@@ -155,15 +200,6 @@ pub fn install_prefix_defaults(prefix: &Path) -> Result<()> {
     Ok(())
 }
 
-fn layer_dll(kind: &str, is_64bit: bool) -> Option<&'static str> {
-    match kind {
-        "dxvk" => Some("d3d11.dll"),
-        "vkd3d" => Some("d3d12.dll"),
-        "dxvk_nvapi" => Some(if is_64bit { "nvapi64.dll" } else { "nvapi.dll" }),
-        _ => None,
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PrefixLayer {
@@ -173,14 +209,15 @@ pub enum PrefixLayer {
     AbsentOnCreate,
 }
 
-fn auto_installs_into_new_prefixes(kind: &str) -> bool {
+fn auto_installs_into_new_prefixes(kind: DllKind) -> bool {
+    let kind = kind.pack_kind();
     components_config::get().layers.iter().any(|source| {
         source.kind == kind
             && prefix_install_tag(source).is_some_and(|tag| pack_dir(kind, tag).is_some())
     })
 }
 
-pub fn prefix_layer(prefix: &Path, kind: &str) -> PrefixLayer {
+pub fn prefix_layer(prefix: &Path, kind: DllKind) -> PrefixLayer {
     let system32 = prefixes::system32_dir(prefix);
     if !system32.is_dir() {
         return if auto_installs_into_new_prefixes(kind) {
@@ -190,9 +227,10 @@ pub fn prefix_layer(prefix: &Path, kind: &str) -> PrefixLayer {
         };
     }
     let is_64bit = prefixes::syswow64_dir(prefix).is_dir();
-    match layer_dll(kind, is_64bit) {
-        Some(dll) if !prefixes::native_dll_present(&system32, dll) => PrefixLayer::Absent,
-        _ => PrefixLayer::Present,
+    if prefixes::native_dll_present(&system32, kind.probe_dll(is_64bit)) {
+        PrefixLayer::Present
+    } else {
+        PrefixLayer::Absent
     }
 }
 
@@ -221,13 +259,16 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
     let syswow64 = prefixes::syswow64_dir(&prefix);
     let is_64bit = syswow64.exists();
 
-    if variant != WineVariant::Proton {
-        for kind in ["dxvk", "vkd3d", "dxvk_nvapi"] {
-            let Layer::Pack(tag) = resolved_layer(game, kind) else {
-                continue;
-            };
-            install_pack(kind, &tag, &system32, is_64bit.then_some(&syswow64))?;
-        }
+    for kind in DllKind::ALL {
+        let Layer::Pack(tag) = resolved_layer(game, kind) else {
+            continue;
+        };
+        install_pack(
+            kind.pack_kind(),
+            &tag,
+            &system32,
+            is_64bit.then_some(&syswow64),
+        )?;
     }
 
     if game.wine.dxvk_nvapi && is_64bit {

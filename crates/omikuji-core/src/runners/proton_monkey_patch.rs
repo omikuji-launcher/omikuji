@@ -4,7 +4,9 @@ proton writes its own d3d dll overrides into WINEDLLOVERRIDES at the very end of
 user_settings.py is a file proton imports when present, and it is the one place our code runs inside proton's own process.
 we use it to swap the session's override table for a dict that refuses the keys we pinned, so proton can set d3d11=n as many times as it wants and none of them stick MUAHAHAHA
 
-the file is inert unless OMIKUJI_PROTON_DLLS_PIN is set, so a runner carrying it behaves like a stock one for steam, for other launchers, and for our own games that pin nothing.
+it also wraps try_copy so proton skips copying the dlls of a layer we pinned a version for, since we already put that version in the prefix ourselves and proton would just delete it and copy its own over it.
+
+the file is inert unless OMIKUJI_PROTON_DLLS_PIN or OMIKUJI_PROTON_DLLS_SKIP is set, so a runner carrying it behaves like a stock one for steam, for other launchers, and for our own games that pin nothing.
 
 the hooks it needs are present in GE-Proton 7 through 11, cachyos 9 through 11, dwproton, and valve's own builds. proton wraps the import in try/except and the patch guards itself
 so something that changes it simply will make the ENVs not get loaded, which is fine i guess.
@@ -16,6 +18,8 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 pub const PIN_VAR: &str = "OMIKUJI_PROTON_DLLS_PIN";
+pub const SKIP_VAR: &str = "OMIKUJI_PROTON_DLLS_SKIP";
+pub const VARS: [&str; 2] = [PIN_VAR, SKIP_VAR];
 
 const SOURCE: &str = include_str!("proton_monkey_patch.py");
 const MARKER: &str = "# omikuji-proton-monkey-patch";

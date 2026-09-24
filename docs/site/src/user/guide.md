@@ -224,13 +224,11 @@ Off sets the layer's dlls to `Wine`'s builtin ones (`=b`), so the layer's own dl
 
 `Built-in` differs per runner. On `Wine` it is whatever dlls are already in the prefix. If the prefix has none for that layer, `Built-in` is greyed out if a toggle is on, because Wine would fall back to its own Direct3D without saying so. For a prefix that does not exist yet and you're adding a new game, the note under the dropdown says whether the layer gets installed when the prefix is created at launch, which follows that layer's `auto-install on prefix` setting in `Settings -> Components`. On `Proton` it is the layer bundled in the runner's files, which Proton deploys into the prefix at launch.
 
-Installing a version differs per runner too. On `Wine` omikuji copies the dlls into the prefix. On `Proton` it also swaps the dlls inside the runner's files, since Proton swaps them back with its own bundle over the prefix at launch. The originals are kept and restored when a game on that runner has `Built-in` or the layer's toggle off.
+Installing a version works the same on both. omikuji copies the version's dlls into the prefix at launch, and a layer on `Built-in` gets the runner's bundled dlls copied instead, so a prefix shared by two games always holds what the game being launched asked for. The runner's own files are never changed.
 
-The restore runs at launch, not when a game closes. Two games sharing a runner each set it as they start, and a game launched from another launcher in between uses whatever the last omikuji launch left there.
+On Proton neither turning a layer off nor picking a version can be done with an environment variable alone. Proton writes its own dll overrides after every hook it exposes, and copies its bundled dlls over the prefix at launch. omikuji writes a `user_settings.py` into the runner folder, a file Proton imports when present, which reads two environment variables set at launch: one holds the overrides of the layers turned off, the other stops Proton from copying the dlls of the layers with a picked version. Each layer is handled on its own, so a picked `DXVK` version does not change what happens to `VKD3D-Proton`. It does nothing when those variables are absent, so the runner behaves normally for Steam and for anything else launching it. I will gladly say Proton, fuck you.
 
-Turning a layer off on Proton needs more than an environment variable, since Proton writes its own dll overrides after every hook it exposes. omikuji writes a `user_settings.py` into the runner folder, a file Proton imports when present, which reads an environment variable set at launch and holds the overrides in place. It does nothing when that variable is absent, so the runner behaves normally for Steam and for anything else launching it.
-
-If a runner already has its own `user_settings.py`, omikuji leaves it alone and these toggles will not apply. The Runner tab says so, and the same warning shows for a Proton build without the hook.
+If a runner already has its own `user_settings.py`, omikuji leaves it alone and these toggles and versions will not apply. The Runner tab says so, and the same warning shows for a Proton build without the hook.
 
 **Misc**
 
@@ -548,9 +546,9 @@ Everything omikuji creates or edits, grouped by where it lives. Paths under `~/.
 
 \- `<Source>-Latest` (e.g. `GE-Proton-Latest`): a normal runner folder with a fixed name. When a newer release comes out, its content is replaced and the name stays the same, so games using it never need to be edited.
 
-\- `user_settings.py`: written into a `Proton` runner the first time a game on it turns a translation layer off (`DXVK`, `VKD3D-Proton`, etc.). `Proton` imports this file on its own, and omikuji uses it to stop `Proton` from putting back the DLL overrides you disabled. It does nothing unless the game was launched by omikuji with a layer pinned, so the same runner used by Steam or other launchers behaves as if nothing was touched. If a runner already has a `user_settings.py` that isn't omikuji's, it is left alone and the layer toggles won't apply on that runner (also noted in the UI with a warning).
+\- `user_settings.py`: written into a `Proton` runner the first time a game on it turns a translation layer off (`DXVK`, `VKD3D-Proton`, etc.) or picks a version for one. `Proton` imports this file on its own, and omikuji uses it to stop `Proton` from putting back the DLL overrides you disabled, or from copying its own DLLs over the version you picked. It does nothing unless the game was launched by omikuji with a layer turned off or a version picked, so the same runner used by Steam or other launchers behaves as if nothing was touched. If a runner already has a `user_settings.py` that isn't omikuji's, it is left alone and the layer toggles and versions won't apply on that runner (also noted in the UI with a warning).
 
-\- `.omikuji-dll-override.json` and `*.omikuji-bak`: when a game picks a specific `DXVK` / `VKD3D-Proton` / `dxvk-nvapi` version on a `Proton` runner, the runner's bundled DLLs in `files/lib/wine/` are swapped for that version. The original files are renamed with `.omikuji-bak` and the JSON file tracks what was swapped, so they can be restored. Runners inside `steamapps/common` are never swapped.
+\- `.omikuji-dll-override.json` and `*.omikuji-bak`: left by older omikuji versions, which swapped a runner's bundled DLLs in `files/lib/wine/` for the picked version. The next launch of a game on that runner puts the original files back and deletes both.
 
 #### Wine prefixes
 
@@ -651,7 +649,7 @@ Only for Proton. The app doesn't implicitly install umu for you. You have a togg
 
 ### A game ran once and now my DLL overrides (layers) are still in place
 
-Turn off the toggles of the layers you activated and run the game again to make omikuji swap them back to the default ones.
+The runner itself is never changed, the picked version lives in the game's prefix. On `Proton`, set the layer back to `Built-in` (or turn its toggle off) and run the game again, and omikuji copies the runner's own dlls back into the prefix. On `Wine` the dlls stay in the prefix, and turning the toggle off makes the game ignore them.
 
 ### Where are the logs?
 
