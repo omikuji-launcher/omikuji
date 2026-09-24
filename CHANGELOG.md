@@ -13,6 +13,20 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.19.0
+Added:
+- Prefix prep for 'run exe in prefix...' winetool
+
+Changed:
+- Reworked layers versions injection (user_settings.py monkey patch instead of in-runner files swap)
+
+Fixed:
+- Minor ui fixes
+- Recover Discord RPC after Discord restarts
+
+
+
+
 ## 0.18.2
 Added:
 - Games count on store pages (Epic, GOG, Amazon)

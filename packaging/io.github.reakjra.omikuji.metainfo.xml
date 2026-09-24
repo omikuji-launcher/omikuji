@@ -22,6 +22,16 @@
     </p>
   </description>
   <releases>
+    <release version="0.19.0" date="2026-09-25">
+      <description>
+        <ul>
+          <li>Prefix prep for 'run exe in prefix...' winetool</li>
+          <li>recover discord RPC after Discord restart</li>
+          <li>minor ui fixes</li>
+          <li>rework layers versions injecting (monkey patch) </li>
+        </ul>
+      </description>
+    </release>
     <release version="0.18.2" date="2026-09-22">
       <description>
         <ul>
