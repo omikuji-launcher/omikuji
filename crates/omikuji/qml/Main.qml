@@ -197,6 +197,13 @@ ApplicationWindow {
         openLogs = openLogs.filter(w => w.gameId !== gameId)
     }
 
+    function withPrefix(index, then) {
+        if (gameModel.needs_prefix_prep(index))
+            prefixPrepDialog.start(index, then)
+        else
+            then()
+    }
+
     readonly property string latestCategory: "runners_latest"
     property var latestToasts: ({})
 
@@ -449,7 +456,7 @@ ApplicationWindow {
         onComponentRequired: (index, skipUpdateCheck, missing) =>
             componentRequiredDialog.start(index, skipUpdateCheck, missing)
         onPrefixPrepRequired: (index, skipUpdateCheck) =>
-            prefixPrepDialog.start(index, skipUpdateCheck)
+            prefixPrepDialog.start(index, () => gameActions.launch(index, skipUpdateCheck))
         onForceLaunched: {
             if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
         }
@@ -1355,7 +1362,6 @@ property real cardZoom: appSettings.cardZoom
         id: prefixPrepDialog
         anchors.fill: parent
         gameModel: root.gameModelRef
-        onLaunchReady: (idx, skip) => gameActions.launch(idx, skip)
     }
 
     MigrationDialog {
@@ -1458,13 +1464,20 @@ property real cardZoom: appSettings.cardZoom
         onItemClicked: (action) => {
             if (!gameActions.selectedGame || !gameActions.selectedGame.gameId) return
             let gid = gameActions.selectedGame.gameId
+            let idx = gameActions.selectedIndex
             if (action === "run_exe") {
                 runExePicker.open()
             } else if (action === "run_command") {
-                gameRunCommandDialog.gameId = gid
-                gameRunCommandDialog.show(gameActions.selectedGame.name || "", gameActions.selectedGame.prefixPath || "")
-            } else {
+                let name = gameActions.selectedGame.name || ""
+                let prefixPath = gameActions.selectedGame.prefixPath || ""
+                root.withPrefix(idx, () => {
+                    gameRunCommandDialog.gameId = gid
+                    gameRunCommandDialog.show(name, prefixPath)
+                })
+            } else if (action === "killwineserver") {
                 gameModel.run_wine_tool(gid, action)
+            } else {
+                root.withPrefix(idx, () => gameModel.run_wine_tool(gid, action))
             }
         }
 
@@ -1474,7 +1487,8 @@ property real cardZoom: appSettings.cardZoom
             startFolder: "/home"
             onPicked: (path) => {
                 if (gameActions.selectedGame && gameActions.selectedGame.gameId) {
-                    gameModel.run_wine_exe(gameActions.selectedGame.gameId, path)
+                    let gid = gameActions.selectedGame.gameId
+                    root.withPrefix(gameActions.selectedIndex, () => gameModel.run_wine_exe(gid, path))
                 }
             }
         }

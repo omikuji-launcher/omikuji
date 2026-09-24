@@ -8,12 +8,9 @@ DialogCard {
     id: root
 
     property var gameModel: null
-    property int gameIndex: -1
-    property bool skipUpdateCheck: false
+    property var onReady: null
     property bool cancelled: false
     property string outputText: ""
-
-    signal launchReady(int idx, bool skip)
 
     readonly property bool busy: gameModel ? gameModel.preparing : false
 
@@ -24,9 +21,8 @@ DialogCard {
     scrollable: false
     title: qsTr("Preparing prefix")
 
-    function start(idx, skip) {
-        gameIndex = idx
-        skipUpdateCheck = skip
+    function start(idx, then) {
+        onReady = then
         cancelled = false
         errorText = ""
         outputText = ""
@@ -51,7 +47,7 @@ DialogCard {
             if (root.cancelled) return
             if (ok) {
                 root.close()
-                root.launchReady(root.gameIndex, root.skipUpdateCheck)
+                if (root.onReady) root.onReady()
             } else {
                 root.errorText = (error && error.length > 0) ? error : qsTr("prefix setup failed")
             }
@@ -67,7 +63,7 @@ DialogCard {
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
-            text: qsTr("First launch for this game, setting up the wine prefix. It'll start once this finishes.")
+            text: qsTr("This game's wine prefix doesn't exist yet, setting it up first. It'll continue once this finishes.")
             color: Theme.textMuted
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
