@@ -679,11 +679,9 @@ pub fn inspect_existing_install(_app_name: &str, install_path: &Path) -> (u64, b
     (crate::fs_util::dir_size(install_path), has_resume)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GogCredentials {
     pub access_token: String,
-    #[allow(dead_code)]
-    pub refresh_token: Option<String>,
     pub user_id: Option<String>,
 }
 
@@ -695,10 +693,6 @@ fn parse_credentials(value: &serde_json::Value) -> Option<GogCredentials> {
     if access_token.is_empty() {
         return None;
     }
-    let refresh_token = value
-        .get("refresh_token")
-        .and_then(|s| s.as_str())
-        .map(String::from);
     let user_id = value.get("user_id").and_then(|x| match x {
         serde_json::Value::String(s) if !s.is_empty() => Some(s.clone()),
         serde_json::Value::Number(n) => Some(n.to_string()),
@@ -706,7 +700,6 @@ fn parse_credentials(value: &serde_json::Value) -> Option<GogCredentials> {
     });
     Some(GogCredentials {
         access_token,
-        refresh_token,
         user_id,
     })
 }
@@ -757,15 +750,15 @@ pub async fn read_credentials() -> Result<GogCredentials> {
             }
         }
         tracing::error!(
-            "couldn't parse auth file at {} (first 200 chars): {}",
+            "couldn't parse auth file at {} ({} bytes)",
             auth.display(),
-            body.chars().take(200).collect::<String>()
+            body.len()
         );
     }
 
     tracing::error!(
-        "gogdl auth stdout (first 500 chars): {}",
-        trimmed.chars().take(500).collect::<String>()
+        "gogdl auth stdout had no usable credentials ({} bytes)",
+        trimmed.len()
     );
     anyhow::bail!(
         "couldn't read gogdl credentials from stdout or {}",
