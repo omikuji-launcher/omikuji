@@ -25,12 +25,10 @@ Item {
     property real leftPanelWidth: 300
     property real rightPanelWidth: 460
 
-    readonly property bool _leftActive: panelsShown && leftPanel !== null
-    readonly property bool _rightActive: panelsShown && rightPanel !== null
     readonly property real _panelGap: Theme.space.lg
     readonly property real _sideSpace: (width - cardWrap.width) / 2 - _panelGap - Theme.space.lg
-    readonly property real _leftW: _leftActive && _sideSpace >= 140 ? Math.min(leftPanelWidth, _sideSpace) : 0
-    readonly property real _rightW: _rightActive && _sideSpace >= 140 ? Math.min(rightPanelWidth, _sideSpace) : 0
+    readonly property real _leftW: leftPanel !== null && _sideSpace >= 140 ? Math.min(leftPanelWidth, _sideSpace) : 0
+    readonly property real _rightW: rightPanel !== null && _sideSpace >= 140 ? Math.min(rightPanelWidth, _sideSpace) : 0
     property bool scrollable: true
     property bool fillHeight: false
     property real preferredHeight: 560
