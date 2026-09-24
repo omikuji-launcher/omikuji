@@ -69,22 +69,26 @@ pub fn clear() {
 
 fn send_activity(activity: Activity) -> Result<()> {
     let mut guard = client_cell().lock().unwrap();
-    if guard.is_none() {
-        let mut c = DiscordIpcClient::new(APP_ID);
-        c.connect().map_err(|e| anyhow::anyhow!("{}", e))?;
-        *guard = Some(c);
+    if let Some(c) = guard.as_mut()
+        && c.set_activity(activity.clone()).is_ok()
+    {
+        return Ok(());
     }
-    if let Some(c) = guard.as_mut() {
-        c.set_activity(activity)
-            .map_err(|e| anyhow::anyhow!("{}", e))?;
-    }
+    *guard = None;
+    let mut c = DiscordIpcClient::new(APP_ID);
+    c.connect()?;
+    c.set_activity(activity)?;
+    *guard = Some(c);
     Ok(())
 }
 
 fn clear_activity_inner() -> Result<()> {
     let mut guard = client_cell().lock().unwrap();
-    if let Some(c) = guard.as_mut() {
-        c.clear_activity().map_err(|e| anyhow::anyhow!("{}", e))?;
+    if let Some(c) = guard.as_mut()
+        && let Err(e) = c.clear_activity()
+    {
+        *guard = None;
+        return Err(e.into());
     }
     Ok(())
 }
