@@ -149,7 +149,7 @@ Item {
         anchors.bottomMargin: -4
         blur: 20
         radius: bar.radius
-        color: Qt.rgba(0, 0, 0, 0.45)
+        color: Theme.shadow
         opacity: bar.opacity
         visible: bar.visible && root.spec.shadow
     }

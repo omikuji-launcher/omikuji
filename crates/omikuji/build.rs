@@ -265,6 +265,7 @@ fn main() {
         .json_accessor("font_sizes", "BTreeMap<String, u32>", "theme.fonts", "font_sizes_changed")
         .json_accessor("radius_overrides", "BTreeMap<String, u32>", "theme.radii", "radius_overrides_changed")
         .json_accessor("template_vars", "BTreeMap<String, String>", "template_vars", "template_vars_changed")
+        .json_accessor("tours_done", "Vec<String>", "state.tours_done", "tours_done_changed")
         .raw_field_persisted("color_overrides", "BTreeMap<String, String>", "s.theme.colors.clone()", "s.theme.colors = self.color_overrides.clone();")
         .raw_field("watcher", "Option<FileWatcher>", "None")
         .raw_field("suppress_reload_until", "Option<Instant>", "None")

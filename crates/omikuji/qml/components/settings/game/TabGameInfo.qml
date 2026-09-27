@@ -30,10 +30,13 @@ Item {
             width: parent.width
 
             M3TextField {
+                id: nameField
                 label: qsTr("Name")
                 text: root.config["meta.name"] || ""
                 width: parent.width
                 onTextEdited: (t) => root.updateField("meta.name", t)
+
+                SpotlightTarget { key: "game.name"; target: nameField }
             }
 
             M3TextField {
@@ -53,6 +56,7 @@ Item {
             }
 
             M3Dropdown {
+                id: runnerTypeField
                 label: qsTr("Runner")
                 width: parent.width
                 options: [
@@ -69,6 +73,8 @@ Item {
                     return 0
                 }
                 onSelected: (val) => root.updateField("runner.type", val)
+
+                SpotlightTarget { key: "game.runner_type"; target: runnerTypeField }
             }
 
             NoteChip {

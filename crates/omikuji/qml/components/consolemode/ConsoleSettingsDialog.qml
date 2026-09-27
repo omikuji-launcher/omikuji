@@ -65,7 +65,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.55)
+        color: Theme.scrim
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true

@@ -9,6 +9,8 @@ Item {
 
     property var gameModel: null
 
+    signal tourRequested()
+
     readonly property string appVersion: gameModel ? gameModel.app_version() : ""
     readonly property string repoUrl: "https://github.com/omikuji-launcher/omikuji"
     readonly property string assetsRepoUrl: "https://github.com/omikuji-launcher/omikuji-assets"
@@ -45,6 +47,24 @@ Item {
                     color: Theme.textMuted
                     font.pixelSize: Theme.type.label.size
                     font.family: Theme.mono
+                }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Tour")
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Guided tour")
+                description: qsTr("A quick walk through the library, adding a game and the stores.")
+                labelWidth: 200
+                contentRightMargin: 0
+
+                M3Button {
+                    text: qsTr("Start")
+                    variant: "tonal"
+                    onClicked: root.tourRequested()
                 }
             }
         }

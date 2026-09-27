@@ -22,6 +22,7 @@ Item {
     property string loginDescription: ""
     property string loginUrl: ""
     property string toolName: ""
+    property string firstCardSpotlightKey: ""
 
     signal backClicked()
     signal gameImported()
@@ -87,8 +88,11 @@ Item {
 
             headerComponent: Component {
                 RowLayout {
+                    id: accountRow
                     anchors.fill: parent
                     spacing: 8
+
+                    SpotlightTarget { key: "store.account"; target: accountRow }
 
                     Text {
                         text: qsTr("Logged in as: %1").arg(root.storeModel ? root.storeModel.displayName : "")
@@ -163,6 +167,12 @@ Item {
                 }
 
                 overlayComponent: isDownloading ? progressOverlay : null
+
+                SpotlightTarget {
+                    key: storeCard.index === 0 ? root.firstCardSpotlightKey : ""
+                    target: storeCard
+                    activate: () => storeCard.primaryAction()
+                }
 
                 Component {
                     id: progressOverlay

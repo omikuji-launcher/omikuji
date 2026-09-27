@@ -496,10 +496,13 @@ Item {
                 spacing: 2
                 z: 1
 
+                SpotlightTarget { key: "nav.stores"; target: storesList }
+
                 Repeater {
                     model: root.storeDefs
 
                     NavItem {
+                        id: storeItem
                         required property var modelData
 
                         visible: modelData.shown
@@ -511,6 +514,8 @@ Item {
                             root.currentStore = modelData.name
                             root.storeSelected(modelData.name)
                         }
+
+                        SpotlightTarget { key: "nav.store." + storeItem.modelData.name.toLowerCase(); target: storeItem }
                     }
                 }
             }

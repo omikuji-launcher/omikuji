@@ -299,6 +299,7 @@ DialogCard {
             spacing: 4
 
             M3FileField {
+                id: installPathField
                 Layout.fillWidth: true
                 label: qsTr("Installation path")
                 placeholder: "/home/you/Games"
@@ -311,6 +312,8 @@ DialogCard {
                     : "/" + (root.gameData.title || "").replace(/[\\/:*?"<>|]/g, "").trim()
                 onTextEdited: (t) => root.installPath = t
                 onAccepted: (p) => root.installPath = p
+
+                SpotlightTarget { key: "install.path"; target: installPathField }
             }
 
             Text {
@@ -343,8 +346,11 @@ DialogCard {
         }
 
         ColumnLayout {
+            id: prefixAndRunner
             Layout.fillWidth: true
             spacing: Theme.space.md
+
+            SpotlightTarget { key: "install.prefix_runner"; target: prefixAndRunner }
 
             M3FileField {
                 Layout.fillWidth: true
@@ -371,6 +377,7 @@ DialogCard {
         }
 
         ArtCheckList {
+            id: dlcList
             Layout.fillWidth: true
             visible: root.dlcs.length > 0
             title: qsTr("DLC")
@@ -379,6 +386,8 @@ DialogCard {
             checkedIds: root.selectedDlcs
             lockedIds: root.lockedDlcs
             onSelectionRequested: (ids) => root.selectedDlcs = ids
+
+            SpotlightTarget { key: "install.dlc"; target: dlcList }
         }
     }
 
@@ -412,6 +421,7 @@ DialogCard {
             onClicked: { root.cancelled(); root.close() }
         }
         M3Button {
+            id: confirmButton
             text: {
                 if (root.gameData && root.gameData.isInstalled) {
                     if (root.addingDlcsOnly) return qsTr("Install DLC")
@@ -441,6 +451,8 @@ DialogCard {
                 }
                 root.close()
             }
+
+            SpotlightTarget { key: "install.confirm"; target: confirmButton }
         }
     }
 }

@@ -46,6 +46,9 @@ QtObject {
     property color cardBorder: "transparent"
     property color cardBorderHover: Qt.rgba(text.r, text.g, text.b, 0.12)
 
+    readonly property color scrim: Qt.rgba(0, 0, 0, 0.55)
+    readonly property color shadow: Qt.rgba(0, 0, 0, 0.45)
+
     property color barBg: Qt.rgba(bg.r, bg.g, bg.b, 0.92)
     property color barBorder: Qt.rgba(text.r, text.g, text.b, 0.08)
 

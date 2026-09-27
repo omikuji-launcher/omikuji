@@ -171,6 +171,8 @@ Item {
             visible: root.showAddButton
             onClicked: if (Date.now() - addMenu.lastClosedAt > 150) addMenu.open()
 
+            SpotlightTarget { key: "topbar.add"; target: addBtn }
+
             Tooltip {
                 text: qsTr("Add")
                 tipVisible: addBtn.hovered && !addMenu.visible

@@ -65,7 +65,7 @@ function _isFlickable(item) {
     return typeof item.contentY === "number" && item.contentItem !== undefined && typeof item.flick === "function"
 }
 
-function _scrollParents(item, stopAt) {
+function scrollParents(item, stopAt) {
     const out = []
     for (let cur = item ? item.parent : null; cur && cur !== stopAt; cur = cur.parent) {
         if (_isFlickable(cur)) out.push(cur)
@@ -90,8 +90,8 @@ function _clip(a, b) {
     return right > x && bottom > y ? { x: x, y: y, width: right - x, height: bottom - y } : null
 }
 
-function _shownRect(item, container) {
-    return _scrollParents(item, container).reduce((r, f) => r && _clip(r, _itemRect(f)), _itemRect(item))
+function shownRect(item, container) {
+    return scrollParents(item, container).reduce((r, f) => r && _clip(r, _itemRect(f)), _itemRect(item))
 }
 
 function _gap(a0, a1, b0, b1) {
@@ -126,7 +126,7 @@ function _best(from, candidates, container, dx, dy) {
     let bestScore = Infinity
     for (const c of candidates) {
         for (const target of _targetsOf(c)) {
-            const rect = _shownRect(target, container)
+            const rect = shownRect(target, container)
             const s = rect ? _score(from, rect, dx, dy) : Infinity
             if (s < bestScore) {
                 bestScore = s
@@ -148,7 +148,7 @@ function spatialMove(scope, focusItem, dx, dy, origin) {
     if (cur === -1 && !origin) return _enter(items, focusItem)
     const from = cur === -1 ? origin : sourceRect(items[cur])
     const others = items.filter((_, i) => i !== cur)
-    const containers = (cur === -1 ? [] : _scrollParents(items[cur], scope)).concat([scope])
+    const containers = (cur === -1 ? [] : scrollParents(items[cur], scope)).concat([scope])
     for (const container of containers) {
         const best = _best(from, others.filter(it => contains(container, it)), container, dx, dy)
         if (!best) continue
@@ -208,17 +208,29 @@ function hostKey(event, scope, sections, focusItem, origin) {
     return false
 }
 
-function ensureVisible(flick, item, margin) {
-    if (!flick || !item || !contains(flick.contentItem, item)) return
-    const pad = margin === undefined ? 8 : margin
+// opts: margin (8), alignTall, fromY (contentY). null when item is already in view or taller than the view and alignTall isn't set
+function revealY(flick, item, opts) {
+    if (!flick || !item || !contains(flick.contentItem, item)) return null
+    const o = opts || {}
+    const pad = o.margin === undefined ? 8 : o.margin
+    const from = o.fromY === undefined ? flick.contentY : o.fromY
     const r = item.mapToItem(flick.contentItem, 0, 0, item.width, item.height)
-    if (r.height > flick.height) return
     const minY = flick.originY
     const maxY = Math.max(minY, minY + flick.contentHeight - flick.height)
-    if (r.y < flick.contentY)
-        flick.contentY = Math.max(minY, r.y - pad)
-    else if (r.y + r.height > flick.contentY + flick.height)
-        flick.contentY = Math.min(maxY, r.y + r.height - flick.height + pad)
+    let to = null
+    if (r.height > flick.height) {
+        if (o.alignTall) to = Math.max(minY, Math.min(maxY, r.y - pad))
+    } else if (r.y < from) {
+        to = Math.max(minY, r.y - pad)
+    } else if (r.y + r.height > from + flick.height) {
+        to = Math.min(maxY, r.y + r.height - flick.height + pad)
+    }
+    return to !== null && Math.abs(to - from) >= 1 ? to : null
+}
+
+function ensureVisible(flick, item, margin) {
+    const y = revealY(flick, item, { margin: margin })
+    if (y !== null) flick.contentY = y
 }
 
 function scrollParent(item) {
@@ -230,9 +242,7 @@ function scrollParent(item) {
 
 function revealAncestors(item, stopAt) {
     const owner = navigableOwner(item, stopAt)
-    for (let cur = owner ? owner.parent : null; cur && cur !== stopAt; cur = cur.parent) {
-        if (_isFlickable(cur)) ensureVisible(cur, owner)
-    }
+    for (const flick of scrollParents(owner, stopAt)) ensureVisible(flick, owner)
 }
 
 function focusLost(scope, focusItem, lastInside) {

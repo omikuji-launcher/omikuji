@@ -37,7 +37,7 @@ Item {
         for (let i = 0; i < items.length; i++) {
             let it = items[i]
             if (!!it.pinned === pinned)
-                out.push({ index: i, icon: it.icon || "", label: it.label || "" })
+                out.push({ index: i, icon: it.icon || "", label: it.label || "", kind: it.kind || "" })
         }
         return out
     }
@@ -118,11 +118,19 @@ Item {
             model: section.rows
 
             RailRow {
+                id: row
                 required property var modelData
                 icon: modelData.icon
                 label: modelData.label
                 selected: modelData.index === root.currentIndex
                 onActivated: root.itemClicked(modelData.index)
+
+                SpotlightTarget {
+                    key: "rail." + row.modelData.kind
+                    target: row
+                    padding: 0
+                    activate: () => row.activated()
+                }
             }
         }
     }

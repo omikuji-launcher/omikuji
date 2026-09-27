@@ -15,6 +15,7 @@ DialogCard {
 
     property var runners: []
     property bool installUmu: true
+    property bool startTour: true
 
     readonly property string recommendedRunner: {
         for (let i = 0; i < runners.length; i++) {
@@ -25,6 +26,7 @@ DialogCard {
 
     signal manageRequested(string category, string source, string kind)
     signal umuInstallRequested()
+    signal tourRequested()
 
     property var umuStatus: ({ status: "missing", path: "" })
     readonly property bool umuFromSystem: umuStatus.status === "system"
@@ -61,6 +63,7 @@ DialogCard {
             umuInstallRequested()
         }
         close()
+        if (startTour) tourRequested()
     }
 
     onCloseRequested: root.finish()
@@ -174,6 +177,19 @@ DialogCard {
                 description: qsTr("Proton runners launch through it")
                 checked: root.installUmu
                 onToggled: (val) => root.installUmu = val
+            }
+        }
+
+        DialogSection {
+            Layout.fillWidth: true
+            label: qsTr("Tour")
+
+            SwitchField {
+                width: parent.width
+                label: qsTr("Start app tour")
+                description: qsTr("Shows you around once this closes")
+                checked: root.startTour
+                onToggled: (val) => root.startTour = val
             }
         }
     }

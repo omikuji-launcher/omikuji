@@ -43,6 +43,7 @@ pub struct AppSettings {
 pub struct AppState {
     pub last_seen_changelog: String,
     pub welcome_seen: bool,
+    pub tours_done: Vec<String>,
 }
 
 impl Default for AppSettings {

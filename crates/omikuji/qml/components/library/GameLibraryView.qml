@@ -169,6 +169,8 @@ FadePanel {
 
     shown: root.active
 
+    SpotlightTarget { key: "library.view"; target: root }
+
     GameGrid {
         id: gameGrid
         anchors.fill: parent

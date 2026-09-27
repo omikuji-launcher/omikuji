@@ -5,8 +5,10 @@ QtObject {
     id: stack
 
     property var entries: []
+    // stays top over dialogs opened after it
+    property var grabbed: null
 
-    readonly property var top: entries.length > 0 ? entries[entries.length - 1] : null
+    readonly property var top: grabbed ? grabbed : (entries.length > 0 ? entries[entries.length - 1] : null)
 
     function push(item) {
         if (entries.indexOf(item) !== -1) return

@@ -289,6 +289,7 @@ Item {
         }
 
         SettingsSection {
+            id: envSection
             label: qsTr("Environment")
             icon: "tune"
             width: parent.width
@@ -314,6 +315,8 @@ Item {
                 onClicked: root.openEnvSets()
             }
         }
+
+        SpotlightTarget { key: "game.env"; target: envSection }
 
         SettingsSection {
             label: qsTr("Scripts")

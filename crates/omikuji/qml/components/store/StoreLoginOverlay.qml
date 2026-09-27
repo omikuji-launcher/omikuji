@@ -19,9 +19,12 @@ Item {
     z: 100
 
     Column {
+        id: loginPanel
         anchors.centerIn: parent
         width: 400
         spacing: Theme.space.xl
+
+        SpotlightTarget { key: "store.account"; target: loginPanel }
 
         SvgIcon {
             anchors.horizontalCenter: parent.horizontalCenter

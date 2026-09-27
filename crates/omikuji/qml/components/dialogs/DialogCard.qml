@@ -4,6 +4,7 @@ import QtQuick
 import omikuji 1.0
 import QtQuick.Controls
 import QtQuick.Effects
+import "../lib/Nav.js" as Nav
 
 Item {
     id: root
@@ -60,15 +61,8 @@ Item {
     }
 
     function revealInBody(item, margin) {
-        if (!item || bodyFlick.contentHeight <= bodyFlick.height) return
-        const pad = margin === undefined ? Theme.space.xxl : margin
-        const top = item.mapToItem(bodyLoader, 0, 0).y
-        const bottom = top + item.height
-        let to = bodyFlick.contentY
-        if (bottom > bodyFlick.contentY + bodyFlick.height) to = bottom + pad - bodyFlick.height
-        else if (top < bodyFlick.contentY) to = top - pad
-        to = Math.max(0, Math.min(to, bodyFlick.contentHeight - bodyFlick.height))
-        if (Math.abs(to - bodyFlick.contentY) < 1) return
+        const to = Nav.revealY(bodyFlick, item, { margin: margin === undefined ? Theme.space.xxl : margin })
+        if (to === null) return
         revealAnim.stop()
         revealAnim.to = to
         revealAnim.start()
@@ -120,7 +114,7 @@ Item {
             anchors.fill: panelSurf
             blur: 26
             radius: panelSurf.radius
-            color: Qt.rgba(0, 0, 0, 0.45)
+            color: Theme.shadow
         }
 
         Squircle {
@@ -155,7 +149,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.55)
+        color: Theme.scrim
         opacity: root.shown ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
@@ -202,7 +196,7 @@ Item {
             anchors.fill: card
             blur: 26
             radius: card.radius
-            color: Qt.rgba(0, 0, 0, 0.45)
+            color: Theme.shadow
             opacity: 1 - resizer.hugT
         }
 

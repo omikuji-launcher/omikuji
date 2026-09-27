@@ -132,7 +132,7 @@ Item {
         offset.y: 8
         blur: 24
         radius: frame.radius
-        color: Qt.rgba(0, 0, 0, 0.45)
+        color: Theme.shadow
         scale: frame.scale
         transformOrigin: Item.Center
         Behavior on opacity { NumberAnimation { duration: 150 } }

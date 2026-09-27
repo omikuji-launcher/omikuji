@@ -30,6 +30,7 @@ Item {
 
     signal prefixOpenRequested(var prefix)
     signal prefixCreateRequested()
+    signal tourRequested()
 
     readonly property string modalTitle: qsTr("Settings")
     readonly property string modalSubtitle: ""
@@ -150,6 +151,7 @@ Item {
             visible: active
             sourceComponent: TabGlobalAbout {
                 gameModel: root.gameModel
+                onTourRequested: root.tourRequested()
             }
         }
     }

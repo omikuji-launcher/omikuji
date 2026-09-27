@@ -96,12 +96,15 @@ Item {
                 width: parent.width
 
                 M3FileField {
+                    id: wineExeField
                     label: qsTr("Path")
                     text: root.config["meta.exe"] || ""
                     width: parent.width
                     gameModel: root.gameModel
                     expandHint: false
                     onTextEdited: (t) => root.updateField("meta.exe", t)
+
+                    SpotlightTarget { key: "game.exe"; target: wineExeField }
                 }
 
                 M3FileField {
@@ -138,6 +141,7 @@ Item {
                 width: parent.width
 
                 M3Dropdown {
+                    id: wineVersionField
                     label: qsTr("Version")
                     width: parent.width
                     options: {
@@ -155,6 +159,8 @@ Item {
                         return RG.selectedIndex(options, root.config["wine.version"] || "")
                     }
                     onSelected: (val) => root.updateField("wine.version", val)
+
+                    SpotlightTarget { key: "game.runner"; target: wineVersionField }
                 }
 
                 M3FileField {
@@ -195,7 +201,8 @@ Item {
                         onToggled: (val) => root.updateField("wine.esync", val)
                     }
 
-                    LabeledSwitch {                        label: qsTr("Fsync")
+                    LabeledSwitch {
+                        label: qsTr("Fsync")
                         checked: root.config["wine.fsync"] === true
                         onToggled: (val) => root.updateField("wine.fsync", val)
                     }
@@ -219,6 +226,7 @@ Item {
             }
 
             SettingsSection {
+                id: layersSection
                 label: qsTr("Translation Layers")
                 icon: "layers"
                 hint: qsTr("A layer that is off is actively disabled, so the game falls back to Wine's own Direct3D even on Proton.")
@@ -235,12 +243,14 @@ Item {
                         onToggled: (val) => root.updateField("wine.dxvk", val)
                     }
 
-                    LabeledSwitch {                        label: "VKD3D"
+                    LabeledSwitch {
+                        label: "VKD3D"
                         checked: root.config["wine.vkd3d"] === true
                         onToggled: (val) => root.updateField("wine.vkd3d", val)
                     }
 
-                    LabeledSwitch {                        label: "DXVK-NVAPI"
+                    LabeledSwitch {
+                        label: "DXVK-NVAPI"
                         checked: root.config["wine.dxvk_nvapi"] === true
                         onToggled: (val) => root.updateField("wine.dxvk_nvapi", val)
                     }
@@ -290,6 +300,9 @@ Item {
                 }
             }
 
+            // beside the section since its default property only takes Items
+            SpotlightTarget { key: "game.layers"; target: layersSection }
+
             SettingsSection {
                 label: qsTr("Compatibility")
                 icon: "verified"
@@ -306,7 +319,8 @@ Item {
                         onToggled: (val) => root.updateField("wine.battleye", val)
                     }
 
-                    LabeledSwitch {                        label: "EasyAntiCheat"
+                    LabeledSwitch {
+                        label: "EasyAntiCheat"
                         checked: root.config["wine.easyanticheat"] === true
                         onToggled: (val) => root.updateField("wine.easyanticheat", val)
                     }
@@ -421,12 +435,15 @@ Item {
             visible: root.runnerType === "native"
 
             M3FileField {
+                id: nativeExeField
                 label: qsTr("Executable")
                 text: root.config["meta.exe"] || ""
                 width: parent.width
                 gameModel: root.gameModel
                 expandHint: false
                 onTextEdited: (t) => root.updateField("meta.exe", t)
+
+                SpotlightTarget { key: "game.exe"; target: nativeExeField }
             }
 
             M3FileField {

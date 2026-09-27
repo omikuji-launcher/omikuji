@@ -10,6 +10,8 @@ Item {
     required property Item scope
     property var sections: []
     property bool active: false
+    // focused on release instead of the previous focus
+    property Item returnTo: null
 
     readonly property bool onTop: active && OverlayStack.top === host
 
@@ -58,7 +60,8 @@ Item {
             _grab()
             return
         }
-        if (_prevFocus && _prevFocus.visible) _prevFocus.forceActiveFocus()
+        const landed = returnTo && returnTo.visible && Nav.focusFirst(returnTo) !== null
+        if (!landed && _prevFocus && _prevFocus.visible) _prevFocus.forceActiveFocus()
         _prevFocus = null
         reset()
     }

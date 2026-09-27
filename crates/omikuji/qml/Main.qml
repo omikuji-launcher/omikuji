@@ -123,6 +123,13 @@ ApplicationWindow {
         }
     }
 
+    function showLibrary() {
+        navTabs.currentStore = ""
+        navTabs.currentBottom = ""
+        navTabs.currentIndex = 0
+        root.currentView = "library"
+    }
+
     function openStore(storeName) {
         navTabs.currentBottom = ""
         if (storeName === "Steam") {
@@ -808,11 +815,7 @@ property real cardZoom: appSettings.cardZoom
                 cardElevation: appSettings.cardElevation
                 cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
-                onBackClicked: {
-                    navTabs.currentStore = ""
-                    navTabs.currentIndex = 0
-                    root.currentView = "library"
-                }
+                onBackClicked: root.showLibrary()
             }
         }
 
@@ -831,11 +834,7 @@ property real cardZoom: appSettings.cardZoom
                 cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 activeDownloads: epicController.activeDownloads
-                onBackClicked: {
-                    navTabs.currentStore = ""
-                    navTabs.currentIndex = 0
-                    root.currentView = "library"
-                }
+                onBackClicked: root.showLibrary()
                 onInstallRequested: (index) => epicController.showInstall(index)
                 onImportRequested: (index) => epicController.showInstall(index)
             }
@@ -856,11 +855,7 @@ property real cardZoom: appSettings.cardZoom
                 cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 activeDownloads: gogController.activeDownloads
-                onBackClicked: {
-                    navTabs.currentStore = ""
-                    navTabs.currentIndex = 0
-                    root.currentView = "library"
-                }
+                onBackClicked: root.showLibrary()
                 onInstallRequested: (index) => gogController.showInstall(index)
                 onImportRequested: (index) => gogController.showInstall(index)
             }
@@ -881,11 +876,7 @@ property real cardZoom: appSettings.cardZoom
                 cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
                 activeDownloads: nileController.activeDownloads
-                onBackClicked: {
-                    navTabs.currentStore = ""
-                    navTabs.currentIndex = 0
-                    root.currentView = "library"
-                }
+                onBackClicked: root.showLibrary()
                 onInstallRequested: (index) => nileController.showInstall(index)
                 onImportRequested: (index) => nileController.showInstall(index)
             }
@@ -912,11 +903,7 @@ property real cardZoom: appSettings.cardZoom
                 cardElevation: appSettings.cardElevation
                 cardFlow: appSettings.cardFlow
                 searchText: topBar.searchText
-                onBackClicked: {
-                    navTabs.currentStore = ""
-                    navTabs.currentIndex = 0
-                    root.currentView = "library"
-                }
+                onBackClicked: root.showLibrary()
                 onInstallRequested: (manifestId) => gachaController.showInstall(manifestId)
             }
         }
@@ -1301,6 +1288,7 @@ property real cardZoom: appSettings.cardZoom
             qsTr("Installing umu-run"),
             qsTr("See Downloads for progress.")
         )
+        onTourRequested: if (!tourRunner.isDone(essentialsTour.tourId)) tourRunner.start(essentialsTour)
         onManageRequested: (category, source, kind) => {
             root.welcomeResumePending = true
             welcomeDialog.close()
@@ -1588,7 +1576,42 @@ property real cardZoom: appSettings.cardZoom
                 onDefaultsApplyToExistingRequested: defaultsApplyDialog.show()
                 onPrefixOpenRequested: (p) => prefixDetailDialog.show(p)
                 onPrefixCreateRequested: prefixCreateDialog.show()
+                onTourRequested: {
+                    root.activeModal = ""
+                    root.showLibrary()
+                    tourRunner.start(essentialsTour)
+                }
             }
+        }
+    }
+
+    // above every dialog so it can point inside them, below toasts
+    Tour {
+        id: tourRunner
+        z: 2500
+        appSettings: root.appSettingsRef
+    }
+
+    EssentialsTour {
+        id: essentialsTour
+        app: root
+        tour: tourRunner
+    }
+
+    // the tour's fake store, under its own install dialog (2000) and the tour
+    Loader {
+        anchors.fill: parent
+        z: 1900
+        active: tourRunner.demo === "epic"
+        sourceComponent: DemoEpicStore {
+            pageArea: contentArea
+            gameModel: root.gameModelRef
+            defaults: defaultsBridge
+            runnersVersion: root.runnersVersion
+            cardZoom: root.cardZoom
+            cardStyle: root.cardStyle
+            cardSpacing: appSettings.cardSpacing
+            cardFlow: appSettings.cardFlow
         }
     }
 
