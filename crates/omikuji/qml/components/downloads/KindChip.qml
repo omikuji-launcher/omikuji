@@ -13,6 +13,6 @@ Chip {
         "import": qsTr("Import")
     })
 
-    tone: root.kind === "repair" ? Theme.warning : Theme.accent
+    tone: root.kind === "repair" ? Theme.warning : Theme.secondary
     text: root.labels[root.kind] || root.kind
 }

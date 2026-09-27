@@ -97,22 +97,14 @@ Item {
             fillColor: Theme.cardBg
         }
 
-        Squircle {
+        IconTile {
             id: iconBox
             anchors.left: parent.left
             anchors.leftMargin: Theme.space.lg
             anchors.verticalCenter: stats.verticalCenter
             width: 34
             height: 34
-            radius: Theme.radius.sm
-            fillColor: Theme.alpha(Theme.accent, 0.10)
-
-            SvgIcon {
-                anchors.centerIn: parent
-                name: row.prefix.kind === "steam" ? "steam" : "ofuda"
-                size: 18
-                color: Theme.accent
-            }
+            icon: row.prefix.kind === "steam" ? "steam" : "ofuda"
         }
 
         Text {

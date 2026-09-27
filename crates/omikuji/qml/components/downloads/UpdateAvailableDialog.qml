@@ -49,16 +49,9 @@ DialogCard {
             Layout.fillWidth: true
             spacing: Theme.space.sm
 
-            Rectangle {
-                width: 36; height: 36; radius: 18
-                color: Theme.alpha(Theme.accent, 0.15)
-                Text {
-                    anchors.centerIn: parent
-                    text: "↻"
-                    color: Theme.accent
-                    font.pixelSize: 20
-                    font.weight: Font.Bold
-                }
+            IconTile {
+                icon: "sync"
+                radius: width / 2
             }
 
             ColumnLayout {

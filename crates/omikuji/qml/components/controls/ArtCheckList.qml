@@ -99,42 +99,15 @@ Item {
                         Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
                     }
 
-                    Rectangle {
+                    IconTile {
                         id: artBox
                         anchors.left: parent.left
                         anchors.leftMargin: Theme.space.md
                         anchors.verticalCenter: parent.verticalCenter
                         width: 56
                         height: 32
-                        radius: Theme.radius.sm
-                        color: art.visible ? "transparent" : Theme.alpha(Theme.accent, 0.15)
-
-                        Image {
-                            id: art
-                            anchors.fill: parent
-                            visible: itemRow.modelData.image !== undefined
-                                && itemRow.modelData.image !== ""
-                                && status === Image.Ready
-                            source: itemRow.modelData.image || ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            sourceSize.width: 112
-                            sourceSize.height: 64
-                            layer.enabled: visible
-                            layer.smooth: true
-                            layer.effect: RoundedRectMask {
-                                radius: artBox.radius
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            visible: !art.visible
-                            text: (itemRow.modelData.title || "?").charAt(0).toUpperCase()
-                            color: Theme.accent
-                            font.pixelSize: Theme.type.subtitle.size
-                            font.weight: Font.DemiBold
-                        }
+                        source: itemRow.modelData.image || ""
+                        monogram: itemRow.modelData.title || "?"
                     }
 
                     Column {

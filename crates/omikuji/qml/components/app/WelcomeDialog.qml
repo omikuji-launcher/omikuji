@@ -114,42 +114,19 @@ DialogCard {
                     elide: Text.ElideRight
                 }
 
-                Item {
+                IconButton {
                     id: openRunners
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 36
-                    height: 36
-
-                    Squircle {
-                        anchors.fill: parent
-                        radius: Theme.radius.md
-                        fillColor: openHover.containsPress
-                            ? Theme.alpha(Theme.accent, 0.28)
-                            : openHover.containsMouse
-                                ? Theme.alpha(Theme.accent, 0.20)
-                                : Theme.alpha(Theme.accent, 0.13)
-
-                        Behavior on fillColor { ColorAnimation { duration: Theme.dur.fast } }
-                    }
-
-                    SvgIcon {
-                        anchors.centerIn: parent
-                        name: "open_in_new"
-                        size: 18
-                        color: Theme.accent
-                    }
-
-                    PressArea {
-                        id: openHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onActivated: {
-                            for (let i = 0; i < root.runners.length; i++) {
-                                if (root.runners[i].name === root.recommendedRunner) {
-                                    root.manageRequested("runners", root.runners[i].name, root.runners[i].kind)
-                                    return
-                                }
+                    size: 36
+                    icon: "open_in_new"
+                    squircle: true
+                    tonal: true
+                    onClicked: {
+                        for (let i = 0; i < root.runners.length; i++) {
+                            if (root.runners[i].name === root.recommendedRunner) {
+                                root.manageRequested("runners", root.runners[i].name, root.runners[i].kind)
+                                return
                             }
                         }
                     }

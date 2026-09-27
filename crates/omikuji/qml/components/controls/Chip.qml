@@ -5,7 +5,7 @@ Squircle {
     id: root
 
     property alias text: label.text
-    property color tone: Theme.accent
+    property color tone: Theme.secondary
 
     implicitWidth: label.implicitWidth + Theme.space.sm * 2
     implicitHeight: Math.max(18, label.implicitHeight + Theme.space.xs)

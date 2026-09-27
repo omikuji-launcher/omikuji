@@ -137,40 +137,14 @@ DialogCard {
                 radius: Theme.radius.md
                 color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.08) : "transparent"
 
-                Rectangle {
+                IconTile {
                     id: iconBox
-                    width: 36
-                    height: 36
-                    radius: Theme.radius.sm
-                    color: iconImg.visible ? "transparent" : Theme.alpha(Theme.accent, 0.15)
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
-
-                    Image {
-                        id: iconImg
-                        anchors.fill: parent
-                        visible: scriptCard.modelData.iconSource !== "" && status === Image.Ready
-                        source: scriptCard.modelData.iconSource
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                        cache: false
-                        sourceSize.width: 72
-                        sourceSize.height: 72
-                        layer.enabled: visible
-                        layer.smooth: true
-                        layer.effect: RoundedRectMask {
-                            radius: iconBox.radius
-                        }
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        visible: !iconImg.visible
-                        text: scriptCard.modelData.name.charAt(0).toUpperCase()
-                        color: Theme.accent
-                        font.pixelSize: Theme.type.title.size
-                        font.weight: Font.DemiBold
-                    }
+                    source: scriptCard.modelData.iconSource
+                    cache: false
+                    monogram: scriptCard.modelData.name
                 }
 
                 Column {

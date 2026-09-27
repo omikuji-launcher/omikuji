@@ -20,7 +20,7 @@ Item {
 
     readonly property color fill: {
         if (btn.tonal)
-            return Theme.alpha(Theme.accent, hoverArea.containsPress ? 0.28
+            return Theme.alpha(Theme.secondary, hoverArea.containsPress ? 0.28
                 : btn.lit ? 0.20 : 0.13)
         if (hoverArea.containsPress)
             return btn.danger ? Theme.alpha(Theme.error, 0.28) : Theme.statePressed
@@ -76,7 +76,7 @@ Item {
         anchors.centerIn: parent
         name: btn.icon
         size: Math.round(btn.size * 0.55)
-        color: btn.tonal ? Theme.accent
+        color: btn.tonal ? Theme.secondary
             : btn.lit ? (btn.danger ? Theme.error : Theme.iconHover)
             : Theme.icon
 

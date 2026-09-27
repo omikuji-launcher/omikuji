@@ -19,6 +19,7 @@ Item {
         { key: "surface",    label: qsTr("Content surface") },
         { key: "accent",     label: qsTr("Accent") },
         { key: "accentText", label: qsTr("Accent text") },
+        { key: "secondary",  label: qsTr("Secondary") },
         { key: "text",       label: qsTr("Text") },
         { key: "error",      label: qsTr("Error") },
         { key: "success",    label: qsTr("Success") },

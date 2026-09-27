@@ -14,7 +14,9 @@ Item {
 
     signal clicked()
 
-    readonly property color _accent: danger ? Theme.error : (success ? Theme.success : Theme.accent)
+    readonly property color _accent: danger ? Theme.error
+        : success ? Theme.success
+        : _tonal ? Theme.secondary : Theme.accent
     readonly property bool _filled: variant === "filled"
     readonly property bool _tonal: variant === "tonal"
     readonly property bool _outlined: variant === "outlined"

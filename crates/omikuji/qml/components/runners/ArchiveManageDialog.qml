@@ -299,22 +299,9 @@ DialogCard {
                         font.weight: Font.DemiBold
                         anchors.verticalCenter: parent.verticalCenter
                     }
-                    Rectangle {
-                        height: 18
-                        width: kindLabel.width + 14
-                        radius: 9
-                        color: Theme.alpha(Theme.accent, 0.15)
+                    Chip {
                         anchors.verticalCenter: parent.verticalCenter
-                        Text {
-                            id: kindLabel
-                            anchors.centerIn: parent
-                            text: root.sourceKind
-                            color: Theme.accent
-                            font.pixelSize: Theme.type.micro.size
-                            font.weight: Font.Medium
-                            font.capitalization: Font.AllUppercase
-                            font.letterSpacing: 0.6
-                        }
+                        text: root.sourceKind
                     }
                 }
 
