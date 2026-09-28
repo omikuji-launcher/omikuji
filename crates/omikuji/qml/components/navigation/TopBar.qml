@@ -1,6 +1,5 @@
 import QtQuick
 import omikuji 1.0
-import QtQuick.Controls
 
 
 Item {
@@ -25,7 +24,6 @@ Item {
     property alias searchText: searchInput.text
 
     signal addClicked()
-    signal installScriptClicked()
     signal zoomMoved(real value)
     signal spacingMoved(int value)
     signal sortSelected(string value)
@@ -169,31 +167,15 @@ Item {
             rounded: true
             anchors.verticalCenter: parent.verticalCenter
             visible: root.showAddButton
-            onClicked: if (Date.now() - addMenu.lastClosedAt > 150) addMenu.open()
+            onClicked: root.addClicked()
 
             SpotlightTarget { key: "topbar.add"; target: addBtn }
 
             Tooltip {
                 text: qsTr("Add")
-                tipVisible: addBtn.hovered && !addMenu.visible
+                tipVisible: addBtn.hovered
                 y: parent.height + 8
             }
-        }
-    }
-
-    ContextMenu {
-        id: addMenu
-        parent: addBtn
-        x: addBtn.width - width
-        y: addBtn.height + 8
-        items: [
-            { text: qsTr("Add game"), action: "add_game" },
-            { text: qsTr("Install script"), action: "install_script" }
-        ]
-        onItemClicked: (action) => {
-            close()
-            if (action === "add_game") root.addClicked()
-            else if (action === "install_script") root.installScriptClicked()
         }
     }
 

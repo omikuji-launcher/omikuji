@@ -128,71 +128,45 @@ DialogCard {
             spacing: Theme.space.xs
             ScrollBar.vertical: ThinScrollBar {}
 
-            delegate: Rectangle {
+            delegate: TileRow {
                 id: scriptCard
                 required property var modelData
 
                 width: ListView.view.width
-                height: 56
-                radius: Theme.radius.md
-                color: rowArea.containsMouse ? Theme.alpha(Theme.text, 0.08) : "transparent"
+                source: modelData.iconSource
+                cache: false
+                monogram: modelData.name
+                title: modelData.name
+                subtitle: modelData.description
 
-                IconTile {
-                    id: iconBox
-                    anchors.left: parent.left
-                    anchors.leftMargin: Theme.space.sm
-                    anchors.verticalCenter: parent.verticalCenter
-                    source: scriptCard.modelData.iconSource
-                    cache: false
-                    monogram: scriptCard.modelData.name
-                }
-
-                Column {
-                    anchors.left: iconBox.right
-                    anchors.leftMargin: Theme.space.md
-                    anchors.right: meta.left
-                    anchors.rightMargin: Theme.space.md
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-
-                    Row {
-                        spacing: Theme.space.xs
-                        Text {
-                            text: scriptCard.modelData.name
-                            color: Theme.text
-                            font.pixelSize: Theme.type.body.size
-                            font.weight: Font.DemiBold
-                            elide: Text.ElideRight
-                        }
-                        SvgIcon {
-                            visible: scriptCard.modelData.hasShell === true
-                            name: "warning"
-                            size: 14
-                            color: Theme.warning
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        SvgIcon {
-                            visible: scriptCard.modelData.remote === true
-                            name: "download"
-                            size: 14
-                            color: Theme.textMuted
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                    Text {
-                        width: parent.width
-                        text: scriptCard.modelData.description
-                        visible: scriptCard.modelData.description !== ""
+                titleAccessories: [
+                    SvgIcon {
+                        visible: scriptCard.modelData.hasShell === true
+                        name: "warning"
+                        size: 14
+                        color: Theme.warning
+                    },
+                    SvgIcon {
+                        visible: scriptCard.modelData.remote === true
+                        name: "download"
+                        size: 14
                         color: Theme.textMuted
-                        font.pixelSize: Theme.type.caption.size
-                        elide: Text.ElideRight
+                    }
+                ]
+
+                onActivated: {
+                    if (modelData.remote) {
+                        if (root.installingRemote) return
+                        root.errorText = ""
+                        root.installingRemote = true
+                        root.scriptsBridge.installRemote(JSON.stringify(modelData.raw))
+                    } else {
+                        root.scriptChosen(modelData.toml)
+                        root.close()
                     }
                 }
 
                 Column {
-                    id: meta
-                    anchors.right: deleteBtn.left
-                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
@@ -210,35 +184,14 @@ DialogCard {
                     }
                 }
 
-                PressArea {
-                    id: rowArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    ringRadius: scriptCard.radius
-                    onActivated: {
-                        if (scriptCard.modelData.remote) {
-                            if (root.installingRemote) return
-                            root.errorText = ""
-                            root.installingRemote = true
-                            root.scriptsBridge.installRemote(JSON.stringify(scriptCard.modelData.raw))
-                        } else {
-                            root.scriptChosen(scriptCard.modelData.toml)
-                            root.close()
-                        }
-                    }
-                }
-
                 IconButton {
                     id: deleteBtn
                     icon: "close"
                     size: 24
                     danger: true
-                    z: 2
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.space.sm
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: !scriptCard.modelData.remote
-                    opacity: rowArea.containsMouse || hovered || InputMode.keyFocus(rowArea) || InputMode.keyFocus(deleteBtn) ? 1 : 0
+                    enabled: !scriptCard.modelData.remote
+                    opacity: enabled && (scriptCard.active || hovered || InputMode.keyFocus(deleteBtn)) ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
                     onClicked: {
                         if (root.scriptsBridge.removeScript(scriptCard.modelData.dir))

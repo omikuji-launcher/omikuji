@@ -17,7 +17,13 @@ QtObject {
         {
             keys: ["topbar.add"],
             title: qsTr("Adding a game"),
-            body: qsTr("Got a game that isn't from a store? Press + and pick 'Add game'."),
+            body: qsTr("Got a game that isn't from a store? Press + to add it."),
+            until: () => tour.has("add.game")
+        },
+        {
+            keys: ["add.game"],
+            title: qsTr("Adding a game"),
+            body: qsTr("Pick 'Add game' to set it up by hand."),
             until: () => app.activeModal === "addGame"
         },
         {

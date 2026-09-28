@@ -741,8 +741,7 @@ property real cardZoom: appSettings.cardZoom
         cardPlayButtonValue: appSettings.cardPlayButton
         showCardPlayButton: root.currentView === "library"
 
-        onAddClicked: root.activeModal = "addGame"
-        onInstallScriptClicked: scriptBrowserDialog.show()
+        onAddClicked: addDialog.open()
         onConsoleModeClicked: gameModel.launch_console_mode()
         onDrawClicked: {
             omikujiDialog.open()
@@ -1320,6 +1319,13 @@ property real cardZoom: appSettings.cardZoom
         gameModel: root.gameModelRef
         ofudaBridge: root.ofudaBridgeRef
         defaults: defaultsBridge
+    }
+
+    AddDialog {
+        id: addDialog
+        anchors.fill: parent
+        onAddGameChosen: root.activeModal = "addGame"
+        onInstallScriptChosen: scriptBrowserDialog.show()
     }
 
     ScriptBrowserDialog {
