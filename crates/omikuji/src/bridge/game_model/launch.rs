@@ -345,6 +345,9 @@ impl super::qobject::GameModel {
 pub(crate) fn pre_launch_update_check(
     game: &Game,
 ) -> Option<omikuji_core::process::UpdateNotification> {
+    if omikuji_core::launch::precheck_exe(game).is_err() {
+        return None;
+    }
     let notif = |from_version, to_version, download_size, can_diff, delta_supported| {
         omikuji_core::process::UpdateNotification {
             game_id: game.metadata.id.clone(),
@@ -412,6 +415,11 @@ fn blocking_ensure_latest(source: &ArchiveSource) -> omikuji_core::anyhow::Resul
 }
 
 fn do_spawn_launch(game: &Game) -> bool {
+    if let Err(e) = omikuji_core::launch::precheck_exe(game) {
+        notify_launch_failed(game.metadata.id.clone(), &e);
+        return false;
+    }
+
     if omikuji_core::runners::is_latest_updating(&game.wine.version) {
         notify_launch_failed(
             game.metadata.id.clone(),

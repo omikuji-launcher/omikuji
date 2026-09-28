@@ -191,6 +191,7 @@ impl super::qobject::GameModel {
         });
     }
 
+    // TODO: prob use a core::updates cuz this is so bad man
     pub fn scan_all_for_updates(mut self: Pin<&mut Self>) {
         let settings = omikuji_core::app_settings::AppSettings::load();
         if !settings.behavior.auto_check_updates_on_boot {
@@ -218,6 +219,7 @@ impl super::qobject::GameModel {
                     g.source.kind,
                     SourceKind::Epic | SourceKind::Gog | SourceKind::Nile
                 ) && !g.source.app_id.is_empty()
+                    && omikuji_core::launch::validate_exe(g).is_ok()
             })
             .map(|g| {
                 let install_path = std::path::PathBuf::from(&g.metadata.exe)
@@ -254,7 +256,11 @@ impl super::qobject::GameModel {
             .library
             .game
             .iter()
-            .filter(|g| g.source.kind == SourceKind::Gacha && !g.source.app_id.is_empty())
+            .filter(|g| {
+                g.source.kind == SourceKind::Gacha
+                    && !g.source.app_id.is_empty()
+                    && omikuji_core::launch::validate_exe(g).is_ok()
+            })
             .cloned()
             .collect();
 

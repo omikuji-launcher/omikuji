@@ -67,9 +67,9 @@ pub fn build_launch(game: &Game) -> Result<ResolvedLaunch> {
 }
 
 pub fn build_launch_as(game: &Game, purpose: EnvPurpose) -> Result<ResolvedLaunch> {
+    validate_exe(game)?;
     let config = assemble_launch(game, purpose)?;
     reject_slop_env(&config)?;
-    validate_exe(game)?;
     Ok(config)
 }
 
@@ -106,7 +106,15 @@ fn run_pre_launch_script(game: &Game, config: &ResolvedLaunch) {
     }
 }
 
-fn validate_exe(game: &Game) -> Result<()> {
+pub fn precheck_exe(game: &Game) -> Result<()> {
+    if game.launch.pre_launch_script.is_empty() {
+        validate_exe(game)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn validate_exe(game: &Game) -> Result<()> {
     let exe = &game.metadata.exe;
     match game.runner.runner_type {
         RunnerType::Steam | RunnerType::Flatpak => Ok(()),
