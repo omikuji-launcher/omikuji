@@ -78,7 +78,7 @@ Item {
         const e = _easeInOut(_t)
         const next = goals.map((g, i) => {
             const from = i < _from.length ? _from[i] : null
-            if (g === null) return from
+            if (g === null) return i < _slots.length ? _slots[i] : from
             if (_t >= 1) return g
             return _lerpRect(from || Qt.rect(g.x + g.width / 2, g.y + g.height / 2, 0, 0), g, e)
         })

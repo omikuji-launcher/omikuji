@@ -49,13 +49,16 @@ Item {
         function disk_free_space(path) { return root.gameModel ? root.gameModel.disk_free_space(path) : "-1" }
         function expandVars(text) { return root.gameModel ? root.gameModel.expandVars(text) : text }
 
-        function epic_check_existing_install(app, path) { return "{}" }
+        function epic_check_existing_install(app, path) {
+            return app === "demo-moyu" ? JSON.stringify({ bytes: 18400000000 }) : "{}"
+        }
         function epic_dir_has_game(exe, path) { return false }
         function installed_dlcs(app) { return "[]" }
         function fetch_epic_game_details(requestId, app) {}
 
         function fetch_epic_install_size(requestId, app) {
             sizeReply.requestId = requestId
+            sizeReply.app = app
             sizeReply.restart()
         }
     }
@@ -63,12 +66,13 @@ Item {
     Timer {
         id: sizeReply
         property string requestId: ""
+        property string app: ""
         interval: 700
         onTriggered: demoBridge.install_size_result(requestId, JSON.stringify({
             download: 2400000000,
             install: 3100000000,
             launchExe: "",
-            dlcs: JSON.stringify([
+            dlcs: JSON.stringify(app === "demo-moyu" ? [] : [
                 { id: "demo-dlc-hats", title: "Goose Hats Pack" },
                 { id: "demo-dlc-honk", title: "Extra Honks" }
             ])
@@ -92,7 +96,7 @@ Item {
             cardStyle: root.cardStyle
             cardSpacing: root.cardSpacing
             cardFlow: root.cardFlow
-            firstCardSpotlightKey: "demo.store.card"
+            cardSpotlightKeys: ({ "demo-goose": "demo.store.card", "demo-moyu": "demo.store.moyu" })
             onInstallRequested: (index) => {
                 dialog.gameIndex = index
                 dialog.show()

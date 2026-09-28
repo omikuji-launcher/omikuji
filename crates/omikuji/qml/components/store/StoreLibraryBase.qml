@@ -22,7 +22,7 @@ Item {
     property string loginDescription: ""
     property string loginUrl: ""
     property string toolName: ""
-    property string firstCardSpotlightKey: ""
+    property var cardSpotlightKeys: ({})
 
     signal backClicked()
     signal gameImported()
@@ -169,7 +169,7 @@ Item {
                 overlayComponent: isDownloading ? progressOverlay : null
 
                 SpotlightTarget {
-                    key: storeCard.index === 0 ? root.firstCardSpotlightKey : ""
+                    key: root.cardSpotlightKeys[storeCard.modelData.appName] || ""
                     target: storeCard
                     activate: () => storeCard.primaryAction()
                 }

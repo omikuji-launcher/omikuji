@@ -20,7 +20,7 @@ Item {
 
     readonly property Item nextButton: nextBtn
 
-    property var _view: ({ stepText: "", title: "", body: "", hint: "", canBack: false, canNext: false, isLast: false, art: null })
+    property var _view: ({ stepText: "", title: "", body: "", note: "", hint: "", canBack: false, canNext: false, isLast: false, art: null })
     on_ViewChanged: contentShown()
 
     function _sameView(a, b) {
@@ -157,6 +157,15 @@ Item {
             text: root._view.body
             color: Theme.text
             font.pixelSize: Theme.type.subtitle.size
+            wrapMode: Text.Wrap
+        }
+
+        Text {
+            Layout.fillWidth: true
+            visible: text !== ""
+            text: root._view.note
+            color: Theme.textMuted
+            font.pixelSize: Theme.type.body.size
             wrapMode: Text.Wrap
         }
 

@@ -283,9 +283,12 @@ DialogCard {
         }
 
         ExistingFilesNote {
+            id: existingNote
             Layout.fillWidth: true
             bytes: root.existingInstallBytes
             hasResume: root.hasResumeState
+
+            SpotlightTarget { key: "install.existing"; target: existingNote }
         }
 
         NoteChip {
@@ -416,9 +419,12 @@ DialogCard {
         spacing: Theme.space.sm
 
         M3Button {
+            id: cancelButton
             text: qsTr("Cancel")
             variant: "text"
             onClicked: { root.cancelled(); root.close() }
+
+            SpotlightTarget { key: "install.cancel"; target: cancelButton }
         }
         M3Button {
             id: confirmButton

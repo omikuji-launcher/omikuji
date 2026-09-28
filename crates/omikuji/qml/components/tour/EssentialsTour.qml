@@ -56,19 +56,22 @@ QtObject {
         {
             keys: ["game.layers"],
             title: qsTr("Translation layers"),
-            body: qsTr("Layers are on by default. Turning one off really disables it, so only touch them if you know what you're doing. You can also pick which version each layer uses, the docs explain it better.")
+            body: qsTr("Layers are on by default. Turning one off really disables it, so only touch them if you know what you're doing."),
+            note: qsTr("You can also pick which version each layer uses, the docs explain it better.")
         },
         {
             keys: ["rail.system"],
             title: qsTr("System options"),
-            body: qsTr("Here you can find general game options, such as environment variables, Discord RPC, GameMode, MangoHud, etc."),
+            body: qsTr("Here you can find general game options."),
+            note: qsTr("Environment variables, Discord RPC, GameMode, MangoHud, etc."),
             hint: qsTr("Open the System tab"),
             until: () => tour.has("game.env")
         },
         {
             keys: ["game.env"],
             title: qsTr("Environment variables"),
-            body: qsTr("Here you can add or remove environment variables. Left field is the variable name, right field is the value.")
+            body: qsTr("Here you can add or remove environment variables."),
+            note: qsTr("Left field is the variable name, right field is the value.")
         },
         {
             keys: [],
@@ -79,7 +82,8 @@ QtObject {
         {
             keys: ["nav.stores"],
             title: qsTr("Stores"),
-            body: qsTr("Steam is read straight from your config. Epic, GOG and Amazon show their libraries once you log in. Gachas install directly. They behave a little differently, but nothing too special.")
+            body: qsTr("Stores behave a little differently, but nothing too special."),
+            note: qsTr("Steam is read straight from your config. Epic, GOG and Amazon show their libraries once you log in. Gachas install directly.")
         },
         {
             keys: ["nav.store.epic"],
@@ -91,7 +95,8 @@ QtObject {
         {
             keys: ["store.account"],
             title: qsTr("The login"),
-            body: qsTr("Press 'Open Login Page', log in and paste the authorization code it gives you. If the store's tool is missing, an 'Install' button shows up here first. Once you're logged in, your library shows up here as cards, ready to install or import.")
+            body: qsTr("Press 'Open Login Page', log in and paste the authorization code it gives you."),
+            note: qsTr("If the store's tool is missing, an 'Install' button shows up here first. Once you're logged in, your library shows up here as cards, ready to install or import.")
         },
         {
             keys: ["demo.store"],
@@ -129,7 +134,44 @@ QtObject {
             keys: ["install.confirm"],
             demo: "epic",
             title: qsTr("Install"),
-            body: qsTr("This queues the download. Once it's done, the game shows up in your library with the options you picked here. We won't press it, clearly.")
+            body: qsTr("This queues the download. Once it's done, the game shows up in your library with the options you picked here."),
+            note: qsTr("We won't press it, clearly.")
+        },
+        {
+            keys: ["install.cancel"],
+            demo: "epic",
+            title: qsTr("Close it"),
+            body: qsTr("Let's close this for now."),
+            hint: qsTr("Press Cancel"),
+            until: () => !tour.has("install.path")
+        },
+        {
+            keys: ["demo.store.moyu"],
+            demo: "epic",
+            title: qsTr("Importing a game"),
+            body: qsTr("A game from a store (Epic Games, GOG, Amazon or Gachas) has to be imported from that store's page, otherwise Omikuji can't keep track of it."),
+            note: qsTr("That covers its state, updates, launching, etc."),
+            hint: qsTr("Press + or Enter on the card"),
+            until: () => tour.has("install.path")
+        },
+        {
+            keys: ["install.path"],
+            demo: "epic",
+            title: qsTr("Point it at the game's folder"),
+            body: qsTr("Point the installation path at the game's folder on disk so Omikuji can import it."),
+            note: qsTr("If Epic, GOG or Amazon already know about the game (their JSON registries), the path is filled in for you. For Gachas, point the path, pick the game's region and you're done.")
+        },
+        {
+            keys: ["install.existing"],
+            demo: "epic",
+            title: qsTr("Found it"),
+            body: qsTr("This shows up when game files are found at that path.")
+        },
+        {
+            keys: ["install.confirm"],
+            demo: "epic",
+            title: qsTr("Import"),
+            body: qsTr("If the game can be imported, the button turns into 'Import', which adds it to your library.")
         },
         {
             keys: [],

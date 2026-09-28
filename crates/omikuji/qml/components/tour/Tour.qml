@@ -4,7 +4,7 @@ import QtQuick
 import omikuji 1.0
 import "../lib/Nav.js" as Nav
 
-// step: { keys, title, body, until?, hint?, demo?, centered?, art? }. with until() the holes take clicks and the step ends when it turns true. without it there's a Next button
+// step: { keys, title, body, note?, until?, hint?, demo?, centered?, art? }. with until() the holes take clicks and the step ends when it turns true. without it there's a Next button
 Item {
     id: root
 
@@ -146,13 +146,14 @@ Item {
             stepText: stepText,
             title: step.title,
             body: qsTr("Head back to where you were to pick the tour up again."),
-            hint: "", canBack: false, canNext: false, isLast: false, art: null
+            note: "", hint: "", canBack: false, canNext: false, isLast: false, art: null
         }
         if (!_present) return null
         return {
             stepText: stepText,
             title: step.title,
             body: step.body,
+            note: step.note || "",
             hint: isDoStep ? (step.hint || (step.keys.length > 0 ? qsTr("Click the highlighted spot") : "")) : "",
             canBack: canBack,
             canNext: !isDoStep,
