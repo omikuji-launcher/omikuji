@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.19.0
+Version:        0.20.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,13 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Mon Sep 28 2026 reakjra <reakjra@proton.me> - 0.20.0-1
+- App tour (tutorial)
+- updates gated behind exe resolve
+- bunbled umu now wins over system umu
+- secondary color token
+- add dialog over popup in library (Add game)
+
 * Fri Sep 25 2026 reakjra <reakjra@proton.me> - 0.19.0-1
 - Prefix prep for 'run exe in prefix...' winetool
 - recover discord RPC after Discord restart

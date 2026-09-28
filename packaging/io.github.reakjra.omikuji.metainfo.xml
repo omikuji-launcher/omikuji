@@ -22,6 +22,17 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.0" date="2026-09-28">
+      <description>
+        <ul>
+          <li>App tour (tutorial)</li>
+          <li>updates gated behind exe resolve</li>
+          <li>bunbled umu now wins over system umu</li>
+          <li>secondary color token</li>
+          <li>add dialog over popup in library (Add game)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.19.0" date="2026-09-25">
       <description>
         <ul>

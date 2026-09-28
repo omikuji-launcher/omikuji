@@ -13,6 +13,21 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.0
+Added:
+- App tour  (tutorial, Settings > About > Tour)
+- Pre-download for HoYo games
+- Secondary color token
+
+Changed:
+- Bundled umu wins over system umu
+- Updates now gated behind exe resolve
+- 'Add' dialog rather than popup (Add game)
+
+Fixed:
+- Minor ui fixes
+
+
 ## 0.19.0
 Added:
 - Prefix prep for 'run exe in prefix...' winetool
@@ -23,9 +38,6 @@ Changed:
 Fixed:
 - Minor ui fixes
 - Recover Discord RPC after Discord restarts
-
-
-
 
 ## 0.18.2
 Added:
