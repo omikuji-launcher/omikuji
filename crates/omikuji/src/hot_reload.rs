@@ -6,15 +6,18 @@ use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 
 const MODULE: &str = "omikuji";
+const ENV_VAR: &str = "OMIKUJI_QML_HOTRELOAD";
 
 pub fn source_dir() -> Option<PathBuf> {
-    match std::env::var("OMIKUJI_QML_HOTRELOAD") {
-        Ok(val) if !val.is_empty() => Some(match val.as_str() {
-            "1" | "true" => PathBuf::from(env!("CARGO_MANIFEST_DIR")),
-            path => PathBuf::from(path),
-        }),
-        _ => None,
+    let val = std::env::var(ENV_VAR).ok().filter(|v| !v.is_empty())?;
+    if !cfg!(qml_hot_reload) {
+        tracing::warn!("{ENV_VAR} is set but this build has no qml hot reload, ignoring it");
+        return None;
     }
+    Some(match val.as_str() {
+        "1" | "true" => PathBuf::from(env!("CARGO_MANIFEST_DIR")),
+        path => PathBuf::from(path),
+    })
 }
 
 // qt locks a plugin module's namespace, so hot reload shadows the qrc module instead of registering into it

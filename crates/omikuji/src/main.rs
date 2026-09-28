@@ -48,9 +48,12 @@ async fn main() {
     };
 
     let hot_source = hot_reload::source_dir();
-    let disk_module = hot_source
-        .as_deref()
-        .map(|dir| hot_reload::DiskModule::mount(dir).expect("mount the hot reload qml module"));
+    let disk_module = hot_source.as_deref().map(|dir| {
+        hot_reload::DiskModule::mount(dir).unwrap_or_else(|e| {
+            tracing::error!("couldn't mount hot reload qml from {}: {e}", dir.display());
+            std::process::exit(1)
+        })
+    });
     let qml_root = match &disk_module {
         Some(module) => {
             let url = module.file_url(qml_rel);

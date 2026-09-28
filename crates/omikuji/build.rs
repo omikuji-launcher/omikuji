@@ -347,6 +347,10 @@ fn main() {
 
     let hot_reload = std::env::var("OMIKUJI_QML_HOTRELOAD").is_ok_and(|v| !v.is_empty());
     println!("cargo:rerun-if-env-changed=OMIKUJI_QML_HOTRELOAD");
+    println!("cargo::rustc-check-cfg=cfg(qml_hot_reload)");
+    if hot_reload {
+        println!("cargo::rustc-cfg=qml_hot_reload");
+    }
 
     let (singletons, qml_files): (Vec<_>, Vec<_>) = walk_files(QML_ROOT, &["qml"])
         .into_iter()
