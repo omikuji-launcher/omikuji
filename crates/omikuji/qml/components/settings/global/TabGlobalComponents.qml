@@ -328,7 +328,7 @@ Item {
                                     text: runtimeRow.status.status === "failed" && runtimeRow.status.error
                                         ? runtimeRow.status.error
                                         : runtimeRow.isSystem
-                                            ? qsTr("Provided by your system, omikuji won't download its own.")
+                                            ? qsTr("Provided by your system. Install to use omikuji's own copy instead.")
                                             : runtimeRow.meta.desc
                                     color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
                                     font.pixelSize: Theme.type.caption.size

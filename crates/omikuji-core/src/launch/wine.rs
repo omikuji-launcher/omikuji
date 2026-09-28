@@ -2,10 +2,10 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 use super::ComponentMissing;
-use crate::fs_util::{find_executable_in_paths, is_executable};
+use crate::fs_util::find_executable_in_paths;
 use crate::library::Game;
-use crate::runners;
 use crate::store::steam::local as steam_local;
+use crate::{components, runners};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WineVariant {
@@ -137,11 +137,9 @@ pub fn umu_system_path() -> Option<PathBuf> {
 }
 
 pub fn find_umu_run() -> Option<PathBuf> {
-    if let Some(p) = umu_system_path() {
-        return Some(p);
-    }
-    let our_runtime = crate::runtime_dir().join("umu-run");
-    (our_runtime.exists() && is_executable(&our_runtime)).then_some(our_runtime)
+    components::umu()
+        .first()
+        .and_then(|spec| components::status_for(spec).into_path())
 }
 
 #[cfg(test)]

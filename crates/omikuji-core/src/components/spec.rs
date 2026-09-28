@@ -41,3 +41,12 @@ pub enum ComponentStatus {
     System { path: PathBuf },
     Missing,
 }
+
+impl ComponentStatus {
+    pub fn into_path(self) -> Option<PathBuf> {
+        match self {
+            Self::Installed { path, .. } | Self::System { path } => Some(path),
+            Self::Missing => None,
+        }
+    }
+}
