@@ -2,6 +2,7 @@ use std::pin::Pin;
 
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
+use omikuji_core::anyhow;
 use omikuji_core::scripts as core_scripts;
 
 #[cxx_qt::bridge]
@@ -150,7 +151,7 @@ impl qobject::ScriptsBridge {
     fn load_json(&self, toml_path: &QString) -> QString {
         let path = std::path::PathBuf::from(toml_path.to_string());
         let loaded = std::fs::read_to_string(&path)
-            .map_err(omikuji_core::anyhow::Error::from)
+            .map_err(anyhow::Error::from)
             .and_then(|text| core_scripts::Script::parse(&text).map(|s| (s, text)));
         let json = match loaded {
             Ok((script, text)) => detail_json(&script, &text),
@@ -172,7 +173,7 @@ impl qobject::ScriptsBridge {
         std::thread::spawn(move || {
             let line_qt = qt.clone();
             let res = std::fs::read_to_string(&path)
-                .map_err(omikuji_core::anyhow::Error::from)
+                .map_err(anyhow::Error::from)
                 .and_then(|text| core_scripts::Script::parse(&text))
                 .and_then(|script| {
                     core_scripts::execute(&script, &values, |line| {

@@ -4,12 +4,13 @@ use prost::Message;
 use super::api::{SophonDiff, SophonManifestEntry};
 use super::protos::SophonManifest as SophonManifestProto;
 use super::protos::SophonPatchProto;
+use crate::http;
 
 pub async fn fetch_patch_manifest(diff: &SophonDiff) -> Result<SophonPatchProto> {
     let url = diff.manifest_download.url_for(&diff.manifest.id);
     let compressed = diff.manifest_download.compression == 1;
 
-    let bytes = crate::http::client()
+    let bytes = http::client()
         .get(&url)
         .send()
         .await
@@ -34,7 +35,7 @@ pub async fn fetch_build_manifest(entry: &SophonManifestEntry) -> Result<SophonM
     let url = entry.manifest_download.url_for(&entry.manifest.id);
     let compressed = entry.manifest_download.compression == 1;
 
-    let bytes = crate::http::client()
+    let bytes = http::client()
         .get(&url)
         .send()
         .await

@@ -448,28 +448,37 @@ fn apply_file_task_blocking(
     Ok(())
 }
 
-pub async fn apply_update(
+struct DownloadedPatches {
+    manifest: SophonPatchProto,
+    tasks: Vec<FileTask>,
+    files_dir: PathBuf,
+    patches_dir: PathBuf,
+    bytes_done: Arc<AtomicU64>,
+    bytes_total: u64,
+}
+
+async fn download_patches(
     diff: &SophonDiff,
-    game_dir: PathBuf,
-    temp_root: PathBuf,
-    from_version: String,
-    on_progress: ProgressFn,
-    is_cancelled: CancelFn,
-) -> Result<PatchOutcome> {
+    game_dir: &Path,
+    temp_root: &Path,
+    from_version: &str,
+    on_progress: &ProgressFn,
+    is_cancelled: &CancelFn,
+) -> Result<Option<DownloadedPatches>> {
     let limits = GachaLimits::load();
     let manifest = fetch_patch_manifest(diff).await?;
     let matching_field = diff.matching_field.clone();
-    ensure_temp_dirs(&temp_root, &matching_field)?;
+    ensure_temp_dirs(temp_root, &matching_field)?;
 
-    let files_dir = files_temp(&temp_root, &matching_field);
-    let patches_dir = patches_temp(&temp_root, &matching_field);
+    let files_dir = files_temp(temp_root, &matching_field);
+    let patches_dir = patches_temp(temp_root, &matching_field);
 
-    let all_tasks = build_tasks(&manifest, &diff.diff_download, &from_version);
+    let all_tasks = build_tasks(&manifest, &diff.diff_download, from_version);
     let total_before = all_tasks.len();
     // oh wow i just spent 1 hour trying to figure out why it'd fail the update. Oh wow, i just realized it was resources management clean-up in game. I'm so very happy right now. Im genuinely blistering happiness from all my pores.
     let tasks: Vec<FileTask> = all_tasks
         .into_iter()
-        .filter(|t| t.original_path(&game_dir).is_none_or(|p| p.exists()))
+        .filter(|t| t.original_path(game_dir).is_none_or(|p| p.exists()))
         .collect();
     if total_before > tasks.len() {
         tracing::info!(
@@ -478,10 +487,7 @@ pub async fn apply_update(
         );
     }
     if tasks.is_empty() {
-        return Ok(PatchOutcome {
-            files_patched: 0,
-            files_deleted: 0,
-        });
+        return Ok(None);
     }
 
     let bytes_total: u64 = tasks.iter().map(|t| t.patch_length).sum();
@@ -496,37 +502,92 @@ pub async fn apply_update(
         bytes_session: 0,
     });
 
-    {
-        let patches_dir = patches_dir.clone();
-        let bytes_done = bytes_done.clone();
-        let on_progress = on_progress.clone();
-        let is_cancelled = is_cancelled.clone();
-        let dl_results: Vec<Result<()>> = stream::iter(tasks.clone())
-            .map(|task| {
-                let patches_dir = patches_dir.clone();
-                let bytes_done = bytes_done.clone();
-                let on_progress = on_progress.clone();
-                let is_cancelled = is_cancelled.clone();
-                async move {
-                    if is_cancelled() {
-                        return Err(anyhow!("cancelled"));
-                    }
-                    download_artifact(&task, &patches_dir, &bytes_done, &on_progress, bytes_total)
-                        .await
+    let dl_results: Vec<Result<()>> = stream::iter(tasks.clone())
+        .map(|task| {
+            let patches_dir = patches_dir.clone();
+            let bytes_done = bytes_done.clone();
+            let on_progress = on_progress.clone();
+            let is_cancelled = is_cancelled.clone();
+            async move {
+                if is_cancelled() {
+                    return Err(anyhow!("cancelled"));
                 }
-            })
-            .buffer_unordered(limits.connections)
-            .collect()
-            .await;
+                download_artifact(&task, &patches_dir, &bytes_done, &on_progress, bytes_total).await
+            }
+        })
+        .buffer_unordered(limits.connections)
+        .collect()
+        .await;
 
-        for r in dl_results {
-            r?;
-        }
+    for r in dl_results {
+        r?;
     }
 
     if is_cancelled() {
         return Err(anyhow!("cancelled"));
     }
+
+    Ok(Some(DownloadedPatches {
+        manifest,
+        tasks,
+        files_dir,
+        patches_dir,
+        bytes_done,
+        bytes_total,
+    }))
+}
+
+pub async fn download_update(
+    diff: &SophonDiff,
+    game_dir: &Path,
+    temp_root: &Path,
+    from_version: &str,
+    on_progress: &ProgressFn,
+    is_cancelled: &CancelFn,
+) -> Result<()> {
+    download_patches(
+        diff,
+        game_dir,
+        temp_root,
+        from_version,
+        on_progress,
+        is_cancelled,
+    )
+    .await
+    .map(|_| ())
+}
+
+pub async fn apply_update(
+    diff: &SophonDiff,
+    game_dir: PathBuf,
+    temp_root: PathBuf,
+    from_version: String,
+    on_progress: ProgressFn,
+    is_cancelled: CancelFn,
+) -> Result<PatchOutcome> {
+    let Some(DownloadedPatches {
+        manifest,
+        tasks,
+        files_dir,
+        patches_dir,
+        bytes_done,
+        bytes_total,
+    }) = download_patches(
+        diff,
+        &game_dir,
+        &temp_root,
+        &from_version,
+        &on_progress,
+        &is_cancelled,
+    )
+    .await?
+    else {
+        return Ok(PatchOutcome {
+            files_patched: 0,
+            files_deleted: 0,
+        });
+    };
+    let limits = GachaLimits::load();
 
     let total_files = tasks.len() as u64;
     let patched = Arc::new(AtomicU64::new(0));

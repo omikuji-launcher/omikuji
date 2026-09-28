@@ -5,6 +5,9 @@ members = [
     "crates/omikuji-core",
 ]
 
+[workspace.lints.clippy]
+absolute_paths = "warn"
+
 [profile.dev]
 debug = "line-tables-only"
 

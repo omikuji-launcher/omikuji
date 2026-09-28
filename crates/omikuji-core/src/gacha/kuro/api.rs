@@ -1,7 +1,11 @@
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
+use serde::de::DeserializeOwned;
 
+use crate::gacha::file_sync::deserialize_size;
 use crate::gacha::manifest::GachaManifest;
+use crate::gacha::strategies::normalize_version;
+use crate::http;
 
 #[derive(Debug, Clone)]
 pub struct ResourceInfo {
@@ -25,10 +29,10 @@ pub struct PatchConfig {
 
 impl ResourceInfo {
     pub fn matching_patch(&self, from_version: &str) -> Option<&PatchConfig> {
-        let target = crate::gacha::strategies::normalize_version(from_version);
+        let target = normalize_version(from_version);
         self.patch_configs
             .iter()
-            .find(|p| crate::gacha::strategies::normalize_version(&p.version) == target)
+            .find(|p| normalize_version(&p.version) == target)
     }
 }
 
@@ -38,7 +42,7 @@ pub async fn fetch_resource_info(
 ) -> Result<ResourceInfo> {
     let url = super::index_url_from_manifest(manifest, edition_id)?;
 
-    let resp = crate::http::client()
+    let resp = http::client()
         .get(&url)
         .send()
         .await
@@ -190,7 +194,7 @@ pub struct IndexFile {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ResourceFile {
     pub dest: String,
-    #[serde(deserialize_with = "crate::gacha::file_sync::deserialize_size")]
+    #[serde(deserialize_with = "deserialize_size")]
     pub size: u64,
     #[serde(default)]
     pub md5: String,
@@ -228,8 +232,8 @@ pub async fn fetch_patch_index(index_file_url: &str) -> Result<PatchIndexFile> {
     fetch_json(index_file_url).await
 }
 
-async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let resp = crate::http::client()
+async fn fetch_json<T: DeserializeOwned>(url: &str) -> Result<T> {
+    let resp = http::client()
         .get(url)
         .send()
         .await

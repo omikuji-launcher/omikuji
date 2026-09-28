@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow, bail};
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
+use zstd::zstd_safe::DParameter;
 
 const CHUNK: usize = 256 * 1024;
 
@@ -147,7 +148,7 @@ impl Krpdiff {
             return Ok(Box::new(f.take(clip.size)));
         }
         let mut dec = zstd::stream::read::Decoder::new(f.take(clip.comp_size))?;
-        dec.set_parameter(zstd::zstd_safe::DParameter::WindowLogMax(31))?;
+        dec.set_parameter(DParameter::WindowLogMax(31))?;
         Ok(Box::new(dec))
     }
 
@@ -423,7 +424,7 @@ fn parse(f: &mut File, path: PathBuf) -> Result<Krpdiff> {
     };
     let head = if head_comp_size > 0 {
         let mut dec = zstd::stream::read::Decoder::new(Read::by_ref(f).take(head_comp_size))?;
-        dec.set_parameter(zstd::zstd_safe::DParameter::WindowLogMax(31))?;
+        dec.set_parameter(DParameter::WindowLogMax(31))?;
         parse_head(
             &mut dec,
             old_path_count,

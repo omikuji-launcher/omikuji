@@ -1,5 +1,9 @@
+use crate::app_settings::AppSettings;
 use crate::archive_source;
 use crate::components_config::{self, ArchiveSource};
+use crate::fs_util::copy_dir_all;
+use crate::store::steam::local as steam_local;
+use crate::system_info::gpu_select_list;
 use anyhow::{Result, anyhow};
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -127,7 +131,7 @@ fn stamp_steam_identity(dir: &Path) -> Result<()> {
         .file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| anyhow!("bad runner path: {}", dir.display()))?;
-    crate::store::steam::local::set_compat_tool_name(dir, name)
+    steam_local::set_compat_tool_name(dir, name)
 }
 
 pub async fn ensure_latest(source: &ArchiveSource) -> Result<PathBuf> {
@@ -272,7 +276,7 @@ pub fn is_proton_dir(path: &Path) -> bool {
 pub fn steam_proton_dirs_by_name(names: &[String]) -> BTreeMap<String, String> {
     let ours = runners_dir();
     let mut out = BTreeMap::new();
-    for (dir_name, path) in crate::store::steam::local::iter_steam_protons() {
+    for (dir_name, path) in steam_local::iter_steam_protons() {
         if path
             .canonicalize()
             .unwrap_or_else(|_| path.clone())
@@ -280,7 +284,7 @@ pub fn steam_proton_dirs_by_name(names: &[String]) -> BTreeMap<String, String> {
         {
             continue;
         }
-        let display = crate::store::steam::local::proton_display_name(&path);
+        let display = steam_local::proton_display_name(&path);
         if let Some(name) = names
             .iter()
             .find(|n| **n == dir_name || Some(n.as_str()) == display.as_deref())
@@ -318,7 +322,7 @@ pub fn move_to_steam_dir(src: &Path, roots: &[PathBuf]) -> Result<()> {
         return Ok(());
     }
     for dest in &targets {
-        crate::fs_util::copy_dir_all(src, dest)?;
+        copy_dir_all(src, dest)?;
     }
     std::fs::remove_dir_all(src)?;
     Ok(())
@@ -337,7 +341,7 @@ fn clear_compat_entry(dest: &Path) -> Result<()> {
 }
 
 pub fn steam_links(src: &Path) -> Vec<PathBuf> {
-    let mut out: Vec<PathBuf> = crate::store::steam::local::iter_compat_tools_dirs()
+    let mut out: Vec<PathBuf> = steam_local::iter_compat_tools_dirs()
         .into_iter()
         .flat_map(|ctd| std::fs::read_dir(ctd).into_iter().flatten().flatten())
         .map(|e| e.path())
@@ -421,9 +425,7 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
 }
 
 pub fn steam_runners_ignored() -> bool {
-    crate::app_settings::AppSettings::load()
-        .behavior
-        .ignore_steam_runners
+    AppSettings::load().behavior.ignore_steam_runners
 }
 
 pub fn runner_dir(version: &str) -> Option<PathBuf> {
@@ -432,7 +434,7 @@ pub fn runner_dir(version: &str) -> Option<PathBuf> {
     }
     match version.strip_prefix("steam:") {
         Some(_) if steam_runners_ignored() => None,
-        Some(rest) => crate::store::steam::local::find_proton_install(rest),
+        Some(rest) => steam_local::find_proton_install(rest),
         None => installed_runner_dir(version),
     }
 }
@@ -528,7 +530,7 @@ pub fn found_runners() -> Vec<FoundRunner> {
     for path in iter_local_runner_dirs() {
         push(&path, "Omikuji");
     }
-    for (_name, path) in crate::store::steam::local::iter_steam_protons() {
+    for (_name, path) in steam_local::iter_steam_protons() {
         push(&path, "Steam");
     }
     out
@@ -547,8 +549,8 @@ pub fn list_installed_runners() -> Vec<(String, String, String)> {
         }
     }
 
-    for (name, path) in crate::store::steam::local::iter_steam_protons() {
-        let label = crate::store::steam::local::proton_display_name(&path).unwrap_or_default();
+    for (name, path) in steam_local::iter_steam_protons() {
+        let label = steam_local::proton_display_name(&path).unwrap_or_default();
         runners.push((format!("steam:{name}"), label, "proton".to_string()));
     }
 
@@ -691,7 +693,7 @@ fn clean_lspci(name: &str) -> String {
 pub fn list_gpus() -> Vec<(String, String)> {
     let mut gpus = vec![("Default".to_string(), "".to_string())];
 
-    let vk = crate::system_info::gpu_select_list();
+    let vk = gpu_select_list();
     if !vk.is_empty() {
         gpus.extend(vk);
         return gpus;

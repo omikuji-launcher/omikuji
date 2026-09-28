@@ -5,6 +5,8 @@ use std::time::Duration;
 
 use super::{EnvPurpose, build_launch_as};
 use crate::library::{AlongsideWhen, Game};
+use crate::process::GAME_ID_VAR;
+use crate::store::steam::local::with_steam_wine;
 use crate::template_vars::TemplateVars;
 
 pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
@@ -46,7 +48,7 @@ fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Resul
     } else {
         prefix_command(game, target)?
     };
-    cmd.env(crate::process::GAME_ID_VAR, &game.metadata.id);
+    cmd.env(GAME_ID_VAR, &game.metadata.id);
     cmd.stdin(Stdio::null());
     cmd.stdout(Stdio::null());
     cmd.stderr(Stdio::null());
@@ -82,7 +84,7 @@ fn host_command(game: &Game, env: &HashMap<String, String>, target: &str) -> Com
 }
 
 fn prefix_command(game: &Game, target: &str) -> Result<Command> {
-    let steam = crate::store::steam::local::with_steam_wine(game)?;
+    let steam = with_steam_wine(game)?;
     let source = steam.as_ref().unwrap_or(game);
 
     let exe = std::path::PathBuf::from(target);

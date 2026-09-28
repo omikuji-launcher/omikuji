@@ -1,7 +1,9 @@
 use anyhow::{Result, anyhow};
+use serde::de::Error as DeError;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::gacha::manifest::GachaManifest;
+use crate::http;
 
 const PLATFORM: &str = "Windows";
 
@@ -50,7 +52,7 @@ fn str_to_u64_opt<'de, D: Deserializer<'de>>(d: D) -> std::result::Result<u64, D
         N(u64),
     }
     match Option::<V>::deserialize(d)? {
-        Some(V::S(s)) if !s.is_empty() => s.parse::<u64>().map_err(serde::de::Error::custom),
+        Some(V::S(s)) if !s.is_empty() => s.parse::<u64>().map_err(DeError::custom),
         Some(V::N(n)) => Ok(n),
         _ => Ok(0),
     }
@@ -122,7 +124,7 @@ fn build_get_latest_url(cfg: &EditionConfig, version: &str) -> String {
 
 pub async fn fetch_latest(cfg: &EditionConfig, installed_version: &str) -> Result<GetLatestData> {
     let url = build_get_latest_url(cfg, installed_version);
-    let body = crate::http::client()
+    let body = http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()
@@ -203,7 +205,7 @@ pub async fn fetch_resources(
     rand_str: &str,
 ) -> Result<ResourceList> {
     let url = build_get_latest_resources_url(cfg, game_version, version, rand_str);
-    let body = crate::http::client()
+    let body = http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()
@@ -259,7 +261,7 @@ pub struct ResourcePatchVariant {
 
 pub async fn fetch_resource_patch(resource_path: &str) -> Result<ResourcePatchManifest> {
     let url = format!("{}/patch.json", resource_path.trim_end_matches('/'));
-    let body = crate::http::client()
+    let body = http::client()
         .get(&url)
         .header("User-Agent", "Mozilla/5.0")
         .send()

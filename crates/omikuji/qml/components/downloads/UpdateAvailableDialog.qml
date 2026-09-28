@@ -17,10 +17,19 @@ DialogCard {
     property real downloadBytes: 0
     property bool canDiff: true
     property bool deltaSupported: true
+    property string kind: "required"
+
+    readonly property bool isPreDownload: kind === "predownload"
 
     signal updateRequested(string gameId, string appId, string fromVersion)
+    signal preDownloadRequested(string gameId, string fromVersion, string toVersion)
+    signal preDownloadDismissed(string gameId, string version)
     signal runAnywayRequested(string gameId)
     signal dismissed(string gameId)
+
+    function decline() {
+        if (root.isPreDownload) root.preDownloadDismissed(root.gameId, root.toVersion)
+    }
 
     maxWidth: 460
 
@@ -34,12 +43,13 @@ DialogCard {
             downloadBytes = payload.downloadBytes || 0
             canDiff = payload.canDiff === undefined ? true : payload.canDiff
             deltaSupported = payload.deltaSupported === undefined ? true : payload.deltaSupported
+            kind = payload.kind || "required"
         }
         open()
     }
     function hide() { close() }
 
-    onCloseRequested: { root.dismissed(root.gameId); root.close() }
+    onCloseRequested: { root.decline(); root.dismissed(root.gameId); root.close() }
 
     body: ColumnLayout {
         width: parent.width
@@ -50,7 +60,7 @@ DialogCard {
             spacing: Theme.space.sm
 
             IconTile {
-                icon: "sync"
+                icon: root.isPreDownload ? "download" : "sync"
                 radius: width / 2
             }
 
@@ -59,7 +69,7 @@ DialogCard {
                 spacing: 2
                 Text {
                     Layout.fillWidth: true
-                    text: qsTr("Update available")
+                    text: root.isPreDownload ? qsTr("Pre-download available") : qsTr("Update available")
                     color: Theme.text
                     font.pixelSize: Theme.type.title.size
                     font.weight: Font.DemiBold
@@ -102,9 +112,16 @@ DialogCard {
                 Text {
                     Layout.fillWidth: true
                     text: {
+                        let size = Format.formatBytes(root.downloadBytes)
+                        if (root.isPreDownload) {
+                            return root.downloadBytes > 0
+                                ? qsTr("Pre-download · %1").arg(size)
+                                : qsTr("Pre-download")
+                        }
+                        if (root.kind === "predownloaded") return qsTr("Delta update · already pre-downloaded")
                         if (root.canDiff) {
                             return root.downloadBytes > 0
-                                ? qsTr("Delta update · %1").arg(Format.formatBytes(root.downloadBytes))
+                                ? qsTr("Delta update · %1").arg(size)
                                 : qsTr("Delta update")
                         }
                         let name = root.displayName || qsTr("the game")
@@ -127,18 +144,19 @@ DialogCard {
         M3Button {
             text: qsTr("Cancel")
             variant: "text"
-            onClicked: { root.dismissed(root.gameId); root.close() }
+            onClicked: { root.decline(); root.dismissed(root.gameId); root.close() }
         }
         M3Button {
             text: qsTr("Run anyway")
             variant: "tonal"
-            onClicked: { root.runAnywayRequested(root.gameId); root.close() }
+            onClicked: { root.decline(); root.runAnywayRequested(root.gameId); root.close() }
         }
         M3Button {
-            text: root.canDiff ? qsTr("Update") : qsTr("Reinstall")
+            text: root.isPreDownload ? qsTr("Pre-download") : root.canDiff ? qsTr("Update") : qsTr("Reinstall")
             variant: "filled"
             onClicked: {
-                root.updateRequested(root.gameId, root.appId, root.fromVersion)
+                if (root.isPreDownload) root.preDownloadRequested(root.gameId, root.fromVersion, root.toVersion)
+                else root.updateRequested(root.gameId, root.appId, root.fromVersion)
                 root.close()
             }
         }

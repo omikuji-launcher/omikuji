@@ -1,8 +1,10 @@
 use anyhow::{Result, anyhow};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use super::super::HoyoEdition;
+use crate::http;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GameBranches {
@@ -157,8 +159,8 @@ struct ApiResponse<T> {
     data: Option<T>,
 }
 
-async fn get_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let resp: ApiResponse<T> = crate::http::client()
+async fn get_json<T: DeserializeOwned>(url: &str) -> Result<T> {
+    let resp: ApiResponse<T> = http::client()
         .get(url)
         .send()
         .await
@@ -177,8 +179,8 @@ async fn get_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
         .ok_or_else(|| anyhow!("sophon api returned no data"))
 }
 
-async fn post_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T> {
-    let resp: ApiResponse<T> = crate::http::client()
+async fn post_json<T: DeserializeOwned>(url: &str) -> Result<T> {
+    let resp: ApiResponse<T> = http::client()
         .post(url)
         .send()
         .await

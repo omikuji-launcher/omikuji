@@ -80,6 +80,7 @@ pub mod qobject {
             download_size: &QString,
             can_diff: bool,
             delta_supported: bool,
+            kind: &QString,
         );
 
         // cxx_name required: cxx-qt doesn't auto-camelCase signal names for qml handlers
@@ -233,13 +234,10 @@ pub mod qobject {
         fn quit_now(self: &GameModel);
 
         #[qinvokable]
-        fn check_epic_update(self: &GameModel, game_id: &QString) -> bool;
+        fn check_game_update(self: &GameModel, game_id: &QString) -> bool;
 
         #[qinvokable]
-        fn check_gog_update(self: &GameModel, game_id: &QString) -> bool;
-
-        #[qinvokable]
-        fn check_nile_update(self: &GameModel, game_id: &QString) -> bool;
+        fn dismiss_predownload(self: Pin<&mut GameModel>, game_id: &QString, version: &QString);
 
         #[qinvokable]
         fn scan_all_for_updates(self: Pin<&mut GameModel>);
@@ -411,6 +409,14 @@ pub mod qobject {
             self: Pin<&mut GameModel>,
             game_id: &QString,
             from_version: &QString,
+        ) -> QString;
+
+        #[qinvokable]
+        fn enqueue_game_predownload(
+            self: Pin<&mut GameModel>,
+            game_id: &QString,
+            from_version: &QString,
+            to_version: &QString,
         ) -> QString;
 
         #[qinvokable]
@@ -756,8 +762,15 @@ use cxx_qt_lib::{
 };
 
 use omikuji_core::app_settings::AppSettings;
+use omikuji_core::defaults::Defaults;
+use omikuji_core::gacha::{art, strategies};
+use omikuji_core::launch::{WineVariant, effective_prefix, missing_component, prefix_path_for};
 use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
+use omikuji_core::process::{self, ErrorAction, ErrorNotification};
+use omikuji_core::{desktop, dll_packs, notifications, prefixes, runners, store, system_info};
+
+use super::expand_path;
 
 const ROLE_ID: i32 = 0x0100;
 const ROLE_NAME: i32 = 0x0101;
@@ -844,7 +857,7 @@ fn runner_display(game: &Game) -> String {
             )
         }
         RunnerType::Native => "Native".to_string(),
-        _ => omikuji_core::runners::display_name(&game.wine.version),
+        _ => runners::display_name(&game.wine.version),
     }
 }
 
@@ -1101,7 +1114,7 @@ fn config_map(game: &Game) -> QMap<QMapPair_QString_QVariant> {
     let mut m = QMap::<QMapPair_QString_QVariant>::default();
     populate_config_map(game, &mut m);
     if !game.metadata.id.is_empty() || !game.wine.prefix.is_empty() {
-        let resolved = omikuji_core::launch::prefix_path_for(game);
+        let resolved = prefix_path_for(game);
         m.insert(
             QString::from("wine.prefix.resolved"),
             QVariant::from(&QString::from(&*resolved.to_string_lossy())),
@@ -1276,7 +1289,7 @@ impl qobject::GameModel {
 
     fn begin_new_game(mut self: Pin<&mut Self>) -> QMap<QMapPair_QString_QVariant> {
         let mut game = Game::new(String::new(), PathBuf::new());
-        game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
+        game.seed_from_defaults(&Defaults::load());
         let m = config_map(&game);
         self.as_mut().rust_mut().get_mut().draft = Some(game);
         m
@@ -1538,13 +1551,13 @@ impl qobject::GameModel {
 
         let game_id = self.library.game[idx].metadata.id.clone();
 
-        if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id) {
+        if let Err(e) = Library::remove_game_file(&game_id) {
             tracing::error!("failed to remove game file: {}", e);
-            omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+            process::notify_error(ErrorNotification {
                 game_id,
                 title: "Remove failed".to_string(),
                 message: format!("Couldn't delete the game's library file: {}", e),
-                action: omikuji_core::process::ErrorAction::None,
+                action: ErrorAction::None,
             });
             return;
         }
@@ -1555,7 +1568,7 @@ impl qobject::GameModel {
         self.as_mut().rust_mut().get_mut().library.game.remove(idx);
 
         media::remove_cached_media(&game_id);
-        omikuji_core::desktop::remove_steam_icon(&game_id);
+        desktop::remove_steam_icon(&game_id);
 
         let count = self.library.game.len() as i32;
         self.as_mut().set_count(count);
@@ -1565,13 +1578,11 @@ impl qobject::GameModel {
     fn remove_game_with_prefix(mut self: Pin<&mut Self>, index: i32) {
         let idx = index as usize;
         let prefix = match self.library.game.get(idx) {
-            Some(game) if game.uses_wine_prefix() => {
-                Some(omikuji_core::launch::prefix_path_for(game))
-            }
+            Some(game) if game.uses_wine_prefix() => Some(prefix_path_for(game)),
             _ => None,
         };
         if let Some(p) = prefix {
-            omikuji_core::prefixes::delete_prefix(&p);
+            prefixes::delete_prefix(&p);
         }
         self.as_mut().remove_game(index);
     }
@@ -1582,12 +1593,12 @@ impl qobject::GameModel {
             return QString::from("[]");
         };
         let json = match game.source.kind {
-            SourceKind::Epic => serde_json::to_string(&omikuji_core::store::epic::installed_dlcs(
-                &game.source.app_id,
-            )),
-            SourceKind::Gog => serde_json::to_string(&omikuji_core::store::gog::installed_dlcs(
-                &game.source.app_id,
-            )),
+            SourceKind::Epic => {
+                serde_json::to_string(&store::epic::installed_dlcs(&game.source.app_id))
+            }
+            SourceKind::Gog => {
+                serde_json::to_string(&store::gog::installed_dlcs(&game.source.app_id))
+            }
             _ => return QString::from("[]"),
         };
         QString::from(&json.unwrap_or_else(|_| "[]".to_string()))
@@ -1603,8 +1614,8 @@ impl qobject::GameModel {
             tracing::warn!("uninstall_dlc: only epic can remove a single dlc");
             return false;
         }
-        let Some(bin) = omikuji_core::store::epic::source::find_legendary() else {
-            omikuji_core::notifications::error(
+        let Some(bin) = store::epic::source::find_legendary() else {
+            notifications::error(
                 "DLC",
                 "Legendary not found - reinstall it from Settings > Components",
             );
@@ -1620,7 +1631,7 @@ impl qobject::GameModel {
             Ok(o) => {
                 let err = String::from_utf8_lossy(&o.stderr);
                 tracing::error!("legendary uninstall {} failed: {}", did, err.trim());
-                omikuji_core::notifications::error("DLC", "Could not remove the DLC");
+                notifications::error("DLC", "Could not remove the DLC");
                 return false;
             }
             Err(e) => {
@@ -1632,7 +1643,7 @@ impl qobject::GameModel {
         let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
         game.source.dlcs.retain(|d| d != &did);
         let snapshot = game.clone();
-        if let Err(e) = omikuji_core::library::Library::save_game_static(&snapshot) {
+        if let Err(e) = Library::save_game_static(&snapshot) {
             tracing::error!("failed to persist dlc removal: {}", e);
         }
         true
@@ -1643,15 +1654,13 @@ impl qobject::GameModel {
         let Some(game) = self.library.game.get(idx) else {
             return QString::default();
         };
-        let path = omikuji_core::launch::prefix_path_for(game);
+        let path = prefix_path_for(game);
         let has_prefix = game.uses_wine_prefix() && path.is_dir();
         let games: Vec<String> = if has_prefix {
             self.library
                 .game
                 .iter()
-                .filter(|g| {
-                    g.uses_wine_prefix() && omikuji_core::launch::prefix_path_for(g) == path
-                })
+                .filter(|g| g.uses_wine_prefix() && prefix_path_for(g) == path)
                 .map(|g| g.metadata.name.clone())
                 .collect()
         } else {
@@ -1671,7 +1680,7 @@ impl qobject::GameModel {
             .library
             .game
             .get(index as usize)
-            .and_then(omikuji_core::launch::missing_component)
+            .and_then(missing_component)
             .unwrap_or_default();
         QString::from(&name)
     }
@@ -1680,7 +1689,7 @@ impl qobject::GameModel {
         self.library
             .game
             .get(index as usize)
-            .map(omikuji_core::prefixes::prefix_needs_bootstrap)
+            .map(prefixes::prefix_needs_bootstrap)
             .unwrap_or(false)
     }
 
@@ -1695,7 +1704,7 @@ impl qobject::GameModel {
         let qt = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             let line_qt = qt.clone();
-            let res = omikuji_core::prefixes::bootstrap_prefix(&game, |line| {
+            let res = prefixes::bootstrap_prefix(&game, |line| {
                 let l = line.to_string();
                 let _ = line_qt.queue(move |mut obj: Pin<&mut qobject::GameModel>| {
                     obj.as_mut().prepare_output(&QString::from(&l));
@@ -1803,7 +1812,7 @@ impl qobject::GameModel {
             QString::from("favourite"),
             QVariant::from(&game.metadata.favourite),
         );
-        let prefix_path = omikuji_core::launch::effective_prefix(game).unwrap_or_default();
+        let prefix_path = effective_prefix(game).unwrap_or_default();
         map.insert(
             QString::from("prefixPath"),
             QVariant::from(&QString::from(&*prefix_path.to_string_lossy())),
@@ -1871,7 +1880,7 @@ impl qobject::GameModel {
         let Some(game) = self.library.game.get(idx) else {
             return false;
         };
-        omikuji_core::process::is_game_running(&game.metadata.id)
+        process::is_game_running(&game.metadata.id)
     }
 
     fn is_launching(&self, index: i32) -> bool {
@@ -1879,7 +1888,7 @@ impl qobject::GameModel {
         let Some(game) = self.library.game.get(idx) else {
             return false;
         };
-        omikuji_core::process::is_launching(&game.metadata.id)
+        process::is_launching(&game.metadata.id)
     }
 
     fn logs_dir(&self) -> QString {
@@ -1948,7 +1957,7 @@ impl qobject::GameModel {
         };
         let name = game.metadata.name.clone();
         let gacha_manifest = if game.source.kind == SourceKind::Gacha {
-            omikuji_core::gacha::strategies::find_for_app_id(&game.source.app_id).map(|(m, _, _)| m)
+            strategies::find_for_app_id(&game.source.app_id).map(|(m, _, _)| m)
         } else {
             None
         };
@@ -1959,9 +1968,7 @@ impl qobject::GameModel {
         let on_asset = media_changed_notifier(qt_thread, id.clone());
         let slot = media::MediaSlot::Pending;
         std::thread::spawn(move || match (gacha_manifest, steam_appid) {
-            (Some(m), _) => {
-                omikuji_core::gacha::art::fetch_into_library_cache(slot, &m, &id, on_asset)
-            }
+            (Some(m), _) => art::fetch_into_library_cache(slot, &m, &id, on_asset),
             (_, Some(appid)) => {
                 let _ = media::fetch_steam_media_blocking_with(slot, &appid, on_asset);
             }
@@ -2052,7 +2059,7 @@ impl qobject::GameModel {
         game_ids_csv: &QString,
         replace_maps: bool,
     ) -> i32 {
-        use omikuji_core::defaults::{CopyMode, Defaults};
+        use omikuji_core::defaults::CopyMode;
 
         fn split_csv(csv: &str) -> Vec<&str> {
             csv.split(',')
@@ -2097,7 +2104,7 @@ impl qobject::GameModel {
     }
 
     fn list_runners(&self) -> QString {
-        let runners = omikuji_core::runners::list_runner_options();
+        let runners = runners::list_runner_options();
         match serde_json::to_string(&runners) {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[]"),
@@ -2106,21 +2113,21 @@ impl qobject::GameModel {
 
     fn runner_is_proton(&self, version: &QString) -> bool {
         matches!(
-            omikuji_core::launch::WineVariant::from_version(&version.to_string()),
-            omikuji_core::launch::WineVariant::Proton
+            WineVariant::from_version(&version.to_string()),
+            WineVariant::Proton
         )
     }
 
     fn proton_patch_state(&self, version: &QString) -> QString {
         use omikuji_core::runners::proton_monkey_patch::{PatchState, status};
-        let state = omikuji_core::runners::runner_dir(&version.to_string())
+        let state = runners::runner_dir(&version.to_string())
             .map(|dir| status(&dir))
             .unwrap_or(PatchState::NotProton);
         unit_variant_name(&state)
     }
 
     fn dll_versions_for_kind(&self, kind: &QString) -> QString {
-        let versions = omikuji_core::dll_packs::installed_versions_for_kind(&kind.to_string());
+        let versions = dll_packs::installed_versions_for_kind(&kind.to_string());
         match serde_json::to_string(&versions) {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[]"),
@@ -2137,7 +2144,7 @@ impl qobject::GameModel {
     }
 
     fn list_gpus(&self) -> QString {
-        let gpus = omikuji_core::runners::list_gpus();
+        let gpus = runners::list_gpus();
         match serde_json::to_string(&gpus) {
             Ok(json) => QString::from(&json),
             Err(_) => QString::from("[[\"Default\",\"\"]]"),
@@ -2146,10 +2153,7 @@ impl qobject::GameModel {
 
     fn system_info(&self) -> QString {
         let qt = option_env!("OMIKUJI_QT_VERSION").unwrap_or("unknown");
-        QString::from(&omikuji_core::system_info::report(
-            env!("CARGO_PKG_VERSION"),
-            qt,
-        ))
+        QString::from(&system_info::report(env!("CARGO_PKG_VERSION"), qt))
     }
 
     fn app_version(&self) -> QString {
@@ -2181,7 +2185,7 @@ impl qobject::GameModel {
 
         let game = self.library.game[idx].clone();
 
-        match omikuji_core::desktop::duplicate_game(&game) {
+        match desktop::duplicate_game(&game) {
             Ok(new_game) => {
                 let new_name = new_game.metadata.name.clone();
                 let new_id = new_game.metadata.id.clone();
@@ -2216,7 +2220,7 @@ impl qobject::GameModel {
     }
 
     fn disk_free_space(&self, path: &QString) -> QString {
-        let bytes = omikuji_core::desktop::disk_free_space(&crate::bridge::expand_path(path));
+        let bytes = desktop::disk_free_space(&expand_path(path));
         QString::from(&bytes.to_string())
     }
 

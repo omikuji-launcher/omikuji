@@ -1,3 +1,5 @@
+use crate::desktop;
+use crate::fs_util::write_atomic;
 use crate::library::Game;
 use crate::media::{MediaType, media_path};
 use anyhow::{Context, Result};
@@ -141,7 +143,7 @@ fn read_entries(path: &Path) -> Result<Vec<Entry>> {
 }
 
 fn write_entries(path: &Path, entries: &[Entry]) -> Result<()> {
-    crate::fs_util::write_atomic(path, serialize_entries(entries))
+    write_atomic(path, serialize_entries(entries))
         .with_context(|| format!("writing {}", path.display()))?;
     Ok(())
 }
@@ -172,7 +174,7 @@ pub fn available() -> bool {
 }
 
 fn launch_spec(game: &Game) -> (String, String) {
-    let target = crate::desktop::launch_target(game);
+    let target = desktop::launch_target(game);
     if let Ok(app_id) = std::env::var("FLATPAK_ID") {
         (
             "/usr/bin/flatpak".to_string(),
@@ -254,7 +256,7 @@ pub fn create_shortcut(game: &Game) -> Result<PathBuf> {
 }
 
 pub fn remove_shortcut(game: &Game) -> Result<()> {
-    crate::desktop::remove_steam_icon(&game.metadata.id);
+    desktop::remove_steam_icon(&game.metadata.id);
 
     let config = user_config_dir().context("no steam user data found")?;
     remove_artwork(&config, shortcut_appid(game));

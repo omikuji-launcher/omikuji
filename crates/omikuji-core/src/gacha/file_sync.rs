@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
-use futures_util::StreamExt;
+use futures_util::{StreamExt, stream};
+use serde::de::Error as _;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -88,7 +89,6 @@ where
     D: serde::Deserializer<'de>,
 {
     use serde::Deserialize;
-    use serde::de::Error;
     match serde_json::Value::deserialize(d)? {
         serde_json::Value::Number(n) => n.as_u64().ok_or_else(|| D::Error::custom("not a u64")),
         serde_json::Value::String(s) => s.parse().map_err(D::Error::custom),
@@ -125,7 +125,7 @@ pub async fn select_stale(
     let progress = SyncProgress::new(total);
     let lanes = std::thread::available_parallelism().map_or(4, |n| n.get());
 
-    let stream = futures_util::stream::iter(files.into_iter().map(|file| {
+    let stream = stream::iter(files.into_iter().map(|file| {
         let id = id.to_string();
         let path = dest_root.join(sanitize_rel(&file.rel_path));
         let progress = progress.clone();
@@ -242,7 +242,7 @@ pub async fn sync_all(
         Skip::Never => files,
     };
 
-    let stream = futures_util::stream::iter(files.into_iter().map(|file| {
+    let stream = stream::iter(files.into_iter().map(|file| {
         let id = id.to_string();
         let dest_root = dest_root.to_path_buf();
         let progress = progress.clone();

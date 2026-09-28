@@ -9,7 +9,10 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use tracing::Level;
 use tracing_subscriber::filter::{EnvFilter, FilterExt, Targets, filter_fn};
-use tracing_subscriber::fmt::writer::{MakeWriter, OptionalWriter};
+use tracing_subscriber::fmt::{
+    self,
+    writer::{MakeWriter, OptionalWriter},
+};
 use tracing_subscriber::prelude::*;
 
 use crate::log_fmt::ShortTarget;
@@ -82,12 +85,12 @@ pub fn init() {
 
     tracing_subscriber::registry()
         .with(
-            tracing_subscriber::fmt::layer()
+            fmt::layer()
                 .event_format(ShortTarget)
                 .with_filter(stderr_filter),
         )
         .with(
-            tracing_subscriber::fmt::layer()
+            fmt::layer()
                 .event_format(ShortTarget)
                 .with_ansi(false)
                 .with_writer(SessionWriter)

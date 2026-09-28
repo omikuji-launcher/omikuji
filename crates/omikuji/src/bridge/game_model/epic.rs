@@ -3,8 +3,13 @@ use std::pin::Pin;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 
+use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library, SourceKind};
-use omikuji_core::media;
+use omikuji_core::process::{self, ErrorAction, ErrorNotification};
+use omikuji_core::store::epic;
+use omikuji_core::{downloads, install_sizes, launch, media, notifications};
+
+use crate::bridge::expand_path;
 
 impl super::qobject::GameModel {
     pub fn epic_check_existing_install(
@@ -13,13 +18,12 @@ impl super::qobject::GameModel {
         install_path: &QString,
     ) -> QString {
         let app_s = app_name.to_string();
-        let install_s = crate::bridge::expand_path(install_path);
+        let install_s = expand_path(install_path);
         if app_s.is_empty() || install_s.trim().is_empty() {
             return QString::from(r#"{"bytes":0,"hasResume":false}"#);
         }
         let install = std::path::PathBuf::from(install_s.trim());
-        let (bytes, has_resume) =
-            omikuji_core::store::epic::inspect_existing_install(&app_s, &install);
+        let (bytes, has_resume) = epic::inspect_existing_install(&app_s, &install);
         QString::from(&format!(
             r#"{{"bytes":{},"hasResume":{}}}"#,
             bytes, has_resume
@@ -30,8 +34,8 @@ impl super::qobject::GameModel {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();
 
-        omikuji_core::install_sizes::spawn_fetch_details(rid, move || async move {
-            omikuji_core::store::epic::fetch_game_details(&app_name_str)
+        install_sizes::spawn_fetch_details(rid, move || async move {
+            epic::fetch_game_details(&app_name_str)
                 .await
                 .map_err(|e| e.to_string())
         });
@@ -41,8 +45,8 @@ impl super::qobject::GameModel {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();
 
-        omikuji_core::install_sizes::spawn_fetch_ex(rid, move || async move {
-            omikuji_core::store::epic::fetch_install_size(&app_name_str)
+        install_sizes::spawn_fetch_ex(rid, move || async move {
+            epic::fetch_install_size(&app_name_str)
                 .await
                 .map(|s| {
                     let dlcs = serde_json::to_string(&s.dlcs).unwrap_or_else(|_| "[]".to_string());
@@ -53,7 +57,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn epic_dir_has_game(&self, launch_exe: &QString, install_path: &QString) -> bool {
-        let path = crate::bridge::expand_path(install_path);
+        let path = expand_path(install_path);
         if path.trim().is_empty() {
             return false;
         }
@@ -90,7 +94,7 @@ impl super::qobject::GameModel {
             return QString::from(&app_name_s);
         }
 
-        let Some(info) = omikuji_core::store::epic::find_installed_info(&app_name_s) else {
+        let Some(info) = epic::find_installed_info(&app_name_s) else {
             tracing::warn!("no install info for {} - leaving library alone", app_name_s);
             return QString::default();
         };
@@ -129,7 +133,7 @@ impl super::qobject::GameModel {
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };
-        game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
+        game.seed_from_defaults(&Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
             tracing::error!("failed to save: {}", e);
@@ -175,31 +179,30 @@ impl super::qobject::GameModel {
         let app_id = game.source.app_id.clone();
         let name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
-        let install_path =
-            omikuji_core::store::epic::find_installed_info(&app_id).map(|i| i.install_path.clone());
+        let install_path = epic::find_installed_info(&app_id).map(|i| i.install_path.clone());
 
         std::thread::spawn(move || {
-            let Some(legendary_bin) = omikuji_core::store::epic::source::find_legendary() else {
-                omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+            let Some(legendary_bin) = epic::source::find_legendary() else {
+                process::notify_error(ErrorNotification {
                     game_id: game_id_owned.clone(),
                     title: "Uninstall failed".to_string(),
                     message: "`Legendary` not found".to_string(),
-                    action: omikuji_core::process::ErrorAction::OpenGlobalSettings,
+                    action: ErrorAction::OpenGlobalSettings,
                 });
                 return;
             };
 
-            let entries_to_cancel: Vec<String> = omikuji_core::downloads::manager()
+            let entries_to_cancel: Vec<String> = downloads::manager()
                 .list()
                 .iter()
                 .filter(|e| e.app_id == app_id)
                 .map(|e| e.id.clone())
                 .collect();
             for entry_id in entries_to_cancel {
-                omikuji_core::downloads::manager().cancel(&entry_id);
+                downloads::manager().cancel(&entry_id);
             }
 
-            omikuji_core::notifications::info(&name, "Uninstalling via Legendary...");
+            notifications::info(&name, "Uninstalling via Legendary...");
 
             let result = std::process::Command::new(&legendary_bin)
                 .arg("-y")
@@ -216,29 +219,28 @@ impl super::qobject::GameModel {
                             "legendary exited 0 but {} still exists, forcing cleanup",
                             path.display()
                         );
-                        omikuji_core::downloads::cleanup_install_dir_blocking(path);
+                        downloads::cleanup_install_dir_blocking(path);
                     }
-                    if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id_owned)
-                    {
+                    if let Err(e) = Library::remove_game_file(&game_id_owned) {
                         tracing::error!("failed to remove game file: {}", e);
                     }
-                    omikuji_core::notifications::success(&name, "Uninstalled");
+                    notifications::success(&name, "Uninstalled");
                 }
                 Ok(out) => {
                     let err = String::from_utf8_lossy(&out.stderr);
-                    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                    process::notify_error(ErrorNotification {
                         game_id: game_id_owned.clone(),
                         title: "Uninstall failed".to_string(),
                         message: format!("`legendary` returned an error: {}", err.trim()),
-                        action: omikuji_core::process::ErrorAction::None,
+                        action: ErrorAction::None,
                     });
                 }
                 Err(e) => {
-                    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                    process::notify_error(ErrorNotification {
                         game_id: game_id_owned.clone(),
                         title: "Uninstall failed".to_string(),
                         message: format!("Couldn't run `legendary`: {}", e),
-                        action: omikuji_core::process::ErrorAction::None,
+                        action: ErrorAction::None,
                     });
                 }
             }
@@ -262,19 +264,15 @@ impl super::qobject::GameModel {
             let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
             game.source.eos_overlay = enable;
             let _ = Library::save_game_static(game);
-            (
-                game.metadata.name.clone(),
-                omikuji_core::launch::resolve_prefix(game),
-            )
+            (game.metadata.name.clone(), launch::resolve_prefix(game))
         };
 
         let id_for_thread = id;
         std::thread::spawn(move || {
-            use omikuji_core::notifications as notif;
             use omikuji_core::store::epic::eos_overlay;
 
             let verb = if enable { "Enabling" } else { "Disabling" };
-            notif::info("EOS Overlay", format!("{} for {}…", verb, game_name));
+            notifications::info("EOS Overlay", format!("{} for {}…", verb, game_name));
 
             let result = if enable {
                 eos_overlay::enable(&prefix)
@@ -285,16 +283,14 @@ impl super::qobject::GameModel {
             match result {
                 Ok(_) => {
                     let verb = if enable { "Enabled" } else { "Disabled" };
-                    notif::success("EOS Overlay", format!("{} for {}", verb, game_name));
+                    notifications::success("EOS Overlay", format!("{} for {}", verb, game_name));
                 }
                 Err(e) => {
-                    notif::error("EOS Overlay", format!("{} failed: {}", verb, e));
+                    notifications::error("EOS Overlay", format!("{} failed: {}", verb, e));
                     // roll back the persisted flag so the ui toggle re-syncs to the real state
-                    if let Ok(Some(mut game)) =
-                        omikuji_core::library::Library::load_game_by_id(&id_for_thread)
-                    {
+                    if let Ok(Some(mut game)) = Library::load_game_by_id(&id_for_thread) {
                         game.source.eos_overlay = !enable;
-                        let _ = omikuji_core::library::Library::save_game_static(&game);
+                        let _ = Library::save_game_static(&game);
                     }
                 }
             }
@@ -304,7 +300,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn epic_overlay_is_installed(&self) -> bool {
-        omikuji_core::store::epic::eos_overlay::is_installed()
+        epic::eos_overlay::is_installed()
     }
 
     pub fn epic_set_cloud_saves(mut self: Pin<&mut Self>, game_id: &QString, enable: bool) -> bool {
@@ -333,31 +329,27 @@ impl super::qobject::GameModel {
 
         let id_for_thread = id;
         std::thread::spawn(move || {
-            use omikuji_core::notifications as notif;
-
-            notif::info(
+            notifications::info(
                 "Cloud Saves",
                 format!("Discovering save path for {}…", game_name),
             );
 
-            match omikuji_core::store::epic::discover_save_path(&game_clone) {
+            match epic::discover_save_path(&game_clone) {
                 Ok(path) if !path.is_empty() => {
-                    if let Ok(Some(mut game)) =
-                        omikuji_core::library::Library::load_game_by_id(&id_for_thread)
-                    {
+                    if let Ok(Some(mut game)) = Library::load_game_by_id(&id_for_thread) {
                         game.source.save_path = path.clone();
-                        let _ = omikuji_core::library::Library::save_game_static(&game);
+                        let _ = Library::save_game_static(&game);
                     }
-                    notif::success("Cloud Saves", format!("Save path resolved: {}", path));
+                    notifications::success("Cloud Saves", format!("Save path resolved: {}", path));
                 }
                 Ok(_) => {
-                    notif::warning(
+                    notifications::warning(
                         "Cloud Saves",
                         "No cloud save path found — this game may not support Epic cloud saves. You can enter one manually below.",
                     );
                 }
                 Err(e) => {
-                    notif::error("Cloud Saves", format!("Discovery failed: {}", e));
+                    notifications::error("Cloud Saves", format!("Discovery failed: {}", e));
                 }
             }
         });

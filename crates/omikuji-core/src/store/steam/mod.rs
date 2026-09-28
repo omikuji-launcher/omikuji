@@ -4,6 +4,8 @@ pub mod shortcuts;
 
 use anyhow::Result;
 
+use crate::library::Library;
+
 pub use api::{SteamApi, SteamGame};
 pub use local::{
     AppManifest, SteamUser, find_steam_dir, get_active_steamid64, get_installed_games,
@@ -48,10 +50,7 @@ pub fn fetch_playtime_data(api_key: &str) -> Result<SteamPlaytimeMap> {
         .collect())
 }
 
-pub fn apply_playtime_data(
-    library: &mut crate::library::Library,
-    steam_data: &SteamPlaytimeMap,
-) -> (usize, usize) {
+pub fn apply_playtime_data(library: &mut Library, steam_data: &SteamPlaytimeMap) -> (usize, usize) {
     let mut updated = 0;
     let steam_game_count = library
         .game

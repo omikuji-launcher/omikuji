@@ -2,8 +2,11 @@ pub mod eos_overlay;
 pub mod source;
 pub mod updates;
 
-use crate::store::StoreGame;
+use crate::launch::build_launch;
+use crate::library::Game;
 use crate::store::epic::source::require_legendary;
+use crate::store::{self, StoreGame};
+use crate::{fs_util, http};
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -73,7 +76,7 @@ impl EpicStore {
             let _ = std::fs::remove_file(&path);
         }
         // drop cache so next login starts with an empty library, not the previous user's
-        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
+        let _ = std::fs::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         Ok(())
     }
@@ -209,7 +212,7 @@ fn installed_json() -> PathBuf {
 
 // only entries with BOTH install_path AND executable; partial installs (killed mid-download) would otherwise show up as "installed" in the ui
 fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    Ok(crate::store::registry::read(&installed_json())
+    Ok(store::registry::read(&installed_json())
         .into_iter()
         .filter(|(_, e)| e.has_executable())
         .map(|(app_name, e)| (app_name, e.install_path))
@@ -368,7 +371,7 @@ pub fn inspect_existing_install(app_name: &str, install_path: &Path) -> (u64, bo
         })
         .unwrap_or(false);
 
-    (crate::fs_util::dir_size(install_path), has_resume)
+    (fs_util::dir_size(install_path), has_resume)
 }
 
 pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
@@ -413,7 +416,7 @@ pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
 }
 
 pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
-    let entry = crate::store::registry::entry(&installed_json(), app_name)?;
+    let entry = store::registry::entry(&installed_json(), app_name)?;
     let exe_rel = Some(entry.executable.clone());
     Some(entry.resolved(exe_rel))
 }
@@ -428,7 +431,7 @@ fn installed_save_path(app_name: &str) -> Option<String> {
         .map(String::from)
 }
 
-pub fn discover_save_path(game: &crate::library::Game) -> Result<String> {
+pub fn discover_save_path(game: &Game) -> Result<String> {
     let bin = require_legendary()?;
     let app_name = if game.source.app_id.is_empty() {
         &game.metadata.id
@@ -436,7 +439,7 @@ pub fn discover_save_path(game: &crate::library::Game) -> Result<String> {
         &game.source.app_id
     };
 
-    let config = crate::launch::build_launch(game)?;
+    let config = build_launch(game)?;
 
     tracing::info!("discovering save path for '{}'", app_name);
 
@@ -511,7 +514,7 @@ fn migrate_image_cache_once() {
     use std::sync::OnceLock;
     static MIGRATED: OnceLock<()> = OnceLock::new();
     MIGRATED.get_or_init(|| {
-        let dir = crate::store::cache::cache_dir(STORE);
+        let dir = store::cache::cache_dir(STORE);
         let marker = dir.join(".thumb-v1");
         if marker.exists() {
             return;
@@ -525,7 +528,7 @@ fn migrate_image_cache_once() {
                 }
             }
         }
-        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
+        let _ = std::fs::remove_file(store::cache::library_path(STORE));
         let _ = std::fs::create_dir_all(&dir);
         let _ = std::fs::write(&marker, "v1");
     });
@@ -533,15 +536,15 @@ fn migrate_image_cache_once() {
 
 pub fn load_cached_library() -> Vec<StoreGame> {
     migrate_image_cache_once();
-    crate::store::cache::load_library(STORE)
+    store::cache::load_library(STORE)
 }
 
 pub fn save_cached_library(games: &[StoreGame]) {
-    crate::store::cache::save_library(STORE, games);
+    store::cache::save_library(STORE, games);
 }
 
 fn resolve_epic_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Option<String> {
-    crate::store::cache::resolve_image(STORE, app_name, kind, cdn_url, thumbnail_url)
+    store::cache::resolve_image(STORE, app_name, kind, cdn_url, thumbnail_url)
 }
 
 pub async fn fetch_game_details(app_name: &str) -> Result<String> {
@@ -567,7 +570,7 @@ pub async fn fetch_game_details(app_name: &str) -> Result<String> {
     let mut reqs = Vec::new();
 
     if !namespace.is_empty() {
-        let client = crate::http::client();
+        let client = http::client();
         let slug = product_slug(client, &namespace, &title).await;
         if let Ok(resp) = client
             .get(format!(

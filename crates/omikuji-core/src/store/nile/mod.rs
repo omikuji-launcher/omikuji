@@ -2,7 +2,8 @@ pub mod fuel;
 pub mod source;
 pub mod updates;
 
-use crate::store::StoreGame;
+use crate::fs_util::dir_size;
+use crate::store::{self, StoreGame};
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -206,11 +207,11 @@ pub fn find_installed_info(app_id: &str) -> Option<InstalledInfo> {
 
 // nile has no resume marker, it hash-checks at run time
 pub fn inspect_existing_install(_app_id: &str, install_path: &Path) -> (u64, bool) {
-    (crate::fs_util::dir_size(install_path), false)
+    (dir_size(install_path), false)
 }
 
 pub fn finished_bytes(install_path: &Path) -> u64 {
-    crate::fs_util::dir_size(install_path).saturating_sub(inflight_bytes(install_path))
+    dir_size(install_path).saturating_sub(inflight_bytes(install_path))
 }
 
 // nile writes each file to <name>.patch and deletes it on the next run instead of appending
@@ -292,16 +293,16 @@ pub async fn fetch_install_size(app_id: &str) -> Result<InstallSize> {
 }
 
 pub fn load_cached_library() -> Vec<StoreGame> {
-    crate::store::cache::load_library(STORE)
+    store::cache::load_library(STORE)
 }
 
 pub fn save_cached_library(games: &[StoreGame]) {
-    crate::store::cache::save_library(STORE, games);
+    store::cache::save_library(STORE, games);
 }
 
 fn resolve_nile_image(app_id: &str, kind: &str, cdn_url: &str) -> Option<String> {
     let url = (!cdn_url.is_empty()).then_some(cdn_url);
-    crate::store::cache::resolve_image(STORE, app_id, kind, url, str::to_string)
+    store::cache::resolve_image(STORE, app_id, kind, url, str::to_string)
 }
 
 pub struct NileStore {
@@ -389,7 +390,7 @@ impl NileStore {
             let err = String::from_utf8_lossy(&output.stderr);
             tracing::error!("nile auth --logout failed: {}", err.trim());
         }
-        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
+        let _ = std::fs::remove_file(store::cache::library_path(STORE));
         self.pending_login = None;
         self.display_name.clear();
         Ok(())

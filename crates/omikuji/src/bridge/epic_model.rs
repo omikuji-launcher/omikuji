@@ -4,9 +4,10 @@ use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
-use omikuji_core::library::SourceKind;
+use omikuji_core::components;
+use omikuji_core::library::{Library, SourceKind};
 use omikuji_core::store::StoreGame;
-use omikuji_core::store::epic::EpicStore;
+use omikuji_core::store::epic::{self, EpicStore};
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -132,7 +133,7 @@ impl Default for EpicModelRust {
             is_logged_in,
             is_refreshing: false,
             display_name,
-            tool_ready: omikuji_core::components::ready(&omikuji_core::components::epic_tools()),
+            tool_ready: components::ready(&components::epic_tools()),
             tool_installing: false,
         }
     }
@@ -167,7 +168,7 @@ impl qobject::EpicModel {
         self.as_mut().set_tool_installing(true);
         let qt_thread = self.as_mut().qt_thread();
         tokio::spawn(async move {
-            let ok = omikuji_core::components::ensure(&omikuji_core::components::epic_tools())
+            let ok = components::ensure(&components::epic_tools())
                 .await
                 .map_err(|e| tracing::error!("epic tools install failed: {}", e))
                 .is_ok();
@@ -179,7 +180,7 @@ impl qobject::EpicModel {
     }
 
     pub fn refresh_tools(mut self: Pin<&mut Self>) {
-        let ready = omikuji_core::components::ready(&omikuji_core::components::epic_tools());
+        let ready = components::ready(&components::epic_tools());
         self.as_mut().set_tool_ready(ready);
     }
 
@@ -239,8 +240,8 @@ impl qobject::EpicModel {
 
         tokio::spawn(async move {
             let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
-                let games = omikuji_core::store::epic::load_cached_library();
-                let ids = omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Epic);
+                let games = epic::load_cached_library();
+                let ids = Library::game_ids_by_app_id(SourceKind::Epic);
                 (games, ids)
             })
             .await
@@ -267,7 +268,7 @@ impl qobject::EpicModel {
             match result {
                 Ok(games) => {
                     let ids = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Epic)
+                        Library::game_ids_by_app_id(SourceKind::Epic)
                     })
                     .await
                     .unwrap_or_default();

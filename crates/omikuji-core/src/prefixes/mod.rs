@@ -1,7 +1,11 @@
 pub mod registry;
 
-use crate::launch::prefix_path_for;
-use crate::library::{Library, SourceKind};
+use crate::defaults::Defaults;
+use crate::launch::{prefix_path_for, resolve_prefix};
+use crate::library::{Game, Library, SourceKind};
+use crate::store::steam::local as steam_local;
+use crate::wine_tools::{self, WineTool};
+use crate::{dll_packs, media};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Read;
@@ -117,10 +121,7 @@ pub fn list_prefixes() -> Vec<PrefixInfo> {
         }
     }
 
-    let default_runner = crate::defaults::Defaults::load()
-        .wine
-        .version
-        .unwrap_or_default();
+    let default_runner = Defaults::load().wine.version.unwrap_or_default();
 
     acc.into_values()
         .map(|a| {
@@ -152,7 +153,7 @@ pub fn list_steam_prefixes() -> Vec<PrefixInfo> {
         if game.source.kind != SourceKind::Steam || game.source.app_id.is_empty() {
             continue;
         }
-        let Some(pfx) = crate::store::steam::local::find_steam_prefix(&game.source.app_id) else {
+        let Some(pfx) = steam_local::find_steam_prefix(&game.source.app_id) else {
             continue;
         };
         let entry = acc.entry(canonical(&pfx)).or_insert_with(|| Acc {
@@ -174,8 +175,8 @@ pub fn list_steam_prefixes() -> Vec<PrefixInfo> {
 }
 
 fn steam_runner(app_id: &str) -> String {
-    let stamped = crate::store::steam::local::find_steam_proton_version(app_id);
-    crate::store::steam::local::resolve_or_default_proton(stamped.as_deref())
+    let stamped = steam_local::find_steam_proton_version(app_id);
+    steam_local::resolve_or_default_proton(stamped.as_deref())
         .and_then(|p| p.file_name().map(|s| s.to_string_lossy().into_owned()))
         .or(stamped)
         .map(|name| format!("steam:{name}"))
@@ -213,12 +214,12 @@ impl PrefixPreset {
         }
     }
 
-    fn tool(self) -> crate::wine_tools::WineTool {
+    fn tool(self) -> WineTool {
         let verbs = self.verbs();
         if verbs.is_empty() {
-            return crate::wine_tools::WineTool::Wineboot;
+            return WineTool::Wineboot;
         }
-        crate::wine_tools::WineTool::WinetricksVerbs(verbs.iter().map(|s| s.to_string()).collect())
+        WineTool::WinetricksVerbs(verbs.iter().map(|s| s.to_string()).collect())
     }
 }
 
@@ -228,39 +229,36 @@ pub fn create_prefix<F: FnMut(&str)>(
     preset: &str,
     on_line: F,
 ) -> anyhow::Result<()> {
-    let folder = crate::media::slugify(name);
+    let folder = media::slugify(name);
     if folder.is_empty() {
         anyhow::bail!("prefix name is empty");
     }
     let dir = crate::prefixes_dir().join(&folder);
     std::fs::create_dir_all(&dir)?;
 
-    let game = crate::library::Game::new("Ofuda".to_string(), PathBuf::new())
+    let game = Game::new("Ofuda".to_string(), PathBuf::new())
         .with_prefix(dir.to_string_lossy())
         .with_runner_version(runner);
 
-    crate::wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)?;
-    crate::dll_packs::install_prefix_defaults(&dir)
+    wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)?;
+    dll_packs::install_prefix_defaults(&dir)
 }
 
-pub fn prefix_needs_bootstrap(game: &crate::library::Game) -> bool {
+pub fn prefix_needs_bootstrap(game: &Game) -> bool {
     if !game.uses_wine_prefix() {
         return false;
     }
     !system32_dir(&prefix_path_for(game)).is_dir()
 }
 
-pub fn bootstrap_prefix<F: FnMut(&str)>(
-    game: &crate::library::Game,
-    on_line: F,
-) -> anyhow::Result<()> {
-    let prefix = crate::launch::resolve_prefix(game);
+pub fn bootstrap_prefix<F: FnMut(&str)>(game: &Game, on_line: F) -> anyhow::Result<()> {
+    let prefix = resolve_prefix(game);
     if system32_dir(&prefix).is_dir() {
         return Ok(());
     }
 
-    crate::wine_tools::run_streamed(game, crate::wine_tools::WineTool::Wineboot, on_line)?;
-    crate::dll_packs::install_prefix_defaults(&prefix)
+    wine_tools::run_streamed(game, WineTool::Wineboot, on_line)?;
+    dll_packs::install_prefix_defaults(&prefix)
 }
 
 pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {

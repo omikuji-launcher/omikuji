@@ -2,7 +2,8 @@
 pub mod source;
 pub mod updates;
 
-use crate::store::StoreGame;
+use crate::store::{self, StoreGame};
+use crate::{fs_util, http};
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -88,7 +89,7 @@ impl GogStore {
             self.user_id = token_user_id.clone();
         }
 
-        let resp = crate::http::client()
+        let resp = http::client()
             .get("https://embed.gog.com/userData.json")
             .bearer_auth(&creds.access_token)
             .header(
@@ -156,7 +157,7 @@ impl GogStore {
             self.user_id,
             creds.access_token.len()
         );
-        let client = crate::http::client();
+        let client = http::client();
         let mut games = Vec::new();
         let mut page_token: Option<String> = None;
 
@@ -274,7 +275,7 @@ impl GogStore {
         if user.exists() {
             let _ = std::fs::remove_file(&user);
         }
-        let _ = std::fs::remove_file(crate::store::cache::library_path(STORE));
+        let _ = std::fs::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         self.user_id.clear();
     }
@@ -314,7 +315,7 @@ fn has_install_marker(dir: &Path) -> bool {
 }
 
 fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    Ok(crate::store::registry::read(&registry_path())
+    Ok(store::registry::read(&registry_path())
         .into_iter()
         .map(|(app_name, e)| (app_name, e.install_path))
         .collect())
@@ -323,7 +324,7 @@ fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
 pub use crate::store::registry::InstalledInfo;
 
 pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
-    let entry = crate::store::registry::entry(&registry_path(), app_name)?;
+    let entry = store::registry::entry(&registry_path(), app_name)?;
     // gogdl leaves executable blank on some titles, so go looking inside the install
     let exe_rel = if entry.has_executable() {
         Some(entry.executable.clone())
@@ -356,7 +357,7 @@ pub fn record_install(
             "title": title,
         }),
     );
-    crate::fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
+    fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
     Ok(())
 }
 
@@ -369,7 +370,7 @@ pub fn remove_install(app_name: &str) -> Result<()> {
     if let Some(obj) = v.as_object_mut() {
         obj.remove(app_name);
     }
-    crate::fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
+    fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
     Ok(())
 }
 
@@ -394,7 +395,7 @@ pub struct GogDlc {
 
 async fn fetch_dlc_art(app_name: &str) -> std::collections::HashMap<String, String> {
     let mut out = std::collections::HashMap::new();
-    let Ok(resp) = crate::http::client()
+    let Ok(resp) = http::client()
         .get(format!(
             "https://api.gog.com/products/{app_name}?expand=expanded_dlcs"
         ))
@@ -676,7 +677,7 @@ pub fn inspect_existing_install(_app_name: &str, install_path: &Path) -> (u64, b
     }
     let has_resume =
         install_path.join(".gogdl-resume").exists() || install_path.join(".gogdl-temp").exists();
-    (crate::fs_util::dir_size(install_path), has_resume)
+    (fs_util::dir_size(install_path), has_resume)
 }
 
 #[derive(Clone)]
@@ -965,7 +966,7 @@ fn read_user_data() -> Option<(String, String)> {
 
 fn save_user_data(name: &str, id: &str) {
     let body = serde_json::json!({ "username": name, "userId": id }).to_string();
-    let _ = crate::fs_util::write_atomic(&user_data_path(), body);
+    let _ = fs_util::write_atomic(&user_data_path(), body);
 }
 
 struct ProductMeta {
@@ -1023,19 +1024,19 @@ fn normalize_image_url(raw: &str) -> String {
 }
 
 pub fn load_cached_library() -> Vec<StoreGame> {
-    crate::store::cache::load_library(STORE)
+    store::cache::load_library(STORE)
 }
 
 pub fn save_cached_library(games: &[StoreGame]) {
-    crate::store::cache::save_library(STORE, games);
+    store::cache::save_library(STORE, games);
 }
 
 fn resolve_gog_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Option<String> {
-    crate::store::cache::resolve_image(STORE, app_name, kind, cdn_url, str::to_string)
+    store::cache::resolve_image(STORE, app_name, kind, cdn_url, str::to_string)
 }
 
 pub async fn fetch_game_details(app_name: &str) -> Result<String> {
-    let client = crate::http::client();
+    let client = http::client();
 
     // summary comes from gamesdb because v2's own description field is promo html with inline css. genuinely why
     let mut description = String::new();

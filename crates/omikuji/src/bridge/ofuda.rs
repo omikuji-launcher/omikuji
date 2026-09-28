@@ -3,7 +3,10 @@ use std::pin::Pin;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 use omikuji_core::fs_watcher::DirWatcher;
+use omikuji_core::library::Game;
 use omikuji_core::prefixes as core_prefixes;
+use omikuji_core::wine_tools::{self, WineTool};
+use omikuji_core::{desktop, fs_util};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -100,8 +103,8 @@ pub struct OfudaRust {
     command_running: bool,
 }
 
-fn prefix_game(path: &QString, runner: &QString) -> omikuji_core::library::Game {
-    omikuji_core::library::Game::new("Ofuda".to_string(), std::path::PathBuf::new())
+fn prefix_game(path: &QString, runner: &QString) -> Game {
+    Game::new("Ofuda".to_string(), std::path::PathBuf::new())
         .with_prefix(path.to_string())
         .with_runner_version(runner.to_string())
 }
@@ -133,7 +136,6 @@ impl qobject::OfudaBridge {
     }
 
     fn run_tool(&self, path: &QString, tool: &QString, runner: &QString) {
-        use omikuji_core::wine_tools::WineTool;
         let name = tool.to_string();
         let Some(tool) = WineTool::from_name(&name) else {
             tracing::warn!("unknown ofuda tool: {name}");
@@ -141,14 +143,13 @@ impl qobject::OfudaBridge {
         };
         let game = prefix_game(path, runner);
         std::thread::spawn(move || {
-            if let Err(e) = omikuji_core::wine_tools::run(&game, tool) {
+            if let Err(e) = wine_tools::run(&game, tool) {
                 tracing::error!("ofuda run_tool failed: {e}");
             }
         });
     }
 
     fn run_command(mut self: Pin<&mut Self>, path: &QString, runner: &QString, command: &QString) {
-        use omikuji_core::wine_tools::{self, WineTool};
         if self.command_running {
             return;
         }
@@ -177,7 +178,7 @@ impl qobject::OfudaBridge {
     }
 
     fn open_folder(&self, path: &QString) -> bool {
-        match omikuji_core::desktop::browse_files(std::path::Path::new(&path.to_string())) {
+        match desktop::browse_files(std::path::Path::new(&path.to_string())) {
             Ok(_) => true,
             Err(e) => {
                 tracing::error!("ofuda open_folder failed: {e}");
@@ -230,7 +231,7 @@ impl qobject::OfudaBridge {
         let qt = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             for path in paths {
-                let bytes = omikuji_core::fs_util::dir_size(std::path::Path::new(&path)) as f64;
+                let bytes = fs_util::dir_size(std::path::Path::new(&path)) as f64;
                 let _ = qt.queue(move |mut obj: Pin<&mut qobject::OfudaBridge>| {
                     obj.as_mut().size_ready(QString::from(&path), bytes);
                 });

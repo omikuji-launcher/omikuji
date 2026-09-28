@@ -3,9 +3,12 @@ use std::path::Path;
 
 use super::prefix::resolve_prefix;
 use super::wine::{ProtonVerb, WineVariant};
+use crate::app_settings::{AppSettings, KvSet};
 use crate::dll_packs::{DllKind, Layer, resolved_layer};
 use crate::library::{Game, SourceKind};
-use crate::runners::proton_monkey_patch;
+use crate::runners::{self, proton_monkey_patch};
+use crate::store::nile;
+use crate::store::steam::local as steam_local;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EnvPurpose {
@@ -55,10 +58,9 @@ pub fn build_env(
                 .version
                 .strip_prefix("steam:")
                 .unwrap_or(&game.wine.version);
-            crate::store::steam::local::resolve_or_default_proton(Some(steam_version))
-                .unwrap_or_default()
+            steam_local::resolve_or_default_proton(Some(steam_version)).unwrap_or_default()
         } else {
-            crate::runners::installed_runner_dir(&game.wine.version)
+            runners::installed_runner_dir(&game.wine.version)
                 .unwrap_or_else(|| crate::runners_dir().join(&game.wine.version))
         };
         env.insert(
@@ -182,7 +184,7 @@ pub fn build_env(
     }
 
     if !game.wine.dll_override_sets.is_empty() {
-        let ui = crate::app_settings::AppSettings::load();
+        let ui = AppSettings::load();
         apply_kv_sets(&ui.dll_sets, &game.wine.dll_override_sets, |key, value| {
             append_dll_override(&mut env, &format!("{key}={value}"));
         });
@@ -206,7 +208,7 @@ fn nile_sdk_env(game: &Game) -> Vec<(String, String)> {
     if game.source.kind != SourceKind::Nile || game.source.app_id.is_empty() {
         return Vec::new();
     }
-    let sdk = crate::store::nile::sdk_dir().join("Amazon Games Services");
+    let sdk = nile::sdk_dir().join("Amazon Games Services");
     if !sdk.exists() {
         return Vec::new();
     }
@@ -220,24 +222,20 @@ fn nile_sdk_env(game: &Game) -> Vec<(String, String)> {
             sdk.to_string_lossy().to_string(),
         ),
     ];
-    if let Some(ids) = crate::store::nile::product_ids(&game.source.app_id) {
+    if let Some(ids) = nile::product_ids(&game.source.app_id) {
         out.push((
             "AMAZON_GAMES_FUEL_ENTITLEMENT_ID".to_string(),
             ids.entitlement_id,
         ));
         out.push(("AMAZON_GAMES_FUEL_PRODUCT_SKU".to_string(), ids.sku));
     }
-    if let Some(name) = crate::store::nile::read_display_name() {
+    if let Some(name) = nile::read_display_name() {
         out.push(("AMAZON_GAMES_FUEL_DISPLAY_NAME".to_string(), name));
     }
     out
 }
 
-fn apply_kv_sets(
-    sets: &[crate::app_settings::KvSet],
-    ids: &[String],
-    mut apply: impl FnMut(&str, &str),
-) {
+fn apply_kv_sets(sets: &[KvSet], ids: &[String], mut apply: impl FnMut(&str, &str)) {
     for id in ids {
         let Some(set) = sets.iter().find(|s| &s.id == id) else {
             continue;
@@ -259,7 +257,7 @@ pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
         pairs.push((k.clone(), v.clone()));
     }
     if !game.launch.env_sets.is_empty() {
-        let ui = crate::app_settings::AppSettings::load();
+        let ui = AppSettings::load();
         apply_kv_sets(&ui.env_sets, &game.launch.env_sets, |key, value| {
             pairs.push((key.to_string(), value.to_string()));
         });
@@ -269,7 +267,7 @@ pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
 
 // a depot husk keeps the dir but loses the v* payload proton's ntdll loads from
 fn anticheat_runtime(appid: &str) -> Option<String> {
-    let dir = crate::store::steam::local::get_game_install_dir(appid)?;
+    let dir = steam_local::get_game_install_dir(appid)?;
     let has_payload = std::fs::read_dir(&dir)
         .ok()?
         .flatten()

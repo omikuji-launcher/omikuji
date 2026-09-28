@@ -3,12 +3,15 @@
 // adding a new source is a 5-line paste in settings.rs, no code change here. yayyyy =m=
 
 use anyhow::{Result, anyhow};
+use flate2::read::GzDecoder;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::components_config::ArchiveSource;
 use crate::event_queue::EventQueue;
+use crate::http;
+use xz2::read::XzDecoder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseInfo {
@@ -175,7 +178,7 @@ fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
 }
 
 async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
-    let resp = crate::http::client()
+    let resp = http::client()
         .get(api_url)
         .query(&[("per_page", "100")])
         .header("Accept", "application/vnd.github+json")
@@ -242,7 +245,7 @@ pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> 
         .and_then(|v| v.as_str())
         .ok_or_else(|| anyhow!("asset {} has no download url", asset_name))?;
 
-    let bytes = crate::http::client()
+    let bytes = http::client()
         .get(url)
         .send()
         .await?
@@ -384,11 +387,11 @@ async fn install_inner(
     match extract_strategy(&release.asset_name).unwrap_or_default() {
         "tar_gz" => {
             let src = ExtractProgress::new(&bytes, category, source, release);
-            tar::Archive::new(flate2::read::GzDecoder::new(src)).unpack(&staging)?;
+            tar::Archive::new(GzDecoder::new(src)).unpack(&staging)?;
         }
         "tar_xz" => {
             let src = ExtractProgress::new(&bytes, category, source, release);
-            tar::Archive::new(xz2::read::XzDecoder::new(src)).unpack(&staging)?;
+            tar::Archive::new(XzDecoder::new(src)).unpack(&staging)?;
         }
         "tar_zst" => {
             let src = ExtractProgress::new(&bytes, category, source, release);
@@ -466,7 +469,7 @@ async fn download_bytes(
     source: &ArchiveSource,
     release: &ReleaseInfo,
 ) -> Result<Vec<u8>> {
-    crate::http::download_with_progress(&release.asset_url, release.asset_size, |pct| {
+    http::download_with_progress(&release.asset_url, release.asset_size, |pct| {
         push(ArchiveEvent::Progress {
             category: category.into(),
             source: source.name.clone(),

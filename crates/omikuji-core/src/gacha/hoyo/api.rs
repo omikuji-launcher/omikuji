@@ -2,6 +2,7 @@ use anyhow::{Result, anyhow};
 use serde::Deserialize;
 
 use super::{HoyoEdition, VoiceLocale};
+use crate::http;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InstallSize {
@@ -77,7 +78,7 @@ pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePa
         edition.launcher_id()
     );
 
-    let resp: ApiResponse<GamePackagesData> = crate::http::client()
+    let resp: ApiResponse<GamePackagesData> = http::client()
         .get(&url)
         .send()
         .await

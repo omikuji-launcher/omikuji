@@ -7,6 +7,16 @@ pub mod session;
 pub mod source;
 pub mod throttle;
 
+use crate::gacha::gryphline::source::GryphlineSource;
+use crate::gacha::hoyo::source::HoyoSource;
+use crate::gacha::kuro::source::KuroSource;
+use crate::gacha::yostar::source::YostarSource;
+use crate::library::generate_id;
+use crate::notifications;
+use crate::store::epic::source::LegendarySource;
+use crate::store::gog::source::GogdlSource;
+use crate::store::nile::source::NileSource;
+use crate::template_vars::TemplateVars;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -82,8 +92,18 @@ pub enum DownloadKind {
     Update {
         from_version: String,
     },
+    PreDownload {
+        from_version: String,
+        to_version: String,
+    },
     Repair,
     ImportExisting,
+}
+
+impl DownloadKind {
+    pub fn writes_install(&self) -> bool {
+        !matches!(self, Self::PreDownload { .. })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -162,6 +182,7 @@ pub enum DownloadEvent {
     Failed(String, String),
     Removed(String),
     Renamed(String, String),
+    Replaced(DownloadEntry),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -196,34 +217,13 @@ pub struct DownloadManager {
 lazy_static! {
     static ref MANAGER: Arc<DownloadManager> = {
         let mut sources: HashMap<String, Arc<dyn DownloadSource>> = HashMap::new();
-        sources.insert(
-            "epic".to_string(),
-            Arc::new(crate::store::epic::source::LegendarySource),
-        );
-        sources.insert(
-            "gog".to_string(),
-            Arc::new(crate::store::gog::source::GogdlSource),
-        );
-        sources.insert(
-            "nile".to_string(),
-            Arc::new(crate::store::nile::source::NileSource),
-        );
-        sources.insert(
-            "hoyo".to_string(),
-            Arc::new(crate::gacha::hoyo::source::HoyoSource),
-        );
-        sources.insert(
-            "endfield".to_string(),
-            Arc::new(crate::gacha::gryphline::source::GryphlineSource),
-        );
-        sources.insert(
-            "kuro".to_string(),
-            Arc::new(crate::gacha::kuro::source::KuroSource),
-        );
-        sources.insert(
-            "yostar".to_string(),
-            Arc::new(crate::gacha::yostar::source::YostarSource),
-        );
+        sources.insert("epic".to_string(), Arc::new(LegendarySource));
+        sources.insert("gog".to_string(), Arc::new(GogdlSource));
+        sources.insert("nile".to_string(), Arc::new(NileSource));
+        sources.insert("hoyo".to_string(), Arc::new(HoyoSource));
+        sources.insert("endfield".to_string(), Arc::new(GryphlineSource));
+        sources.insert("kuro".to_string(), Arc::new(KuroSource));
+        sources.insert("yostar".to_string(), Arc::new(YostarSource));
 
         let restored = load_queue();
         if !restored.is_empty() {
@@ -305,7 +305,7 @@ pub fn manager() -> Arc<DownloadManager> {
 
 impl DownloadManager {
     fn next_id() -> String {
-        crate::library::generate_id()
+        generate_id()
     }
 
     pub fn source_supports_import(&self, key: &str) -> bool {
@@ -330,8 +330,35 @@ impl DownloadManager {
             .map(|e| e.id.clone())
     }
 
+    pub fn has_active_for_game(&self, game_id: &str) -> bool {
+        let inner = self.inner.lock().unwrap();
+        inner
+            .entries
+            .iter()
+            .any(|e| e.status.is_active() && e.game_id == game_id)
+    }
+
+    fn promote_pre_download(&self, id: &str, req: &DownloadRequest) {
+        let mut inner = self.inner.lock().unwrap();
+        let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+            return;
+        };
+        if !matches!(e.kind, DownloadKind::PreDownload { .. })
+            || matches!(req.kind, DownloadKind::PreDownload { .. })
+            || e.status.is_running()
+        {
+            return;
+        }
+        e.kind = req.kind.clone();
+        e.display_name = req.display_name.clone();
+        let replaced = e.clone();
+        inner.events.push_back(DownloadEvent::Replaced(replaced));
+        save_queue(&inner.entries);
+    }
+
     pub fn enqueue(&self, req: DownloadRequest) -> String {
         if let Some(existing) = self.active_for(&req.source, &req.app_id) {
+            self.promote_pre_download(&existing, &req);
             self.resume(&existing);
             return existing;
         }
@@ -343,7 +370,7 @@ impl DownloadManager {
         } else {
             DownloadStatus::Queued
         };
-        let vars = crate::template_vars::TemplateVars::global();
+        let vars = TemplateVars::global();
         let expand_path = |p: PathBuf| PathBuf::from(vars.expand(&p.to_string_lossy()));
         let entry = DownloadEntry {
             id: id.clone(),
@@ -610,6 +637,7 @@ impl DownloadManager {
             let result = match &entry.kind {
                 DownloadKind::Install => source.install(&entry).await,
                 DownloadKind::Update { .. } => source.update(&entry).await,
+                DownloadKind::PreDownload { .. } => source.pre_download(&entry).await,
                 DownloadKind::Repair => source.repair(&entry).await,
                 DownloadKind::ImportExisting => source.import_existing(&entry).await,
             };
@@ -903,7 +931,7 @@ fn set_failed(id: &str, err: String) {
     } else {
         label
     };
-    crate::notifications::error(title, err);
+    notifications::error(title, err);
 }
 
 fn complete(entry: &DownloadEntry) {

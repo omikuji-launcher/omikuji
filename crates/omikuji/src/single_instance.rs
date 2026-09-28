@@ -3,6 +3,10 @@ use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{UnixListener, UnixStream};
 
+use omikuji_core::process::{self, ErrorNotification};
+
+use crate::bridge::tray;
+
 const MSG_FOCUS: &[u8] = b"focus";
 const MSG_ERRORS: &[u8] = b"errors ";
 const MSG_LAUNCH: &[u8] = b"launch ";
@@ -28,7 +32,7 @@ pub fn hand_off_launch(game_id: &str) -> bool {
 }
 
 fn handoff_payload() -> Vec<u8> {
-    let pending = omikuji_core::process::take_errors();
+    let pending = process::take_errors();
     if pending.is_empty() {
         return MSG_FOCUS.to_vec();
     }
@@ -44,17 +48,15 @@ fn handoff_payload() -> Vec<u8> {
 
 fn accept_handoff(buf: &[u8]) {
     if let Some(json) = buf.strip_prefix(MSG_ERRORS) {
-        match serde_json::from_slice::<Vec<omikuji_core::process::ErrorNotification>>(json) {
-            Ok(items) => items
-                .into_iter()
-                .for_each(omikuji_core::process::notify_error),
+        match serde_json::from_slice::<Vec<ErrorNotification>>(json) {
+            Ok(items) => items.into_iter().for_each(process::notify_error),
             Err(e) => tracing::error!("failed to decode handed off errors: {e}"),
         }
     } else if buf != MSG_FOCUS {
         return;
     }
 
-    crate::bridge::tray::omikuji_tray_event_show();
+    tray::omikuji_tray_event_show();
 }
 
 fn socket_path() -> PathBuf {
@@ -124,7 +126,7 @@ pub async fn check() -> bool {
                             Ok(Ok(n)) if n > 0 => match buf.strip_prefix(MSG_LAUNCH) {
                                 Some(id) => {
                                     let game_id = String::from_utf8_lossy(id).into_owned();
-                                    let _ = omikuji_core::process::request_launch(&game_id).await;
+                                    let _ = process::request_launch(&game_id).await;
                                 }
                                 None => accept_handoff(&buf),
                             },

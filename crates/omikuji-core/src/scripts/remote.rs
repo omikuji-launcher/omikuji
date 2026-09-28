@@ -1,5 +1,7 @@
 use super::Script;
+use crate::settings;
 use anyhow::{Context, Result, bail};
+use reqwest::blocking;
 use serde::Deserialize;
 use std::path::PathBuf;
 
@@ -20,15 +22,15 @@ pub struct RemoteScript {
 }
 
 pub fn fetch_base() -> String {
-    crate::settings::get()
+    settings::get()
         .scripts
         .fetch_url
         .trim_end_matches('/')
         .to_string()
 }
 
-fn client() -> Result<reqwest::blocking::Client> {
-    reqwest::blocking::Client::builder()
+fn client() -> Result<blocking::Client> {
+    blocking::Client::builder()
         .user_agent("omikuji")
         .build()
         .map_err(Into::into)

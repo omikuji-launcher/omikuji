@@ -3,6 +3,7 @@ use anyhow::Result;
 use crate::gacha::manifest::GachaManifest;
 use crate::gacha::state;
 use crate::gacha::strategies::UpdateCheck;
+use crate::process::UpdateKind;
 
 pub async fn check_for_update(
     manifest: &GachaManifest,
@@ -30,5 +31,6 @@ pub async fn check_for_update(
         download_size,
         can_diff: true,
         delta_supported: true,
+        kind: UpdateKind::Required,
     }))
 }

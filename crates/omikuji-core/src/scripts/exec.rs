@@ -1,12 +1,17 @@
 use super::{InputKind, Script, Step, StepAction, interpolate};
-use crate::library::{Game, RunnerType};
-use crate::wine_tools::WineTool;
+use crate::library::{Game, RunnerType, generate_id};
+use crate::template_vars::TemplateVars;
+use crate::wine_tools::{self, WineTool};
+use crate::{media, prefixes};
 use anyhow::{Context, Result, bail};
+use flate2::read::GzDecoder;
 use regex::Regex;
+use reqwest::blocking;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::{BufRead, Read, Write};
 use std::path::{Path, PathBuf};
+use xz2::read::XzDecoder;
 
 pub struct ExecOutcome {
     pub game: Option<Game>,
@@ -18,7 +23,7 @@ pub fn execute<F: FnMut(&str)>(
     values: &HashMap<String, String>,
     mut on_line: F,
 ) -> Result<ExecOutcome> {
-    let tv = crate::template_vars::TemplateVars::global();
+    let tv = TemplateVars::global();
     let mut vars: HashMap<String, String> = HashMap::new();
     let mut sel: HashMap<String, String> = HashMap::new();
     for input in &script.inputs {
@@ -42,8 +47,8 @@ pub fn execute<F: FnMut(&str)>(
     let chosen = script.games.iter().find(|g| g.when.matches(&sel));
 
     let display_name = chosen.map_or(script.script.name.as_str(), |g| g.name.as_str());
-    let slug = crate::media::slugify(display_name);
-    let id = crate::library::generate_id();
+    let slug = media::slugify(display_name);
+    let id = generate_id();
 
     let cache = crate::cache_dir()
         .join("scripts")
@@ -97,10 +102,10 @@ pub fn execute<F: FnMut(&str)>(
         match &step.action {
             StepAction::InitPrefix => {
                 std::fs::create_dir_all(&prefix)?;
-                crate::prefixes::bootstrap_prefix(&tool_game, &mut on_line)?;
+                prefixes::bootstrap_prefix(&tool_game, &mut on_line)?;
             }
             StepAction::Winetricks { verbs } => {
-                crate::wine_tools::run_streamed(
+                wine_tools::run_streamed(
                     &tool_game,
                     WineTool::WinetricksVerbs(verbs.clone()),
                     &mut on_line,
@@ -139,7 +144,7 @@ pub fn execute<F: FnMut(&str)>(
                     .iter()
                     .map(|(k, v)| Ok((k.clone(), interpolate(v, &vars)?)))
                     .collect::<Result<_>>()?;
-                let mut child = crate::wine_tools::run(&game, WineTool::RunExe(exe))?;
+                let mut child = wine_tools::run(&game, WineTool::RunExe(exe))?;
                 on_line("waiting for the program to exit...");
                 let status = child.wait()?;
                 if !status.success() {
@@ -251,9 +256,9 @@ fn shell<F: FnMut(&str)>(text: &str, prefix: &Path, cwd: &Path, on_line: &mut F)
 type TarDecoder = fn(std::io::BufReader<std::fs::File>) -> Result<Box<dyn Read>>;
 
 const TAR_DECODERS: &[(&str, TarDecoder)] = &[
-    (".tar.gz", |r| Ok(Box::new(flate2::read::GzDecoder::new(r)))),
-    (".tgz", |r| Ok(Box::new(flate2::read::GzDecoder::new(r)))),
-    (".tar.xz", |r| Ok(Box::new(xz2::read::XzDecoder::new(r)))),
+    (".tar.gz", |r| Ok(Box::new(GzDecoder::new(r)))),
+    (".tgz", |r| Ok(Box::new(GzDecoder::new(r)))),
+    (".tar.xz", |r| Ok(Box::new(XzDecoder::new(r)))),
     (".tar.zst", |r| {
         Ok(Box::new(zstd::stream::read::Decoder::new(r)?))
     }),
@@ -283,7 +288,7 @@ fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
 }
 
 fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {
-    let values = crate::prefixes::registry::read_key(
+    let values = prefixes::registry::read_key(
         prefix,
         &format!("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{key}"),
     )?;
@@ -292,13 +297,13 @@ fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {
         if !icon.to_ascii_lowercase().ends_with(".exe") {
             return None;
         }
-        return crate::prefixes::wine_path_to_host(prefix, icon);
+        return prefixes::wine_path_to_host(prefix, icon);
     }
     let dir = install_dir(&values)?;
-    Some(crate::prefixes::wine_path_to_host(prefix, &dir)?.join(relative))
+    Some(prefixes::wine_path_to_host(prefix, &dir)?.join(relative))
 }
 
-fn install_dir(values: &crate::prefixes::registry::Values) -> Option<String> {
+fn install_dir(values: &prefixes::registry::Values) -> Option<String> {
     if let Some(location) = values
         .get("InstallLocation")
         .filter(|v| !v.trim().is_empty())
@@ -324,7 +329,7 @@ fn first_path(raw: &str) -> &str {
 }
 
 fn resolve_url(source: &str, pattern: &str) -> Result<String> {
-    let body = reqwest::blocking::Client::builder()
+    let body = blocking::Client::builder()
         .user_agent("omikuji")
         .build()?
         .get(source)
@@ -349,7 +354,7 @@ fn download_to<F: FnMut(&str)>(
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let client = reqwest::blocking::Client::builder()
+    let client = blocking::Client::builder()
         .user_agent("omikuji")
         .timeout(None::<std::time::Duration>)
         .build()?;

@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use reqwest::blocking;
 use serde::Deserialize;
 
 const API_BASE: &str = "https://api.steampowered.com";
@@ -18,8 +19,7 @@ impl SteamApi {
             API_BASE, self.api_key, steamid
         );
 
-        let resp =
-            reqwest::blocking::get(&url).with_context(|| "requesting steam api".to_string())?;
+        let resp = blocking::get(&url).with_context(|| "requesting steam api".to_string())?;
 
         if !resp.status().is_success() {
             anyhow::bail!(

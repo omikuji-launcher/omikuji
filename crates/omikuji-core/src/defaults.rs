@@ -1,5 +1,6 @@
 // no runtime cascade; only seeded into a Game at creation or via apply-to-existing
 
+use crate::fs_util::write_atomic;
 use crate::library::{Game, GraphicsConfig, LaunchConfig, SystemConfig, WineConfig};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -312,6 +313,6 @@ impl Defaults {
 
     pub fn save(&self) -> std::io::Result<()> {
         let body = toml::to_string_pretty(self).map_err(std::io::Error::other)?;
-        crate::fs_util::write_atomic(&defaults_path(), body)
+        write_atomic(&defaults_path(), body)
     }
 }

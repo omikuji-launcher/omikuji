@@ -2,6 +2,8 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use super::strategies::InstallStrategy;
+use crate::archive_source;
+use crate::library::{AlongsideWhen, LaunchConfig};
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -75,7 +77,7 @@ impl GachaManifest {
     pub fn apply_options(
         &self,
         accepted: &[String],
-        launch: &mut crate::library::LaunchConfig,
+        launch: &mut LaunchConfig,
     ) -> Option<&ManifestAlongside> {
         let mut companion = None;
         for opt in self
@@ -130,7 +132,7 @@ pub struct ManifestAlongside {
     #[serde(default)]
     pub args: Vec<String>,
     #[serde(default)]
-    pub when: crate::library::AlongsideWhen,
+    pub when: AlongsideWhen,
     #[serde(default)]
     pub delay: u32,
 }
@@ -144,7 +146,7 @@ impl ManifestAlongside {
         self.install_dir().join(&self.exe)
     }
 
-    pub fn apply_to(&self, launch: &mut crate::library::LaunchConfig) {
+    pub fn apply_to(&self, launch: &mut LaunchConfig) {
         launch.alongside = self.exe_path().to_string_lossy().into_owned();
         launch.alongside_args = self.args.clone();
         launch.alongside_when = self.when;
@@ -156,14 +158,10 @@ impl ManifestAlongside {
         if exe.is_file() {
             return Ok(exe);
         }
-        let link = crate::archive_source::RepoLink::parse(&self.repo)
+        let link = archive_source::RepoLink::parse(&self.repo)
             .ok_or_else(|| anyhow::anyhow!("unusable repo link: {}", self.repo))?;
-        crate::archive_source::install_asset(
-            &link.releases_api_url(),
-            &self.exe,
-            &self.install_dir(),
-        )
-        .await
+        archive_source::install_asset(&link.releases_api_url(), &self.exe, &self.install_dir())
+            .await
     }
 }
 

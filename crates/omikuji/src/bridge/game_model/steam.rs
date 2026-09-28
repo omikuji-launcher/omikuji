@@ -4,12 +4,14 @@ use std::pin::Pin;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 
+use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library, SourceKind};
-use omikuji_core::media;
+use omikuji_core::store::steam;
+use omikuji_core::{media, settings};
 
 impl super::qobject::GameModel {
     pub fn steam_get_installed_games(&self) -> QString {
-        let games = omikuji_core::store::steam::get_installed_games();
+        let games = steam::get_installed_games();
         let json_games: Vec<serde_json::Value> = games
             .iter()
             .map(|g| {
@@ -29,7 +31,7 @@ impl super::qobject::GameModel {
 
     pub fn steam_local_library_image(&self, appid: &QString) -> QString {
         let appid_str = appid.to_string();
-        match omikuji_core::store::steam::local::find_local_library_image(&appid_str) {
+        match steam::local::find_local_library_image(&appid_str) {
             Some(path) => QString::from(&*path.to_string_lossy()),
             None => QString::default(),
         }
@@ -71,7 +73,7 @@ impl super::qobject::GameModel {
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };
-        game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
+        game.seed_from_defaults(&Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
             tracing::error!("failed to save game: {}", e);
@@ -99,7 +101,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn steam_sync_playtime(mut self: Pin<&mut Self>) {
-        let api_key = omikuji_core::settings::get().steam.api_key.clone();
+        let api_key = settings::get().steam.api_key.clone();
         if api_key.is_empty() {
             return;
         }
@@ -109,7 +111,7 @@ impl super::qobject::GameModel {
 
         // blocking reqwest inside #[tokio::main] panics; escape to an os thread, then marshal the mutation back via qt_thread.queue
         std::thread::spawn(move || {
-            let fetch_result = omikuji_core::store::steam::fetch_playtime_data(&api_key);
+            let fetch_result = steam::fetch_playtime_data(&api_key);
 
             let _ = qt_thread.queue(move |mut obj: Pin<&mut super::qobject::GameModel>| {
                 let steam_data = match fetch_result {
@@ -121,8 +123,7 @@ impl super::qobject::GameModel {
                 };
 
                 let library = &mut obj.as_mut().rust_mut().get_mut().library;
-                let (updated, total) =
-                    omikuji_core::store::steam::apply_playtime_data(library, &steam_data);
+                let (updated, total) = steam::apply_playtime_data(library, &steam_data);
                 tracing::info!("updated {}/{} steam games", updated, total);
 
                 let mut saved = 0;

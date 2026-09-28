@@ -1,6 +1,7 @@
 use cxx_qt::CxxQtType;
 use cxx_qt_lib::QString;
 use omikuji_core::components as core_components;
+use omikuji_core::notifications;
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::thread;
@@ -217,7 +218,7 @@ impl qobject::ComponentsBridge {
                 .enable_all()
                 .build();
             let Ok(rt) = rt else {
-                omikuji_core::components::push_fail_event("setup", "couldn't build tokio runtime");
+                core_components::push_fail_event("setup", "couldn't build tokio runtime");
                 return;
             };
             rt.block_on(async {
@@ -242,10 +243,7 @@ impl qobject::ComponentsBridge {
             return;
         };
         if let Err(e) = core_components::remove(spec) {
-            omikuji_core::notifications::error(
-                format!("Couldn't remove {}", target),
-                e.to_string(),
-            );
+            notifications::error(format!("Couldn't remove {}", target), e.to_string());
             return;
         }
         self.as_mut().refresh();
@@ -264,7 +262,7 @@ impl qobject::ComponentsBridge {
                 .enable_all()
                 .build();
             let Ok(rt) = rt else {
-                omikuji_core::components::push_fail_event("setup", "couldn't build tokio runtime");
+                core_components::push_fail_event("setup", "couldn't build tokio runtime");
                 return;
             };
             rt.block_on(async {
@@ -278,10 +276,7 @@ impl qobject::ComponentsBridge {
     fn install_component(mut self: Pin<&mut Self>, name: QString) {
         let target = name.to_string();
         let Some(spec) = spec_by_name(&target) else {
-            omikuji_core::components::push_fail_event(
-                &target,
-                "unknown component (not in specs::all())",
-            );
+            core_components::push_fail_event(&target, "unknown component (not in specs::all())");
             return;
         };
         self.as_mut().spawn_install(vec![spec]);

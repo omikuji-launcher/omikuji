@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use crate::fs_util::move_dir_all;
+
 pub fn game_state_dir(game_slug: &str) -> PathBuf {
     flatten_publisher_dirs_once();
     crate::gachas_dir().join(game_slug)
@@ -50,7 +52,7 @@ pub fn flatten_publisher_dirs_once() {
                     continue;
                 };
                 let dest = root.join(name);
-                match crate::fs_util::move_dir_all(&game, &dest) {
+                match move_dir_all(&game, &dest) {
                     Ok(()) => {
                         let _ = std::fs::remove_dir(&game);
                         tracing::info!("moved {} to {}", game.display(), dest.display());

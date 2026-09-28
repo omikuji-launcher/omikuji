@@ -7,13 +7,14 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
+use crate::downloads::io_stats::track_child;
 use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
 use crate::downloads::proxy;
 use crate::downloads::rate::{RateMeter, seeded_update};
 use crate::downloads::session::SessionTally;
 use crate::downloads::{
-    ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
+    ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress, set_display_name,
 };
 
 pub struct LegendarySource;
@@ -83,7 +84,7 @@ impl DownloadSource for LegendarySource {
             .to_string();
         let base_path_str = base_path.to_string_lossy().to_string();
 
-        if let Some(info) = crate::store::epic::find_installed_info(&entry.app_id)
+        if let Some(info) = super::find_installed_info(&entry.app_id)
             && !info.install_path.exists()
         {
             tracing::warn!(
@@ -116,7 +117,7 @@ impl DownloadSource for LegendarySource {
         .await?;
 
         // legendary can exit 0 without writing installed.json, and then completion imports a game that isnt installed
-        if crate::store::epic::find_installed_info(&entry.app_id).is_none() {
+        if super::find_installed_info(&entry.app_id).is_none() {
             return Err(anyhow!(
                 "legendary exited cleanly but installed.json has no record for {} \u{2014} try cancelling and starting again",
                 entry.app_id
@@ -125,17 +126,17 @@ impl DownloadSource for LegendarySource {
 
         let base_label = entry.display_name.clone();
         for (i, dlc) in entry.dlcs.iter().enumerate() {
-            crate::downloads::set_display_name(
+            set_display_name(
                 &entry.id,
                 &format!("{} · DLC {}/{}", base_label, i + 1, entry.dlcs.len()),
             );
             if let Err(e) = run_install(&legendary, dlc, &base_path_str, &game_folder, entry).await
             {
-                crate::downloads::set_display_name(&entry.id, &base_label);
+                set_display_name(&entry.id, &base_label);
                 return Err(anyhow!("dlc {} failed to install: {}", dlc, e));
             }
         }
-        crate::downloads::set_display_name(&entry.id, &base_label);
+        set_display_name(&entry.id, &base_label);
 
         Ok(())
     }
@@ -166,7 +167,7 @@ impl DownloadSource for LegendarySource {
         let legendary = require_legendary()?;
 
         // lets a game living somewhere else than installed.json says stilll import at the new path ig
-        if crate::store::epic::find_installed_info(&entry.app_id).is_some() {
+        if super::find_installed_info(&entry.app_id).is_some() {
             let _ = Command::new(&legendary)
                 .arg("-y")
                 .arg("uninstall")
@@ -200,7 +201,7 @@ impl DownloadSource for LegendarySource {
             anyhow::bail!("import failed: {}", msg);
         }
 
-        if crate::store::epic::find_installed_info(&entry.app_id).is_none() {
+        if super::find_installed_info(&entry.app_id).is_none() {
             anyhow::bail!(
                 "legendary import exited cleanly but installed.json has no record for {}",
                 entry.app_id
@@ -246,7 +247,7 @@ async fn run_install(
 
 async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()> {
     if let Some(pid) = child.id() {
-        crate::downloads::io_stats::track_child(pid);
+        track_child(pid);
     }
     let stdout = child.stdout.take().expect("stdout piped");
     let stderr = child.stderr.take().expect("stderr piped");

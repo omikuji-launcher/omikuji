@@ -1,7 +1,12 @@
 // todo: remove one day lol
 
+use crate::archive_source::installed_source_tag;
 use crate::components_config::{self, ArchiveSource, ComponentsConfig};
+use crate::dll_packs;
+use crate::launch::WineVariant;
+use crate::library::{Game, Library};
 use crate::settings::{self, Settings};
+use crate::store::gog::gog_dir;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::fs;
@@ -142,7 +147,7 @@ fn move_runners(
         let Some(name) = path.file_name().and_then(|n| n.to_str()).map(String::from) else {
             continue;
         };
-        let (dest, label) = match crate::archive_source::installed_source_tag(&path) {
+        let (dest, label) = match installed_source_tag(&path) {
             Some((source, tag)) if !source.is_empty() && !tag.is_empty() => {
                 let label = format!("{}/{}", source, tag);
                 (new_root.join(&source).join(&tag), label)
@@ -173,7 +178,7 @@ fn move_gog(on_line: &mut impl FnMut(String)) -> Result<()> {
     if !old.is_dir() {
         return Ok(());
     }
-    let new = crate::store::gog::gog_dir();
+    let new = gog_dir();
     if new.exists() {
         on_line("skipping gog (already at destination)".into());
         return Ok(());
@@ -233,12 +238,12 @@ fn adopt_layer(enabled: &mut bool, version: &mut String) -> bool {
         return false;
     }
     *enabled = true;
-    *version = crate::dll_packs::BUILTIN.to_string();
+    *version = dll_packs::BUILTIN.to_string();
     true
 }
 
-fn proton_layer_games() -> Vec<crate::library::Game> {
-    let Ok(library) = crate::library::Library::load() else {
+fn proton_layer_games() -> Vec<Game> {
+    let Ok(library) = Library::load() else {
         return Vec::new();
     };
     library
@@ -246,8 +251,7 @@ fn proton_layer_games() -> Vec<crate::library::Game> {
         .into_iter()
         .filter(|g| {
             g.uses_wine_prefix()
-                && crate::launch::WineVariant::from_version(&g.wine.version)
-                    == crate::launch::WineVariant::Proton
+                && WineVariant::from_version(&g.wine.version) == WineVariant::Proton
                 && !(g.wine.dxvk && g.wine.vkd3d && g.wine.dxvk_nvapi)
         })
         .collect()
@@ -258,7 +262,7 @@ fn adopt_proton_layers() {
         let mut changed = adopt_layer(&mut game.wine.dxvk, &mut game.wine.dxvk_version);
         changed |= adopt_layer(&mut game.wine.vkd3d, &mut game.wine.vkd3d_version);
         changed |= adopt_layer(&mut game.wine.dxvk_nvapi, &mut game.wine.dxvk_nvapi_version);
-        if changed && let Err(e) = crate::library::Library::save_game_static(&game) {
+        if changed && let Err(e) = Library::save_game_static(&game) {
             tracing::warn!("layer migration failed for {}: {}", game.id(), e);
         }
     }

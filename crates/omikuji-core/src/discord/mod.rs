@@ -7,7 +7,9 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::app_settings::AppSettings;
 use crate::library::Game;
+use crate::media;
 
 const APP_ID: &str = "1503896994018623709";
 const LAUNCHER_LOGO: &str = "https://raw.githubusercontent.com/omikuji-launcher/omikuji/master/crates/omikuji/qml/icons/app.png";
@@ -46,10 +48,7 @@ pub fn set_playing(game: &Game) {
                     .large_text(&game.metadata.name),
             );
 
-        if crate::app_settings::AppSettings::load()
-            .behavior
-            .discord_show_launcher
-        {
+        if AppSettings::load().behavior.discord_show_launcher {
             activity = activity.state("Playing on Omikuji");
         }
 
@@ -103,9 +102,7 @@ fn image_url_for(game: &Game) -> Option<String> {
         }
     }
 
-    let result = crate::media::sgdb_icon_url(&game.metadata.name)
-        .ok()
-        .flatten();
+    let result = media::sgdb_icon_url(&game.metadata.name).ok().flatten();
     url_cache().lock().unwrap().insert(key, result.clone());
     result
 }

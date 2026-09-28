@@ -1,4 +1,5 @@
 use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source};
+use crate::launch::umu_system_path;
 
 pub fn all() -> &'static [ComponentSpec] {
     COMPONENTS
@@ -15,7 +16,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         },
         dest: "umu-run",
         settings_key: SettingsKey::UmuRun,
-        system_probe: Some(crate::launch::umu_system_path),
+        system_probe: Some(umu_system_path),
     },
     ComponentSpec {
         name: "hpatchz",

@@ -1,7 +1,8 @@
 use cxx_qt_lib::QString;
+use omikuji_core::template_vars::TemplateVars;
 
 pub fn expand_path(path: &QString) -> String {
-    omikuji_core::template_vars::TemplateVars::global().expand(&path.to_string())
+    TemplateVars::global().expand(&path.to_string())
 }
 
 pub fn csv_ids(csv: &QString) -> Vec<String> {

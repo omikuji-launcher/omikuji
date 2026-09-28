@@ -1,6 +1,9 @@
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 
+use crate::fs_util::write_atomic;
+use crate::{http, settings};
+
 #[derive(Debug, Deserialize)]
 struct IndexFile {
     schema_version: u32,
@@ -10,7 +13,7 @@ struct IndexFile {
 const INDEX_SCHEMA_VERSION: u32 = 2;
 
 pub async fn ensure_all_fetched() -> Result<u32> {
-    let base = crate::settings::get().assets.fetch_url.trim().to_string();
+    let base = settings::get().assets.fetch_url.trim().to_string();
     if base.is_empty() {
         return Err(anyhow!(
             "assets.fetch_url is empty in settings.toml — check [assets]"
@@ -18,7 +21,7 @@ pub async fn ensure_all_fetched() -> Result<u32> {
     }
 
     super::state::flatten_publisher_dirs_once();
-    let client = crate::http::client();
+    let client = http::client();
     let index = fetch_index(client, &base).await?;
 
     let mut written: u32 = 0;
@@ -71,6 +74,6 @@ async fn fetch_one(client: &reqwest::Client, base: &str, game: &str) -> Result<(
         .map_err(|e| anyhow!("invalid manifest from {}: {}", url, e))?;
 
     let path = crate::gachas_dir().join(game).join("manifest.json");
-    crate::fs_util::write_atomic(&path, &body)?;
+    write_atomic(&path, &body)?;
     Ok(())
 }

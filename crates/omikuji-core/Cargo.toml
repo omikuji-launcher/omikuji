@@ -5,6 +5,9 @@ description = "Core library for omikuji — wine apps launcher logic"
 license = "GPL-3.0-or-later"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }

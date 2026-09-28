@@ -1,4 +1,9 @@
+use crate::fs_util::write_atomic;
+use crate::http;
+use crate::template_vars::TemplateVars;
 use anyhow::{Context, Result};
+use reqwest::blocking;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -190,7 +195,7 @@ pub fn discard_pending(game_id: &str) {
 
 pub fn resolve_image(game_id: &str, manual_override: &str, media_type: &MediaType) -> String {
     if !manual_override.is_empty() {
-        return to_qml_url(&crate::template_vars::TemplateVars::global().expand(manual_override));
+        return to_qml_url(&TemplateVars::global().expand(manual_override));
     }
 
     for slot in [MediaSlot::Pending, MediaSlot::Live] {
@@ -274,8 +279,8 @@ where
     result
 }
 
-fn sgdb_get<T: serde::de::DeserializeOwned>(url: reqwest::Url) -> Result<T> {
-    let client = reqwest::blocking::Client::builder()
+fn sgdb_get<T: DeserializeOwned>(url: reqwest::Url) -> Result<T> {
+    let client = blocking::Client::builder()
         .user_agent("omikuji")
         .build()
         .context("building sgdb client")?;
@@ -382,7 +387,7 @@ fn sgdb_icon_assets(game_id: u64) -> Result<Vec<SgdbAsset>> {
 }
 
 fn download_blocking(url: &str, dest: &PathBuf) -> Result<usize> {
-    let resp = reqwest::blocking::get(url).with_context(|| format!("downloading {}", url))?;
+    let resp = blocking::get(url).with_context(|| format!("downloading {}", url))?;
 
     if !resp.status().is_success() {
         anyhow::bail!("image download failed: {} for {}", resp.status(), url);
@@ -502,10 +507,10 @@ pub fn fetch_cached_image(cache_path: &std::path::Path, url: &str, key: String) 
     let path = cache_path.to_path_buf();
     let fetch_url = url.to_string();
     tokio::spawn(async move {
-        match crate::http::client().get(&fetch_url).send().await {
+        match http::client().get(&fetch_url).send().await {
             Ok(resp) if resp.status().is_success() => {
                 if let Ok(bytes) = resp.bytes().await
-                    && let Err(e) = crate::fs_util::write_atomic(&path, &bytes)
+                    && let Err(e) = write_atomic(&path, &bytes)
                 {
                     tracing::error!("image cache write failed {}: {}", path.display(), e);
                 }

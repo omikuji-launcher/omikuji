@@ -4,9 +4,10 @@ use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
-use omikuji_core::library::SourceKind;
+use omikuji_core::components;
+use omikuji_core::library::{Library, SourceKind};
 use omikuji_core::store::StoreGame;
-use omikuji_core::store::nile::NileStore;
+use omikuji_core::store::nile::{self, NileStore};
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -134,7 +135,7 @@ impl Default for NileModelRust {
             is_refreshing: false,
             display_name,
             login_url: QString::default(),
-            tool_ready: omikuji_core::components::ready(&omikuji_core::components::nile_tools()),
+            tool_ready: components::ready(&components::nile_tools()),
             tool_installing: false,
             login_fetching: false,
         }
@@ -166,7 +167,7 @@ impl qobject::NileModel {
         self.as_mut().set_tool_installing(true);
         let qt_thread = self.as_mut().qt_thread();
         tokio::spawn(async move {
-            let ok = omikuji_core::components::ensure(&omikuji_core::components::nile_tools())
+            let ok = components::ensure(&components::nile_tools())
                 .await
                 .map_err(|e| tracing::error!("nile tools install failed: {}", e))
                 .is_ok();
@@ -181,7 +182,7 @@ impl qobject::NileModel {
     }
 
     pub fn refresh_tools(mut self: Pin<&mut Self>) {
-        let ready = omikuji_core::components::ready(&omikuji_core::components::nile_tools());
+        let ready = components::ready(&components::nile_tools());
         self.as_mut().set_tool_ready(ready);
         if ready {
             self.as_mut().begin_login();
@@ -277,8 +278,8 @@ impl qobject::NileModel {
 
         tokio::spawn(async move {
             let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
-                let games = omikuji_core::store::nile::load_cached_library();
-                let ids = omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Nile);
+                let games = nile::load_cached_library();
+                let ids = Library::game_ids_by_app_id(SourceKind::Nile);
                 (games, ids)
             })
             .await
@@ -305,7 +306,7 @@ impl qobject::NileModel {
             match result {
                 Ok(games) => {
                     let ids = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Nile)
+                        Library::game_ids_by_app_id(SourceKind::Nile)
                     })
                     .await
                     .unwrap_or_default();

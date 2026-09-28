@@ -120,6 +120,17 @@ Item {
                     onToggled: (val) => appSettings.applyAutoCheckUpdatesOnBoot(val)
                 }
             }
+
+            SettingsRow {
+                label: qsTr("Queue pre-downloads for Gachas on app launch")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    enabled: appSettings ? appSettings.autoCheckUpdatesOnBoot : false
+                    checked: appSettings ? appSettings.autoQueuePredownloadsOnBoot : false
+                    onToggled: (val) => appSettings.applyAutoQueuePredownloadsOnBoot(val)
+                }
+            }
         }
 
         SettingsSection {

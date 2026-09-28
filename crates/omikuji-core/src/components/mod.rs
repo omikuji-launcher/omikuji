@@ -4,7 +4,10 @@ pub mod specs;
 pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Source};
 
 use crate::event_queue::EventQueue;
+use crate::gacha::strategies::InstallStrategy;
+use crate::{http, settings};
 use anyhow::{Result, anyhow};
+use flate2::read::GzDecoder;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -82,9 +85,7 @@ pub fn nile_tools() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
-pub fn gacha_tools(
-    strategy: crate::gacha::strategies::InstallStrategy,
-) -> Vec<&'static ComponentSpec> {
+pub fn gacha_tools(strategy: InstallStrategy) -> Vec<&'static ComponentSpec> {
     let needs_hpatchz = strategy.needs_hpatchz();
     specs::all()
         .iter()
@@ -183,7 +184,7 @@ struct GhAsset {
 }
 
 async fn fetch_latest_release(api_url: &str) -> Result<GhRelease> {
-    let resp = crate::http::client()
+    let resp = http::client()
         .get(api_url)
         .header("Accept", "application/vnd.github+json")
         .send()
@@ -237,7 +238,7 @@ pub async fn check_update(spec: &'static ComponentSpec) {
 }
 
 fn url_for(key: SettingsKey) -> Result<String> {
-    let s = &crate::settings::get().components;
+    let s = &settings::get().components;
     let value = match key {
         SettingsKey::UmuRun => &s.umu_run,
         SettingsKey::Hpatchz => &s.hpatchz,
@@ -333,7 +334,7 @@ async fn install_one_inner(spec: &ComponentSpec) -> Result<String> {
 }
 
 async fn download_bytes(url: &str, name: &str) -> Result<Vec<u8>> {
-    crate::http::download_with_progress(url, 0, |pct| {
+    http::download_with_progress(url, 0, |pct| {
         push(ComponentEvent::Progress {
             name: name.to_string(),
             phase: "downloading".into(),
@@ -406,7 +407,7 @@ fn promote_from_tar(
     fs::create_dir_all(&staging)?;
 
     if gzipped.is_some() {
-        let gz = flate2::read::GzDecoder::new(bytes);
+        let gz = GzDecoder::new(bytes);
         tar::Archive::new(gz).unpack(&staging)?;
     } else {
         tar::Archive::new(std::io::Cursor::new(bytes)).unpack(&staging)?;

@@ -5,9 +5,13 @@ use std::path::PathBuf;
 use cxx_qt::CxxQtType;
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 
+use omikuji_core::app_settings::AppSettings;
 use omikuji_core::downloads::{self, DownloadEntry, DownloadEvent, DownloadKind, DownloadStatus};
+use omikuji_core::gacha::{manifest as gm, strategies};
+use omikuji_core::store::nile;
 
 use super::csv_ids;
+use crate::notify;
 
 include!(concat!(env!("OUT_DIR"), "/download_model_bridge.rs"));
 
@@ -27,6 +31,7 @@ fn kind_label(k: &DownloadKind) -> &'static str {
     match k {
         DownloadKind::Install => "install",
         DownloadKind::Update { .. } => "update",
+        DownloadKind::PreDownload { .. } => "predownload",
         DownloadKind::Repair => "repair",
         DownloadKind::ImportExisting => "import",
     }
@@ -132,8 +137,6 @@ impl qobject::DownloadModel {
         import_existing: bool,
         options_csv: &QString,
     ) -> QString {
-        use omikuji_core::gacha::{manifest as gm, strategies};
-
         let mid = manifest_id.to_string();
         let Some(manifest) = gm::find(&mid) else {
             tracing::error!("manifest '{}' not found", mid);
@@ -177,9 +180,8 @@ impl qobject::DownloadModel {
     }
 
     fn gacha_supports_import(&self, manifest_id: &QString, edition_id: &QString) -> bool {
-        omikuji_core::gacha::manifest::find(&manifest_id.to_string()).is_some_and(|m| {
-            omikuji_core::gacha::strategies::supports_import(&m, &edition_id.to_string())
-        })
+        gm::find(&manifest_id.to_string())
+            .is_some_and(|m| strategies::supports_import(&m, &edition_id.to_string()))
     }
 
     fn pause(self: Pin<&mut Self>, id: &QString) {
@@ -266,11 +268,8 @@ impl qobject::DownloadModel {
                         entry.progress = 100.0;
                         self.as_mut().notify_row_changed(idx as i32);
                     }
-                    if omikuji_core::app_settings::AppSettings::load()
-                        .behavior
-                        .notify_on_download_complete
-                    {
-                        crate::notify::send(&display_name, "Download finished");
+                    if AppSettings::load().behavior.notify_on_download_complete {
+                        notify::send(&display_name, "Download finished");
                     }
                     let prefix_str = prefix_path
                         .as_ref()
@@ -303,6 +302,12 @@ impl qobject::DownloadModel {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
                         let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
                         entry.display_name = name;
+                        self.as_mut().notify_row_changed(idx as i32);
+                    }
+                }
+                DownloadEvent::Replaced(entry) => {
+                    if let Some(idx) = self.entries.iter().position(|e| e.id == entry.id) {
+                        self.as_mut().rust_mut().get_mut().entries[idx] = entry;
                         self.as_mut().notify_row_changed(idx as i32);
                     }
                 }
@@ -357,7 +362,7 @@ impl qobject::DownloadModel {
         let hit = self
             .entries
             .iter()
-            .find(|e| e.status.is_active() && e.game_id == needle);
+            .find(|e| e.status.is_active() && e.kind.writes_install() && e.game_id == needle);
 
         let Some(e) = hit else {
             return QString::from("");
@@ -382,7 +387,7 @@ impl qobject::DownloadModel {
         let bytes = entries
             .iter()
             .find(|e| e.id == needle && e.source == "nile")
-            .map(|e| omikuji_core::store::nile::inflight_bytes(&e.install_path))
+            .map(|e| nile::inflight_bytes(&e.install_path))
             .unwrap_or(0);
         QString::from(&bytes.to_string())
     }

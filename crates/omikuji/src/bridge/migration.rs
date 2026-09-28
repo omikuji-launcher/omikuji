@@ -2,6 +2,8 @@ use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 use std::pin::Pin;
 
+use omikuji_core::migration;
+
 #[cxx_qt::bridge]
 pub mod qobject {
     unsafe extern "C++" {
@@ -52,15 +54,15 @@ pub struct MigrationRust {
 
 impl qobject::MigrationBridge {
     fn pending(&self) -> bool {
-        omikuji_core::migration::pending()
+        migration::pending()
     }
 
     fn schema_pending(&self) -> i32 {
-        omikuji_core::migration::schema_pending() as i32
+        migration::schema_pending() as i32
     }
 
     fn run_schema(&self) {
-        omikuji_core::migration::run_schema();
+        migration::run_schema();
     }
 
     fn run(mut self: Pin<&mut Self>) {
@@ -71,7 +73,7 @@ impl qobject::MigrationBridge {
         let qt = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             let line_qt = qt.clone();
-            let res = omikuji_core::migration::run(move |line| {
+            let res = migration::run(move |line| {
                 let _ = line_qt.queue(move |mut obj: Pin<&mut qobject::MigrationBridge>| {
                     obj.as_mut().output(QString::from(&line));
                 });

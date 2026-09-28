@@ -6,6 +6,8 @@ use std::process::Stdio;
 use super::wine::{ProtonVerb, WineVariant};
 use super::wine_command;
 use crate::library::{Game, RunnerType};
+use crate::prefixes::windows_dir;
+use crate::store::steam::local::find_steam_prefix;
 use crate::template_vars::TemplateVars;
 
 pub fn prefix_path_for(game: &Game) -> PathBuf {
@@ -32,7 +34,7 @@ pub fn effective_prefix(game: &Game) -> Option<PathBuf> {
             if game.source.app_id.is_empty() {
                 None
             } else {
-                crate::store::steam::local::find_steam_prefix(&game.source.app_id)
+                find_steam_prefix(&game.source.app_id)
             }
         }
         RunnerType::Wine => Some(prefix_path_for(game)),
@@ -108,7 +110,7 @@ pub fn prepare_epic_prefix(
 
     let dummy_src = crate::runtime_dir().join("EpicGamesLauncher.exe");
     if dummy_src.exists() {
-        let dest_dir = crate::prefixes::windows_dir(&prefix).join("command");
+        let dest_dir = windows_dir(&prefix).join("command");
         if let Err(e) = std::fs::create_dir_all(&dest_dir) {
             tracing::error!("failed to create command dir in prefix: {}", e);
         } else {

@@ -1,7 +1,10 @@
 use crate::launch::{
-    EnvPurpose, ProtonVerb, WineVariant, build_env, resolve_wine_exe, wine_command,
+    EnvPurpose, ProtonVerb, WineVariant, build_env, resolve_prefix, resolve_wine_exe, wine_command,
 };
 use crate::library::Game;
+use crate::runners;
+use crate::store::steam::local::with_steam_wine;
+use crate::template_vars::TemplateVars;
 use anyhow::{Result, anyhow};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -134,10 +137,10 @@ fn pipe_lines<R: std::io::Read + Send + 'static>(reader: R, tx: std::sync::mpsc:
 }
 
 fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
-    let effective = crate::store::steam::local::with_steam_wine(game)?;
+    let effective = with_steam_wine(game)?;
     let g: &Game = effective.as_ref().unwrap_or(game);
 
-    crate::runners::ensure_latest_blocking(&g.wine.version)?;
+    runners::ensure_latest_blocking(&g.wine.version)?;
     let variant = WineVariant::from_version(&g.wine.version);
     let wine_exe = resolve_wine_exe(variant, &g.wine.version)?;
     let mut env = build_env(g, variant, &wine_exe, EnvPurpose::Tool);
@@ -153,12 +156,12 @@ fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
 
     let (program, args) = build_command(tool, variant, &wine_exe)?;
 
-    let vars = crate::template_vars::TemplateVars::for_game(g);
+    let vars = TemplateVars::for_game(g);
     let env = vars.expand_env(env);
     let args: Vec<String> = args.into_iter().map(|a| vars.expand(&a)).collect();
 
     let verb = (variant == WineVariant::Proton && !matches!(tool, WineTool::KillWineserver))
-        .then(|| ProtonVerb::for_prefix(&crate::launch::resolve_prefix(g), ProtonVerb::Run));
+        .then(|| ProtonVerb::for_prefix(&resolve_prefix(g), ProtonVerb::Run));
     let cmd = wine_command(&program, &env, variant, verb, &args);
 
     tracing::debug!("{:?} :: {} {}", tool, program.display(), args.join(" "));

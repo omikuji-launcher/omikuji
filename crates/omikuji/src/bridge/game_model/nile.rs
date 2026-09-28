@@ -3,8 +3,13 @@ use std::pin::Pin;
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
+use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library, SourceKind};
-use omikuji_core::media;
+use omikuji_core::process::{self, ErrorAction, ErrorNotification};
+use omikuji_core::store::nile;
+use omikuji_core::{downloads, install_sizes, media, notifications};
+
+use crate::bridge::expand_path;
 
 impl super::qobject::GameModel {
     pub fn nile_check_existing_install(
@@ -13,13 +18,12 @@ impl super::qobject::GameModel {
         install_path: &QString,
     ) -> QString {
         let app_s = app_name.to_string();
-        let install_s = crate::bridge::expand_path(install_path);
+        let install_s = expand_path(install_path);
         if app_s.is_empty() || install_s.trim().is_empty() {
             return QString::from(r#"{"bytes":0,"hasResume":false}"#);
         }
         let install = std::path::PathBuf::from(install_s.trim());
-        let (bytes, has_resume) =
-            omikuji_core::store::nile::inspect_existing_install(&app_s, &install);
+        let (bytes, has_resume) = nile::inspect_existing_install(&app_s, &install);
         QString::from(&format!(
             r#"{{"bytes":{},"hasResume":{}}}"#,
             bytes, has_resume
@@ -27,19 +31,19 @@ impl super::qobject::GameModel {
     }
 
     pub fn nile_dir_has_game(&self, _app_id: &QString, install_path: &QString) -> bool {
-        let path = crate::bridge::expand_path(install_path);
+        let path = expand_path(install_path);
         if path.trim().is_empty() {
             return false;
         }
-        omikuji_core::store::nile::fuel::path_in(std::path::Path::new(path.trim())).exists()
+        nile::fuel::path_in(std::path::Path::new(path.trim())).exists()
     }
 
     pub fn fetch_nile_install_size(self: Pin<&mut Self>, request_id: &QString, app_name: &QString) {
         let rid = request_id.to_string();
         let app_name_str = app_name.to_string();
 
-        omikuji_core::install_sizes::spawn_fetch_ex(rid, move || async move {
-            omikuji_core::store::nile::fetch_install_size(&app_name_str)
+        install_sizes::spawn_fetch_ex(rid, move || async move {
+            nile::fetch_install_size(&app_name_str)
                 .await
                 .map(|s| {
                     (
@@ -77,7 +81,7 @@ impl super::qobject::GameModel {
             return QString::from(&app_name_s);
         }
 
-        let Some(info) = omikuji_core::store::nile::find_installed_info(&app_name_s) else {
+        let Some(info) = nile::find_installed_info(&app_name_s) else {
             tracing::warn!("no install info for {} - leaving library alone", app_name_s);
             return QString::default();
         };
@@ -97,7 +101,7 @@ impl super::qobject::GameModel {
             display_str
         };
 
-        let fuel = omikuji_core::store::nile::fuel::load(&info.install_path).ok();
+        let fuel = nile::fuel::load(&info.install_path).ok();
 
         let mut game = Game {
             metadata: Metadata {
@@ -132,7 +136,7 @@ impl super::qobject::GameModel {
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };
-        game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
+        game.seed_from_defaults(&Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
             tracing::error!("failed to save: {}", e);
@@ -178,23 +182,22 @@ impl super::qobject::GameModel {
         let app_id = game.source.app_id.clone();
         let name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
-        let install_path =
-            omikuji_core::store::nile::find_installed_info(&app_id).map(|i| i.install_path);
+        let install_path = nile::find_installed_info(&app_id).map(|i| i.install_path);
 
         std::thread::spawn(move || {
-            let entries_to_cancel: Vec<String> = omikuji_core::downloads::manager()
+            let entries_to_cancel: Vec<String> = downloads::manager()
                 .list()
                 .iter()
                 .filter(|e| e.app_id == app_id)
                 .map(|e| e.id.clone())
                 .collect();
             for entry_id in entries_to_cancel {
-                omikuji_core::downloads::manager().cancel(&entry_id);
+                downloads::manager().cancel(&entry_id);
             }
 
-            omikuji_core::notifications::info(&name, "Removing Amazon game...");
+            notifications::info(&name, "Removing Amazon game...");
 
-            if let Err(e) = omikuji_core::store::nile::uninstall(&app_id) {
+            if let Err(e) = nile::uninstall(&app_id) {
                 tracing::error!("{}", e);
             }
 
@@ -202,19 +205,19 @@ impl super::qobject::GameModel {
                 && path.exists()
                 && let Err(e) = std::fs::remove_dir_all(&path)
             {
-                omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
+                process::notify_error(ErrorNotification {
                     game_id: game_id_owned.clone(),
                     title: "Uninstall failed".to_string(),
                     message: format!("Failed to remove install dir: {}", e),
-                    action: omikuji_core::process::ErrorAction::None,
+                    action: ErrorAction::None,
                 });
                 return;
             }
 
-            if let Err(e) = omikuji_core::library::Library::remove_game_file(&game_id_owned) {
+            if let Err(e) = Library::remove_game_file(&game_id_owned) {
                 tracing::error!("failed to remove game file: {}", e);
             }
-            omikuji_core::notifications::success(&name, "Uninstalled");
+            notifications::success(&name, "Uninstalled");
         });
 
         true

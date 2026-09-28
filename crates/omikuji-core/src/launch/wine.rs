@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use super::ComponentMissing;
 use crate::fs_util::{find_executable_in_paths, is_executable};
 use crate::library::Game;
+use crate::runners;
+use crate::store::steam::local as steam_local;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WineVariant {
@@ -25,8 +27,8 @@ impl WineVariant {
         if version.is_empty() || version == "system" {
             return WineVariant::System;
         }
-        match crate::runners::runner_dir(version) {
-            Some(dir) if crate::runners::is_proton_dir(&dir) => WineVariant::Proton,
+        match runners::runner_dir(version) {
+            Some(dir) if runners::is_proton_dir(&dir) => WineVariant::Proton,
             Some(_) => WineVariant::Runner,
             None if looks_like_proton(version.strip_prefix("steam:").unwrap_or(version)) => {
                 WineVariant::Proton
@@ -69,7 +71,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
     }
 
     if let Some(name) = version.strip_prefix("system:") {
-        if let Some(path) = crate::runners::system_wine_paths().get(name) {
+        if let Some(path) = runners::system_wine_paths().get(name) {
             return Ok(path.clone());
         }
         anyhow::bail!("Runner `{}` not found.", name);
@@ -77,7 +79,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
 
     match variant {
         WineVariant::System => Ok(PathBuf::from("wine")),
-        WineVariant::Runner => crate::runners::installed_runner_dir(version)
+        WineVariant::Runner => runners::installed_runner_dir(version)
             .map(|d| d.join("bin").join("wine"))
             .filter(|p| p.exists())
             .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version)),
@@ -88,7 +90,7 @@ pub fn resolve_wine_exe(variant: WineVariant, version: &str) -> Result<PathBuf> 
                 })
             })?;
 
-            let has_files = crate::runners::installed_runner_dir(version)
+            let has_files = runners::installed_runner_dir(version)
                 .map(|d| d.join("files").exists())
                 .unwrap_or(false);
             if !has_files {
@@ -112,10 +114,10 @@ pub fn missing_component(game: &Game) -> Option<String> {
 }
 
 fn resolve_steam_runner(version: &str) -> Result<PathBuf> {
-    if crate::runners::steam_runners_ignored() {
+    if runners::steam_runners_ignored() {
         anyhow::bail!("Runner `{}` not found.", version);
     }
-    crate::store::steam::local::find_proton_install(version)
+    steam_local::find_proton_install(version)
         .ok_or_else(|| anyhow::anyhow!("Runner `{}` not found.", version))?;
     find_umu_run().ok_or_else(|| {
         anyhow::Error::new(ComponentMissing {

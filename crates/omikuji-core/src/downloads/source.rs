@@ -13,6 +13,10 @@ pub trait DownloadSource: Send + Sync {
         Err(anyhow!("this source does not support in-place updates"))
     }
 
+    async fn pre_download(&self, _entry: &DownloadEntry) -> Result<()> {
+        Err(anyhow!("this source does not support pre-downloads"))
+    }
+
     fn supports_repair(&self) -> bool {
         false
     }

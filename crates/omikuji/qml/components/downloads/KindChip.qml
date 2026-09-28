@@ -9,6 +9,7 @@ Chip {
     readonly property var labels: ({
         install: qsTr("Install"),
         update: qsTr("Update"),
+        predownload: qsTr("Pre-download"),
         repair: qsTr("Repair"),
         "import": qsTr("Import")
     })

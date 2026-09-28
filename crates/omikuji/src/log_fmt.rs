@@ -1,11 +1,12 @@
 use std::fmt;
 use tracing_subscriber::fmt::{FmtContext, FormatEvent, FormatFields, format::Writer};
+use tracing_subscriber::registry::LookupSpan;
 
 pub struct ShortTarget;
 
 impl<S, N> FormatEvent<S, N> for ShortTarget
 where
-    S: tracing::Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+    S: tracing::Subscriber + for<'a> LookupSpan<'a>,
     N: for<'a> FormatFields<'a> + 'static,
 {
     fn format_event(

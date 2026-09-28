@@ -5,6 +5,7 @@ use std::sync::OnceLock;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 
+use crate::app_settings::AppSettings;
 use crate::downloads::throttle;
 
 const RELAY_BUF: usize = 64 * 1024;
@@ -36,11 +37,7 @@ pub async fn address() -> Option<SocketAddr> {
 }
 
 pub async fn env_vars() -> Vec<(String, String)> {
-    if crate::app_settings::AppSettings::load()
-        .download
-        .bandwidth_mb_per_sec
-        <= 0.0
-    {
+    if AppSettings::load().download.bandwidth_mb_per_sec <= 0.0 {
         return Vec::new();
     }
     let Some(addr) = address().await else {

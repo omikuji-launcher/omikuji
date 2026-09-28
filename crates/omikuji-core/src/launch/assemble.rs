@@ -7,8 +7,11 @@ use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
 use super::wine::{WineVariant, resolve_wine_exe};
 use super::{ComponentMissing, StoreSignedOut};
+use crate::desktop::ensure_steam_icon;
 use crate::library::{Game, RunnerType};
+use crate::store::epic;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
+use crate::system_info::gpu_launch_env;
 use crate::template_vars::TemplateVars;
 
 pub struct ResolvedLaunch {
@@ -67,18 +70,18 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
     let mut env = build_env(game, variant, &wine_exe, purpose);
 
     if variant == WineVariant::Proton
-        && let Err(e) = crate::desktop::ensure_steam_icon(game)
+        && let Err(e) = ensure_steam_icon(game)
     {
         tracing::warn!("dock icon link failed for {}: {}", game.metadata.name, e);
     }
 
     let mut command = if game.is_epic() {
-        let legendary = crate::store::epic::source::find_legendary().ok_or_else(|| {
+        let legendary = epic::source::find_legendary().ok_or_else(|| {
             anyhow::Error::new(ComponentMissing {
                 name: "Legendary".to_string(),
             })
         })?;
-        if !crate::store::epic::logged_in() {
+        if !epic::logged_in() {
             return Err(anyhow::Error::new(StoreSignedOut {
                 store: "Epic Games".to_string(),
             }));
@@ -137,7 +140,7 @@ fn apply_wrapping(
     }
 
     if wrap_mangohud {
-        for (k, v) in crate::system_info::gpu_launch_env(&game.graphics.gpu) {
+        for (k, v) in gpu_launch_env(&game.graphics.gpu) {
             env.insert(k, v);
         }
     }
@@ -223,7 +226,7 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLau
         command.push("--env=MANGOHUD=1".to_string());
         command.push("--env=MANGOHUD_DLSYM=1".to_string());
     }
-    for (k, v) in crate::system_info::gpu_launch_env(&game.graphics.gpu) {
+    for (k, v) in gpu_launch_env(&game.graphics.gpu) {
         command.push(format!("--env={}={}", k, v));
     }
 

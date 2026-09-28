@@ -2,11 +2,13 @@ pub mod api;
 pub mod source;
 pub mod update;
 
+use crate::gacha::state;
+
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {
-    if let Some(v) = crate::gacha::state::read_install_dotversion(install_path) {
+    if let Some(v) = state::read_install_dotversion(install_path) {
         return Some(v);
     }
-    crate::gacha::state::scan_globalgamemanagers(install_path, data_folder, 0)
+    state::scan_globalgamemanagers(install_path, data_folder, 0)
 }
 
 // gryphline wants a rand_str on every request; not validated server-side per traces

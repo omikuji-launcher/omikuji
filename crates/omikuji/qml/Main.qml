@@ -534,7 +534,7 @@ ApplicationWindow {
         function onNotification(level, title, message) {
             toastManager.show(level, title, message)
         }
-        function onUpdate_required(gameId, appId, displayName, fromVersion, toVersion, downloadSize, canDiff, deltaSupported) {
+        function onUpdate_required(gameId, appId, displayName, fromVersion, toVersion, downloadSize, canDiff, deltaSupported, kind) {
             updateDialog.show({
                 gameId: gameId,
                 appId: appId,
@@ -543,7 +543,8 @@ ApplicationWindow {
                 toVersion: toVersion,
                 downloadBytes: parseInt(downloadSize, 10) || 0,
                 canDiff: canDiff,
-                deltaSupported: deltaSupported
+                deltaSupported: deltaSupported,
+                kind: kind
             })
         }
         function onError_required(gameId, displayName, title, message, action) {
@@ -1240,14 +1241,16 @@ property real cardZoom: appSettings.cardZoom
     UpdateAvailableDialog {
         id: updateDialog
         anchors.fill: parent
-        onUpdateRequested: (gid, aid, fromV) => {
-            let newId = gameModel.enqueue_game_update(gid, fromV)
+        function reportQueued(newId, title) {
             if (newId && newId.length > 0) {
-                toastManager.show("info", qsTr("Update queued"), gameActions.selectedGame ? gameActions.selectedGame.name : "")
+                toastManager.show("info", title, updateDialog.displayName)
             } else {
                 toastManager.show("error", qsTr("Update failed"), qsTr("Could not enqueue update"))
             }
         }
+        onUpdateRequested: (gid, aid, fromV) => reportQueued(gameModel.enqueue_game_update(gid, fromV), qsTr("Update queued"))
+        onPreDownloadRequested: (gid, fromV, toV) => reportQueued(gameModel.enqueue_game_predownload(gid, fromV, toV), qsTr("Pre-download queued"))
+        onPreDownloadDismissed: (gid, version) => gameModel.dismiss_predownload(gid, version)
         onRunAnywayRequested: (gid) => {
             let idx = gameModel.index_of_id(gid)
             if (idx >= 0) gameActions.play(idx, true)

@@ -3,6 +3,7 @@ use std::pin::Pin;
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
+use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library};
 use omikuji_core::media;
 
@@ -15,7 +16,7 @@ impl super::qobject::GameModel {
                 return QString::default();
             }
         };
-        game.seed_from_defaults(&omikuji_core::defaults::Defaults::load());
+        game.seed_from_defaults(&Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
             tracing::error!("register_game_json: failed to save: {e}");

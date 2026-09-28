@@ -3,13 +3,23 @@
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use futures_util::StreamExt;
-use std::path::Path;
+use nix::fcntl::{PosixFadviseAdvice, posix_fadvise};
+use reqwest::header::CONTENT_RANGE;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::sophon;
 use super::{HoyoEdition, VoiceLocale};
-use crate::gacha::state;
+use crate::downloads::io_stats::track_child;
+use crate::downloads::limits::GachaLimits;
+use crate::downloads::rate::RateMeter;
+use crate::downloads::throttle;
+use crate::downloads::{
+    ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
+    report_progress, set_status,
+};
+use crate::gacha::{state, strategies};
 
 struct ParsedHoyoApp {
     biz_id: String,
@@ -17,12 +27,6 @@ struct ParsedHoyoApp {
     display_name: String,
     edition: HoyoEdition,
 }
-use crate::downloads::limits::GachaLimits;
-use crate::downloads::throttle;
-use crate::downloads::{
-    ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
-    report_progress, set_status,
-};
 
 pub struct HoyoSource;
 
@@ -42,163 +46,72 @@ impl DownloadSource for HoyoSource {
     }
 
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
-        let from_version = match &entry.kind {
-            DownloadKind::Update { from_version } => from_version.clone(),
-            _ => return Err(anyhow!("update() called on a non-update entry")),
+        let DownloadKind::Update { from_version } = &entry.kind else {
+            return Err(anyhow!("update() called on a non-update entry"));
         };
 
-        let parsed = parse_app_id(&entry.app_id)?;
-        let app_parts: Vec<&str> = entry.app_id.splitn(3, ':').collect();
-        let voice_str = app_parts.get(2).unwrap_or(&"");
-        let voice_locales = parse_voice_locales(voice_str);
-
-        let safe_id = entry.app_id.replace(':', "-");
-        let temp_root = entry
-            .install_path
-            .parent()
-            .unwrap_or(&entry.install_path)
-            .join(format!(".omikuji-update-{}", safe_id));
-        let _ = std::fs::create_dir_all(&temp_root);
-
-        let branches = sophon::api::fetch_game_branches(parsed.edition).await?;
-        let branch = branches
-            .find_for(&parsed.biz_id)
-            .ok_or_else(|| anyhow!("game branch not found in api response"))?;
-        let main = branch
-            .main
-            .as_ref()
-            .ok_or_else(|| anyhow!("no main package info for {}", parsed.display_name))?;
-        let target_version = main.tag.clone();
-
-        let target = crate::gacha::strategies::normalize_version(&from_version);
-        let matched_tag = main
-            .diff_tags
-            .iter()
-            .find(|t| crate::gacha::strategies::normalize_version(t) == target)
-            .cloned();
-        let Some(diff_key) = matched_tag else {
+        let job = plan_patch(entry, from_version, PackageChannel::Main).await?;
+        let Some(diff_key) = &job.diff_key else {
             tracing::warn!(
                 "no diff path from {} to {} for {}, falling back to full reinstall",
                 from_version,
-                target_version,
-                parsed.display_name
+                job.package.tag,
+                job.parsed.display_name
             );
             return self.install(entry).await;
         };
 
-        let diffs = sophon::api::fetch_patch_build(parsed.edition, main).await?;
-
-        let id = entry.id.clone();
-        let total_bytes_arc = Arc::new(AtomicU64::new(0));
-        let total_bytes_arc_cb = total_bytes_arc.clone();
-        let last_stage = Arc::new(std::sync::Mutex::new(None::<sophon::patcher::Stage>));
-        let last_stage_cb = last_stage.clone();
-        let id_cb = id.clone();
-
-        let on_progress: sophon::patcher::ProgressFn = Arc::new(move |rep| {
-            use sophon::patcher::Stage;
-            let mut last = last_stage_cb.lock().unwrap();
-            let transitioned = !matches!((&*last, &rep.stage), (Some(s), s2) if std::mem::discriminant(s) == std::mem::discriminant(s2));
-            *last = Some(rep.stage);
-            drop(last);
-
-            if transitioned {
-                match rep.stage {
-                    Stage::Downloading => set_status(&id_cb, DownloadStatus::Downloading),
-                    Stage::Patching => set_status(&id_cb, DownloadStatus::Patching),
-                    Stage::Deleting => set_status(&id_cb, DownloadStatus::Patching),
-                }
-            }
-
-            let (done, total) = if rep.bytes_total > 0 {
-                (rep.bytes_done, rep.bytes_total)
-            } else {
-                (rep.current, rep.total.max(1))
-            };
-            total_bytes_arc_cb.store(total, Ordering::SeqCst);
-            let pct = if total > 0 {
-                (done as f64 / total as f64) * 100.0
-            } else {
-                0.0
-            };
-            report_progress(&id_cb, pct, done, total, throttle::global().speed_bps());
-        });
-
-        let id_cancel = id.clone();
-        let is_cancelled: sophon::patcher::CancelFn =
-            Arc::new(move || !matches!(check_control(&id_cancel), ControlSignal::None));
-
-        let game_diff = diffs
-            .get_for("game")
-            .ok_or_else(|| anyhow!("no 'game' diff in sophon response"))?;
-        sophon::patcher::apply_update(
-            game_diff,
-            entry.install_path.clone(),
-            temp_root.clone(),
-            diff_key.clone(),
-            on_progress.clone(),
-            is_cancelled.clone(),
-        )
-        .await?;
-
-        if check_control(&id) != ControlSignal::None {
+        run_patch(entry, &job, diff_key, PatchMode::Apply).await?;
+        if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
         }
 
-        for locale in &voice_locales {
-            let field = locale.api_name();
-            let Some(voice_diff) = diffs.get_for(field) else {
-                continue;
-            };
-            if !voice_diff.stats.contains_key(&diff_key) {
-                continue;
-            }
-            sophon::patcher::apply_update(
-                voice_diff,
-                entry.install_path.clone(),
-                temp_root.clone(),
-                diff_key.clone(),
-                on_progress.clone(),
-                is_cancelled.clone(),
-            )
-            .await?;
+        state::write_installed_version(
+            &job.parsed.game_slug,
+            job.parsed.edition.id(),
+            &job.package.tag,
+        );
+        let _ = std::fs::remove_dir_all(&job.temp_root);
+        Ok(())
+    }
 
-            if check_control(&id) != ControlSignal::None {
-                return Ok(());
-            }
+    async fn pre_download(&self, entry: &DownloadEntry) -> Result<()> {
+        let DownloadKind::PreDownload { from_version, .. } = &entry.kind else {
+            return Err(anyhow!("pre_download() called on a non-pre-download entry"));
+        };
+
+        let job = plan_patch(entry, from_version, PackageChannel::PreDownload).await?;
+        let Some(diff_key) = &job.diff_key else {
+            return Err(anyhow!(
+                "no pre-download patch from {} to {} for {}",
+                from_version,
+                job.package.tag,
+                job.parsed.display_name
+            ));
+        };
+
+        run_patch(entry, &job, diff_key, PatchMode::DownloadOnly).await?;
+        if check_control(&entry.id) != ControlSignal::None {
+            return Ok(());
         }
 
-        state::write_installed_version(&parsed.game_slug, parsed.edition.id(), &target_version);
-
-        let _ = std::fs::remove_dir_all(&temp_root);
-
+        std::fs::write(job.temp_root.join(PREDOWNLOAD_MARKER), &job.package.tag)?;
         Ok(())
     }
 
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         let parsed = parse_app_id(&entry.app_id)?;
-        let app_parts: Vec<&str> = entry.app_id.splitn(3, ':').collect();
-        let voice_str = app_parts.get(2).unwrap_or(&"");
-        let voice_locales = parse_voice_locales(voice_str);
-
-        let branches = sophon::api::fetch_game_branches(parsed.edition).await?;
-        let branch = branches
-            .find_for(&parsed.biz_id)
-            .ok_or_else(|| anyhow!("game branch not found for biz_id {}", parsed.biz_id))?;
-        let main = branch
-            .main
-            .as_ref()
-            .ok_or_else(|| anyhow!("no main package info for {}", parsed.display_name))?;
+        let main = fetch_package(&parsed, PackageChannel::Main).await?;
         let target_version = main.tag.clone();
 
-        let build = sophon::api::fetch_build(parsed.edition, main).await?;
+        let build = sophon::api::fetch_build(parsed.edition, &main).await?;
 
         let game_entry = build
             .get_for("game")
             .ok_or_else(|| anyhow!("no 'game' category in sophon build"))?
             .clone();
         let mut entries = vec![game_entry];
-        for locale in &voice_locales {
+        for locale in voice_locales_for(&entry.app_id) {
             if let Some(audio_entry) = build.get_for(locale.api_name()) {
                 entries.push(audio_entry.clone());
             }
@@ -206,37 +119,14 @@ impl DownloadSource for HoyoSource {
 
         std::fs::create_dir_all(&entry.install_path)?;
 
-        let id = entry.id.clone();
-        let total_bytes_arc = Arc::new(AtomicU64::new(0));
-        let total_bytes_arc_cb = total_bytes_arc.clone();
-        let id_cb = id.clone();
-
         set_status(&entry.id, DownloadStatus::Downloading);
 
-        let on_progress: sophon::patcher::ProgressFn = Arc::new(move |rep| {
-            let (done, total) = if rep.bytes_total > 0 {
-                (rep.bytes_done, rep.bytes_total)
-            } else {
-                (rep.current, rep.total.max(1))
-            };
-            total_bytes_arc_cb.store(total, Ordering::SeqCst);
-            let pct = if total > 0 {
-                (done as f64 / total as f64) * 100.0
-            } else {
-                0.0
-            };
-            report_progress(&id_cb, pct, done, total, throttle::global().speed_bps());
-        });
-
-        let id_cancel = id.clone();
-        let is_cancelled: sophon::patcher::CancelFn =
-            Arc::new(move || !matches!(check_control(&id_cancel), ControlSignal::None));
-
+        let callbacks = sophon_callbacks(&entry.id);
         sophon::installer::apply_install(
             &entries,
             entry.install_path.clone(),
-            on_progress,
-            is_cancelled,
+            callbacks.on_progress,
+            callbacks.is_cancelled,
         )
         .await?;
 
@@ -245,7 +135,7 @@ impl DownloadSource for HoyoSource {
         }
 
         state::write_installed_version(&parsed.game_slug, parsed.edition.id(), &target_version);
-        let total = total_bytes_arc.load(Ordering::SeqCst);
+        let total = callbacks.total_bytes.load(Ordering::SeqCst);
         report_progress(&entry.id, 100.0, total, total, 0);
         tracing::info!(
             "installed {} {} v{}",
@@ -323,7 +213,7 @@ async fn download_file_conn(
     let probed_size = if probe.status() == reqwest::StatusCode::PARTIAL_CONTENT {
         probe
             .headers()
-            .get(reqwest::header::CONTENT_RANGE)
+            .get(CONTENT_RANGE)
             .and_then(|v| v.to_str().ok())
             .and_then(|s| s.rsplit('/').next())
             .and_then(|s| s.parse::<u64>().ok())
@@ -477,11 +367,11 @@ async fn download_file_conn(
                     use std::os::unix::io::AsRawFd;
                     let fd = file.get_ref().as_raw_fd();
                     let len = (end - start + 1) as libc::off_t;
-                    let _ = nix::fcntl::posix_fadvise(
+                    let _ = posix_fadvise(
                         fd,
                         start as libc::off_t,
                         len,
-                        nix::fcntl::PosixFadviseAdvice::POSIX_FADV_DONTNEED,
+                        PosixFadviseAdvice::POSIX_FADV_DONTNEED,
                     );
                 }
                 if let Err(e) = mark_part_complete(&dest, idx) {
@@ -500,7 +390,7 @@ async fn download_file_conn(
     let progress_cancelled = cancelled.clone();
 
     let reporter = tokio::spawn(async move {
-        let mut meter = crate::downloads::rate::RateMeter::new(0);
+        let mut meter = RateMeter::new(0);
         loop {
             tokio::time::sleep(std::time::Duration::from_millis(250)).await;
             let dl = progress_downloaded.load(Ordering::Relaxed);
@@ -602,7 +492,7 @@ async fn download_file_simple(
     let mut stream = resp.bytes_stream();
     let mut downloaded: u64 = if resumed { existing } else { 0 };
     let mut last_report = std::time::Instant::now();
-    let mut meter = crate::downloads::rate::RateMeter::new(downloaded);
+    let mut meter = RateMeter::new(downloaded);
 
     let mut chunk_count: u64 = 0;
     while let Some(chunk) = stream.next().await {
@@ -700,7 +590,7 @@ pub fn extract_archive_with_password(
         .stderr(std::process::Stdio::piped())
         .spawn()
         .map_err(|e| anyhow!("failed to run 7z: {}", e))?;
-    crate::downloads::io_stats::track_child(child.id());
+    track_child(child.id());
 
     if let Some(stdout) = child.stdout.take() {
         use std::io::Read;
@@ -748,7 +638,7 @@ pub fn extract_archive_with_password(
 }
 
 fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
-    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
+    let (manifest, edition_id, _) = strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
 
     Ok(ParsedHoyoApp {
@@ -766,6 +656,190 @@ fn parse_voice_locales(s: &str) -> Vec<VoiceLocale> {
     s.split(',')
         .filter_map(VoiceLocale::from_api_name)
         .collect()
+}
+
+fn voice_locales_for(app_id: &str) -> Vec<VoiceLocale> {
+    parse_voice_locales(app_id.splitn(3, ':').nth(2).unwrap_or(""))
+}
+
+#[derive(Clone, Copy)]
+enum PackageChannel {
+    Main,
+    PreDownload,
+}
+
+impl PackageChannel {
+    fn pick(self, branch: &sophon::api::GameBranchInfo) -> Option<&sophon::api::PackageInfo> {
+        match self {
+            Self::Main => branch.main.as_ref(),
+            Self::PreDownload => branch.pre_download.as_ref(),
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Main => "main",
+            Self::PreDownload => "pre-download",
+        }
+    }
+}
+
+async fn fetch_package(
+    parsed: &ParsedHoyoApp,
+    channel: PackageChannel,
+) -> Result<sophon::api::PackageInfo> {
+    let branches = sophon::api::fetch_game_branches(parsed.edition).await?;
+    let branch = branches
+        .find_for(&parsed.biz_id)
+        .ok_or_else(|| anyhow!("game branch not found for biz_id {}", parsed.biz_id))?;
+    channel.pick(branch).cloned().ok_or_else(|| {
+        anyhow!(
+            "no {} package info for {}",
+            channel.label(),
+            parsed.display_name
+        )
+    })
+}
+
+struct SophonCallbacks {
+    on_progress: sophon::patcher::ProgressFn,
+    is_cancelled: sophon::patcher::CancelFn,
+    total_bytes: Arc<AtomicU64>,
+}
+
+fn sophon_callbacks(id: &str) -> SophonCallbacks {
+    use sophon::patcher::Stage;
+
+    let total_bytes = Arc::new(AtomicU64::new(0));
+    let total_bytes_cb = total_bytes.clone();
+    let last_stage = std::sync::Mutex::new(None::<Stage>);
+    let id_cb = id.to_string();
+
+    let on_progress: sophon::patcher::ProgressFn = Arc::new(move |rep| {
+        let mut last = last_stage.lock().unwrap();
+        let transitioned = !matches!((&*last, &rep.stage), (Some(s), s2) if std::mem::discriminant(s) == std::mem::discriminant(s2));
+        *last = Some(rep.stage);
+        drop(last);
+
+        if transitioned {
+            match rep.stage {
+                Stage::Downloading => set_status(&id_cb, DownloadStatus::Downloading),
+                Stage::Patching | Stage::Deleting => set_status(&id_cb, DownloadStatus::Patching),
+            }
+        }
+
+        let (done, total) = if rep.bytes_total > 0 {
+            (rep.bytes_done, rep.bytes_total)
+        } else {
+            (rep.current, rep.total.max(1))
+        };
+        total_bytes_cb.store(total, Ordering::SeqCst);
+        let pct = if total > 0 {
+            (done as f64 / total as f64) * 100.0
+        } else {
+            0.0
+        };
+        report_progress(&id_cb, pct, done, total, throttle::global().speed_bps());
+    });
+
+    let id_cancel = id.to_string();
+    let is_cancelled: sophon::patcher::CancelFn =
+        Arc::new(move || !matches!(check_control(&id_cancel), ControlSignal::None));
+
+    SophonCallbacks {
+        on_progress,
+        is_cancelled,
+        total_bytes,
+    }
+}
+
+#[derive(Clone, Copy)]
+enum PatchMode {
+    Apply,
+    DownloadOnly,
+}
+
+struct PatchJob {
+    parsed: ParsedHoyoApp,
+    voice_locales: Vec<VoiceLocale>,
+    temp_root: PathBuf,
+    package: sophon::api::PackageInfo,
+    diff_key: Option<String>,
+}
+
+async fn plan_patch(
+    entry: &DownloadEntry,
+    from_version: &str,
+    channel: PackageChannel,
+) -> Result<PatchJob> {
+    let parsed = parse_app_id(&entry.app_id)?;
+    let temp_root = update_scratch_dir(&entry.app_id, &entry.install_path);
+    let _ = std::fs::create_dir_all(&temp_root);
+
+    let package = fetch_package(&parsed, channel).await?;
+    let target = strategies::normalize_version(from_version);
+    let diff_key = package
+        .diff_tags
+        .iter()
+        .find(|t| strategies::normalize_version(t) == target)
+        .cloned();
+
+    Ok(PatchJob {
+        voice_locales: voice_locales_for(&entry.app_id),
+        parsed,
+        temp_root,
+        package,
+        diff_key,
+    })
+}
+
+async fn run_patch(
+    entry: &DownloadEntry,
+    job: &PatchJob,
+    diff_key: &str,
+    mode: PatchMode,
+) -> Result<()> {
+    let diffs = sophon::api::fetch_patch_build(job.parsed.edition, &job.package).await?;
+    let game_diff = diffs
+        .get_for("game")
+        .ok_or_else(|| anyhow!("no 'game' diff in sophon response"))?;
+    let voice_diffs = job
+        .voice_locales
+        .iter()
+        .filter_map(|locale| diffs.get_for(locale.api_name()))
+        .filter(|diff| diff.stats.contains_key(diff_key));
+
+    let callbacks = sophon_callbacks(&entry.id);
+    for diff in std::iter::once(game_diff).chain(voice_diffs) {
+        match mode {
+            PatchMode::Apply => {
+                sophon::patcher::apply_update(
+                    diff,
+                    entry.install_path.clone(),
+                    job.temp_root.clone(),
+                    diff_key.to_string(),
+                    callbacks.on_progress.clone(),
+                    callbacks.is_cancelled.clone(),
+                )
+                .await?;
+            }
+            PatchMode::DownloadOnly => {
+                sophon::patcher::download_update(
+                    diff,
+                    &entry.install_path,
+                    &job.temp_root,
+                    diff_key,
+                    &callbacks.on_progress,
+                    &callbacks.is_cancelled,
+                )
+                .await?;
+            }
+        }
+        if check_control(&entry.id) != ControlSignal::None {
+            return Ok(());
+        }
+    }
+    Ok(())
 }
 
 fn format_bytes(bytes: u64) -> String {
@@ -862,30 +936,33 @@ pub fn inspect_hoyo_temp(app_id: &str, install_path: &Path, temp_dir: Option<&Pa
     (bytes, segments)
 }
 
-pub fn cleanup_hoyo_state(app_id: &str, install_path: &Path, temp_dir: Option<&Path>) {
-    let dir = scratch_dir_for(app_id, install_path, temp_dir);
-    if dir.exists() {
-        if let Err(e) = std::fs::remove_dir_all(&dir) {
-            tracing::warn!("failed to clean temp dir {}: {}", dir.display(), e);
-        } else {
-            tracing::debug!("cleaned temp dir {}", dir.display());
-        }
-    }
+const PREDOWNLOAD_MARKER: &str = ".predownload";
 
-    let safe_id = app_id.replace(':', "-");
-    let update_scratch = install_path
+fn update_scratch_dir(app_id: &str, install_path: &Path) -> PathBuf {
+    install_path
         .parent()
         .unwrap_or(install_path)
-        .join(format!(".omikuji-update-{}", safe_id));
-    if update_scratch.exists() {
-        if let Err(e) = std::fs::remove_dir_all(&update_scratch) {
-            tracing::warn!(
-                "failed to clean update scratch {}: {}",
-                update_scratch.display(),
-                e
-            );
-        } else {
-            tracing::debug!("cleaned update scratch {}", update_scratch.display());
-        }
+        .join(format!(".omikuji-update-{}", app_id.replace(':', "-")))
+}
+
+pub fn predownloaded_version(app_id: &str, install_path: &Path) -> Option<String> {
+    let marker = update_scratch_dir(app_id, install_path).join(PREDOWNLOAD_MARKER);
+    std::fs::read_to_string(marker)
+        .ok()
+        .map(|tag| tag.trim().to_string())
+}
+
+fn remove_scratch(dir: &Path) {
+    if !dir.exists() {
+        return;
     }
+    match std::fs::remove_dir_all(dir) {
+        Ok(()) => tracing::debug!("cleaned {}", dir.display()),
+        Err(e) => tracing::warn!("failed to clean {}: {}", dir.display(), e),
+    }
+}
+
+pub fn cleanup_hoyo_state(app_id: &str, install_path: &Path, temp_dir: Option<&Path>) {
+    remove_scratch(&scratch_dir_for(app_id, install_path, temp_dir));
+    remove_scratch(&update_scratch_dir(app_id, install_path));
 }

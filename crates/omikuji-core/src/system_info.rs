@@ -1,3 +1,4 @@
+use ash::vk;
 use std::ffi::c_char;
 use std::fmt::Write as _;
 
@@ -176,8 +177,8 @@ fn enumerate() -> Vec<Gpu> {
         Ok(e) => e,
         Err(_) => return Vec::new(),
     };
-    let app_info = ash::vk::ApplicationInfo::default().api_version(ash::vk::API_VERSION_1_1);
-    let create_info = ash::vk::InstanceCreateInfo::default().application_info(&app_info);
+    let app_info = vk::ApplicationInfo::default().api_version(vk::API_VERSION_1_1);
+    let create_info = vk::InstanceCreateInfo::default().application_info(&app_info);
     let instance = match unsafe { entry.create_instance(&create_info, None) } {
         Ok(i) => i,
         Err(_) => return Vec::new(),
@@ -186,9 +187,9 @@ fn enumerate() -> Vec<Gpu> {
     let mut out = Vec::new();
     if let Ok(devices) = unsafe { instance.enumerate_physical_devices() } {
         for pd in devices {
-            let mut driver = ash::vk::PhysicalDeviceDriverProperties::default();
-            let mut ids = ash::vk::PhysicalDeviceIDProperties::default();
-            let mut props2 = ash::vk::PhysicalDeviceProperties2::default()
+            let mut driver = vk::PhysicalDeviceDriverProperties::default();
+            let mut ids = vk::PhysicalDeviceIDProperties::default();
+            let mut props2 = vk::PhysicalDeviceProperties2::default()
                 .push_next(&mut driver)
                 .push_next(&mut ids);
             unsafe { instance.get_physical_device_properties2(pd, &mut props2) };
@@ -201,7 +202,7 @@ fn enumerate() -> Vec<Gpu> {
                 &c_array_to_string(&driver.driver_name),
                 &c_array_to_string(&driver.driver_info),
             );
-            let nvidia = driver.driver_id == ash::vk::DriverId::NVIDIA_PROPRIETARY;
+            let nvidia = driver.driver_id == vk::DriverId::NVIDIA_PROPRIETARY;
             let uuid = format_uuid(&ids.device_uuid);
             let loader = loader_for(driver.driver_id, vendor_id).to_string();
 
@@ -221,8 +222,8 @@ fn enumerate() -> Vec<Gpu> {
     out
 }
 
-fn loader_for(driver_id: ash::vk::DriverId, vendor_id: u32) -> &'static str {
-    use ash::vk::DriverId;
+fn loader_for(driver_id: vk::DriverId, vendor_id: u32) -> &'static str {
+    use vk::DriverId;
     if driver_id == DriverId::MESA_RADV {
         return "radeon";
     }

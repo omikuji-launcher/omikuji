@@ -1,3 +1,4 @@
+use crate::fs_util::write_atomic;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -140,7 +141,7 @@ fn mutate<T>(f: impl FnOnce(&mut ComponentsConfig) -> anyhow::Result<T>) -> anyh
     };
     let out = f(&mut config)?;
     let body = toml::to_string_pretty(&config).map_err(std::io::Error::other)?;
-    crate::fs_util::write_atomic(&config_path(), body)?;
+    write_atomic(&config_path(), body)?;
     *guard = Some(config);
     Ok(out)
 }

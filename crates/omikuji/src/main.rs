@@ -9,6 +9,7 @@ mod qml_tree;
 mod single_instance;
 
 use cxx_qt_lib::{QQmlApplicationEngine, QString, QUrl};
+use omikuji_core::app_settings::AppSettings;
 use std::ffi::{CString, c_void};
 
 unsafe extern "C" {
@@ -72,7 +73,7 @@ async fn main() {
 
     unsafe { omikuji_app_init() };
 
-    let ui = omikuji_core::app_settings::AppSettings::load();
+    let ui = AppSettings::load();
 
     if let Ok(lang) = CString::new(ui.language) {
         unsafe { omikuji_install_translator(lang.as_ptr()) };

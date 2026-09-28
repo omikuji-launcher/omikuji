@@ -4,6 +4,7 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Child;
 
+use crate::downloads::io_stats::track_child;
 use crate::downloads::proc_tree::shutdown;
 use crate::downloads::proxy;
 use crate::downloads::rate::{RateMeter, seeded_update};
@@ -98,7 +99,7 @@ async fn run_with_progress(
     on_disk: u64,
 ) -> Result<()> {
     if let Some(pid) = child.id() {
-        crate::downloads::io_stats::track_child(pid);
+        track_child(pid);
     }
     let stdout = child.stdout.take().expect("stdout piped");
     let stderr = child.stderr.take().expect("stderr piped");

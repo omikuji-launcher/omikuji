@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow, bail};
-use futures_util::StreamExt;
+use futures_util::{StreamExt, stream};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -65,7 +65,7 @@ async fn patch_into_staging(
     let dl_for_workers = dl_root.clone();
     let progress_for_workers = progress.clone();
 
-    let stream = futures_util::stream::iter(resources.into_iter().map(move |file| {
+    let stream = stream::iter(resources.into_iter().map(move |file| {
         let id = id.clone();
         let dl_root = dl_for_workers.clone();
         let progress = progress_for_workers.clone();

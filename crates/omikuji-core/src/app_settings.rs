@@ -4,6 +4,7 @@
 // that the user edits and the app reads once at startup. app.toml is the app's own scratch
 // for zoom/tabs/layout/behaviour prefs; app writes, qml reads live through the bridge, no restart needed.
 
+use crate::fs_util::write_atomic;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -215,6 +216,7 @@ pub struct BehaviorSettings {
     pub auto_check_epic_updates_on_launch: bool,
     pub auto_check_gog_updates_on_launch: bool,
     pub auto_check_updates_on_boot: bool,
+    pub auto_queue_predownloads_on_boot: bool,
     pub show_tray_icon: bool,
     pub double_click_launches: bool,
     pub discord_show_launcher: bool,
@@ -230,6 +232,7 @@ impl Default for BehaviorSettings {
             auto_check_epic_updates_on_launch: false,
             auto_check_gog_updates_on_launch: false,
             auto_check_updates_on_boot: false,
+            auto_queue_predownloads_on_boot: false,
             show_tray_icon: false,
             double_click_launches: false,
             discord_show_launcher: true,
@@ -487,6 +490,6 @@ impl AppSettings {
                 )
             })
             .map_err(std::io::Error::other)?;
-        crate::fs_util::write_atomic(&app_settings_path(), body)
+        write_atomic(&app_settings_path(), body)
     }
 }

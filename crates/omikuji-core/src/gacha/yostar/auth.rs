@@ -4,6 +4,7 @@ use serde::de::DeserializeOwned;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use super::EditionApi;
+use crate::http;
 
 // the sign covers the exact bytes of head, so it is formatted not serialized
 fn header(api: &EditionApi) -> String {
@@ -26,7 +27,7 @@ struct Envelope<T> {
 }
 
 pub async fn get<T: DeserializeOwned>(api: &EditionApi, url: &str) -> Result<T> {
-    let resp = crate::http::client()
+    let resp = http::client()
         .get(url)
         .header("Authorization", header(api))
         .send()

@@ -1,6 +1,8 @@
-use crate::library::{Game, Library};
+use crate::library::{Game, Library, generate_id, rfc3339_now};
 use crate::media::{MediaType, media_path};
+use crate::store::steam;
 use anyhow::{Context, Result};
+use nix::sys::statvfs::statvfs;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -93,7 +95,7 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
     let dir = icons_dir();
     fs::create_dir_all(&dir).with_context(|| format!("creating icon dir {}", dir.display()))?;
 
-    let appid = crate::store::steam::synthetic_appid(&game.metadata.id);
+    let appid = steam::synthetic_appid(&game.metadata.id);
     let link = dir.join(format!("steam_icon_{}.png", appid));
     let _ = fs::remove_file(&link);
     std::os::unix::fs::symlink(&src, &link)
@@ -103,7 +105,7 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
 }
 
 pub fn remove_steam_icon(game_id: &str) {
-    let appid = crate::store::steam::synthetic_appid(game_id);
+    let appid = steam::synthetic_appid(game_id);
     let _ = fs::remove_file(icons_dir().join(format!("steam_icon_{}.png", appid)));
 }
 
@@ -132,7 +134,7 @@ pub fn get_game_browse_dir(game: &Game) -> Option<PathBuf> {
     }
 
     if game.runner.runner_type.is_steam() {
-        return crate::store::steam::local::get_game_install_dir(&game.metadata.id);
+        return steam::local::get_game_install_dir(&game.metadata.id);
     }
 
     game.metadata.exe.parent().map(|p| p.to_path_buf())
@@ -263,14 +265,14 @@ pub fn menu_shortcut_exists(game: &Game) -> bool {
 }
 
 pub fn duplicate_game(game: &Game) -> Result<Game> {
-    let new_id = crate::library::generate_id();
+    let new_id = generate_id();
 
     let mut new_game = game.clone();
     new_game.metadata.id = new_id;
     new_game.metadata.name = format!("{} (Copy)", game.metadata.name);
     new_game.metadata.playtime = 0.0;
     new_game.metadata.last_played = String::new();
-    new_game.metadata.added = crate::library::rfc3339_now();
+    new_game.metadata.added = rfc3339_now();
 
     Library::save_game_static(&new_game)?;
 
@@ -284,7 +286,7 @@ pub fn disk_free_space(path: &str) -> u64 {
             return 0;
         }
     }
-    match nix::sys::statvfs::statvfs(&p) {
+    match statvfs(&p) {
         Ok(stat) => stat.fragment_size() * stat.blocks_available(),
         Err(e) => {
             tracing::error!("statvfs failed for {}: {}", p.display(), e);

@@ -2,6 +2,9 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::SystemTime;
 
+use crate::app_settings::{AppSettings, app_settings_path};
+use crate::desktop::game_slug;
+use crate::launch::effective_prefix;
 use crate::library::Game;
 
 const RESERVED: &[&str] = &[
@@ -48,7 +51,7 @@ type UserVarsCache = Option<(SystemTime, Vec<(String, String)>)>;
 static USER_VARS: Mutex<UserVarsCache> = Mutex::new(None);
 
 fn user_vars() -> Vec<(String, String)> {
-    let mtime = std::fs::metadata(crate::app_settings::app_settings_path())
+    let mtime = std::fs::metadata(app_settings_path())
         .and_then(|m| m.modified())
         .unwrap_or(SystemTime::UNIX_EPOCH);
     let mut guard = USER_VARS.lock().unwrap();
@@ -57,7 +60,7 @@ fn user_vars() -> Vec<(String, String)> {
     {
         return vars.clone();
     }
-    let vars: Vec<(String, String)> = crate::app_settings::AppSettings::load()
+    let vars: Vec<(String, String)> = AppSettings::load()
         .template_vars
         .into_iter()
         .filter(|(k, _)| !k.is_empty() && !RESERVED.contains(&k.as_str()))
@@ -93,14 +96,14 @@ impl TemplateVars {
         }
         vars.push(("game_id".to_string(), game.metadata.id.clone()));
         vars.push(("game_name".to_string(), game.metadata.name.clone()));
-        vars.push(("game_slug".to_string(), crate::desktop::game_slug(game)));
+        vars.push(("game_slug".to_string(), game_slug(game)));
         vars.extend(root_paths());
         Self::finish(vars)
     }
 
     pub fn for_game(game: &Game) -> Self {
         let mut this = Self::base(game);
-        if let Some(prefix) = crate::launch::effective_prefix(game) {
+        if let Some(prefix) = effective_prefix(game) {
             this.0.push((
                 "game_prefix".to_string(),
                 prefix.to_string_lossy().into_owned(),

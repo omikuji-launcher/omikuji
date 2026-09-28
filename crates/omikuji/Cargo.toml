@@ -5,6 +5,9 @@ description = "Qt/QML based wine apps launcher for Linux"
 license = "GPL-3.0-or-later"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 cxx = "1.0"
 cxx-qt = "0.10"

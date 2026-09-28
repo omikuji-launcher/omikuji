@@ -1,4 +1,7 @@
-use crate::library::SourceKind;
+use crate::fs_util::find_executable_in_paths;
+use crate::library::{Game, SourceKind};
+use crate::runners::is_proton_dir;
+use crate::settings;
 use anyhow::{Context, Result, anyhow};
 use std::collections::HashMap;
 use std::fs;
@@ -19,7 +22,7 @@ const STEAM_DATA_DIRS: &[&str] = &[
 
 // configured dirs come first because every lookup below takes the first hit
 pub fn steam_data_dirs() -> Vec<String> {
-    crate::settings::get()
+    settings::get()
         .steam
         .install_dirs
         .iter()
@@ -85,8 +88,7 @@ pub fn find_native_steam() -> Option<String> {
         .map(|d| format!("{}/steam.sh", d.trim_end_matches('/')))
         .collect();
     let refs: Vec<&str> = scripts.iter().map(String::as_str).collect();
-    crate::fs_util::find_executable_in_paths(&["steam", "steam.sh"], &refs)
-        .map(|p| p.to_string_lossy().to_string())
+    find_executable_in_paths(&["steam", "steam.sh"], &refs).map(|p| p.to_string_lossy().to_string())
 }
 
 pub fn flatpak_steam_installed() -> bool {
@@ -547,7 +549,7 @@ fn push_protons_from(parent: &Path, out: &mut Vec<(String, PathBuf)>) {
     };
     for e in entries.flatten() {
         let p = e.path();
-        if crate::runners::is_proton_dir(&p)
+        if is_proton_dir(&p)
             && let Some(name) = p.file_name().and_then(|n| n.to_str())
         {
             out.push((name.to_string(), p));
@@ -647,7 +649,7 @@ pub fn resolve_or_default_proton(name: Option<&str>) -> Option<PathBuf> {
     default_proton_install()
 }
 
-pub fn with_steam_wine(game: &crate::library::Game) -> Result<Option<crate::library::Game>> {
+pub fn with_steam_wine(game: &Game) -> Result<Option<Game>> {
     if game.source.kind != SourceKind::Steam || game.source.app_id.is_empty() {
         return Ok(None);
     }

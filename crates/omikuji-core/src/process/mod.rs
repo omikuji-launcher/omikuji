@@ -1,5 +1,12 @@
+use crate::app_settings::AppSettings;
 use crate::event_queue::EventQueue;
+use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, alongside};
+use crate::library::{Game, Library};
+use crate::store::epic;
+use crate::{discord, dll_packs, game_logs, runners};
 use anyhow::Result;
+use nix::fcntl::{Flock, FlockArg};
+use nix::unistd::setsid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -18,43 +25,42 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst))
 }
 
-fn prepare_runtime(game: &crate::library::Game, env: &HashMap<String, String>) {
+fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
     if game.is_epic() {
         let wine_exe = env
             .get("WINE")
             .map(std::path::PathBuf::from)
             .unwrap_or_else(|| std::path::PathBuf::from("wine"));
-        let _ = crate::launch::prepare_epic_prefix(game, &wine_exe, env);
+        let _ = launch::prepare_epic_prefix(game, &wine_exe, env);
     }
 
     // steam manages its own prefix, skip dll injection for it
     if !game.runner.runner_type.is_steam()
-        && let Err(e) = crate::dll_packs::inject_all(game, env)
+        && let Err(e) = dll_packs::inject_all(game, env)
     {
         tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
     }
 
     if !game.runner.runner_type.is_steam()
-        && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
-        && let Err(e) = crate::runners::bundled_layers::apply_for_launch(&runner_dir, game, env)
+        && let Some(runner_dir) = runners::runner_dir(&game.wine.version)
+        && let Err(e) = runners::bundled_layers::apply_for_launch(&runner_dir, game, env)
     {
         tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
     }
 
-    if crate::runners::proton_monkey_patch::VARS
+    if runners::proton_monkey_patch::VARS
         .iter()
         .any(|var| env.contains_key(*var))
-        && let Some(runner_dir) = crate::runners::runner_dir(&game.wine.version)
+        && let Some(runner_dir) = runners::runner_dir(&game.wine.version)
     {
-        crate::runners::proton_monkey_patch::ensure_installed(&runner_dir);
+        runners::proton_monkey_patch::ensure_installed(&runner_dir);
     }
 
     // download saves before the game opens its save files
     if game.is_epic()
         && game.source.cloud_saves
         && !game.source.save_path.is_empty()
-        && let Err(e) =
-            crate::store::epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
+        && let Err(e) = epic::sync_saves_download(&game.source.app_id, &game.source.save_path)
     {
         tracing::warn!("cloud save download failed: {} (launching anyway)", e);
     }
@@ -104,19 +110,17 @@ impl ProcessManager {
         }
     }
 
-    pub async fn launch(&self, config: &crate::launch::ResolvedLaunch) -> Result<ProcessId> {
-        let game = crate::library::Library::load_game_by_id(&config.game_id)?
+    pub async fn launch(&self, config: &ResolvedLaunch) -> Result<ProcessId> {
+        let game = Library::load_game_by_id(&config.game_id)?
             .ok_or_else(|| anyhow::anyhow!("game not found in library"))?;
 
         prepare_runtime(&game, &config.env);
 
         // drop stale in-memory log from the previous session before streaming new lines
-        crate::game_logs::reset_log(&config.game_id);
+        game_logs::reset_log(&config.game_id);
 
         // save_game_logs is opt-in; we still run the reader so the log viewer works
-        let save_to_disk = crate::app_settings::AppSettings::load()
-            .behavior
-            .save_game_logs;
+        let save_to_disk = AppSettings::load().behavior.save_game_logs;
         let log_path = if save_to_disk {
             tokio::fs::create_dir_all(&self.logs_dir).await.ok();
             crate::stamped_log_path(&config.game_id)
@@ -134,7 +138,7 @@ impl ProcessManager {
             config.env.len()
         );
         for line in header.lines() {
-            crate::game_logs::append_line(&config.game_id, line.to_string());
+            game_logs::append_line(&config.game_id, line.to_string());
         }
 
         let mut cmd = config.to_command()?;
@@ -151,21 +155,21 @@ impl ProcessManager {
             use std::os::unix::process::CommandExt;
             unsafe {
                 cmd.pre_exec(|| {
-                    nix::unistd::setsid()
+                    setsid()
                         .map(|_| ())
                         .map_err(|e| std::io::Error::from_raw_os_error(e as i32))
                 });
             }
         }
 
-        crate::launch::alongside::start(&game, &config.env).await;
+        alongside::start(&game, &config.env).await;
 
         let mut child = cmd.spawn()?;
         let pid = child.id();
 
         tracing::info!("spawned pid: {}", pid);
 
-        crate::discord::set_playing(&game);
+        discord::set_playing(&game);
 
         let stdout_pipe = child.stdout.take();
         let stderr_pipe = child.stderr.take();
@@ -190,7 +194,7 @@ impl ProcessManager {
                     if let Some(ref mut f) = file {
                         let _ = writeln!(f, "{}", line);
                     }
-                    crate::game_logs::append_line(&game_id, line);
+                    game_logs::append_line(&game_id, line);
                 }
             });
         }
@@ -228,7 +232,7 @@ impl ProcessManager {
         pid: u32,
         proc_id: ProcessId,
         started_at: Instant,
-        config: &crate::launch::ResolvedLaunch,
+        config: &ResolvedLaunch,
     ) {
         let sessions = self.sessions.clone();
         let game_id = config.game_id.clone();
@@ -243,7 +247,7 @@ impl ProcessManager {
             // wait until every process in the session exits, not just the
             // tracked parent. legendary and umu-run hand off to wine, so the
             // parent exits early while the real game is still running.
-            if let Ok(Some(game)) = crate::library::Library::load_game_by_id(&game_id) {
+            if let Ok(Some(game)) = Library::load_game_by_id(&game_id) {
                 if !game.runner.runner_type.is_steam() {
                     while session_has_live_process(pid) {
                         std::thread::sleep(Duration::from_millis(500));
@@ -254,10 +258,8 @@ impl ProcessManager {
                 if game.is_epic()
                     && game.source.cloud_saves
                     && !game.source.save_path.is_empty()
-                    && let Err(e) = crate::store::epic::sync_saves_upload(
-                        &game.source.app_id,
-                        &game.source.save_path,
-                    )
+                    && let Err(e) =
+                        epic::sync_saves_upload(&game.source.app_id, &game.source.save_path)
                 {
                     tracing::warn!(pid, "cloud save upload failed: {}", e);
                 }
@@ -283,7 +285,7 @@ impl ProcessManager {
                 playtime_secs
             );
 
-            crate::discord::clear();
+            discord::clear();
 
             notify_game_exited(&game_id);
 
@@ -304,12 +306,12 @@ impl ProcessManager {
                 }
             }
 
-            match crate::library::Library::load_game_by_id(&game_id) {
+            match Library::load_game_by_id(&game_id) {
                 Ok(Some(mut game)) => {
                     game.metadata.playtime += playtime_secs as f64 / 3600.0;
                     game.metadata.last_played =
                         chrono::Local::now().format("%b %-d, %Y").to_string();
-                    if let Err(e) = crate::library::Library::save_game_static(&game) {
+                    if let Err(e) = Library::save_game_static(&game) {
                         tracing::error!(pid, "failed to save playtime: {}", e);
                     }
                 }
@@ -379,7 +381,7 @@ pub fn is_launching(game_id: &str) -> bool {
 }
 
 pub struct LaunchSoulGuard {
-    _lock: nix::fcntl::Flock<std::fs::File>,
+    _lock: Flock<std::fs::File>,
 }
 // yes this is a dbd reference, yes im mentally ill, yes fuck you too
 
@@ -405,7 +407,7 @@ pub fn try_claim_launch(game_id: &str) -> Option<LaunchSoulGuard> {
         .open(launch_lock_path(game_id))
         .ok()?;
 
-    nix::fcntl::Flock::lock(file, nix::fcntl::FlockArg::LockExclusiveNonblock)
+    Flock::lock(file, FlockArg::LockExclusiveNonblock)
         .ok()
         .map(|lock| LaunchSoulGuard { _lock: lock })
 }
@@ -492,6 +494,25 @@ pub struct UpdateNotification {
     pub can_diff: bool,
     // false = game doesnt ship deltas at all (e.g. hi3 today), distinct from "your version too old to delta"
     pub delta_supported: bool,
+    pub kind: UpdateKind,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum UpdateKind {
+    #[default]
+    Required,
+    PreDownloaded,
+    PreDownload,
+}
+
+impl UpdateKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Required => "required",
+            Self::PreDownloaded => "predownloaded",
+            Self::PreDownload => "predownload",
+        }
+    }
 }
 
 static UPDATE_REQUIRED: EventQueue<UpdateNotification> = EventQueue::new(10);
@@ -513,12 +534,9 @@ pub enum ErrorAction {
 
 impl ErrorAction {
     pub fn for_launch_error(e: &anyhow::Error) -> Self {
-        if e.downcast_ref::<crate::launch::StoreSignedOut>().is_some() {
+        if e.downcast_ref::<StoreSignedOut>().is_some() {
             Self::OpenEpicStore
-        } else if e
-            .downcast_ref::<crate::launch::ComponentMissing>()
-            .is_some()
-        {
+        } else if e.downcast_ref::<ComponentMissing>().is_some() {
             Self::OpenGlobalSettings
         } else {
             Self::OpenGameSettings
@@ -557,7 +575,7 @@ pub fn manager() -> &'static ProcessManager {
     &MANAGER
 }
 
-pub async fn launch_game(config: &crate::launch::ResolvedLaunch) -> Result<ProcessId> {
+pub async fn launch_game(config: &ResolvedLaunch) -> Result<ProcessId> {
     manager().launch(config).await
 }
 
@@ -578,7 +596,7 @@ pub fn stop_game(game_id: &str) -> bool {
     }
 
     // for non-steam games, pid == sid (we called setsid on spawn. [my head hurts])
-    let is_steam = crate::library::Library::load_game_by_id(game_id)
+    let is_steam = Library::load_game_by_id(game_id)
         .ok()
         .flatten()
         .map(|g| g.runner.runner_type.is_steam())
@@ -765,7 +783,7 @@ fn running_marked_ids() -> HashSet<String> {
     let ids: HashSet<String> = by_game
         .into_iter()
         .filter(|(game_id, pids)| {
-            crate::library::Library::load_game_by_id(game_id)
+            Library::load_game_by_id(game_id)
                 .ok()
                 .flatten()
                 .and_then(|g| {

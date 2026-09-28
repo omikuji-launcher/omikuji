@@ -4,9 +4,10 @@ use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
 use lazy_static::lazy_static;
-use omikuji_core::library::SourceKind;
+use omikuji_core::components;
+use omikuji_core::library::{Library, SourceKind};
 use omikuji_core::store::StoreGame;
-use omikuji_core::store::gog::GogStore;
+use omikuji_core::store::gog::{self, GogStore};
 use std::collections::HashMap;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -130,7 +131,7 @@ impl Default for GogModelRust {
             is_logged_in,
             is_refreshing: false,
             display_name,
-            tool_ready: omikuji_core::components::ready(&omikuji_core::components::gog_tools()),
+            tool_ready: components::ready(&components::gog_tools()),
             tool_installing: false,
         }
     }
@@ -165,7 +166,7 @@ impl qobject::GogModel {
         self.as_mut().set_tool_installing(true);
         let qt_thread = self.as_mut().qt_thread();
         tokio::spawn(async move {
-            let ok = omikuji_core::components::ensure(&omikuji_core::components::gog_tools())
+            let ok = components::ensure(&components::gog_tools())
                 .await
                 .map_err(|e| tracing::error!("gog tools install failed: {}", e))
                 .is_ok();
@@ -177,7 +178,7 @@ impl qobject::GogModel {
     }
 
     pub fn refresh_tools(mut self: Pin<&mut Self>) {
-        let ready = omikuji_core::components::ready(&omikuji_core::components::gog_tools());
+        let ready = components::ready(&components::gog_tools());
         self.as_mut().set_tool_ready(ready);
     }
 
@@ -235,8 +236,8 @@ impl qobject::GogModel {
 
         tokio::spawn(async move {
             let (cached, ids_pre) = tokio::task::spawn_blocking(|| {
-                let games = omikuji_core::store::gog::load_cached_library();
-                let ids = omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Gog);
+                let games = gog::load_cached_library();
+                let ids = Library::game_ids_by_app_id(SourceKind::Gog);
                 (games, ids)
             })
             .await
@@ -263,7 +264,7 @@ impl qobject::GogModel {
             match result {
                 Ok(games) => {
                     let ids = tokio::task::spawn_blocking(|| {
-                        omikuji_core::library::Library::game_ids_by_app_id(SourceKind::Gog)
+                        Library::game_ids_by_app_id(SourceKind::Gog)
                     })
                     .await
                     .unwrap_or_default();

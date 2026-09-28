@@ -1,3 +1,5 @@
+use crate::fs_util::write_atomic;
+use crate::media;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::path::PathBuf;
@@ -35,7 +37,7 @@ pub fn save_library<T: Serialize>(store: &str, games: &[T]) {
             return;
         }
     };
-    if let Err(e) = crate::fs_util::write_atomic(&library_path(store), body) {
+    if let Err(e) = write_atomic(&library_path(store), body) {
         tracing::error!("{} library cache write failed: {}", store, e);
     }
 }
@@ -52,7 +54,7 @@ pub fn resolve_image(
     if url.is_empty() {
         return None;
     }
-    crate::media::fetch_cached_image(
+    media::fetch_cached_image(
         &image_path(store, app_name, kind),
         &transform(url),
         format!("{}_{}_{}", store, app_name, kind),

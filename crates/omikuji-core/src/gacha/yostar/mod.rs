@@ -6,6 +6,7 @@ pub mod update;
 use anyhow::{Result, anyhow, bail};
 
 use crate::gacha::manifest::GachaManifest;
+use crate::gacha::state;
 
 #[derive(Debug, Clone)]
 pub struct EditionApi {
@@ -93,5 +94,5 @@ pub fn verify_edition_on_disk(
 
 // no unity fallback: package and client versions differ, a wrong stamp = phantom update
 pub fn read_install_version(install_path: &std::path::Path, _data_folder: &str) -> Option<String> {
-    crate::gacha::state::read_install_dotversion(install_path)
+    state::read_install_dotversion(install_path)
 }

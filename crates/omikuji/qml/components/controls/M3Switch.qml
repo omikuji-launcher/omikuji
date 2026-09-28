@@ -9,8 +9,9 @@ Item {
 
     implicitWidth: 44
     implicitHeight: 26
+    opacity: enabled ? 1 : 0.45
 
-    readonly property bool navigable: true
+    readonly property bool navigable: enabled
     readonly property real navRingRadius: height / 2
     function navActivate() { toggled(!checked) }
 

@@ -11,6 +11,7 @@ use omikuji_core::archive_source::{self, ReleaseInfo};
 use omikuji_core::components_config::{self, ArchiveSource};
 use omikuji_core::dll_packs;
 use omikuji_core::runners;
+use omikuji_core::store::steam::local as steam_local;
 use std::pin::Pin;
 use std::thread;
 
@@ -575,7 +576,7 @@ impl qobject::ArchiveManagerBridge {
     }
 
     fn list_steam_roots(&self) -> QString {
-        let roots: Vec<(String, String)> = omikuji_core::store::steam::local::steam_install_roots()
+        let roots: Vec<(String, String)> = steam_local::steam_install_roots()
             .into_iter()
             .map(|(label, path)| (label, path.to_string_lossy().into_owned()))
             .collect();

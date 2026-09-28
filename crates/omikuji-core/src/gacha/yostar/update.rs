@@ -3,6 +3,7 @@ use anyhow::Result;
 use crate::gacha::manifest::GachaManifest;
 use crate::gacha::state;
 use crate::gacha::strategies::UpdateCheck;
+use crate::process::UpdateKind;
 
 // 0 like kuro's full sync: the real size depends on what already matches on disk
 pub async fn check_for_update(
@@ -23,5 +24,6 @@ pub async fn check_for_update(
         download_size: 0,
         can_diff: false,
         delta_supported: false,
+        kind: UpdateKind::Required,
     }))
 }

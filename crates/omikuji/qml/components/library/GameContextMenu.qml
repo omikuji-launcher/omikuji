@@ -63,6 +63,7 @@ Item {
             let isEpic = game.sourceKind === "epic" && game.sourceAppId && game.sourceAppId.length > 0
             let isGog = game.sourceKind === "gog" && game.sourceAppId && game.sourceAppId.length > 0
             let isNile = game.sourceKind === "nile" && game.sourceAppId && game.sourceAppId.length > 0
+            let isGacha = game.sourceKind === "gacha" && game.sourceAppId && game.sourceAppId.length > 0
             let hasDesktopShortcut = ctrl.gameModel.has_desktop_shortcut(index)
             let hasMenuShortcut = ctrl.gameModel.has_menu_shortcut(index)
 
@@ -89,7 +90,7 @@ Item {
             if (InputMode.keyboard && ctrl.canMove) {
                 built.push({ text: qsTr("Move"), action: "move" })
             }
-            if (isEpic || isGog || isNile) {
+            if (isEpic || isGog || isNile || isGacha) {
                 built.push({ text: qsTr("Check for updates"), action: "check_update", accent: true })
             }
             if (ctrl.gameModel.game_supports_repair(game.gameId)) {
@@ -203,11 +204,7 @@ Item {
                 }
                 case "check_update": {
                     let g = ctrl.gameModel.get_game(idx)
-                    if (g && g.gameId) {
-                        if (g.sourceKind === "gog") ctrl.gameModel.check_gog_update(g.gameId)
-                        else if (g.sourceKind === "nile") ctrl.gameModel.check_nile_update(g.gameId)
-                        else ctrl.gameModel.check_epic_update(g.gameId)
-                    }
+                    if (g && g.gameId) ctrl.gameModel.check_game_update(g.gameId)
                     break
                 }
                 case "repair": {

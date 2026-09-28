@@ -4,7 +4,7 @@ pub mod manifest;
 pub mod patcher;
 
 pub mod protos {
-    #![allow(clippy::all)]
+    #![allow(clippy::all, clippy::absolute_paths)]
     include!(concat!(env!("OUT_DIR"), "/sophon.rs"));
 }
 

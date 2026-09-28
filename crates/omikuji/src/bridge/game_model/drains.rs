@@ -1,9 +1,12 @@
 use cxx_qt_lib::QString;
 use std::pin::Pin;
 
+use omikuji_core::process::{self, ErrorAction, ErrorNotification};
+use omikuji_core::{install_sizes, notifications};
+
 impl super::qobject::GameModel {
     pub fn drain_notifications(mut self: Pin<&mut Self>) {
-        for n in omikuji_core::notifications::take_pending() {
+        for n in notifications::take_pending() {
             self.as_mut().notification(
                 &QString::from(n.level.as_str()),
                 &QString::from(&n.title),
@@ -13,7 +16,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn drain_launch_requests(mut self: Pin<&mut Self>) {
-        for request in omikuji_core::process::take_launch_requests() {
+        for request in process::take_launch_requests() {
             let index = self
                 .library
                 .game
@@ -24,21 +27,19 @@ impl super::qobject::GameModel {
             match index {
                 Some(i) if self.as_mut().launch_game(i) => continue,
                 Some(_) => {}
-                None => {
-                    omikuji_core::process::notify_error(omikuji_core::process::ErrorNotification {
-                        game_id: request.game_id.clone(),
-                        title: "Couldn't launch".to_string(),
-                        message: "This game is no longer in the library.".to_string(),
-                        action: omikuji_core::process::ErrorAction::None,
-                    })
-                }
+                None => process::notify_error(ErrorNotification {
+                    game_id: request.game_id.clone(),
+                    title: "Couldn't launch".to_string(),
+                    message: "This game is no longer in the library.".to_string(),
+                    action: ErrorAction::None,
+                }),
             }
             request.release();
         }
     }
 
     pub fn drain_update_notifications(mut self: Pin<&mut Self>) {
-        for n in omikuji_core::process::take_update_notifications() {
+        for n in process::take_update_notifications() {
             let display_name = self
                 .library
                 .game
@@ -55,12 +56,13 @@ impl super::qobject::GameModel {
                 &QString::from(&n.download_size.to_string()),
                 n.can_diff,
                 n.delta_supported,
+                &QString::from(n.kind.as_str()),
             );
         }
     }
 
     pub fn drain_errors(mut self: Pin<&mut Self>) {
-        for n in omikuji_core::process::take_errors() {
+        for n in process::take_errors() {
             let display_name = self
                 .library
                 .game
@@ -79,7 +81,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn drain_install_sizes(mut self: Pin<&mut Self>) {
-        for r in omikuji_core::install_sizes::take_pending() {
+        for r in install_sizes::take_pending() {
             let payload = serde_json::json!({
                 "download": r.download_bytes.to_string(),
                 "install": r.install_bytes.to_string(),
@@ -94,7 +96,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn drain_game_details(mut self: Pin<&mut Self>) {
-        for r in omikuji_core::install_sizes::take_details_pending() {
+        for r in install_sizes::take_details_pending() {
             self.as_mut()
                 .game_details_result(&QString::from(&r.request_id), &QString::from(&r.payload));
         }

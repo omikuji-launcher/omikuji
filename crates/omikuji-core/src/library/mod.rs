@@ -1,3 +1,6 @@
+use crate::defaults::Defaults;
+use crate::dll_packs;
+use crate::fs_util::write_atomic;
 use crate::media::slugify;
 use anyhow::{Context, Result};
 use indexmap::IndexMap;
@@ -5,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use toml::ser;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Game {
@@ -142,6 +146,8 @@ pub struct SourceConfig {
     // store dlc ids the user installed; updates must re-send these or gogdl drops the files apparently? i genuinely dont fully know
     #[serde(default)]
     pub dlcs: Vec<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub predownload_dismissed: String,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -257,7 +263,7 @@ fn default_true() -> bool {
     true
 }
 fn default_builtin() -> String {
-    crate::dll_packs::BUILTIN.to_string()
+    dll_packs::BUILTIN.to_string()
 }
 fn default_dpi() -> u32 {
     96
@@ -446,7 +452,7 @@ impl Metadata {
     }
     pub fn slug(&self) -> String {
         if self.slug.trim().is_empty() {
-            crate::media::slugify(&self.name)
+            slugify(&self.name)
         } else {
             self.slug.clone()
         }
@@ -517,7 +523,7 @@ impl Library {
                             .unwrap_or(std::time::UNIX_EPOCH);
                         game.metadata.added = rfc3339_of(t);
                         if let Ok(contents) = Self::game_toml(&game) {
-                            let _ = crate::fs_util::write_atomic(&path, contents);
+                            let _ = write_atomic(&path, contents);
                         }
                     }
                     games.push(game)
@@ -561,7 +567,7 @@ impl Library {
         Self::save_game_static(game)
     }
 
-    fn game_toml(game: &Game) -> Result<String, toml::ser::Error> {
+    fn game_toml(game: &Game) -> Result<String, ser::Error> {
         let contents = toml::to_string_pretty(game)?;
         Ok(contents.replace(
             "\n[source]\n",
@@ -588,8 +594,7 @@ impl Library {
         };
 
         let contents = Self::game_toml(game)?;
-        crate::fs_util::write_atomic(&path, contents)
-            .with_context(|| format!("writing {}", path.display()))?;
+        write_atomic(&path, contents).with_context(|| format!("writing {}", path.display()))?;
 
         Ok(())
     }
@@ -712,7 +717,7 @@ impl Game {
     }
 
     // skips fields the caller already set so per-source picks (steam:appid etc) survive
-    pub fn seed_from_defaults(&mut self, d: &crate::defaults::Defaults) {
+    pub fn seed_from_defaults(&mut self, d: &Defaults) {
         use crate::defaults::{CopyMode, FIELDS};
         d.apply_to(self, FIELDS.iter().map(|f| f.key), CopyMode::Seed);
     }

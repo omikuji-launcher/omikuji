@@ -3,6 +3,9 @@ use omikuji_core::app_settings::AppSettings;
 use omikuji_core::library::{Game, Library};
 use omikuji_core::process::{ErrorAction, ErrorNotification};
 use omikuji_core::{desktop, launch, process};
+
+use crate::bridge::game_model::launch::pre_launch_update_check;
+use crate::single_instance;
 use std::io::{self, IsTerminal, Write};
 
 #[derive(Parser)]
@@ -215,7 +218,7 @@ fn print_matches(matches: &[&Game]) {
 }
 
 fn launch_and_wait(game: &Game, report: &Report) -> i32 {
-    if report.gui && crate::single_instance::hand_off_launch(&game.metadata.id) {
+    if report.gui && single_instance::hand_off_launch(&game.metadata.id) {
         return 0;
     }
 
@@ -229,7 +232,7 @@ fn launch_and_wait(game: &Game, report: &Report) -> i32 {
     };
 
     if report.gui
-        && let Some(info) = crate::bridge::game_model::launch::pre_launch_update_check(game)
+        && let Some(info) = pre_launch_update_check(game)
     {
         process::notify_update_required(info);
         return 1;

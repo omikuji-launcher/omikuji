@@ -11,8 +11,11 @@ use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
     report_progress, set_status,
 };
+use crate::external::hpatchz;
+use crate::gacha::hoyo::source as hoyo_source;
 use crate::gacha::manifest::GachaManifest;
-use crate::gacha::state;
+use crate::gacha::{state, strategies};
+use crate::{fs_util, http, notifications};
 
 const PATCH_STAGING: &str = ".omikuji-patch";
 const PATCH_SCRATCH: &str = ".hpatchz";
@@ -27,7 +30,7 @@ struct ParsedGryphlineApp {
 }
 
 fn parse_app_id(app_id: &str) -> Result<ParsedGryphlineApp> {
-    let (manifest, edition_id, _) = crate::gacha::strategies::find_for_app_id(app_id)
+    let (manifest, edition_id, _) = strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
     let edition_label = manifest
         .edition(&edition_id)
@@ -173,7 +176,7 @@ async fn apply_patch_bundle(entry: &DownloadEntry, patch: &api::PatchInfo) -> Re
         let vfs_files = staging.join("vfs_files");
         let whole_files = vfs_files.join("files");
         if whole_files.is_dir() {
-            crate::fs_util::move_dir_all(&whole_files, &staging)?;
+            fs_util::move_dir_all(&whole_files, &staging)?;
         }
         apply_bundle_diffs(
             entry,
@@ -196,7 +199,7 @@ async fn apply_patch_bundle(entry: &DownloadEntry, patch: &api::PatchInfo) -> Re
     let _ = std::fs::remove_file(&delete_list_path);
 
     set_status(&entry.id, DownloadStatus::Extracting);
-    crate::fs_util::move_dir_all(&staging, &entry.install_path)?;
+    fs_util::move_dir_all(&staging, &entry.install_path)?;
     let _ = std::fs::remove_dir_all(&staging);
     Ok(())
 }
@@ -331,11 +334,11 @@ fn patch_bundle_file(
             continue;
         }
 
-        match crate::external::hpatchz::patch(&base, &blob, &out) {
+        match hpatchz::patch(&base, &blob, &out) {
             Ok(()) => {
                 let got = md5_of_file(&out)?;
                 if got == want {
-                    crate::fs_util::move_file(&out, &target)?;
+                    fs_util::move_file(&out, &target)?;
                     return Ok(true);
                 }
                 let _ = std::fs::remove_file(&out);
@@ -593,14 +596,7 @@ async fn apply_variant(
 
     let need_dl = !matches!(std::fs::metadata(&blob_path), Ok(m) if m.len() == variant.patch_size);
     if need_dl {
-        crate::gacha::hoyo::source::download_file(
-            &url,
-            &blob_path,
-            &entry.id,
-            0,
-            variant.patch_size,
-        )
-        .await?;
+        hoyo_source::download_file(&url, &blob_path, &entry.id, 0, variant.patch_size).await?;
     }
 
     let target_abs = install_path_for(
@@ -612,7 +608,7 @@ async fn apply_variant(
     .ok_or_else(|| anyhow!("couldn't locate install root for {}", file.name))?;
 
     let tmp_out = scratch.join(format!("{}.out", blob_name));
-    crate::external::hpatchz::patch(base_abs, &blob_path, &tmp_out)
+    hpatchz::patch(base_abs, &blob_path, &tmp_out)
         .map_err(|e| anyhow!("hpatchz({}): {}", file.name, e))?;
 
     let got = md5_of_file(&tmp_out)?;
@@ -733,7 +729,7 @@ async fn download_and_extract(
     let segments: Vec<PathBuf> = files
         .iter()
         .map(|f| {
-            crate::http::url_file_name(&f.url)
+            http::url_file_name(&f.url)
                 .map(|name| temp_dir.join(name))
                 .ok_or_else(|| anyhow!("no file name in {} url {}", label, f.url))
         })
@@ -751,14 +747,7 @@ async fn download_and_extract(
             format_bytes(f.package_size)
         );
 
-        crate::gacha::hoyo::source::download_file(
-            &f.url,
-            temp_path,
-            &entry.id,
-            so_far,
-            total_bytes,
-        )
-        .await?;
+        hoyo_source::download_file(&f.url, temp_path, &entry.id, so_far, total_bytes).await?;
 
         so_far += f.package_size;
     }
@@ -769,7 +758,7 @@ async fn download_and_extract(
 
     if let Some(first) = segments.first() {
         tracing::info!("extracting {} to {}", label, dest.display());
-        crate::notifications::info(
+        notifications::info(
             &entry.display_name,
             if label == "patch" {
                 "Applying update…"
@@ -778,12 +767,7 @@ async fn download_and_extract(
             },
         );
         set_status(&entry.id, DownloadStatus::Extracting);
-        crate::gacha::hoyo::source::extract_archive_with_password(
-            first,
-            dest,
-            Some(&entry.id),
-            password,
-        )?;
+        hoyo_source::extract_archive_with_password(first, dest, Some(&entry.id), password)?;
 
         for segment in &segments {
             let _ = std::fs::remove_file(segment);
