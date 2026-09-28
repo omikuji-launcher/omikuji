@@ -2,6 +2,34 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="en_US">
 <context>
+    <name>AddDialog</name>
+    <message>
+        <location filename="../qml/components/library/AddDialog.qml" line="15"/>
+        <source>Add game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/AddDialog.qml" line="16"/>
+        <source>Add a library entry for a game you have on disk</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/AddDialog.qml" line="22"/>
+        <source>Install script</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/AddDialog.qml" line="23"/>
+        <source>Use scripts to download and set up entries for you</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/library/AddDialog.qml" line="29"/>
+        <source>Add to library</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AddGamePage</name>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="23"/>
@@ -52,12 +80,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="322"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="309"/>
         <source>Fetching versions…</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="323"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="310"/>
         <source>%n version(s) available</source>
         <translation>
             <numerusform>%n version available</numerusform>
@@ -65,27 +93,27 @@
         </translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="324"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="311"/>
         <source>No versions loaded yet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="361"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="348"/>
         <source>Loading versions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="367"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="354"/>
         <source>Installed runners are still listed under Found runners.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="368"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="355"/>
         <source>No versions available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="417"/>
+        <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="404"/>
         <source>Always updates itself to the newest release</source>
         <translation type="unfinished"></translation>
     </message>
@@ -844,98 +872,98 @@
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="254"/>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="422"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="438"/>
         <source>Install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="294"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="297"/>
         <source>Legendary allows only one install. To reinstall elsewhere, delete the game files first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="303"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="307"/>
         <source>Installation path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="321"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="327"/>
         <source>Calculating size…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="323"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="329"/>
         <source>Size unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="325"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="331"/>
         <source>%1 install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="327"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="333"/>
         <source>%1 download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="332"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="338"/>
         <source>%1 free</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="351"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="360"/>
         <source>Prefix path (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="352"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="361"/>
         <source>auto — created per game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="362"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="371"/>
         <source>Runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="376"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="386"/>
         <source>DLC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="402"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="414"/>
         <source>Hide details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="402"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="414"/>
         <source>Show details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="410"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="423"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="417"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="433"/>
         <source>Install DLC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="418"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="434"/>
         <source>Repair</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="418"/>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="421"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="434"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="437"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="420"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="436"/>
         <source>Resume</source>
         <translation type="unfinished"></translation>
     </message>
@@ -975,6 +1003,341 @@
         <location filename="../qml/components/dialogs/ErrorDialog.qml" line="18"/>
         <location filename="../qml/components/dialogs/ErrorDialog.qml" line="127"/>
         <source>Open Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EssentialsTour</name>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="14"/>
+        <source>Your library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="15"/>
+        <source>Every game you add or install from a store ends up here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="19"/>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="25"/>
+        <source>Adding a game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="20"/>
+        <source>Got a game that isn&apos;t from a store? Press + to add it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="26"/>
+        <source>Pick &apos;Add game&apos; to set it up by hand.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="31"/>
+        <source>Game&apos;s name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="32"/>
+        <source>This is what shows up on its card in the library.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="36"/>
+        <source>What kind of game is this?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="37"/>
+        <source>&apos;Wine&apos; runs Windows games, &apos;Native&apos; runs Linux binaries, &apos;Steam&apos; and &apos;Flatpak&apos; run the game from them. We&apos;ll use &apos;Wine&apos; for this tour!</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="41"/>
+        <source>Runner options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="42"/>
+        <source>What the game launches and what it runs through live in the Runner tab.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="43"/>
+        <source>Open the Runner tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="48"/>
+        <source>The executable path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="49"/>
+        <source>Add the path of the executable that starts the game.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="53"/>
+        <source>Pick a runner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="54"/>
+        <source>The Wine or Proton build the game runs with. Do you have any installed yet?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="58"/>
+        <source>Translation layers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="59"/>
+        <source>Layers are on by default. Turning one off really disables it, so only touch them if you know what you&apos;re doing.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="60"/>
+        <source>You can also pick which version each layer uses, the docs explain it better.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="64"/>
+        <source>System options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="65"/>
+        <source>Here you can find general game options.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="66"/>
+        <source>Environment variables, Discord RPC, GameMode, MangoHud, etc.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="67"/>
+        <source>Open the System tab</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="72"/>
+        <source>Environment variables</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="73"/>
+        <source>Here you can add or remove environment variables.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="74"/>
+        <source>Left field is the variable name, right field is the value.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="78"/>
+        <source>Your turn</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="79"/>
+        <source>Fill in the fields shown if you wish to add a game right now or close the dialog to carry on with the tour.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="84"/>
+        <source>Stores</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="85"/>
+        <source>Stores behave a little differently, but nothing too special.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="86"/>
+        <source>Steam is read straight from your config. Epic, GOG and Amazon show their libraries once you log in. Gachas install directly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="90"/>
+        <source>Let&apos;s peek at Epic</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="91"/>
+        <source>We&apos;ll look at Epic Games, it&apos;s the most common one and behaves like GOG and Amazon.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="92"/>
+        <source>Open Epic Games</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="97"/>
+        <source>The login</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="98"/>
+        <source>Press &apos;Open Login Page&apos;, log in and paste the authorization code it gives you.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="99"/>
+        <source>If the store&apos;s tool is missing, an &apos;Install&apos; button shows up here first. Once you&apos;re logged in, your library shows up here as cards, ready to install or import.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="104"/>
+        <source>Store&apos;s library</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="105"/>
+        <source>This is how your games would look. Of course your games will never beat these ones.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="110"/>
+        <source>Installing a game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="111"/>
+        <source>Press &apos;+&apos; on a card to open the install/import dialog.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="112"/>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="154"/>
+        <source>Press + or Enter on the card</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="118"/>
+        <source>Installation path</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="119"/>
+        <source>The folder the game gets installed into.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="124"/>
+        <source>Prefix and runner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="125"/>
+        <source>Where the game&apos;s Wine prefix lives and the runner to run the game with.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="130"/>
+        <source>DLC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="131"/>
+        <source>Pick which DLC to install alongside the game, if any available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="136"/>
+        <source>Install</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="137"/>
+        <source>This queues the download. Once it&apos;s done, the game shows up in your library with the options you picked here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="138"/>
+        <source>We won&apos;t press it, clearly.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="143"/>
+        <source>Close it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="144"/>
+        <source>Let&apos;s close this for now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="145"/>
+        <source>Press Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="151"/>
+        <source>Importing a game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="152"/>
+        <source>A game from a store (Epic Games, GOG, Amazon or Gachas) has to be imported from that store&apos;s page, otherwise Omikuji can&apos;t keep track of it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="153"/>
+        <source>That covers its state, updates, launching, etc.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="160"/>
+        <source>Point it at the game&apos;s folder</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="161"/>
+        <source>Point the installation path at the game&apos;s folder on disk so Omikuji can import it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="162"/>
+        <source>If Epic, GOG or Amazon already know about the game (their JSON registries), the path is filled in for you. For Gachas, point the path, pick the game&apos;s region and you&apos;re done.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="167"/>
+        <source>Found it</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="168"/>
+        <source>This shows up when game files are found at that path.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="173"/>
+        <source>Import</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="174"/>
+        <source>If the game can be imported, the button turns into &apos;Import&apos;, which adds it to your library.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="180"/>
+        <source>Enjoy Omikuji~</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/EssentialsTour.qml" line="181"/>
+        <source>Don&apos;t fret if you meet Moyu around. He&apos;s overworking.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1343,32 +1706,32 @@
 <context>
     <name>GameContextMenu</name>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="70"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="71"/>
         <source>Remove desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="70"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="71"/>
         <source>Create desktop shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="71"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="72"/>
         <source>Remove application menu shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="71"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="72"/>
         <source>Create application menu shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="75"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="76"/>
         <source>Remove Steam shortcut</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="75"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="76"/>
         <source>Create Steam shortcut</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1388,108 +1751,108 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="80"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="81"/>
         <source>Show logs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="81"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="82"/>
         <source>Configure</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="82"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="83"/>
         <source>Categories</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="83"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="84"/>
         <source>Browse files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="84"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="85"/>
         <source>Remove from favorites</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="84"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="85"/>
         <source>Add to favorites</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="85"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="86"/>
         <source>Unhide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="85"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="86"/>
         <source>Hide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="86"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="87"/>
         <source>Shortcuts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="87"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="88"/>
         <source>Duplicate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="90"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="91"/>
         <source>Move</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="93"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="94"/>
         <source>Check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="96"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="97"/>
         <source>Repair</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="99"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="100"/>
         <source>Uninstall (Epic Games)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="101"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="102"/>
         <source>Uninstall (GOG)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="103"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="104"/>
         <source>Uninstall (Amazon)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="105"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="106"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="107"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="108"/>
         <source>Remove + prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="183"/>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="196"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="184"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="197"/>
         <source>this game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="185"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="186"/>
         <source>Remove %1 + prefix?</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/components/library/GameContextMenu.qml" line="187"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="188"/>
         <source>This removes %1 and deletes its prefix. %n other game(s) use this prefix and will lose it too. It won&apos;t be recoverable.</source>
         <translation>
             <numerusform>This removes %1 and deletes its prefix. %n other game uses this prefix and will lose it too. It won&apos;t be recoverable.</numerusform>
@@ -1497,42 +1860,42 @@
         </translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="188"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="189"/>
         <source>This removes %1 and deletes its prefix. It won&apos;t be recoverable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="196"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="197"/>
         <source>Uninstall %1?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="199"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="200"/>
         <source>The game files will be deleted from disk. This cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="198"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="199"/>
         <source>Legendary will delete the game files from disk. This cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="225"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="222"/>
         <source>Uninstall</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="226"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="223"/>
         <source>Keep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="239"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="236"/>
         <source>Remove + delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/library/GameContextMenu.qml" line="240"/>
+        <location filename="../qml/components/library/GameContextMenu.qml" line="237"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1639,42 +2002,42 @@
 <context>
     <name>GlobalSettingsPage</name>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="34"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="35"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="46"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="47"/>
         <source>App</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="47"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="48"/>
         <source>Interface</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="48"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="49"/>
         <source>Defaults</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="49"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="50"/>
         <source>Presets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="50"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="51"/>
         <source>Components</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="52"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="53"/>
         <source>Theme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="53"/>
+        <location filename="../qml/components/settings/GlobalSettingsPage.qml" line="54"/>
         <source>About</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1906,11 +2269,16 @@
     </message>
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="12"/>
-        <source>Repair</source>
+        <source>Pre-download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="13"/>
+        <source>Repair</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/KindChip.qml" line="14"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1974,234 +2342,239 @@
 <context>
     <name>Main</name>
     <message>
-        <location filename="../qml/Main.qml" line="212"/>
+        <location filename="../qml/Main.qml" line="226"/>
         <source>Updating %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="255"/>
+        <location filename="../qml/Main.qml" line="269"/>
         <source>Starting download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="263"/>
+        <location filename="../qml/Main.qml" line="277"/>
         <source>Extracting %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="264"/>
+        <location filename="../qml/Main.qml" line="278"/>
         <source>Downloading %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="272"/>
+        <location filename="../qml/Main.qml" line="286"/>
         <source>%1 updated</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="280"/>
+        <location filename="../qml/Main.qml" line="294"/>
         <source>Couldn&apos;t update %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="326"/>
+        <location filename="../qml/Main.qml" line="340"/>
         <source>%1 failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="326"/>
+        <location filename="../qml/Main.qml" line="340"/>
         <source>Retry it from the Downloads tab.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="371"/>
+        <location filename="../qml/Main.qml" line="385"/>
         <source> gacha</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="372"/>
+        <location filename="../qml/Main.qml" line="386"/>
         <source>Updates available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="372"/>
+        <location filename="../qml/Main.qml" line="386"/>
         <source>%1 queued in Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="383"/>
+        <location filename="../qml/Main.qml" line="397"/>
         <source>Queued</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="928"/>
+        <location filename="../qml/Main.qml" line="922"/>
         <source>This will stop &quot;%1&quot; and delete the partially downloaded files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="933"/>
+        <location filename="../qml/Main.qml" line="927"/>
         <source>Nile cannot resume a partial file. Pausing &quot;%1&quot; throws away the %2 it is currently writing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1019"/>
+        <location filename="../qml/Main.qml" line="1013"/>
         <source>Cancel download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1020"/>
+        <location filename="../qml/Main.qml" line="1014"/>
         <source>Cancel &amp; delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1021"/>
+        <location filename="../qml/Main.qml" line="1015"/>
         <source>Keep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1029"/>
+        <location filename="../qml/Main.qml" line="1023"/>
         <source>Pause download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1030"/>
+        <location filename="../qml/Main.qml" line="1024"/>
         <source>Pause anyway</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1031"/>
+        <location filename="../qml/Main.qml" line="1025"/>
         <source>Keep downloading</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1039"/>
+        <location filename="../qml/Main.qml" line="1033"/>
         <source>Refetch art from SGDB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1040"/>
+        <location filename="../qml/Main.qml" line="1034"/>
         <source>Replaces the cached banner, cover art, and icon with a fresh pull from SteamGridDB. Manual overrides you&apos;ve set won&apos;t be touched.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1041"/>
+        <location filename="../qml/Main.qml" line="1035"/>
         <source>Refetch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1042"/>
-        <location filename="../qml/Main.qml" line="1404"/>
+        <location filename="../qml/Main.qml" line="1036"/>
+        <location filename="../qml/Main.qml" line="1407"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1049"/>
+        <location filename="../qml/Main.qml" line="1043"/>
         <source>Art preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1073"/>
+        <location filename="../qml/Main.qml" line="1067"/>
         <source>Environment sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1074"/>
+        <location filename="../qml/Main.qml" line="1068"/>
         <source>Manage env sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1085"/>
+        <location filename="../qml/Main.qml" line="1079"/>
         <source>DLL override sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1086"/>
+        <location filename="../qml/Main.qml" line="1080"/>
         <source>Manage DLL sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1157"/>
+        <location filename="../qml/Main.qml" line="1151"/>
         <source>Removes &quot;%1&quot; from your sources. Installed versions stay on disk and keep working; adding a source with the same name picks them up again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1185"/>
+        <location filename="../qml/Main.qml" line="1179"/>
         <source>Couldn&apos;t delete runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1186"/>
+        <location filename="../qml/Main.qml" line="1180"/>
         <source>%1 deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1199"/>
+        <location filename="../qml/Main.qml" line="1193"/>
         <source>Couldn&apos;t update Steam links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1204"/>
+        <location filename="../qml/Main.qml" line="1198"/>
         <source>Steam links updated for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1204"/>
-        <location filename="../qml/Main.qml" line="1215"/>
+        <location filename="../qml/Main.qml" line="1198"/>
+        <location filename="../qml/Main.qml" line="1209"/>
         <source>Restart Steam to see it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1215"/>
+        <location filename="../qml/Main.qml" line="1209"/>
         <source>%1 moved to Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1223"/>
+        <location filename="../qml/Main.qml" line="1217"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1228"/>
+        <location filename="../qml/Main.qml" line="1222"/>
         <source>Couldn&apos;t remove source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1253"/>
+        <location filename="../qml/Main.qml" line="1251"/>
         <source>Update queued</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1255"/>
+        <location filename="../qml/Main.qml" line="1248"/>
         <source>Update failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1255"/>
+        <location filename="../qml/Main.qml" line="1248"/>
         <source>Could not enqueue update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1294"/>
+        <location filename="../qml/Main.qml" line="1252"/>
+        <source>Pre-download queued</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/Main.qml" line="1290"/>
         <source>Installing umu-run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1295"/>
+        <location filename="../qml/Main.qml" line="1291"/>
         <source>See Downloads for progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1344"/>
+        <location filename="../qml/Main.qml" line="1348"/>
         <source>Game added</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1371"/>
+        <location filename="../qml/Main.qml" line="1374"/>
         <source>Translation layers changed</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1373"/>
+        <location filename="../qml/Main.qml" line="1376"/>
         <source>Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.
 
 So %n Proton game(s) would start running on Wine&apos;s own Direct3D instead of what they use today. Turning those toggles back on keeps them exactly as they are.
@@ -2227,17 +2600,17 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1374"/>
+        <location filename="../qml/Main.qml" line="1377"/>
         <source>Update games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1375"/>
+        <location filename="../qml/Main.qml" line="1378"/>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1387"/>
+        <location filename="../qml/Main.qml" line="1390"/>
         <source>This deletes the prefix and everything in it. %n game(s) use it, and it won&apos;t be recoverable.</source>
         <translation>
             <numerusform>This deletes the prefix and everything in it. %n game uses it, and it won&apos;t be recoverable.</numerusform>
@@ -2245,57 +2618,57 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1388"/>
+        <location filename="../qml/Main.qml" line="1391"/>
         <source>This deletes the prefix and everything in it. It won&apos;t be recoverable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1402"/>
+        <location filename="../qml/Main.qml" line="1405"/>
         <source>Delete prefix?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1403"/>
+        <location filename="../qml/Main.qml" line="1406"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1448"/>
+        <location filename="../qml/Main.qml" line="1451"/>
         <source>Configure (winecfg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1450"/>
+        <location filename="../qml/Main.qml" line="1453"/>
         <source>Registry (regedit)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1451"/>
+        <location filename="../qml/Main.qml" line="1454"/>
         <source>Command Prompt (cmd)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1452"/>
+        <location filename="../qml/Main.qml" line="1455"/>
         <source>File Explorer (explorer)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1453"/>
+        <location filename="../qml/Main.qml" line="1456"/>
         <source>Run EXE in prefix…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1454"/>
+        <location filename="../qml/Main.qml" line="1457"/>
         <source>Run wine command…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1455"/>
+        <location filename="../qml/Main.qml" line="1458"/>
         <source>Kill wineserver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1473"/>
+        <location filename="../qml/Main.qml" line="1483"/>
         <source>Select EXE to run in prefix</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2448,17 +2821,17 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/NavTabs.qml" line="525"/>
+        <location filename="../qml/components/navigation/NavTabs.qml" line="530"/>
         <source>Downloads (%1)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/NavTabs.qml" line="525"/>
+        <location filename="../qml/components/navigation/NavTabs.qml" line="530"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/NavTabs.qml" line="536"/>
+        <location filename="../qml/components/navigation/NavTabs.qml" line="541"/>
         <source>Settings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2788,27 +3161,27 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
 <context>
     <name>PrefixPrepDialog</name>
     <message>
-        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="25"/>
+        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="22"/>
         <source>Preparing prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="56"/>
+        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="52"/>
         <source>prefix setup failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="70"/>
-        <source>First launch for this game, setting up the wine prefix. It&apos;ll start once this finishes.</source>
+        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="66"/>
+        <source>This game&apos;s wine prefix doesn&apos;t exist yet, setting it up first. It&apos;ll continue once this finishes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="87"/>
+        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="83"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="87"/>
+        <location filename="../qml/components/prefixes/PrefixPrepDialog.qml" line="83"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3009,28 +3382,28 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="273"/>
+        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="200"/>
         <source>Couldn&apos;t remove the script.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="288"/>
+        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="215"/>
         <source>No scripts installed yet.
 Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="289"/>
+        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="216"/>
         <source>No scripts match your search.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="297"/>
+        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="224"/>
         <source>Use local</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="303"/>
+        <location filename="../qml/components/scripts/ScriptBrowserDialog.qml" line="230"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3528,22 +3901,22 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>StoreLibraryBase</name>
     <message>
-        <location filename="../qml/components/store/StoreLibraryBase.qml" line="94"/>
+        <location filename="../qml/components/store/StoreLibraryBase.qml" line="98"/>
         <source>Logged in as: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLibraryBase.qml" line="102"/>
+        <location filename="../qml/components/store/StoreLibraryBase.qml" line="106"/>
         <source>Games found</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLibraryBase.qml" line="196"/>
+        <location filename="../qml/components/store/StoreLibraryBase.qml" line="206"/>
         <source>Loading library</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLibraryBase.qml" line="210"/>
+        <location filename="../qml/components/store/StoreLibraryBase.qml" line="220"/>
         <source>No games in this store</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3551,32 +3924,32 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>StoreLoginOverlay</name>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="53"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="56"/>
         <source>Open Login Page</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="71"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="74"/>
         <source>Paste authorization code here...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="79"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="82"/>
         <source>Login</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="96"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="99"/>
         <source>Installing %1...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="97"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="100"/>
         <source>No %1 found. Install it to log in.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="107"/>
+        <location filename="../qml/components/store/StoreLoginOverlay.qml" line="110"/>
         <source>Install %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3642,67 +4015,67 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="33"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="34"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="40"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="43"/>
         <source>Sort Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="41"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="44"/>
         <source>optional, for custom sort order</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="48"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="51"/>
         <source>Slug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="49"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="52"/>
         <source>for API lookups (auto-derived from name)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="56"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="60"/>
         <source>Runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="79"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="85"/>
         <source>It seems you&apos;re using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="84"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="90"/>
         <source>Images</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="90"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="96"/>
         <source>Banner Override</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="91"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="97"/>
         <source>Cover Art Override</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="92"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="98"/>
         <source>Icon Override</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="114"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="120"/>
         <source>Refetch art</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="120"/>
+        <location filename="../qml/components/settings/game/TabGameInfo.qml" line="126"/>
         <source>Color</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3710,52 +4083,72 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>TabGlobalAbout</name>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="39"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="41"/>
         <source>QtQuick based game launcher for Linux.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="44"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="46"/>
         <source>Version %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="53"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="55"/>
+        <source>Tour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="59"/>
+        <source>Guided tour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="60"/>
+        <source>A quick walk through the library, adding a game and the stores.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="65"/>
+        <source>Start</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="73"/>
         <source>License</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="57"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="77"/>
         <source>GPL-3.0-or-later. omikuji is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="67"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="87"/>
         <source>Links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="76"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="96"/>
         <source>Source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="77"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="97"/>
         <source>Assets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="78"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="98"/>
         <source>Docs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="109"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="129"/>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="136"/>
+        <location filename="../qml/components/settings/global/TabGlobalAbout.qml" line="156"/>
         <source>Copy</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3828,135 +4221,140 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="126"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="125"/>
+        <source>Queue pre-downloads for Gachas on app launch</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="137"/>
         <source>Discord</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="130"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="141"/>
         <source>Show app name in Discord RPC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="141"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="152"/>
         <source>Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="145"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="156"/>
         <source>Bandwidth limit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="146"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="157"/>
         <source>Applies to every download, whatever the source.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="153"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="164"/>
         <source>Unlimited</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="159"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="170"/>
         <source>Notify when a download finishes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="160"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="171"/>
         <source>Sends a desktop notification.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="171"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="182"/>
         <source>Epic downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="175"/>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="204"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="186"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="215"/>
         <source>Download workers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="176"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="187"/>
         <source>Auto lets legendary pick, which is min(2 x CPUs, 16).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="180"/>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="193"/>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="209"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="191"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="204"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="220"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="186"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="197"/>
         <source>Shared memory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="187"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="198"/>
         <source>Buffer the workers download into. Auto is 1024.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="200"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="211"/>
         <source>GOG downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="205"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="216"/>
         <source>Auto lets gogdl pick.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="216"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="227"/>
         <source>Gacha downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="220"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="231"/>
         <source>Max connections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="221"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="232"/>
         <source>How many files download at the same time.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="230"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="241"/>
         <source>HoYo patch threads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="231"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="242"/>
         <source>Patches applied at once after an update. Raise it if patching feels slow.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="241"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="252"/>
         <source>Resources</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="245"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="256"/>
         <source>Unload store tabs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="246"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="257"/>
         <source>After 15s idle</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="256"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="267"/>
         <source>Save game logs to disk</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="257"/>
+        <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="268"/>
         <source>Off: logs live in memory only until the game exits. On: also written to cache/logs/.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4051,7 +4449,7 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="331"/>
-        <source>Provided by your system, omikuji won&apos;t download its own.</source>
+        <source>Provided by your system. Install to use omikuji&apos;s own copy instead.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4208,52 +4606,52 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>TabGlobalOfuda</name>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="141"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="133"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="147"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="139"/>
         <source>Games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="158"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="150"/>
         <source>Manage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="188"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="180"/>
         <source>New prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="194"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="186"/>
         <source>Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="213"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="205"/>
         <source>Orphan</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="221"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="213"/>
         <source>No prefixes yet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="231"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="223"/>
         <source>Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="239"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="231"/>
         <source>Prefixes of Steam games in the library.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="264"/>
+        <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="256"/>
         <source>No Steam game in the library has a prefix yet. Steam creates one on first launch.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4322,120 +4720,125 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="22"/>
-        <source>Text</source>
+        <source>Secondary</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="23"/>
-        <source>Error</source>
+        <source>Text</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="24"/>
-        <source>Success</source>
+        <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="25"/>
+        <source>Success</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="26"/>
         <source>Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="72"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="73"/>
         <source>Colors</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="76"/>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="144"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="77"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="145"/>
         <source>Follow system</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="77"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="78"/>
         <source>Use the desktop palette. Disable to apply per-token overrides below.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="109"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="110"/>
         <source>system</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="140"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="141"/>
         <source>Font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="145"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="146"/>
         <source>Use the desktop default font. Disable to pick a family below.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="154"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="155"/>
         <source>Font family</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="155"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="156"/>
         <source>Applied app-wide. Requires restart.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="162"/>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="189"/>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="216"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="163"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="190"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="217"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="182"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="183"/>
         <source>Mono font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="183"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="184"/>
         <source>Paths, versions and inline values.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="209"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="210"/>
         <source>Logs font</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="210"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="211"/>
         <source>Log views and preformatted blocks.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="236"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="237"/>
         <source>Font sizes</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="237"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="238"/>
         <source>Per-role text sizes used across the app.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="241"/>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="258"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="242"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="259"/>
         <source>Manage</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="249"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="250"/>
         <source>Shape</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="253"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="254"/>
         <source>Corner radius</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="254"/>
+        <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="255"/>
         <source>Per-token corner rounding used across the app.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4707,7 +5110,7 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="69"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="150"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="154"/>
         <source>missing</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4718,201 +5121,201 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="94"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="424"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="439"/>
         <source>Executable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="99"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="100"/>
         <source>Path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="108"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="433"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="111"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="450"/>
         <source>Working Directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="109"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="434"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="112"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="451"/>
         <source>empty = executable&apos;s parent directory</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="118"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="443"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="475"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="498"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="121"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="460"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="492"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="515"/>
         <source>Arguments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="127"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="452"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="130"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="469"/>
         <source>Command Prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="128"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="453"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="131"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="470"/>
         <source>prepended to command (e.g. custom wrapper)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="141"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="145"/>
         <source>Version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="148"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="152"/>
         <source>No runners installed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="161"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="167"/>
         <source>Prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="162"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="168"/>
         <source>empty = auto-create per game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="171"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="177"/>
         <source>Architecture</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="174"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="180"/>
         <source>64-bit (win64)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="175"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="181"/>
         <source>32-bit (win32)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="183"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="189"/>
         <source>Sync</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="193"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="199"/>
         <source>Esync</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="198"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="205"/>
         <source>Fsync</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="204"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="211"/>
         <source>NTSync</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="211"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="218"/>
         <source>NTSync is only applied when the selected Wine version is Proton.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="222"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="230"/>
         <source>Translation Layers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="224"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="232"/>
         <source>A layer that is off is actively disabled, so the game falls back to Wine&apos;s own Direct3D even on Proton.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="288"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="298"/>
         <source>The Proton build this game uses already carries its own user_settings.py, so Omikuji leaves it alone and these toggles and versions will not apply. See Translation Layers in the Usage Guide.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="289"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="299"/>
         <source>The Proton build this game uses does not expose the hook Omikuji needs, so these toggles and versions will not apply. See Translation Layers in the Usage Guide.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="294"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="307"/>
         <source>Compatibility</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="323"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="337"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="328"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="342"/>
         <source>DPI Scaling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="334"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="348"/>
         <source>DPI</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="350"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="364"/>
         <source>Drivers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="355"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="369"/>
         <source>Audio Driver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="358"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="375"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="372"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="389"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="372"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="386"/>
         <source>Graphics Driver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="390"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="404"/>
         <source>DLL Overrides</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="399"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="413"/>
         <source>Add override</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="407"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="421"/>
         <source>Sets · %1 synced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="407"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="421"/>
         <source>Sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="418"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="432"/>
         <source>Native</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="467"/>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="490"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="484"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="507"/>
         <source>Application ID</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="499"/>
+        <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="516"/>
         <source>passed to the application</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5102,87 +5505,87 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="292"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="293"/>
         <source>Environment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="301"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="302"/>
         <source>Add variable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="310"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="311"/>
         <source>Sets · %1 synced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="310"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="311"/>
         <source>Sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="319"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="322"/>
         <source>Scripts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="324"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="327"/>
         <source>Pre-Launch Script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="325"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="328"/>
         <source>runs before game starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="333"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="336"/>
         <source>Post-Exit Script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="334"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="337"/>
         <source>runs after game exits</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="346"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="349"/>
         <source>Run Alongside</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="347"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="350"/>
         <source>an .exe to run in the prefix while the game runs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="347"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="350"/>
         <source>a command to run while the game runs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="355"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="358"/>
         <source>Arguments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="365"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="368"/>
         <source>Start It First</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="366"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="369"/>
         <source>run it before the game instead of after</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="376"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="379"/>
         <source>Delay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="377"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="380"/>
         <source>seconds to wait between the two, for whichever starts first</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5303,22 +5706,22 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>TopBar</name>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="103"/>
+        <location filename="../qml/components/navigation/TopBar.qml" line="101"/>
         <source>Search games...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="128"/>
+        <location filename="../qml/components/navigation/TopBar.qml" line="126"/>
         <source>Draw a fortune</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="143"/>
+        <location filename="../qml/components/navigation/TopBar.qml" line="141"/>
         <source>Console Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="159"/>
+        <location filename="../qml/components/navigation/TopBar.qml" line="157"/>
         <source>Quick Settings</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5327,66 +5730,113 @@ Search for community scripts, or use a local file.</source>
         <source>Add</source>
         <translation type="unfinished"></translation>
     </message>
+</context>
+<context>
+    <name>Tour</name>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="188"/>
-        <source>Add game</source>
+        <location filename="../qml/components/tour/Tour.qml" line="144"/>
+        <source>%1 of %2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/navigation/TopBar.qml" line="189"/>
-        <source>Install script</source>
+        <location filename="../qml/components/tour/Tour.qml" line="148"/>
+        <source>Head back to where you were to pick the tour up again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/Tour.qml" line="157"/>
+        <source>Click the highlighted spot</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TourCard</name>
+    <message>
+        <location filename="../qml/components/tour/TourCard.qml" line="188"/>
+        <source>Back</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/TourCard.qml" line="197"/>
+        <source>Done</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/tour/TourCard.qml" line="197"/>
+        <source>Next</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>UpdateAvailableDialog</name>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="69"/>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="72"/>
         <source>Update available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="114"/>
-        <source>Delta update · %1</source>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="72"/>
+        <source>Pre-download available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="115"/>
-        <source>Delta update</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="117"/>
-        <source>the game</source>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="118"/>
+        <source>Pre-download · %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="119"/>
-        <source>Seems there&apos;s an update for %1, however, it doesn&apos;t handle delta patches. Wanna reinstall the game to update?</source>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="155"/>
+        <source>Pre-download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="121"/>
+        <source>Delta update · already pre-downloaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="124"/>
+        <source>Delta update · %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="125"/>
+        <source>Delta update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="127"/>
+        <source>the game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="129"/>
+        <source>Seems there&apos;s an update for %1, however, it doesn&apos;t handle delta patches. Wanna reinstall the game to update?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="131"/>
         <source>Your install is too old for a delta patch. Reinstall %1 to update?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="135"/>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="145"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="140"/>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="150"/>
         <source>Run anyway</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="145"/>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="155"/>
         <source>Update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="145"/>
+        <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="155"/>
         <source>Reinstall</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5394,57 +5844,72 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>WelcomeDialog</name>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="35"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="37"/>
         <source>Welcome to omikuji~</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="86"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="89"/>
         <source>Everything here is optional, you can close this at any time and set it all up later from Settings.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="95"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="98"/>
         <source>Runners</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="96"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="99"/>
         <source>Games run through a Wine or Proton build, you&apos;ll need at least one.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="108"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="111"/>
         <source>Install a runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="159"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="139"/>
         <source>No runner sources configured yet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="169"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="149"/>
         <source>Proton support</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="173"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="153"/>
         <source>Install umu-run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="174"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="154"/>
         <source>Proton runners launch through it</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="182"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="162"/>
+        <source>Tour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="166"/>
+        <source>Start app tour</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="167"/>
+        <source>Shows you around once this closes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="175"/>
         <source>Docs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/app/WelcomeDialog.qml" line="188"/>
+        <location filename="../qml/components/app/WelcomeDialog.qml" line="181"/>
         <source>Get started</source>
         <translation type="unfinished"></translation>
     </message>
