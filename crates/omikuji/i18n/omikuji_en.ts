@@ -59,9 +59,9 @@
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="323"/>
         <source>%n version(s) available</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n version available</numerusform>
+            <numerusform>%n versions available</numerusform>
         </translation>
     </message>
     <message>
@@ -193,9 +193,9 @@
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="88"/>
         <source>%n version(s) installed</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n version installed</numerusform>
+            <numerusform>%n versions installed</numerusform>
         </translation>
     </message>
     <message>
@@ -718,9 +718,9 @@
     <message numerus="yes">
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="188"/>
         <source>Affects %n game(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Affects %n game</numerusform>
+            <numerusform>Affects %n games</numerusform>
         </translation>
     </message>
     <message>
@@ -1491,9 +1491,9 @@
     <message numerus="yes">
         <location filename="../qml/components/library/GameContextMenu.qml" line="187"/>
         <source>This removes %1 and deletes its prefix. %n other game(s) use this prefix and will lose it too. It won&apos;t be recoverable.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>This removes %1 and deletes its prefix. %n other game uses this prefix and will lose it too. It won&apos;t be recoverable.</numerusform>
+            <numerusform>This removes %1 and deletes its prefix. %n other games use this prefix and will lose it too. It won&apos;t be recoverable.</numerusform>
         </translation>
     </message>
     <message>
@@ -2208,10 +2208,22 @@ So %n Proton game(s) would start running on Wine&apos;s own Direct3D instead of 
 
 Each one is set to Built-in, so it uses the DLLs the runner already ships. Nothing is downloaded and no files are replaced.
 
- Would you like Omikuji to migrate these games for you? They&apos;ll behave like they did before if you let it migrate.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+Would you like Omikuji to migrate these games for you? They&apos;ll behave like they did before if you let it migrate.</source>
+        <translation>
+            <numerusform>Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.
+
+So %n Proton game would start running on Wine&apos;s own Direct3D instead of what it uses today. Turning those toggles back on keeps it exactly as it is.
+
+It is set to Built-in, so it uses the DLLs the runner already ships. Nothing is downloaded and no files are replaced.
+
+Would you like Omikuji to migrate this game for you? It&apos;ll behave like it did before if you let it migrate.</numerusform>
+            <numerusform>Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.
+
+So %n Proton games would start running on Wine&apos;s own Direct3D instead of what they use today. Turning those toggles back on keeps them exactly as they are.
+
+Each one is set to Built-in, so it uses the DLLs the runner already ships. Nothing is downloaded and no files are replaced.
+
+Would you like Omikuji to migrate these games for you? They&apos;ll behave like they did before if you let it migrate.</numerusform>
         </translation>
     </message>
     <message>
@@ -2227,9 +2239,9 @@ Each one is set to Built-in, so it uses the DLLs the runner already ships. Nothi
     <message numerus="yes">
         <location filename="../qml/Main.qml" line="1387"/>
         <source>This deletes the prefix and everything in it. %n game(s) use it, and it won&apos;t be recoverable.</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>This deletes the prefix and everything in it. %n game uses it, and it won&apos;t be recoverable.</numerusform>
+            <numerusform>This deletes the prefix and everything in it. %n games use it, and it won&apos;t be recoverable.</numerusform>
         </translation>
     </message>
     <message>
