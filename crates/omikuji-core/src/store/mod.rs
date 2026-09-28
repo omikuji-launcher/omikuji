@@ -7,3 +7,8 @@ pub mod registry;
 pub mod steam;
 
 pub use game::StoreGame;
+
+pub struct UpdateInfo {
+    pub from_version: String,
+    pub to_version: String,
+}

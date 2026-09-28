@@ -31,6 +31,7 @@ pub mod settings;
 pub mod store;
 pub mod system_info;
 pub mod template_vars;
+pub mod updates;
 pub mod wine_tools;
 
 use std::path::PathBuf;

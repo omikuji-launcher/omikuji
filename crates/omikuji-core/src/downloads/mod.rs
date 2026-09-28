@@ -104,6 +104,16 @@ impl DownloadKind {
     pub fn writes_install(&self) -> bool {
         !matches!(self, Self::PreDownload { .. })
     }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::Install => "install",
+            Self::Update { .. } => "update",
+            Self::PreDownload { .. } => "pre-download",
+            Self::Repair => "repair",
+            Self::ImportExisting => "import",
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

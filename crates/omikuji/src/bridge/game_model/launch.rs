@@ -4,13 +4,12 @@ use cxx_qt_lib::QString;
 
 use omikuji_core::app_settings::AppSettings;
 use omikuji_core::components_config::ArchiveSource;
-use omikuji_core::library::{Game, SourceKind};
+use omikuji_core::library::Game;
 use omikuji_core::process::{self, ErrorAction};
 use omikuji_core::template_vars::TemplateVars;
 use omikuji_core::wine_tools::{self, WineTool};
-use omikuji_core::{anyhow, game_logs, launch, notifications, runners};
+use omikuji_core::{anyhow, game_logs, launch, notifications, runners, updates};
 
-use super::updates;
 use crate::inhibit;
 
 impl super::qobject::GameModel {
@@ -30,7 +29,7 @@ impl super::qobject::GameModel {
 
         let qt = self.as_mut().qt_thread();
         std::thread::spawn(move || {
-            if let Some(info) = pre_launch_update_check(&game) {
+            if let Some(info) = updates::pre_launch_check(&game) {
                 process::clear_launching(&game.metadata.id);
                 process::release_exit_waiters(&game.metadata.id);
                 process::notify_update_required(info);
@@ -328,24 +327,6 @@ impl super::qobject::GameModel {
                 .spawn();
         }
         std::process::exit(0);
-    }
-}
-
-pub(crate) fn pre_launch_update_check(game: &Game) -> Option<process::UpdateNotification> {
-    if launch::precheck_exe(game).is_err() {
-        return None;
-    }
-    let behavior = || AppSettings::load().behavior;
-    match game.source.kind {
-        SourceKind::Gacha => {
-            let info = updates::blocking_check_gacha_update(game)?;
-            (!info.is_muted_for(game)).then(|| updates::gacha_notification(game, info))
-        }
-        SourceKind::Epic if behavior().auto_check_epic_updates_on_launch => {
-            updates::epic_update(game)
-        }
-        SourceKind::Gog if behavior().auto_check_gog_updates_on_launch => updates::gog_update(game),
-        _ => None,
     }
 }
 

@@ -3,11 +3,7 @@ use std::process::Command;
 
 use serde::Deserialize;
 
-pub struct GogUpdateInfo {
-    pub from_version: String,
-    pub to_version: String,
-    pub download_size: u64,
-}
+use crate::store::UpdateInfo;
 
 #[derive(Deserialize)]
 struct GoggameInfo {
@@ -17,7 +13,7 @@ struct GoggameInfo {
     version_name: Option<String>,
 }
 
-pub fn blocking_check_gog_update(app_id: &str) -> Option<GogUpdateInfo> {
+pub fn blocking_check_gog_update(app_id: &str) -> Option<UpdateInfo> {
     let installed_info = super::find_installed_info(app_id)?;
     let (installed_build, installed_version) =
         read_installed_meta(&installed_info.install_path, app_id)?;
@@ -25,10 +21,9 @@ pub fn blocking_check_gog_update(app_id: &str) -> Option<GogUpdateInfo> {
     if installed_build == latest_build {
         return None;
     }
-    Some(GogUpdateInfo {
+    Some(UpdateInfo {
         from_version: installed_version.unwrap_or(installed_build),
         to_version: latest_build,
-        download_size: 0,
     })
 }
 

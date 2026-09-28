@@ -2,9 +2,8 @@ use clap::{Parser, Subcommand};
 use omikuji_core::app_settings::AppSettings;
 use omikuji_core::library::{Game, Library};
 use omikuji_core::process::{ErrorAction, ErrorNotification};
-use omikuji_core::{desktop, launch, process};
+use omikuji_core::{desktop, launch, process, updates};
 
-use crate::bridge::game_model::launch::pre_launch_update_check;
 use crate::single_instance;
 use std::io::{self, IsTerminal, Write};
 
@@ -232,7 +231,7 @@ fn launch_and_wait(game: &Game, report: &Report) -> i32 {
     };
 
     if report.gui
-        && let Some(info) = pre_launch_update_check(game)
+        && let Some(info) = updates::pre_launch_check(game)
     {
         process::notify_update_required(info);
         return 1;

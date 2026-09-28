@@ -63,7 +63,7 @@ pub struct Metadata {
     pub categories: Vec<String>,
 }
 
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
 pub enum SourceKind {
     #[default]
     Manual,
@@ -94,6 +94,10 @@ impl SourceKind {
             Self::Nile => Some("amazon"),
             _ => None,
         }
+    }
+
+    pub fn has_updates(self) -> bool {
+        matches!(self, Self::Gacha | Self::Epic | Self::Gog | Self::Nile)
     }
 }
 

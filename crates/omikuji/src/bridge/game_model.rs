@@ -5,7 +5,7 @@ mod drains;
 mod epic;
 mod gacha;
 mod gog;
-pub(crate) mod launch;
+mod launch;
 mod nile;
 mod scripts;
 mod shortcuts;

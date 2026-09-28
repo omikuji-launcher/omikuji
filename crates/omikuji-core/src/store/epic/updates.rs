@@ -4,11 +4,7 @@ use std::process::Command;
 
 use serde::Deserialize;
 
-pub struct EpicUpdateInfo {
-    pub from_version: String,
-    pub to_version: String,
-    pub download_size: u64,
-}
+use crate::store::UpdateInfo;
 
 #[derive(Deserialize)]
 struct InstalledMeta {
@@ -22,11 +18,6 @@ struct AssetEntry {
     build_version: String,
 }
 
-pub fn blocking_check_epic_update(app_id: &str) -> Option<EpicUpdateInfo> {
-    let _ = refresh_assets_cache();
-    find_update_for(app_id)
-}
-
 pub fn refresh_assets_cache() -> Option<()> {
     let bin = super::source::find_legendary()?;
     let _ = Command::new(bin)
@@ -36,7 +27,7 @@ pub fn refresh_assets_cache() -> Option<()> {
     Some(())
 }
 
-pub fn find_update_for(app_id: &str) -> Option<EpicUpdateInfo> {
+pub fn find_update_for(app_id: &str) -> Option<UpdateInfo> {
     let config = legendary_config_dir()?;
 
     let installed_raw = std::fs::read_to_string(config.join("installed.json")).ok()?;
@@ -52,10 +43,9 @@ pub fn find_update_for(app_id: &str) -> Option<EpicUpdateInfo> {
         return None;
     }
 
-    Some(EpicUpdateInfo {
+    Some(UpdateInfo {
         from_version: installed_entry.version.clone(),
         to_version: asset.build_version.clone(),
-        download_size: 0,
     })
 }
 
