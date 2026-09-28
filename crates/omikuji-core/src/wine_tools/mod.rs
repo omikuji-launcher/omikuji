@@ -9,13 +9,11 @@ use anyhow::{Result, anyhow};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex, MutexGuard};
 
-lazy_static::lazy_static! {
-    static ref STARTING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
-}
+static STARTING: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
 
-fn starting() -> std::sync::MutexGuard<'static, HashSet<String>> {
+fn starting() -> MutexGuard<'static, HashSet<String>> {
     STARTING.lock().unwrap_or_else(|e| e.into_inner())
 }
 

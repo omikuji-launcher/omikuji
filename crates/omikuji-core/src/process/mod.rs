@@ -8,10 +8,10 @@ use anyhow::Result;
 use nix::fcntl::{Flock, FlockArg};
 use nix::unistd::setsid;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::process::Stdio;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 pub const GAME_ID_VAR: &str = "OMIKUJI_GAME_ID";
@@ -344,18 +344,11 @@ impl Default for ProcessManager {
     }
 }
 
-lazy_static::lazy_static! {
-    static ref MANAGER: ProcessManager = ProcessManager::new();
-}
-
-use std::collections::HashSet;
-
-lazy_static::lazy_static! {
-    static ref LAUNCHING: Mutex<HashSet<String>> = Mutex::new(HashSet::new());
-    static ref EXIT_WAITERS: Mutex<ExitWaiters> = Mutex::new(HashMap::new());
-    static ref MARKED_IDS: Mutex<(Option<Instant>, HashSet<String>)> =
-        Mutex::new((None, HashSet::new()));
-}
+static MANAGER: LazyLock<ProcessManager> = LazyLock::new(ProcessManager::new);
+static LAUNCHING: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
+static EXIT_WAITERS: LazyLock<Mutex<ExitWaiters>> = LazyLock::new(Default::default);
+static MARKED_IDS: LazyLock<Mutex<(Option<Instant>, HashSet<String>)>> =
+    LazyLock::new(Default::default);
 
 type ExitWaiters = HashMap<String, Vec<(u64, tokio::sync::oneshot::Sender<()>)>>;
 

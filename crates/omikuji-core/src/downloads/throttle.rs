@@ -1,6 +1,5 @@
-use lazy_static::lazy_static;
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 
 use crate::app_settings::AppSettings;
@@ -10,9 +9,7 @@ const BYTES_PER_MB: u64 = 1_000_000;
 const BURST_SECONDS: f64 = 0.2;
 const MIN_BURST: f64 = 64.0 * 1024.0;
 
-lazy_static! {
-    static ref THROTTLE: Throttle = Throttle::new();
-}
+static THROTTLE: LazyLock<Throttle> = LazyLock::new(Throttle::new);
 
 pub struct Throttle {
     rate: AtomicU64,

@@ -3,19 +3,16 @@
 use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
-use lazy_static::lazy_static;
 use omikuji_core::components;
 use omikuji_core::library::{Library, SourceKind};
 use omikuji_core::store::StoreGame;
 use omikuji_core::store::gog::{self, GogStore};
 use std::collections::HashMap;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
-lazy_static! {
-    static ref GOG_STORE: Arc<Mutex<GogStore>> = Arc::new(Mutex::new(GogStore::new()));
-}
+static GOG_STORE: LazyLock<Mutex<GogStore>> = LazyLock::new(|| Mutex::new(GogStore::new()));
 
 #[cxx_qt::bridge]
 pub mod qobject {

@@ -3,19 +3,16 @@
 use super::store_model;
 use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::{QModelIndex, QString, QVariant};
-use lazy_static::lazy_static;
 use omikuji_core::components;
 use omikuji_core::library::{Library, SourceKind};
 use omikuji_core::store::StoreGame;
 use omikuji_core::store::nile::{self, NileStore};
 use std::collections::HashMap;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::LazyLock;
 use tokio::sync::Mutex;
 
-lazy_static! {
-    static ref NILE_STORE: Arc<Mutex<NileStore>> = Arc::new(Mutex::new(NileStore::new()));
-}
+static NILE_STORE: LazyLock<Mutex<NileStore>> = LazyLock::new(|| Mutex::new(NileStore::new()));
 
 #[cxx_qt::bridge]
 pub mod qobject {

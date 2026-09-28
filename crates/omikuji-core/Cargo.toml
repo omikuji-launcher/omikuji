@@ -21,7 +21,6 @@ tracing = "0.1"
 dirs = "6"
 unicode-normalization = "0.1"
 chrono = "0.4"
-lazy_static = "1"
 indicatif = "0.17"
 which = "7"
 nix = { version = "0.29", features = ["signal", "process", "fs"] }

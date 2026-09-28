@@ -18,11 +18,10 @@ use crate::store::gog::source::GogdlSource;
 use crate::store::nile::source::NileSource;
 use crate::template_vars::TemplateVars;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex};
 use tokio::sync::Notify;
 
 pub use source::DownloadSource;
@@ -224,40 +223,36 @@ pub struct DownloadManager {
     notify: Notify,
 }
 
-lazy_static! {
-    static ref MANAGER: Arc<DownloadManager> = {
-        let mut sources: HashMap<String, Arc<dyn DownloadSource>> = HashMap::new();
-        sources.insert("epic".to_string(), Arc::new(LegendarySource));
-        sources.insert("gog".to_string(), Arc::new(GogdlSource));
-        sources.insert("nile".to_string(), Arc::new(NileSource));
-        sources.insert("hoyo".to_string(), Arc::new(HoyoSource));
-        sources.insert("endfield".to_string(), Arc::new(GryphlineSource));
-        sources.insert("kuro".to_string(), Arc::new(KuroSource));
-        sources.insert("yostar".to_string(), Arc::new(YostarSource));
+static MANAGER: LazyLock<DownloadManager> = LazyLock::new(|| {
+    let mut sources: HashMap<String, Arc<dyn DownloadSource>> = HashMap::new();
+    sources.insert("epic".to_string(), Arc::new(LegendarySource));
+    sources.insert("gog".to_string(), Arc::new(GogdlSource));
+    sources.insert("nile".to_string(), Arc::new(NileSource));
+    sources.insert("hoyo".to_string(), Arc::new(HoyoSource));
+    sources.insert("endfield".to_string(), Arc::new(GryphlineSource));
+    sources.insert("kuro".to_string(), Arc::new(KuroSource));
+    sources.insert("yostar".to_string(), Arc::new(YostarSource));
 
-        let restored = load_queue();
-        if !restored.is_empty() {
-            tracing::info!("restored {} entries from previous session", restored.len());
-        }
+    let restored = load_queue();
+    if !restored.is_empty() {
+        tracing::info!("restored {} entries from previous session", restored.len());
+    }
 
-        Arc::new(DownloadManager {
-            inner: Mutex::new(Inner {
-                entries: restored,
-                events: VecDeque::new(),
-                control: HashMap::new(),
-                sources,
-                worker_started: false,
-                sampler_running: false,
-            }),
-            notify: Notify::new(),
-        })
-    };
-}
+    DownloadManager {
+        inner: Mutex::new(Inner {
+            entries: restored,
+            events: VecDeque::new(),
+            control: HashMap::new(),
+            sources,
+            worker_started: false,
+            sampler_running: false,
+        }),
+        notify: Notify::new(),
+    }
+});
 
-lazy_static! {
-    static ref MULTI: MultiProgress = MultiProgress::new();
-    static ref BARS: Mutex<HashMap<String, ProgressBar>> = Mutex::new(HashMap::new());
-}
+static MULTI: LazyLock<MultiProgress> = LazyLock::new(MultiProgress::new);
+static BARS: LazyLock<Mutex<HashMap<String, ProgressBar>>> = LazyLock::new(Default::default);
 
 fn bar_style() -> ProgressStyle {
     ProgressStyle::with_template("\n{msg}\n  {prefix}  [{bar:30}]  {decimal_bytes}/{decimal_total_bytes}  {decimal_bytes_per_sec}\n")
@@ -309,8 +304,8 @@ fn finish_bar(id: &str, name: &str, status: &str) {
     }
 }
 
-pub fn manager() -> Arc<DownloadManager> {
-    MANAGER.clone()
+pub fn manager() -> &'static DownloadManager {
+    &MANAGER
 }
 
 impl DownloadManager {
@@ -615,7 +610,7 @@ impl DownloadManager {
     }
 
     async fn worker_loop() {
-        let mgr = MANAGER.clone();
+        let mgr = manager();
         loop {
             let next = {
                 let inner = mgr.inner.lock().unwrap();
@@ -668,7 +663,6 @@ impl DownloadManager {
                     }
                     cleanup_source_state(&entry);
                     finish_bar(&entry.id, &entry.display_name, "cancelled");
-                    let mgr = MANAGER.clone();
                     let mut inner = mgr.inner.lock().unwrap();
                     if let Some(idx) = inner.entries.iter().position(|e| e.id == entry.id) {
                         inner.entries.remove(idx);
@@ -817,8 +811,7 @@ fn cleanup_source_state(entry: &DownloadEntry) {
 }
 
 pub fn set_display_name(id: &str, name: &str) {
-    let mgr = MANAGER.clone();
-    let mut inner = mgr.inner.lock().unwrap();
+    let mut inner = MANAGER.inner.lock().unwrap();
     let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
         return;
     };
@@ -838,8 +831,7 @@ pub fn report_progress(
     bytes_total: u64,
     speed_bps: u64,
 ) {
-    let mgr = MANAGER.clone();
-    let mut inner = mgr.inner.lock().unwrap();
+    let mut inner = MANAGER.inner.lock().unwrap();
 
     let mut became_downloading = false;
     let display_name = inner
@@ -881,8 +873,7 @@ pub fn report_progress(
 }
 
 pub fn check_control(id: &str) -> ControlSignal {
-    let mgr = MANAGER.clone();
-    let inner = mgr.inner.lock().unwrap();
+    let inner = MANAGER.inner.lock().unwrap();
     inner
         .control
         .get(id)
@@ -891,8 +882,7 @@ pub fn check_control(id: &str) -> ControlSignal {
 }
 
 pub fn set_status(id: &str, status: DownloadStatus) {
-    let mgr = MANAGER.clone();
-    let mut inner = mgr.inner.lock().unwrap();
+    let mut inner = MANAGER.inner.lock().unwrap();
     if let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) {
         e.status = status.clone();
     }
@@ -919,8 +909,7 @@ pub fn set_status(id: &str, status: DownloadStatus) {
 }
 
 fn set_failed(id: &str, err: String) {
-    let mgr = MANAGER.clone();
-    let mut inner = mgr.inner.lock().unwrap();
+    let mut inner = MANAGER.inner.lock().unwrap();
     let name = inner
         .entries
         .iter()
@@ -945,8 +934,7 @@ fn set_failed(id: &str, err: String) {
 }
 
 fn complete(entry: &DownloadEntry) {
-    let mgr = MANAGER.clone();
-    let mut inner = mgr.inner.lock().unwrap();
+    let mut inner = MANAGER.inner.lock().unwrap();
     if let Some(e) = inner.entries.iter_mut().find(|e| e.id == entry.id) {
         e.status = DownloadStatus::Completed;
         e.progress = 100.0;
