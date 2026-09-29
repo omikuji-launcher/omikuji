@@ -267,6 +267,7 @@ mod tests {
             telemetry_block: vec![],
             options: vec![],
             env: IndexMap::new(),
+            args: vec![],
             letter_fallback: "T".into(),
             uses_temp_dir: true,
             strategy_config: serde_json::Value::Null,
