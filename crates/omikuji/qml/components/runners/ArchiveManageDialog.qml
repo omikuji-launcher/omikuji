@@ -54,10 +54,7 @@ DialogCard {
             return
         }
         try {
-            let raw = category === "dll_packs"
-                ? archiveManager.listDllPacks()
-                : archiveManager.listRunners()
-            sources = JSON.parse(raw) || []
+            sources = JSON.parse(archiveManager.listSources(category)) || []
         } catch (e) {
             sources = []
         }

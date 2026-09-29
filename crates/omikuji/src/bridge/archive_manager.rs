@@ -1,18 +1,13 @@
-// unified bridge for runners and dll packs. both use the same settings-driven fetch pipeline
-// (see core::archive_source), so theres no reason to doubel the qobject surface;
-// the category argument ("runners" / "dll_packs") picks the right source list and install target.
-//
-// async ops run on a detached os thread with a fresh tokio runtime. nesting a runtime from a cxx-qt invokable panics becuase main is #[tokio::main];
-// results flow back as events on the archive_source queue, drained by drainEvents on a qml timer.
+// fresh runtime per op since nesting one under #[tokio::main] panics
+// also check drain_events
 
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
-use omikuji_core::archive;
-use omikuji_core::archive_source::{self, ReleaseInfo};
-use omikuji_core::components_config::{self, ArchiveSource};
-use omikuji_core::dll_packs;
+use omikuji_core::archive_source::{self, InstallChannel, ReleaseInfo};
+use omikuji_core::components_config::{self, ArchiveSource, SourceCategory};
 use omikuji_core::runners;
 use omikuji_core::store::steam::local as steam_local;
+use omikuji_core::{anyhow, archive};
 use std::pin::Pin;
 use std::thread;
 
@@ -104,12 +99,8 @@ pub mod qobject {
         );
 
         #[qinvokable]
-        #[cxx_name = "listRunners"]
-        fn list_runners(self: &ArchiveManagerBridge) -> QString;
-
-        #[qinvokable]
-        #[cxx_name = "listDllPacks"]
-        fn list_dll_packs(self: &ArchiveManagerBridge) -> QString;
+        #[cxx_name = "listSources"]
+        fn list_sources(self: &ArchiveManagerBridge, category: QString) -> QString;
 
         #[qinvokable]
         #[cxx_name = "listInstalled"]
@@ -253,25 +244,9 @@ pub mod qobject {
 #[derive(Default)]
 pub struct ArchiveManagerRust;
 
-fn sources_for(category: &str) -> Vec<ArchiveSource> {
-    match category {
-        "runners" => runners::list_sources(),
-        "dll_packs" => dll_packs::list_sources(),
-        _ => Vec::new(),
-    }
-}
-
-// the ui speaks "dll_packs", components.toml calls them layers
-fn core_category(category: &str) -> &str {
-    if category == "dll_packs" {
-        "layers"
-    } else {
-        category
-    }
-}
-
-fn source_lookup(category: &str, name: &str) -> Option<ArchiveSource> {
-    sources_for(category).into_iter().find(|s| s.name == name)
+fn lookup(category: &str, name: &str) -> Option<(SourceCategory, ArchiveSource)> {
+    let category: SourceCategory = category.parse().ok()?;
+    Some((category, category.find(name)?))
 }
 
 fn resolve_release(link: &str) -> Result<(runners::AdvisedRunner, ReleaseInfo), String> {
@@ -296,32 +271,27 @@ fn sources_to_json(sources: &[ArchiveSource]) -> String {
 }
 
 impl qobject::ArchiveManagerBridge {
-    fn list_runners(&self) -> QString {
-        QString::from(&sources_to_json(&runners::list_sources()))
-    }
-
-    fn list_dll_packs(&self) -> QString {
-        QString::from(&sources_to_json(&dll_packs::list_sources()))
+    fn list_sources(&self, category: QString) -> QString {
+        let sources = category
+            .to_string()
+            .parse()
+            .map(SourceCategory::sources)
+            .unwrap_or_default();
+        QString::from(&sources_to_json(&sources))
     }
 
     fn list_installed(&self, category: QString, source: QString) -> QString {
-        let cat = category.to_string();
-        let name = source.to_string();
-        let Some(src) = source_lookup(&cat, &name) else {
+        let Some((category, src)) = lookup(&category.to_string(), &source.to_string()) else {
             return QString::from("[]");
         };
-        let installed = match cat.as_str() {
-            "runners" => runners::list_installed(&src),
-            "dll_packs" => dll_packs::list_installed(&src),
-            _ => Vec::new(),
-        };
+        let installed = category.list_installed(&src);
         QString::from(&serde_json::to_string(&installed).unwrap_or_else(|_| "[]".into()))
     }
 
     fn fetch_versions(mut self: Pin<&mut Self>, category: QString, source: QString) {
         let cat = category.to_string();
         let name = source.to_string();
-        let Some(src) = source_lookup(&cat, &name) else {
+        let Some((_, src)) = lookup(&cat, &name) else {
             self.as_mut().versions_failed(
                 QString::from(&cat),
                 QString::from(&name),
@@ -415,7 +385,7 @@ impl qobject::ArchiveManagerBridge {
                 Err(e) => {
                     let _ = qt.queue(move |bridge| {
                         bridge.install_failed(
-                            QString::from("runners"),
+                            QString::from(InstallChannel::Runners.as_str()),
                             QString::from(""),
                             QString::from(""),
                             QString::from(&e),
@@ -439,7 +409,7 @@ impl qobject::ArchiveManagerBridge {
                 Err(_) => return,
             };
             let _ = rt.block_on(archive_source::install_version(
-                "runners",
+                InstallChannel::Runners,
                 &advised.source,
                 &release,
                 &advised.dest_root(),
@@ -455,7 +425,7 @@ impl qobject::ArchiveManagerBridge {
     ) {
         let cat = category.to_string();
         let name = source.to_string();
-        let Some(src) = source_lookup(&cat, &name) else {
+        let Some((category, src)) = lookup(&cat, &name) else {
             self.as_mut().install_failed(
                 QString::from(&cat),
                 QString::from(&name),
@@ -477,20 +447,6 @@ impl qobject::ArchiveManagerBridge {
             }
         };
 
-        let dest_root = match cat.as_str() {
-            "runners" => runners::source_root(&src),
-            "dll_packs" => dll_packs::source_root(&src),
-            other => {
-                self.as_mut().install_failed(
-                    QString::from(&cat),
-                    QString::from(&name),
-                    QString::from(&release.tag),
-                    QString::from(&format!("unknown category: {}", other)),
-                );
-                return;
-            }
-        };
-        let cat_for_thread = cat.clone();
         thread::spawn(move || {
             let rt = match tokio::runtime::Builder::new_current_thread()
                 .enable_all()
@@ -499,12 +455,7 @@ impl qobject::ArchiveManagerBridge {
                 Ok(rt) => rt,
                 Err(_) => return,
             };
-            let _ = rt.block_on(archive_source::install_version(
-                &cat_for_thread,
-                &src,
-                &release,
-                &dest_root,
-            ));
+            let _ = rt.block_on(category.install_version(&src, &release));
         });
     }
 
@@ -512,15 +463,10 @@ impl qobject::ArchiveManagerBridge {
         let cat = category.to_string();
         let name = source.to_string();
         let tag_s = tag.to_string();
-        let Some(src) = source_lookup(&cat, &name) else {
+        let Some((category, src)) = lookup(&cat, &name) else {
             return;
         };
-        let res = match cat.as_str() {
-            "runners" => runners::delete_version(&src, &tag_s),
-            "dll_packs" => dll_packs::delete_version(&src, &tag_s),
-            _ => Ok(()),
-        };
-        if let Err(e) = res {
+        if let Err(e) = category.delete_version(&src, &tag_s) {
             self.as_mut().install_failed(
                 QString::from(&cat),
                 QString::from(&name),
@@ -534,13 +480,13 @@ impl qobject::ArchiveManagerBridge {
         QString::from(&archive_source::normalize_releases_url(&link.to_string()))
     }
 
-    fn add_source(mut self: Pin<&mut Self>, category: QString, source_json: QString) -> QString {
-        let source: ArchiveSource = match serde_json::from_str(&source_json.to_string()) {
-            Ok(s) => s,
-            Err(e) => return QString::from(&format!("source parse: {}", e)),
-        };
-        match components_config::add_source(core_category(&category.to_string()), source) {
-            Ok(_) => {
+    fn edit_sources(
+        mut self: Pin<&mut Self>,
+        category: &QString,
+        edit: impl FnOnce(SourceCategory) -> anyhow::Result<()>,
+    ) -> QString {
+        match category.to_string().parse().and_then(edit) {
+            Ok(()) => {
                 self.as_mut().sources_changed();
                 QString::from("")
             }
@@ -548,8 +494,18 @@ impl qobject::ArchiveManagerBridge {
         }
     }
 
+    fn add_source(self: Pin<&mut Self>, category: QString, source_json: QString) -> QString {
+        let source: ArchiveSource = match serde_json::from_str(&source_json.to_string()) {
+            Ok(s) => s,
+            Err(e) => return QString::from(&format!("source parse: {}", e)),
+        };
+        self.edit_sources(&category, |category| {
+            components_config::add_source(category, source)
+        })
+    }
+
     fn update_source(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         category: QString,
         name: QString,
         source_json: QString,
@@ -558,30 +514,15 @@ impl qobject::ArchiveManagerBridge {
             Ok(s) => s,
             Err(e) => return QString::from(&format!("source parse: {}", e)),
         };
-        match components_config::update_source(
-            core_category(&category.to_string()),
-            &name.to_string(),
-            source,
-        ) {
-            Ok(_) => {
-                self.as_mut().sources_changed();
-                QString::from("")
-            }
-            Err(e) => QString::from(&format!("{:#}", e)),
-        }
+        self.edit_sources(&category, |category| {
+            components_config::update_source(category, &name.to_string(), source)
+        })
     }
 
-    fn remove_source(mut self: Pin<&mut Self>, category: QString, name: QString) -> QString {
-        match components_config::remove_source(
-            core_category(&category.to_string()),
-            &name.to_string(),
-        ) {
-            Ok(_) => {
-                self.as_mut().sources_changed();
-                QString::from("")
-            }
-            Err(e) => QString::from(&format!("{:#}", e)),
-        }
+    fn remove_source(self: Pin<&mut Self>, category: QString, name: QString) -> QString {
+        self.edit_sources(&category, |category| {
+            components_config::remove_source(category, &name.to_string())
+        })
     }
 
     fn list_steam_roots(&self) -> QString {
@@ -596,13 +537,13 @@ impl qobject::ArchiveManagerBridge {
         let name = source.to_string();
         let fail = |bridge: Pin<&mut qobject::ArchiveManagerBridge>, name: &str, err: &str| {
             bridge.install_failed(
-                QString::from(runners::LATEST_CATEGORY),
+                QString::from(InstallChannel::RunnersLatest.as_str()),
                 QString::from(name),
                 QString::from(""),
                 QString::from(err),
             );
         };
-        let Some(src) = source_lookup("runners", &name) else {
+        let Some(src) = SourceCategory::Runners.find(&name) else {
             fail(self.as_mut(), &name, &format!("unknown source: {}", name));
             return;
         };
@@ -693,7 +634,7 @@ impl qobject::ArchiveManagerBridge {
     }
 
     fn installed_runner_path(&self, source: QString, name: QString) -> QString {
-        let Some(src) = source_lookup("runners", &source.to_string()) else {
+        let Some(src) = SourceCategory::Runners.find(&source.to_string()) else {
             return QString::from("");
         };
         let path = runners::source_root(&src).join(name.to_string());
@@ -716,25 +657,25 @@ impl qobject::ArchiveManagerBridge {
         for ev in archive_source::drain_events() {
             match ev {
                 archive_source::ArchiveEvent::Started {
-                    category,
+                    channel,
                     source,
                     tag,
                 } => {
                     self.as_mut().install_started(
-                        QString::from(&category),
+                        QString::from(channel.as_str()),
                         QString::from(&source),
                         QString::from(&tag),
                     );
                 }
                 archive_source::ArchiveEvent::Progress {
-                    category,
+                    channel,
                     source,
                     tag,
                     phase,
                     percent,
                 } => {
                     self.as_mut().install_progress(
-                        QString::from(&category),
+                        QString::from(channel.as_str()),
                         QString::from(&source),
                         QString::from(&tag),
                         QString::from(&phase),
@@ -742,26 +683,26 @@ impl qobject::ArchiveManagerBridge {
                     );
                 }
                 archive_source::ArchiveEvent::Completed {
-                    category,
+                    channel,
                     source,
                     tag,
                     install_dir,
                 } => {
                     self.as_mut().install_completed(
-                        QString::from(&category),
+                        QString::from(channel.as_str()),
                         QString::from(&source),
                         QString::from(&tag),
                         QString::from(&install_dir),
                     );
                 }
                 archive_source::ArchiveEvent::Failed {
-                    category,
+                    channel,
                     source,
                     tag,
                     error,
                 } => {
                     self.as_mut().install_failed(
-                        QString::from(&category),
+                        QString::from(channel.as_str()),
                         QString::from(&source),
                         QString::from(&tag),
                         QString::from(&error),

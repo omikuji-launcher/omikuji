@@ -1,4 +1,4 @@
-use crate::archive_source;
+use crate::archive_source::{self, InstallChannel};
 use crate::components_config::{self, ArchiveSource};
 use crate::launch::{ProtonVerb, WineVariant, wine_command};
 use crate::library::Game;
@@ -27,7 +27,13 @@ pub async fn install_version(
     source: &ArchiveSource,
     release: &archive_source::ReleaseInfo,
 ) -> Result<PathBuf> {
-    archive_source::install_version("dll_packs", source, release, &source_root(source)).await
+    archive_source::install_version(
+        InstallChannel::Layers,
+        source,
+        release,
+        &source_root(source),
+    )
+    .await
 }
 
 pub fn list_installed(source: &ArchiveSource) -> Vec<String> {

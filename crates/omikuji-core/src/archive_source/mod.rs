@@ -10,7 +10,7 @@ use std::io::{self, Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
 use crate::archive::{self, ArchiveKind};
-use crate::components_config::ArchiveSource;
+use crate::components_config::{ArchiveSource, SourceCategory};
 use crate::event_queue::EventQueue;
 use crate::http;
 
@@ -85,29 +85,45 @@ pub fn normalize_releases_url(link: &str) -> String {
     RepoLink::parse(link).map_or_else(|| link.trim().to_string(), |repo| repo.releases_api_url()) // uhm
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InstallChannel {
+    Runners,
+    Layers,
+    RunnersLatest,
+}
+
+impl InstallChannel {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Runners => SourceCategory::Runners.as_str(),
+            Self::Layers => SourceCategory::Layers.as_str(),
+            Self::RunnersLatest => "runners_latest",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum ArchiveEvent {
-    // category: "runners" | "dll_packs", routes to the right QML listener
     Started {
-        category: String,
+        channel: InstallChannel,
         source: String,
         tag: String,
     },
     Progress {
-        category: String,
+        channel: InstallChannel,
         source: String,
         tag: String,
         phase: String,
         percent: f64,
     },
     Completed {
-        category: String,
+        channel: InstallChannel,
         source: String,
         tag: String,
         install_dir: String,
     },
     Failed {
-        category: String,
+        channel: InstallChannel,
         source: String,
         tag: String,
         error: String,
@@ -253,41 +269,41 @@ pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> 
 }
 
 pub async fn install_version(
-    category: &str,
+    channel: InstallChannel,
     source: &ArchiveSource,
     release: &ReleaseInfo,
     dest_root: &Path,
 ) -> Result<PathBuf> {
-    install_named(category, source, release, dest_root, None).await
+    install_named(channel, source, release, dest_root, None).await
 }
 
 pub async fn install_version_named(
-    category: &str,
+    channel: InstallChannel,
     source: &ArchiveSource,
     release: &ReleaseInfo,
     dest_root: &Path,
     dir_name: &str,
 ) -> Result<PathBuf> {
-    install_named(category, source, release, dest_root, Some(dir_name)).await
+    install_named(channel, source, release, dest_root, Some(dir_name)).await
 }
 
 async fn install_named(
-    category: &str,
+    channel: InstallChannel,
     source: &ArchiveSource,
     release: &ReleaseInfo,
     dest_root: &Path,
     dir_name: Option<&str>,
 ) -> Result<PathBuf> {
     push(ArchiveEvent::Started {
-        category: category.into(),
+        channel,
         source: source.name.clone(),
         tag: release.tag.clone(),
     });
 
-    match install_inner(category, source, release, dest_root, dir_name).await {
+    match install_inner(channel, source, release, dest_root, dir_name).await {
         Ok(dir) => {
             push(ArchiveEvent::Completed {
-                category: category.into(),
+                channel,
                 source: source.name.clone(),
                 tag: release.tag.clone(),
                 install_dir: dir.to_string_lossy().into_owned(),
@@ -297,7 +313,7 @@ async fn install_named(
         Err(e) => {
             let msg = format!("{:#}", e);
             push(ArchiveEvent::Failed {
-                category: category.into(),
+                channel,
                 source: source.name.clone(),
                 tag: release.tag.clone(),
                 error: msg.clone(),
@@ -311,18 +327,23 @@ struct ExtractProgress<'a> {
     inner: Cursor<&'a [u8]>,
     total: u64,
     last_pct: f64,
-    category: String,
+    channel: InstallChannel,
     source: String,
     tag: String,
 }
 
 impl<'a> ExtractProgress<'a> {
-    fn new(bytes: &'a [u8], category: &str, source: &ArchiveSource, release: &ReleaseInfo) -> Self {
+    fn new(
+        bytes: &'a [u8],
+        channel: InstallChannel,
+        source: &ArchiveSource,
+        release: &ReleaseInfo,
+    ) -> Self {
         Self {
             inner: Cursor::new(bytes),
             total: bytes.len() as u64,
             last_pct: -1.0,
-            category: category.to_string(),
+            channel,
             source: source.name.clone(),
             tag: release.tag.clone(),
         }
@@ -344,7 +365,7 @@ impl Read for ExtractProgress<'_> {
         let pct = (self.inner.position() as f64 / self.total as f64) * 100.0;
         if pct - self.last_pct >= 1.0 {
             push(ArchiveEvent::Progress {
-                category: self.category.clone(),
+                channel: self.channel,
                 source: self.source.clone(),
                 tag: self.tag.clone(),
                 phase: "extracting".into(),
@@ -357,7 +378,7 @@ impl Read for ExtractProgress<'_> {
 }
 
 async fn install_inner(
-    category: &str,
+    channel: InstallChannel,
     source: &ArchiveSource,
     release: &ReleaseInfo,
     dest_root: &Path,
@@ -365,10 +386,10 @@ async fn install_inner(
 ) -> Result<PathBuf> {
     fs::create_dir_all(dest_root)?;
 
-    let bytes = download_bytes(category, source, release).await?;
+    let bytes = download_bytes(channel, source, release).await?;
 
     push(ArchiveEvent::Progress {
-        category: category.into(),
+        channel,
         source: source.name.clone(),
         tag: release.tag.clone(),
         phase: "extracting".into(),
@@ -381,7 +402,7 @@ async fn install_inner(
     let _ = fs::remove_dir_all(&staging);
     fs::create_dir_all(&staging)?;
     kind.unpack(
-        ExtractProgress::new(&bytes, category, source, release),
+        ExtractProgress::new(&bytes, channel, source, release),
         &staging,
     )?;
 
@@ -444,13 +465,13 @@ pub fn installed_source_tag(dir: &Path) -> Option<(String, String)> {
 }
 
 async fn download_bytes(
-    category: &str,
+    channel: InstallChannel,
     source: &ArchiveSource,
     release: &ReleaseInfo,
 ) -> Result<Vec<u8>> {
     http::download_with_progress(&release.asset_url, release.asset_size, |pct| {
         push(ArchiveEvent::Progress {
-            category: category.into(),
+            channel,
             source: source.name.clone(),
             tag: release.tag.clone(),
             phase: "downloading".into(),

@@ -1,5 +1,5 @@
 use crate::app_settings::AppSettings;
-use crate::archive_source::{self, RepoLink};
+use crate::archive_source::{self, InstallChannel, RepoLink};
 use crate::components_config::{self, ArchiveSource};
 use crate::fs_util::copy_dir_all;
 use crate::store::steam::local as steam_local;
@@ -34,7 +34,13 @@ pub async fn install_version(
     source: &ArchiveSource,
     release: &archive_source::ReleaseInfo,
 ) -> Result<PathBuf> {
-    archive_source::install_version("runners", source, release, &source_root(source)).await
+    archive_source::install_version(
+        InstallChannel::Runners,
+        source,
+        release,
+        &source_root(source),
+    )
+    .await
 }
 
 pub fn list_installed(source: &ArchiveSource) -> Vec<String> {
@@ -42,7 +48,6 @@ pub fn list_installed(source: &ArchiveSource) -> Vec<String> {
 }
 
 pub const LATEST_SUFFIX: &str = "-Latest";
-pub const LATEST_CATEGORY: &str = "runners_latest";
 
 pub fn latest_dir_name(source: &ArchiveSource) -> String {
     format!("{}{}", source.name, LATEST_SUFFIX)
@@ -107,7 +112,7 @@ pub async fn install_latest_release(
     let _guard = UpdatingGuard(source.name.clone());
 
     let dir = archive_source::install_version_named(
-        LATEST_CATEGORY,
+        InstallChannel::RunnersLatest,
         source,
         release,
         &source_root(source),

@@ -1135,9 +1135,7 @@ property real cardZoom: appSettings.cardZoom
         onEditSourceRequested: (category, sourceName) => {
             let list = []
             try {
-                list = JSON.parse(category === "runners"
-                    ? archiveManager.listRunners()
-                    : archiveManager.listDllPacks()) || []
+                list = JSON.parse(archiveManager.listSources(category)) || []
             } catch (e) {
                 return
             }

@@ -38,7 +38,7 @@ DialogCard {
 
     function refresh() {
         if (archiveManager) {
-            try { runners = JSON.parse(archiveManager.listRunners()) || [] }
+            try { runners = JSON.parse(archiveManager.listSources("runners")) || [] }
             catch (e) { runners = [] }
         }
         if (componentsBridge) {

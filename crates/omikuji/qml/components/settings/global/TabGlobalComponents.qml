@@ -65,9 +65,9 @@ Item {
 
     function loadSources() {
         if (!archiveManager) return
-        try { runners = JSON.parse(archiveManager.listRunners()) || [] }
+        try { runners = JSON.parse(archiveManager.listSources("runners")) || [] }
         catch (e) { runners = [] }
-        try { dllPacks = JSON.parse(archiveManager.listDllPacks()) || [] }
+        try { dllPacks = JSON.parse(archiveManager.listSources("layers")) || [] }
         catch (e) { dllPacks = [] }
         refreshInstalledCounts()
     }
@@ -90,7 +90,7 @@ Item {
         for (let i = 0; i < dllPacks.length; i++) {
             let d = dllPacks[i]
             try {
-                let list = JSON.parse(archiveManager.listInstalled("dll_packs", d.name)) || []
+                let list = JSON.parse(archiveManager.listInstalled("layers", d.name)) || []
                 counts["dll_packs/" + d.name] = list.length
                 versions["dll_packs/" + d.name] = list.slice().reverse()
             } catch (e) {
@@ -133,7 +133,7 @@ Item {
             action: M3Button {
                 text: qsTr("Add source")
                 variant: "tonal"
-                onClicked: root.addSourceRequested("dll_packs")
+                onClicked: root.addSourceRequested("layers")
             }
 
             Column {
@@ -154,7 +154,7 @@ Item {
                         showPrefixInstall: true
                         installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
                         prefixInstallVersion: modelData.prefix_install_version || ""
-                        onManageClicked: root.manageRequested("dll_packs", sourceName, sourceKind)
+                        onManageClicked: root.manageRequested("layers", sourceName, sourceKind)
                         onPrefixInstallVersionSelected: (tag) => {
                             root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
                             root.loadSources()
