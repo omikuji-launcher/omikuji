@@ -5,6 +5,7 @@ pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Sou
 
 use crate::archive::ArchiveKind;
 use crate::event_queue::EventQueue;
+use crate::fs_util::write_executable_atomic;
 use crate::gacha::strategies::InstallStrategy;
 use crate::{http, settings};
 use anyhow::{Result, anyhow};
@@ -345,20 +346,9 @@ async fn download_bytes(url: &str, name: &str) -> Result<Vec<u8>> {
 }
 
 fn install_bytes(spec: &ComponentSpec, bytes: &[u8]) -> Result<()> {
-    let runtime = crate::runtime_dir();
-    fs::create_dir_all(&runtime)?;
-    let dest = runtime.join(spec.dest);
-    if let Some(parent) = dest.parent() {
-        fs::create_dir_all(parent)?;
-    }
-
+    let dest = crate::runtime_dir().join(spec.dest);
     match &spec.extract {
-        ExtractStrategy::Raw => {
-            let tmp = dest.with_extension("dl-tmp");
-            fs::write(&tmp, bytes)?;
-            chmod_exec(&tmp)?;
-            fs::rename(&tmp, &dest)?;
-        }
+        ExtractStrategy::Raw => write_executable_atomic(&dest, bytes)?,
         ExtractStrategy::Archive { kind, inner_path } => {
             promote_from_archive(spec, bytes, *kind, inner_path, &dest)?;
         }
@@ -386,19 +376,9 @@ fn promote_from_archive(
             list_tree(&staging)
         )
     })?;
-    let tmp = dest.with_extension("dl-tmp");
-    fs::copy(&src, &tmp)?;
-    chmod_exec(&tmp)?;
-    fs::rename(&tmp, dest)?;
+    write_executable_atomic(dest, fs::read(&src)?)?;
     let _ = fs::remove_dir_all(&staging);
     Ok(())
-}
-
-fn chmod_exec(path: &Path) -> std::io::Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-    let mut perms = fs::metadata(path)?.permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(path, perms)
 }
 
 fn find_by_filename(root: &Path, target: &str) -> Option<PathBuf> {

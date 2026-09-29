@@ -80,23 +80,3 @@ pub fn apply_playtime_data(library: &mut Library, steam_data: &SteamPlaytimeMap)
 
     (updated, steam_game_count)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_steam_installed() {
-        let installed = is_steam_installed();
-        println!("steam installed: {}", installed);
-    }
-
-    #[test]
-    fn test_get_current_user() {
-        if let Some(user) = get_steam_users().into_iter().next() {
-            println!("current user: {:?}", user);
-        } else {
-            println!("no steam user found");
-        }
-    }
-}

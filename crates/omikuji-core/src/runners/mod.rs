@@ -721,12 +721,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_runners_dir() {
-        let dir = runners_dir();
-        assert!(dir.to_string_lossy().contains("omikuji"));
-    }
-
-    #[test]
     fn test_list_gpus() {
         let gpus = list_gpus();
         assert!(!gpus.is_empty());

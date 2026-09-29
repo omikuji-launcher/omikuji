@@ -1,9 +1,9 @@
 use std::io::{Error, ErrorKind, Result};
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use crate::downloads::io_stats::track_child;
+use crate::fs_util::{is_executable, set_executable};
 
 pub fn binary_path() -> Result<PathBuf> {
     let p = crate::runtime_dir().join("hpatchz");
@@ -11,7 +11,7 @@ pub fn binary_path() -> Result<PathBuf> {
         return Err(Error::new(
             ErrorKind::NotFound,
             format!(
-                "hpatchz not found at {}. drop the binary there (chmod +x) — first-run fetcher comes later",
+                "hpatchz not found at {}, install it from Settings > Components",
                 p.display()
             ),
         ));
@@ -23,13 +23,8 @@ pub fn binary_path() -> Result<PathBuf> {
 pub fn patch(file: &Path, patch: &Path, output: &Path) -> Result<()> {
     let bin = binary_path()?;
 
-    if let Ok(meta) = std::fs::metadata(&bin) {
-        let mode = meta.permissions().mode();
-        if mode & 0o111 == 0 {
-            let mut perms = meta.permissions();
-            perms.set_mode(mode | 0o755);
-            let _ = std::fs::set_permissions(&bin, perms);
-        }
+    if !is_executable(&bin) {
+        let _ = set_executable(&bin);
     }
 
     let child = Command::new(&bin)

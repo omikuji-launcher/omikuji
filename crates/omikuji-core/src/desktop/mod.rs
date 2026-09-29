@@ -1,10 +1,10 @@
+use crate::fs_util::set_executable;
 use crate::library::{Game, Library, generate_id, rfc3339_now};
 use crate::media::{MediaType, media_path};
 use crate::store::steam;
 use anyhow::{Context, Result};
 use nix::sys::statvfs::statvfs;
 use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -211,8 +211,7 @@ fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
 fn write_shortcut(game: &Game, path: &Path, label: &str) -> Result<()> {
     fs::write(path, generate_desktop_content(game))
         .with_context(|| format!("writing {} file {}", label, path.display()))?;
-    fs::set_permissions(path, fs::Permissions::from_mode(0o755))
-        .with_context(|| format!("setting permissions on {}", path.display()))
+    set_executable(path).with_context(|| format!("setting permissions on {}", path.display()))
 }
 
 fn remove_shortcut(path: &Path, label: &str) -> Result<()> {
