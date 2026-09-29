@@ -2,9 +2,11 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::process::Command;
 
+use anyhow::{Result, bail};
 use serde::Deserialize;
 
 use crate::store::UpdateInfo;
+use crate::store::epic::source::require_legendary;
 
 #[derive(Deserialize)]
 struct InstalledMeta {
@@ -18,13 +20,15 @@ struct AssetEntry {
     build_version: String,
 }
 
-pub fn refresh_assets_cache() -> Option<()> {
-    let bin = super::source::find_legendary()?;
-    let _ = Command::new(bin)
+pub fn refresh_assets_cache() -> Result<()> {
+    let output = Command::new(require_legendary()?)
         .args(["list", "--third-party", "--json"])
-        .output()
-        .ok()?;
-    Some(())
+        .output()?;
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        bail!("legendary list failed: {}", err.trim());
+    }
+    Ok(())
 }
 
 pub fn find_update_for(app_id: &str) -> Option<UpdateInfo> {

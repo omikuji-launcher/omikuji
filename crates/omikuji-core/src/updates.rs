@@ -182,14 +182,13 @@ fn gacha_download_kind(info: GachaUpdateInfo) -> DownloadKind {
 }
 
 fn refresh_store_cache(kind: SourceKind) {
-    match kind {
-        SourceKind::Epic => {
-            let _ = epic::updates::refresh_assets_cache();
-        }
-        SourceKind::Nile => {
-            let _ = nile::updates::refresh_updates_cache();
-        }
-        _ => {}
+    let refreshed = match kind {
+        SourceKind::Epic => epic::updates::refresh_assets_cache(),
+        SourceKind::Nile => nile::updates::refresh_updates_cache(),
+        _ => return,
+    };
+    if let Err(e) = refreshed {
+        tracing::warn!("{} update refresh failed: {:#}", kind.as_str(), e);
     }
 }
 
