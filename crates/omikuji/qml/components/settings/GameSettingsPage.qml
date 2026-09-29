@@ -19,13 +19,14 @@ Item {
     property var gameData: null
     property var config: ({})
     property bool draftLoaded: false
+    property bool dirty: false
 
     readonly property string modalTitle: gameData ? (gameData["name"] || "") : ""
     readonly property string modalSubtitle: gameId
     readonly property string primaryLabel: qsTr("Save & Play")
     readonly property string secondaryLabel: qsTr("Save")
-    readonly property bool primaryEnabled: true
-    readonly property bool secondaryEnabled: true
+    readonly property bool primaryEnabled: dirty
+    readonly property bool secondaryEnabled: dirty
 
     signal saveRequested(int gameIndex)
     signal saveAndPlayRequested(int gameIndex)
@@ -76,6 +77,11 @@ Item {
         gameId = data ? data["gameId"] : ""
         config = gameModel.begin_edit_game(gameIndex)
         draftLoaded = true
+        refreshDirty()
+    }
+
+    function refreshDirty() {
+        dirty = gameModel ? gameModel.draft_dirty() : false
     }
 
     function save() {
@@ -101,6 +107,7 @@ Item {
                 let next = gameModel.get_draft_config()
                 if (key === "launch.args" || key === "launch.alongside_args") next[key] = strVal
                 config = next
+                refreshDirty()
             }
         }
     }
@@ -116,7 +123,12 @@ Item {
     Connections {
         target: root.gameModel
         function onDraftRebased(gameId) {
-            if (gameId === root.gameId) root.config = root.gameModel.get_draft_config()
+            if (gameId !== root.gameId) return
+            root.config = root.gameModel.get_draft_config()
+            root.refreshDirty()
+        }
+        function onMediaChanged(gameId) {
+            if (gameId === root.gameId) root.refreshDirty()
         }
     }
 

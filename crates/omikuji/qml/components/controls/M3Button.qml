@@ -31,6 +31,7 @@ Item {
     implicitHeight: small ? 28 : 36
     implicitWidth: Math.max(small ? 0 : 72, content.implicitWidth + (small ? Theme.space.md : Theme.space.lg) * 2)
     opacity: enabled ? 1 : 0.45
+    Behavior on opacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
 
     readonly property bool navigable: true
     readonly property real navRingRadius: radius

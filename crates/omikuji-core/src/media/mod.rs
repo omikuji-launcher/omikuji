@@ -187,6 +187,12 @@ pub fn commit_pending(game_id: &str) {
     }
 }
 
+pub fn has_pending(game_id: &str) -> bool {
+    ALL_TYPES
+        .iter()
+        .any(|media_type| media_path_in(MediaSlot::Pending, game_id, media_type).is_file())
+}
+
 pub fn discard_pending(game_id: &str) {
     for media_type in ALL_TYPES {
         let _ = fs::remove_file(media_path_in(MediaSlot::Pending, game_id, &media_type));

@@ -162,6 +162,9 @@ pub mod qobject {
         fn get_draft_config(self: &GameModel) -> QMap_QString_QVariant;
 
         #[qinvokable]
+        fn draft_dirty(self: &GameModel) -> bool;
+
+        #[qinvokable]
         fn update_draft_field(self: Pin<&mut GameModel>, key: &QString, value: &QString) -> bool;
 
         #[qinvokable]
@@ -1329,6 +1332,18 @@ impl qobject::GameModel {
             Some(draft) => config_map(&draft.game),
             None => QMap::<QMapPair_QString_QVariant>::default(),
         }
+    }
+
+    fn draft_dirty(&self) -> bool {
+        let Some(draft) = &self.rust().draft else {
+            return false;
+        };
+        let id = &draft.game.metadata.id;
+        self.library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == *id)
+            .is_some_and(|base| draft.game != *base || media::has_pending(id))
     }
 
     fn update_draft_field(mut self: Pin<&mut Self>, key: &QString, value: &QString) -> bool {
