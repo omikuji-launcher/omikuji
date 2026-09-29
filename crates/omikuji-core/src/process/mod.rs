@@ -9,9 +9,14 @@ use nix::fcntl::{Flock, FlockArg};
 use nix::unistd::setsid;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use std::fs::{self, OpenOptions};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
-use std::process::Stdio;
+use std::process::{Child, Command, Stdio};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, LazyLock, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 
 pub const GAME_ID_VAR: &str = "OMIKUJI_GAME_ID";
@@ -19,18 +24,18 @@ pub const GAME_ID_VAR: &str = "OMIKUJI_GAME_ID";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProcessId(pub u64);
 
-static ID_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+static ID_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 fn next_id() -> ProcessId {
-    ProcessId(ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst))
+    ProcessId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
 }
 
 fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
     if game.is_epic() {
         let wine_exe = env
             .get("WINE")
-            .map(std::path::PathBuf::from)
-            .unwrap_or_else(|| std::path::PathBuf::from("wine"));
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("wine"));
         let _ = launch::prepare_epic_prefix(game, &wine_exe, env);
     }
 
@@ -67,9 +72,8 @@ fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
 }
 
 // yes pump as in the sexual joke ghaha yeah mature of me
-fn pump_lines(pipe: impl std::io::Read + Send + 'static, tx: std::sync::mpsc::Sender<String>) {
-    std::thread::spawn(move || {
-        use std::io::{BufRead, BufReader};
+fn pump_lines(pipe: impl Read + Send + 'static, tx: Sender<String>) {
+    thread::spawn(move || {
         for line in BufReader::new(pipe).lines().map_while(|l| l.ok()) {
             let _ = tx.send(line);
         }
@@ -94,7 +98,6 @@ pub struct GameSession {
     pub game_id: String,
     pub game_name: String,
     pub state: ProcessState,
-    pub log_path: PathBuf,
 }
 
 pub struct ProcessManager {
@@ -120,14 +123,11 @@ impl ProcessManager {
         game_logs::reset_log(&config.game_id);
 
         // save_game_logs is opt-in; we still run the reader so the log viewer works
-        let save_to_disk = AppSettings::load().behavior.save_game_logs;
-        let log_path = if save_to_disk {
+        let log_path = if AppSettings::load().behavior.save_game_logs {
             tokio::fs::create_dir_all(&self.logs_dir).await.ok();
-            crate::stamped_log_path(&config.game_id)
+            Some(crate::stamped_log_path(&config.game_id))
         } else {
-            // placeholder only, never opened
-            self.logs_dir
-                .join(format!("{}_ephemeral.log", config.game_id))
+            None
         };
 
         let header = format!(
@@ -173,23 +173,13 @@ impl ProcessManager {
 
         let stdout_pipe = child.stdout.take();
         let stderr_pipe = child.stderr.take();
-        let (log_tx, log_rx) = std::sync::mpsc::channel::<String>();
+        let (log_tx, log_rx) = mpsc::channel::<String>();
         {
             let game_id = config.game_id.clone();
-            let log_path_for_writer = if save_to_disk {
-                Some(log_path.clone())
-            } else {
-                None
-            };
-            std::thread::spawn(move || {
-                use std::io::Write;
-                let mut file = log_path_for_writer.as_ref().and_then(|p| {
-                    std::fs::OpenOptions::new()
-                        .create(true)
-                        .append(true)
-                        .open(p)
-                        .ok()
-                });
+            thread::spawn(move || {
+                let mut file = log_path
+                    .as_ref()
+                    .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok());
                 while let Ok(line) = log_rx.recv() {
                     if let Some(ref mut f) = file {
                         let _ = writeln!(f, "{}", line);
@@ -213,7 +203,6 @@ impl ProcessManager {
             game_id: config.game_id.clone(),
             game_name: config.game_name.clone(),
             state: ProcessState::Running { pid, started_at },
-            log_path: log_path.clone(),
         };
 
         {
@@ -228,7 +217,7 @@ impl ProcessManager {
 
     fn spawn_exit_watcher(
         &self,
-        mut child: std::process::Child,
+        mut child: Child,
         pid: u32,
         proc_id: ProcessId,
         started_at: Instant,
@@ -240,7 +229,7 @@ impl ProcessManager {
         let working_dir = config.working_dir.clone();
         let env = config.env.clone();
 
-        std::thread::spawn(move || {
+        thread::spawn(move || {
             let exit_status = child.wait();
             let exit_code = exit_status.ok().and_then(|s| s.code());
 
@@ -250,7 +239,7 @@ impl ProcessManager {
             if let Ok(Some(game)) = Library::load_game_by_id(&game_id) {
                 if !game.runner.runner_type.is_steam() {
                     while session_has_live_process(pid) {
-                        std::thread::sleep(Duration::from_millis(500));
+                        thread::sleep(Duration::from_millis(500));
                     }
                 }
 
@@ -291,7 +280,7 @@ impl ProcessManager {
 
             if !post_exit_script.is_empty() {
                 tracing::info!(pid, "running post-exit script: {}", post_exit_script);
-                let status = std::process::Command::new("sh")
+                let status = Command::new("sh")
                     .arg("-c")
                     .arg(&post_exit_script)
                     .current_dir(&working_dir)
@@ -355,7 +344,7 @@ type ExitWaiters = HashMap<String, Vec<(u64, tokio::sync::oneshot::Sender<()>)>>
 static EXITED_GAMES: EventQueue<String> = EventQueue::new(10);
 static LAUNCH_REQUESTS: EventQueue<LaunchRequest> = EventQueue::new(10);
 const MARKED_IDS_TTL: Duration = Duration::from_millis(400);
-static WAITER_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+static WAITER_ID: AtomicU64 = AtomicU64::new(1);
 
 pub fn mark_launching(game_id: &str) {
     if let Ok(mut set) = LAUNCHING.lock() {
@@ -374,7 +363,7 @@ pub fn is_launching(game_id: &str) -> bool {
 }
 
 pub struct LaunchSoulGuard {
-    _lock: Flock<std::fs::File>,
+    _lock: Flock<fs::File>,
 }
 // yes this is a dbd reference, yes im mentally ill, yes fuck you too
 
@@ -393,7 +382,7 @@ pub fn try_claim_launch(game_id: &str) -> Option<LaunchSoulGuard> {
         return None;
     }
 
-    let file = std::fs::OpenOptions::new()
+    let file = OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(false)
@@ -440,7 +429,7 @@ pub fn release_exit_waiters(game_id: &str) {
 
 pub fn request_launch(game_id: &str) -> tokio::sync::oneshot::Receiver<()> {
     let (tx, rx) = tokio::sync::oneshot::channel();
-    let waiter = WAITER_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+    let waiter = WAITER_ID.fetch_add(1, Ordering::SeqCst);
 
     if let Ok(mut map) = EXIT_WAITERS.lock() {
         map.entry(game_id.to_string())
@@ -610,7 +599,7 @@ pub fn stop_game(game_id: &str) -> bool {
         }
 
         let game_id = game_id.to_string();
-        std::thread::spawn(move || {
+        thread::spawn(move || {
             let gather = || {
                 let mut pids = session_pid.map(session_pids).unwrap_or_default();
                 for p in marker_pids(&game_id) {
@@ -628,7 +617,7 @@ pub fn stop_game(game_id: &str) -> bool {
             }
 
             for _ in 0..30 {
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                thread::sleep(Duration::from_millis(100));
                 if gather().is_empty() {
                     tracing::info!("game '{}' stopped gracefully", game_id);
                     return;
@@ -658,67 +647,35 @@ pub fn stop_game(game_id: &str) -> bool {
 
 // comm can contain spaces and parens so we parse from the last ')' as the reliable field delimiter
 #[cfg(target_os = "linux")]
-fn session_pids(sid: u32) -> Vec<u32> {
+fn proc_pids() -> impl Iterator<Item = u32> {
     let my_pid = std::process::id();
-    let mut pids = Vec::new();
+    fs::read_dir("/proc")
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|entry| entry.file_name().to_str()?.parse::<u32>().ok())
+        .filter(move |pid| *pid != my_pid)
+}
 
-    let Ok(entries) = std::fs::read_dir("/proc") else {
-        return pids;
-    };
-
-    for entry in entries.flatten() {
-        let name = entry.file_name();
-        let Some(name_str) = name.to_str() else {
-            continue;
-        };
-        let Ok(pid) = name_str.parse::<u32>() else {
-            continue;
-        };
-        if pid == my_pid {
-            continue;
-        }
-
-        if session_of(pid) == Some(sid) {
-            pids.push(pid);
-        }
-    }
-    pids
+#[cfg(target_os = "linux")]
+fn session_pids(sid: u32) -> Vec<u32> {
+    proc_pids()
+        .filter(|pid| session_of(*pid) == Some(sid))
+        .collect()
 }
 
 #[cfg(target_os = "linux")]
 fn marked_processes() -> Vec<(u32, String)> {
     let key = format!("{GAME_ID_VAR}=");
-    let key = key.as_bytes();
-    let my_pid = std::process::id();
-    let mut found = Vec::new();
-
-    let Ok(entries) = std::fs::read_dir("/proc") else {
-        return found;
-    };
-
-    for entry in entries.flatten() {
-        let name = entry.file_name();
-        let Some(name_str) = name.to_str() else {
-            continue;
-        };
-        let Ok(pid) = name_str.parse::<u32>() else {
-            continue;
-        };
-        if pid == my_pid {
-            continue;
-        }
-
-        let Ok(environ) = std::fs::read(entry.path().join("environ")) else {
-            continue;
-        };
-        if let Some(id) = environ
-            .split(|b| *b == 0)
-            .find_map(|var| var.strip_prefix(key))
-        {
-            found.push((pid, String::from_utf8_lossy(id).into_owned()));
-        }
-    }
-    found
+    proc_pids()
+        .filter_map(|pid| {
+            let environ = fs::read(format!("/proc/{pid}/environ")).ok()?;
+            let id = environ
+                .split(|b| *b == 0)
+                .find_map(|var| var.strip_prefix(key.as_bytes()))?;
+            Some((pid, String::from_utf8_lossy(id).into_owned()))
+        })
+        .collect()
 }
 
 fn marker_pids(game_id: &str) -> Vec<u32> {
@@ -746,13 +703,13 @@ fn marked_processes() -> Vec<(u32, String)> {
 }
 
 fn session_of(pid: u32) -> Option<u32> {
-    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
     let rparen = stat.rfind(')')?;
     stat[rparen + 1..].split_whitespace().nth(3)?.parse().ok()
 }
 
 fn runs_exe(pid: u32, exe_name: &str) -> bool {
-    let Ok(comm) = std::fs::read_to_string(format!("/proc/{pid}/comm")) else {
+    let Ok(comm) = fs::read_to_string(format!("/proc/{pid}/comm")) else {
         return false;
     };
     let comm = comm.trim().to_lowercase();
