@@ -478,10 +478,7 @@ impl DownloadManager {
         let Some(status) = inner.entry(id).map(|e| e.status.clone()) else {
             return;
         };
-        if matches!(
-            status,
-            DownloadStatus::Downloading | DownloadStatus::Starting
-        ) {
+        if status.is_running() {
             inner.control.insert(id.to_string(), ControlSignal::Cancel);
             return;
         }
