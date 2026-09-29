@@ -13,6 +13,22 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.1
+Added:
+- Pause/resume on patch (Kuro, HoYo, Endfield)
+- Patching progress for Kuro
+
+
+Fixed:
+- Faster Kuro patching and verification
+- Faster GOG library loading and refreshing
+- Game settings (merge rather than replace draft) + dimmed save buttons on unchanged draft
+- Proper url handling for components (Github, Forgejo, etc.) 
+- Gachas implict args on donwload (allows WuWa to get '-krqlv=hd' in order to run launcherless)
+- Epic DLCs removal cockblocking the GUI thread
+
+
+
 ## 0.20.0
 Added:
 - App tour  (tutorial, Settings > About > Tour)

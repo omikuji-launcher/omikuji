@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.0
+Version:        0.20.1
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,16 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Wed Sep 30 2026 reakjra <reakjra@proton.me> - 0.20.1-1
+- Pause/resume on patch (Kuro, HoYo, Endfield)
+- Patching progress for Kuro
+- Faster Kuro patching and verification
+- Faster GOG library loading and refreshing
+- Game settings (merge rather than replace draft) + dimmed save buttons on unchanged draft
+- Proper url handling for components (Github, Forgejo, etc.) 
+- Gachas implict args on donwload (allows WuWa to get '-krqlv=hd' in order to run launcherless)
+- Epic DLCs removal cockblocking the GUI thread
+
 * Mon Sep 28 2026 reakjra <reakjra@proton.me> - 0.20.0-1
 - App tour (tutorial)
 - updates gated behind exe resolve

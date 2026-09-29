@@ -22,6 +22,20 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.1" date="2026-09-30">
+      <description>
+        <ul>
+          <li>Pause/resume on patch (Kuro, HoYo, Endfield)</li>
+          <li>Patching progress for Kuro</li>
+          <li>Faster Kuro patching and verification</li>
+          <li>Faster GOG library loading and refreshing</li>
+          <li>Game settings (merge rather than replace draft) + dimmed save buttons on unchanged draft</li>
+          <li>Proper url handling for components (Github, Forgejo, etc.) </li>
+          <li>Gachas implict args on donwload (allows WuWa to get '-krqlv=hd' in order to run launcherless)</li>
+          <li>Epic DLCs removal cockblocking the GUI thread</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.0" date="2026-09-28">
       <description>
         <ul>
