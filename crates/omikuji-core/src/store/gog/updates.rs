@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::process::Command;
 
 use serde::Deserialize;
 
@@ -36,25 +35,13 @@ fn read_installed_meta(install_path: &Path, app_id: &str) -> Option<(String, Opt
 }
 
 fn fetch_latest_build(app_id: &str) -> Option<String> {
-    let bin = super::gogdl_bin().ok()?;
-    let auth = super::gog_auth_path();
-    let gogdl_cfg = super::gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&gogdl_cfg);
-    let output = Command::new(&bin)
-        .env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-        .arg("--auth-config-path")
-        .arg(&auth)
-        .arg("info")
-        .arg(app_id)
-        .arg("--os")
-        .arg("windows")
+    let output = super::gogdl_command()
+        .ok()?
+        .args(["info", app_id, "--os", "windows"])
         .output()
         .ok()?;
     if !output.status.success() {
         return None;
     }
-    let v: serde_json::Value = serde_json::from_slice(&output.stdout).ok()?;
-    v.pointer("/builds/items/0/build_id")
-        .and_then(|b| b.as_str())
-        .map(String::from)
+    super::latest_build_id(&serde_json::from_slice(&output.stdout).ok()?)
 }

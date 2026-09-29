@@ -5,7 +5,7 @@ pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Sou
 
 use crate::archive::ArchiveKind;
 use crate::event_queue::EventQueue;
-use crate::fs_util::write_executable_atomic;
+use crate::fs_util::{find_file_named, walk, write_executable_atomic};
 use crate::gacha::strategies::InstallStrategy;
 use crate::{http, settings};
 use anyhow::{Result, anyhow};
@@ -369,7 +369,7 @@ fn promote_from_archive(
     fs::create_dir_all(&staging)?;
     kind.unpack(Cursor::new(bytes), &staging)?;
 
-    let src = find_by_filename(&staging, inner_path).ok_or_else(|| {
+    let src = find_file_named(&staging, inner_path).ok_or_else(|| {
         anyhow!(
             "{} not found after extracting. contents:\n  - {}",
             inner_path,
@@ -381,41 +381,10 @@ fn promote_from_archive(
     Ok(())
 }
 
-fn find_by_filename(root: &Path, target: &str) -> Option<PathBuf> {
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        let Ok(entries) = fs::read_dir(&dir) else {
-            continue;
-        };
-        for e in entries.flatten() {
-            let p = e.path();
-            if p.is_dir() {
-                stack.push(p);
-            } else if p.file_name().and_then(|n| n.to_str()) == Some(target) {
-                return Some(p);
-            }
-        }
-    }
-    None
-}
-
 fn list_tree(root: &Path) -> String {
-    let mut out: Vec<String> = Vec::new();
-    let mut stack = vec![root.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        let Ok(entries) = fs::read_dir(&dir) else {
-            continue;
-        };
-        for e in entries.flatten() {
-            let p = e.path();
-            if p.is_dir() {
-                stack.push(p.clone());
-            }
-            if let Ok(rel) = p.strip_prefix(root) {
-                out.push(rel.display().to_string());
-            }
-        }
-    }
+    let mut out: Vec<String> = walk(root)
+        .filter_map(|e| Some(e.path().strip_prefix(root).ok()?.display().to_string()))
+        .collect();
     out.sort();
     out.join("\n  - ")
 }

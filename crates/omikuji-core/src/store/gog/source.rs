@@ -1,7 +1,9 @@
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use std::path::PathBuf;
-use std::process::Stdio;
+use std::collections::VecDeque;
+use std::fs::DirEntry;
+use std::path::{Path, PathBuf};
+use std::process::{self, Stdio};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
@@ -18,15 +20,6 @@ use crate::fs_util::dir_size;
 
 pub struct GogdlSource;
 
-fn gogdl_bin() -> Result<PathBuf> {
-    super::find_gogdl().ok_or_else(|| {
-        anyhow!(
-            "gogdl not found — install via first-run components or place at {}",
-            crate::runtime_dir().join("gogdl").display()
-        )
-    })
-}
-
 #[async_trait]
 impl DownloadSource for GogdlSource {
     // destructive_cleanup on Install already rm -rf's install_path, so this is a no-op there
@@ -38,7 +31,7 @@ impl DownloadSource for GogdlSource {
     }
 
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
-        let gogdl = gogdl_bin()?;
+        let gogdl = super::gogdl_command()?;
 
         // drop stale registry entries whose files are gone, else you get a "Completed" flash over an empty dir
         let mut live_install = false;
@@ -69,7 +62,7 @@ impl DownloadSource for GogdlSource {
             ));
         }
 
-        let child = spawn_download(&gogdl, entry).await?;
+        let child = spawn_download(gogdl, entry).await?;
         run_with_progress(child, entry).await?;
 
         // clean gogdl exit is the install signal, same as heroic
@@ -104,10 +97,10 @@ impl DownloadSource for GogdlSource {
     }
 
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
-        let gogdl = gogdl_bin()?;
+        let gogdl = super::gogdl_command()?;
         // wipe stale manifest so gogdl sees the latest build before deciding whats to patch
         super::wipe_gogdl_manifest_for(&entry.app_id);
-        let child = spawn_download(&gogdl, entry).await?;
+        let child = spawn_download(gogdl, entry).await?;
         run_with_progress(child, entry).await
     }
 
@@ -144,19 +137,12 @@ fn dlc_args(dlcs: &[String]) -> Vec<String> {
     ]
 }
 
-async fn spawn_download(gogdl: &std::path::Path, entry: &DownloadEntry) -> Result<Child> {
+async fn spawn_download(gogdl: process::Command, entry: &DownloadEntry) -> Result<Child> {
     let support_dir = super::gog_dir().join("support").join(&entry.app_id);
     let _ = std::fs::create_dir_all(&support_dir);
 
-    let auth = super::gog_auth_path();
-    let gogdl_cfg = super::gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&gogdl_cfg);
-
-    let mut cmd = Command::new(gogdl);
-    cmd.env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-        .arg("--auth-config-path")
-        .arg(&auth)
-        .arg("download")
+    let mut cmd = Command::from(gogdl);
+    cmd.arg("download")
         .arg(&entry.app_id)
         .arg("--platform")
         .arg("windows")
@@ -248,7 +234,7 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
 }
 
 // post-install fallback to find where gogdl actually dropped the game, logs top level + immediate subdirs
-fn log_dir_listing(dir: &std::path::Path) {
+fn log_dir_listing(dir: &Path) {
     tracing::debug!(
         "listing {} (diagnostic - no info marker found):",
         dir.display()
@@ -272,102 +258,69 @@ fn log_dir_listing(dir: &std::path::Path) {
     }
 }
 
-pub fn dir_has_info_marker(dir: &std::path::Path, app_id: &str) -> bool {
-    if dir.join(format!("goggame-{}.info", app_id)).exists() {
-        return true;
-    }
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for e in entries.flatten() {
-            let name = e.file_name().to_string_lossy().to_string();
-            if name.starts_with("goggame-") && name.ends_with(".info") {
-                return true;
-            }
-        }
-    }
-    false
+fn is_info_marker(entry: &DirEntry) -> bool {
+    let name = entry.file_name();
+    let name = name.to_string_lossy();
+    name.starts_with("goggame-") && name.ends_with(".info")
+}
+
+fn subdirs(dir: &Path) -> impl Iterator<Item = DirEntry> {
+    std::fs::read_dir(dir)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter(|e| e.file_type().is_ok_and(|t| t.is_dir()))
+}
+
+pub fn dir_has_info_marker(dir: &Path, app_id: &str) -> bool {
+    dir.join(format!("goggame-{}.info", app_id)).exists()
+        || std::fs::read_dir(dir).is_ok_and(|entries| entries.flatten().any(|e| is_info_marker(&e)))
 }
 
 // gogdl can nest a folder_name subdir inside --path (paths with ™ etc), so BFS to depth 3 for the marker
-fn resolve_install_root(dir: &std::path::Path, app_id: &str) -> Option<std::path::PathBuf> {
-    let mut queue: std::collections::VecDeque<(std::path::PathBuf, usize)> =
-        std::collections::VecDeque::new();
-    queue.push_back((dir.to_path_buf(), 0));
+fn resolve_install_root(dir: &Path, app_id: &str) -> Option<PathBuf> {
+    let mut queue = VecDeque::from([(dir.to_path_buf(), 0)]);
     while let Some((d, depth)) = queue.pop_front() {
         if dir_has_info_marker(&d, app_id) {
             return Some(d);
         }
-        if depth >= 3 {
-            continue;
-        }
-        if let Ok(entries) = std::fs::read_dir(&d) {
-            for e in entries.flatten() {
-                if e.file_type().ok().map(|t| t.is_dir()).unwrap_or(false) {
-                    queue.push_back((e.path(), depth + 1));
-                }
-            }
+        if depth < 3 {
+            queue.extend(subdirs(&d).map(|e| (e.path(), depth + 1)));
         }
     }
     None
 }
 
-pub fn find_game_exe_pub(install_path: &std::path::Path, app_id: &str) -> Option<String> {
-    find_game_exe(install_path, app_id)
-}
-
 // mirrors heroic's getExecutable: goggame-{app_id}.info -> playTasks isPrimary -> workingDir/path, then a one-level subdir scan, then any non-installer .exe
-fn find_game_exe(install_path: &std::path::Path, app_id: &str) -> Option<String> {
+pub fn find_game_exe(install_path: &Path, app_id: &str) -> Option<String> {
     let preferred = install_path.join(format!("goggame-{}.info", app_id));
     if preferred.exists()
         && let Some(exe) = parse_info_for_exe(&preferred)
     {
         return Some(exe);
     }
+    scan_with_subdirs(install_path, scan_dir_for_info)
+        .or_else(|| scan_with_subdirs(install_path, scan_dir_for_exe))
+}
 
-    if let Some(exe) = scan_dir_for_info(install_path) {
-        return Some(exe);
-    }
-    if let Ok(entries) = std::fs::read_dir(install_path) {
-        for e in entries.flatten() {
-            if e.file_type().ok().map(|t| t.is_dir()).unwrap_or(false)
-                && let Some(exe) = scan_dir_for_info(&e.path())
-            {
-                let sub = e.file_name().to_string_lossy().to_string();
-                return Some(format!("{}/{}", sub, exe));
-            }
-        }
-    }
-
-    // last resort: first plausible .exe, skipping common installer prefixes
-    scan_dir_for_exe(install_path).or_else(|| {
-        std::fs::read_dir(install_path).ok().and_then(|entries| {
-            for e in entries.flatten() {
-                if e.file_type().ok().map(|t| t.is_dir()).unwrap_or(false)
-                    && let Some(exe) = scan_dir_for_exe(&e.path())
-                {
-                    let sub = e.file_name().to_string_lossy().to_string();
-                    return Some(format!("{}/{}", sub, exe));
-                }
-            }
-            None
+fn scan_with_subdirs(dir: &Path, scan: impl Fn(&Path) -> Option<String>) -> Option<String> {
+    scan(dir).or_else(|| {
+        subdirs(dir).find_map(|sub| {
+            let exe = scan(&sub.path())?;
+            Some(format!("{}/{}", sub.file_name().to_string_lossy(), exe))
         })
     })
 }
 
-fn scan_dir_for_info(dir: &std::path::Path) -> Option<String> {
-    let entries = std::fs::read_dir(dir).ok()?;
-    for e in entries.flatten() {
-        let name = e.file_name().to_string_lossy().to_string();
-        if name.starts_with("goggame-")
-            && name.ends_with(".info")
-            && let Some(exe) = parse_info_for_exe(&e.path())
-        {
-            return Some(exe);
-        }
-    }
-    None
+fn scan_dir_for_info(dir: &Path) -> Option<String> {
+    std::fs::read_dir(dir)
+        .ok()?
+        .flatten()
+        .filter(is_info_marker)
+        .find_map(|e| parse_info_for_exe(&e.path()))
 }
 
-fn parse_info_for_exe(info_path: &std::path::Path) -> Option<String> {
+fn parse_info_for_exe(info_path: &Path) -> Option<String> {
     let content = std::fs::read_to_string(info_path).ok()?;
     let v: serde_json::Value = serde_json::from_str(&content).ok()?;
     let tasks = v.get("playTasks").and_then(|t| t.as_array())?;
@@ -402,7 +355,7 @@ fn parse_info_for_exe(info_path: &std::path::Path) -> Option<String> {
     }
 }
 
-fn scan_dir_for_exe(dir: &std::path::Path) -> Option<String> {
+fn scan_dir_for_exe(dir: &Path) -> Option<String> {
     let skip_prefixes = [
         "setup", "install", "unins", "redist", "dxsetup", "vcredist", "directx",
     ];

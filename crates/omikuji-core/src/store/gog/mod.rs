@@ -5,11 +5,15 @@ pub mod updates;
 use crate::store::{self, StoreGame};
 use crate::{fs_util, http};
 use anyhow::{Result, anyhow};
+use futures_util::{StreamExt, future, stream};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 use tokio::process::Command as AsyncCommand;
 
 const STORE: &str = "gog";
+const METADATA_FETCHES: usize = 8;
 
 pub struct GogStore {
     pub display_name: String,
@@ -24,10 +28,10 @@ impl Default for GogStore {
 
 impl GogStore {
     pub fn new() -> Self {
-        let (name, id) = read_user_data().unwrap_or_default();
+        let user = read_user_data().unwrap_or_default();
         Self {
-            display_name: name,
-            user_id: id,
+            display_name: user.username,
+            user_id: user.user_id,
         }
     }
 
@@ -41,27 +45,7 @@ impl GogStore {
     }
 
     pub async fn login(&mut self, code: &str) -> Result<String> {
-        let bin = gogdl_bin()?;
-        let auth = gog_auth_path();
-        if let Some(parent) = auth.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        let gogdl_cfg = gogdl_config_dir();
-        let _ = std::fs::create_dir_all(&gogdl_cfg);
-        let output = AsyncCommand::new(&bin)
-            .env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-            .arg("--auth-config-path")
-            .arg(&auth)
-            .arg("auth")
-            .arg("--code")
-            .arg(code.trim())
-            .output()
-            .await?;
-
-        if !output.status.success() {
-            let err = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("gogdl auth failed: {}", err.trim());
-        }
+        gogdl_output(&["auth", "--code", code.trim()]).await?;
 
         if let Err(e) = self.refresh_user_data().await {
             tracing::error!("refresh_user_data after login failed: {}", e);
@@ -79,23 +63,13 @@ impl GogStore {
             return Ok(());
         }
         let creds = read_credentials().await?;
-        let token_user_id = creds
-            .user_id
-            .as_ref()
-            .filter(|s| !s.is_empty())
-            .cloned()
-            .unwrap_or_default();
-        if !token_user_id.is_empty() {
-            self.user_id = token_user_id.clone();
+        if let Some(id) = &creds.user_id {
+            self.user_id = id.clone();
         }
 
         let resp = http::client()
             .get("https://embed.gog.com/userData.json")
             .bearer_auth(&creds.access_token)
-            .header(
-                "User-Agent",
-                "omikuji/0.1 (+https://github.com/omikuji-launcher/omikuji)",
-            )
             .send()
             .await?;
         let status = resp.status();
@@ -136,7 +110,10 @@ impl GogStore {
             self.display_name,
             self.user_id
         );
-        save_user_data(&self.display_name, &self.user_id);
+        save_user_data(&UserData {
+            username: self.display_name.clone(),
+            user_id: self.user_id.clone(),
+        });
         Ok(())
     }
 
@@ -158,26 +135,19 @@ impl GogStore {
             creds.access_token.len()
         );
         let client = http::client();
-        let mut games = Vec::new();
+        let mut ids = Vec::new();
         let mut page_token: Option<String> = None;
 
+        let url = format!(
+            "https://galaxy-library.gog.com/users/{}/releases",
+            self.user_id
+        );
         loop {
-            let url = match &page_token {
-                Some(tok) => format!(
-                    "https://galaxy-library.gog.com/users/{}/releases?page_token={}",
-                    self.user_id,
-                    urlencoding_simple(tok)
-                ),
-                None => format!(
-                    "https://galaxy-library.gog.com/users/{}/releases",
-                    self.user_id
-                ),
-            };
-            let resp = client
-                .get(&url)
-                .bearer_auth(&creds.access_token)
-                .send()
-                .await?;
+            let mut request = client.get(&url).bearer_auth(&creds.access_token);
+            if let Some(tok) = &page_token {
+                request = request.query(&[("page_token", tok)]);
+            }
+            let resp = request.send().await?;
             let status = resp.status();
             if !status.is_success() {
                 let body = resp.text().await.unwrap_or_default();
@@ -189,53 +159,16 @@ impl GogStore {
                 anyhow::bail!("galaxy-library returned {}", status);
             }
             let v: serde_json::Value = resp.json().await?;
-            if let Some(items) = v.get("items").and_then(|i| i.as_array()) {
-                for item in items {
-                    let platform = item
-                        .get("platform_id")
-                        .and_then(|p| p.as_str())
-                        .unwrap_or("");
-                    if platform != "gog" {
-                        continue;
-                    }
-                    let external_id = item
-                        .get("external_id")
-                        .and_then(|e| e.as_str())
-                        .unwrap_or("")
-                        .to_string();
-                    if external_id.is_empty() {
-                        continue;
-                    }
-                    match fetch_game_metadata(client, &external_id).await {
-                        Ok(meta) if meta.is_dlc => {
-                            tracing::debug!("skipping dlc {} ({})", meta.title, external_id);
-                        }
-                        Ok(meta) => {
-                            let banner_r =
-                                resolve_gog_image(&external_id, "banner", meta.banner.as_deref());
-                            let coverart_r = resolve_gog_image(
-                                &external_id,
-                                "coverart",
-                                meta.coverart.as_deref(),
-                            );
-                            let icon_r =
-                                resolve_gog_image(&external_id, "icon", meta.icon.as_deref());
-                            games.push(StoreGame {
-                                app_name: external_id,
-                                title: meta.title,
-                                banner: banner_r,
-                                coverart: coverart_r,
-                                icon: icon_r,
-                                is_installed: false,
-                                install_path: None,
-                            });
-                        }
-                        Err(e) => {
-                            tracing::warn!("skipping {}: {}", external_id, e);
-                        }
-                    }
+            let items = v.get("items").and_then(|i| i.as_array());
+            ids.extend(items.into_iter().flatten().filter_map(|item| {
+                if item.get("platform_id").and_then(|p| p.as_str()) != Some("gog") {
+                    return None;
                 }
-            }
+                item.get("external_id")
+                    .and_then(|e| e.as_str())
+                    .filter(|id| !id.is_empty())
+                    .map(String::from)
+            }));
             match v
                 .get("next_page_token")
                 .and_then(|t| t.as_str())
@@ -246,17 +179,19 @@ impl GogStore {
             }
         }
 
+        let mut games: Vec<StoreGame> = stream::iter(ids)
+            .map(|external_id| store_game(client, external_id))
+            .buffer_unordered(METADATA_FETCHES)
+            .filter_map(future::ready)
+            .collect()
+            .await;
+
         // gogdl writes goggame-*.info only on success, so without this marker a stale registry entry reads as installed over an empty dir
-        let installed = list_installed_map().unwrap_or_default();
+        let installed = list_installed_map();
         for g in &mut games {
             if let Some(p) = installed.get(&g.app_name) {
-                let really_installed = p.exists() && has_install_marker(p);
-                g.is_installed = really_installed;
-                g.install_path = if really_installed {
-                    Some(p.clone())
-                } else {
-                    None
-                };
+                g.is_installed = source::dir_has_info_marker(p, &g.app_name);
+                g.install_path = g.is_installed.then(|| p.clone());
             }
         }
 
@@ -267,14 +202,8 @@ impl GogStore {
     }
 
     pub fn logout(&mut self) {
-        let auth = gog_auth_path();
-        if auth.exists() {
-            let _ = std::fs::remove_file(&auth);
-        }
-        let user = user_data_path();
-        if user.exists() {
-            let _ = std::fs::remove_file(&user);
-        }
+        let _ = std::fs::remove_file(gog_auth_path());
+        let _ = std::fs::remove_file(user_data_path());
         let _ = std::fs::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         self.user_id.clear();
@@ -289,36 +218,11 @@ fn registry_path() -> PathBuf {
     gog_dir().join("installed.json")
 }
 
-fn has_install_marker(dir: &Path) -> bool {
-    let scan = |d: &Path| -> bool {
-        if let Ok(entries) = std::fs::read_dir(d) {
-            for e in entries.flatten() {
-                let name = e.file_name().to_string_lossy().to_string();
-                if name.starts_with("goggame-") && name.ends_with(".info") {
-                    return true;
-                }
-            }
-        }
-        false
-    };
-    if scan(dir) {
-        return true;
-    }
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for e in entries.flatten() {
-            if e.file_type().ok().map(|t| t.is_dir()).unwrap_or(false) && scan(&e.path()) {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    Ok(store::registry::read(&registry_path())
+fn list_installed_map() -> HashMap<String, PathBuf> {
+    store::registry::read(&registry_path())
         .into_iter()
         .map(|(app_name, e)| (app_name, e.install_path))
-        .collect())
+        .collect()
 }
 
 pub use crate::store::registry::InstalledInfo;
@@ -329,7 +233,7 @@ pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
     let exe_rel = if entry.has_executable() {
         Some(entry.executable.clone())
     } else {
-        source::find_game_exe_pub(&entry.install_path, app_name)
+        source::find_game_exe(&entry.install_path, app_name)
     };
     Some(entry.resolved(exe_rel))
 }
@@ -340,38 +244,16 @@ pub fn record_install(
     executable: &str,
     title: &str,
 ) -> Result<()> {
-    let registry = registry_path();
-    let mut v: serde_json::Value = if registry.exists() {
-        serde_json::from_str(&std::fs::read_to_string(&registry)?).unwrap_or_default()
-    } else {
-        serde_json::json!({})
+    let entry = store::registry::Entry {
+        install_path: install_path.to_path_buf(),
+        executable: executable.to_string(),
+        title: Some(title.to_string()),
     };
-    let obj = v
-        .as_object_mut()
-        .ok_or_else(|| anyhow!("registry corrupt"))?;
-    obj.insert(
-        app_name.to_string(),
-        serde_json::json!({
-            "install_path": install_path.to_string_lossy().to_string(),
-            "executable": executable,
-            "title": title,
-        }),
-    );
-    fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
-    Ok(())
+    store::registry::insert(&registry_path(), app_name, entry)
 }
 
 pub fn remove_install(app_name: &str) -> Result<()> {
-    let registry = registry_path();
-    if !registry.exists() {
-        return Ok(());
-    }
-    let mut v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&registry)?)?;
-    if let Some(obj) = v.as_object_mut() {
-        obj.remove(app_name);
-    }
-    fs_util::write_atomic(&registry, serde_json::to_string_pretty(&v)?)?;
-    Ok(())
+    store::registry::remove(&registry_path(), app_name)
 }
 
 // must stay in sync with the folder-name sanitize in GogInstallDialog.qml
@@ -393,8 +275,8 @@ pub struct GogDlc {
     pub image: String,
 }
 
-async fn fetch_dlc_art(app_name: &str) -> std::collections::HashMap<String, String> {
-    let mut out = std::collections::HashMap::new();
+async fn fetch_dlc_art(app_name: &str) -> HashMap<String, String> {
+    let mut out = HashMap::new();
     let Ok(resp) = http::client()
         .get(format!(
             "https://api.gog.com/products/{app_name}?expand=expanded_dlcs"
@@ -464,55 +346,32 @@ fn extract_dlcs(v: &serde_json::Value) -> Vec<GogDlc> {
 
 // linux-native games return 0/0 sizes from gogdl and would need their own path, deferred
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
-    let bin = gogdl_bin()?;
-    let auth = gog_auth_path();
-    let gogdl_cfg = gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&gogdl_cfg);
-    let output = AsyncCommand::new(&bin)
-        .env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-        .arg("--auth-config-path")
-        .arg(&auth)
-        .arg("info")
-        .arg(app_name)
-        .arg("--os")
-        .arg("windows")
-        .output()
-        .await?;
+    let mut info = gogdl_info(app_name, None).await?;
 
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("gogdl info failed: {}", err.trim());
+    if extract_sizes(&info) == (0, 0)
+        && let Some(build_id) = latest_build_id(&info)
+    {
+        tracing::debug!(
+            "no manifest in default response - retrying with --build {}",
+            build_id
+        );
+        match gogdl_info(app_name, Some(&build_id)).await {
+            Ok(pinned) if extract_sizes(&pinned) != (0, 0) => info = pinned,
+            Ok(_) => tracing::error!("--build retry still returned no sizes"),
+            Err(e) => tracing::error!("--build retry also failed: {}", e),
+        }
     }
 
-    let v: serde_json::Value = serde_json::from_slice(&output.stdout)?;
-    let (install_bytes, download_bytes) = extract_sizes(&v);
-
+    let (install_bytes, download_bytes) = extract_sizes(&info);
     if install_bytes == 0 && download_bytes == 0 {
-        let latest_build = v
-            .pointer("/builds/items/0/build_id")
-            .and_then(|x| x.as_str())
-            .map(|s| s.to_string());
-        if let Some(build_id) = latest_build {
-            tracing::debug!(
-                "no manifest in default response - retrying with --build {}",
-                build_id
-            );
-            match fetch_install_size_pinned(app_name, &build_id).await {
-                Ok(s) => return Ok(s),
-                Err(e) => {
-                    tracing::error!("--build retry also failed: {}", e);
-                }
-            }
-        }
-
-        let dump = serde_json::to_string_pretty(&v).unwrap_or_default();
+        let dump = serde_json::to_string_pretty(&info).unwrap_or_default();
         tracing::warn!(
             "no manifest sizes for {} - full gogdl info response:\n{}",
             app_name,
             dump
         );
     }
-    let mut dlcs = extract_dlcs(&v);
+    let mut dlcs = extract_dlcs(&info);
     if !dlcs.is_empty() {
         let art = fetch_dlc_art(app_name).await;
         for d in &mut dlcs {
@@ -526,39 +385,6 @@ pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
         download_bytes,
         install_bytes,
         dlcs,
-    })
-}
-
-async fn fetch_install_size_pinned(app_name: &str, build_id: &str) -> Result<InstallSize> {
-    let bin = gogdl_bin()?;
-    let auth = gog_auth_path();
-    let gogdl_cfg = gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&gogdl_cfg);
-    let output = AsyncCommand::new(&bin)
-        .env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-        .arg("--auth-config-path")
-        .arg(&auth)
-        .arg("info")
-        .arg(app_name)
-        .arg("--os")
-        .arg("windows")
-        .arg("--build")
-        .arg(build_id)
-        .output()
-        .await?;
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("gogdl info --build failed: {}", err.trim());
-    }
-    let v: serde_json::Value = serde_json::from_slice(&output.stdout)?;
-    let (install_bytes, download_bytes) = extract_sizes(&v);
-    if install_bytes == 0 && download_bytes == 0 {
-        anyhow::bail!("--build retry still returned no sizes");
-    }
-    Ok(InstallSize {
-        download_bytes,
-        install_bytes,
-        dlcs: extract_dlcs(&v),
     })
 }
 
@@ -632,44 +458,6 @@ fn extract_sizes(v: &serde_json::Value) -> (u64, u64) {
     (install_bytes, download_bytes)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn extract_sizes_from_new_shape() {
-        let body = r#"{
-            "size": {
-                "*": { "disk_size": 755, "download_size": 202 },
-                "en-US": { "disk_size": 22258049719, "download_size": 15862889094 },
-                "de-DE": { "disk_size": 22258049718, "download_size": 15862889094 }
-            }
-        }"#;
-        let v: serde_json::Value = serde_json::from_str(body).unwrap();
-        let (install, download) = extract_sizes(&v);
-        assert_eq!(install, 22258049719 + 755);
-        assert_eq!(download, 15862889094 + 202);
-    }
-
-    #[test]
-    fn extract_sizes_from_manifest_legacy() {
-        let body = r#"{ "manifest": { "disk_size": 1000, "download_size": 500 } }"#;
-        let v: serde_json::Value = serde_json::from_str(body).unwrap();
-        let (install, download) = extract_sizes(&v);
-        assert_eq!(install, 1000);
-        assert_eq!(download, 500);
-    }
-
-    #[test]
-    fn extract_sizes_no_data() {
-        let body = r#"{ "buildId": "x", "builds": { "items": [] } }"#;
-        let v: serde_json::Value = serde_json::from_str(body).unwrap();
-        let (install, download) = extract_sizes(&v);
-        assert_eq!(install, 0);
-        assert_eq!(download, 0);
-    }
-}
-
 // gogdl drops `.gogdl-resume` at the install root during an interrupted dowload
 pub fn inspect_existing_install(_app_name: &str, install_path: &Path) -> (u64, bool) {
     if !install_path.exists() {
@@ -706,14 +494,8 @@ fn parse_credentials(value: &serde_json::Value) -> Option<GogCredentials> {
 }
 
 pub async fn read_credentials() -> Result<GogCredentials> {
-    let bin = gogdl_bin()?;
     let auth = gog_auth_path();
-    let gogdl_cfg = gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&gogdl_cfg);
-    let output = AsyncCommand::new(&bin)
-        .env("GOGDL_CONFIG_PATH", &gogdl_cfg)
-        .arg("--auth-config-path")
-        .arg(&auth)
+    let output = AsyncCommand::from(gogdl_command()?)
         .arg("auth")
         .output()
         .await?;
@@ -802,10 +584,45 @@ fn find_json_blob(s: &str) -> Option<GogCredentials> {
 fn gogdl_bin() -> Result<PathBuf> {
     find_gogdl().ok_or_else(|| {
         anyhow!(
-            "gogdl not found — install via first-run components or place the binary at {}",
+            "gogdl not found, install via Settings > Components or place the binary at {}",
             crate::runtime_dir().join("gogdl").display()
         )
     })
+}
+
+fn gogdl_command() -> Result<Command> {
+    let config = gogdl_config_dir();
+    let _ = std::fs::create_dir_all(&config);
+    let mut cmd = Command::new(gogdl_bin()?);
+    cmd.env("GOGDL_CONFIG_PATH", &config)
+        .arg("--auth-config-path")
+        .arg(gog_auth_path());
+    Ok(cmd)
+}
+
+async fn gogdl_output(args: &[&str]) -> Result<Output> {
+    let output = AsyncCommand::from(gogdl_command()?)
+        .args(args)
+        .output()
+        .await?;
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr);
+        let subcommand = args.first().copied().unwrap_or_default();
+        anyhow::bail!("gogdl {} failed: {}", subcommand, err.trim());
+    }
+    Ok(output)
+}
+
+async fn gogdl_info(app_name: &str, build: Option<&str>) -> Result<serde_json::Value> {
+    let mut args = vec!["info", app_name, "--os", "windows"];
+    args.extend(build.map(|build| ["--build", build]).into_iter().flatten());
+    Ok(serde_json::from_slice(&gogdl_output(&args).await?.stdout)?)
+}
+
+fn latest_build_id(info: &serde_json::Value) -> Option<String> {
+    info.pointer("/builds/items/0/build_id")
+        .and_then(|b| b.as_str())
+        .map(String::from)
 }
 
 pub fn find_gogdl() -> Option<PathBuf> {
@@ -829,19 +646,7 @@ pub fn gogdl_config_dir() -> PathBuf {
 }
 
 pub fn installed_dlcs(app_name: &str) -> Vec<GogDlc> {
-    let root = gogdl_config_dir();
-    if !root.exists() {
-        return Vec::new();
-    }
-    let mut found = None;
-    for dir in walkdir_manifests(&root) {
-        let candidate = dir.join(app_name);
-        if candidate.is_file() {
-            found = Some(candidate);
-            break;
-        }
-    }
-    let Some(path) = found else {
+    let Some(path) = fs_util::find_file_named(&gogdl_config_dir(), app_name) else {
         return Vec::new();
     };
     let Ok(text) = std::fs::read_to_string(&path) else {
@@ -873,100 +678,68 @@ pub fn installed_dlcs(app_name: &str) -> Vec<GogDlc> {
         .collect()
 }
 
-fn walkdir_manifests(root: &Path) -> Vec<PathBuf> {
-    let mut out = vec![root.to_path_buf()];
-    let mut i = 0;
-    while i < out.len() {
-        if let Ok(entries) = std::fs::read_dir(&out[i]) {
-            for e in entries.flatten() {
-                let p = e.path();
-                if p.is_dir() {
-                    out.push(p);
-                }
-            }
-        }
-        i += 1;
-    }
-    out
-}
-
 // gogdl deltas against ghost state otherwise, so wipe before a fresh install. heroic does the same on buildid change
 pub fn wipe_gogdl_manifest_for(app_id: &str) {
-    let root = gogdl_config_dir();
-    if !root.exists() {
-        return;
-    }
     // layout varies by gogdl version, so match on basename instead of hardcoding a path
-    fn walk(dir: &Path, needle: &str) {
-        let Ok(entries) = std::fs::read_dir(dir) else {
-            return;
+    let stale: Vec<PathBuf> = fs_util::walk(&gogdl_config_dir())
+        .filter(|e| e.file_name() == app_id)
+        .map(|e| e.path())
+        .collect();
+    for path in stale {
+        let removed = if path.is_dir() {
+            std::fs::remove_dir_all(&path)
+        } else {
+            std::fs::remove_file(&path)
         };
-        for e in entries.flatten() {
-            let p = e.path();
-            let name = e.file_name().to_string_lossy().to_string();
-            let md = match e.metadata() {
-                Ok(m) => m,
-                Err(_) => continue,
-            };
-            if name == needle {
-                if md.is_dir() {
-                    let _ = std::fs::remove_dir_all(&p);
-                } else {
-                    let _ = std::fs::remove_file(&p);
-                }
-                tracing::debug!("cleared stale gogdl state: {}", p.display());
-                continue;
-            }
-            if md.is_dir() {
-                walk(&p, needle);
-            }
+        if removed.is_ok() {
+            tracing::debug!("cleared stale gogdl state: {}", path.display());
         }
     }
-    walk(&root, app_id);
-}
-
-fn urlencoding_simple(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    for b in s.bytes() {
-        match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                out.push(b as char);
-            }
-            _ => {
-                out.push_str(&format!("%{:02X}", b));
-            }
-        }
-    }
-    out
 }
 
 fn user_data_path() -> PathBuf {
     gog_dir().join("user.json")
 }
 
-fn read_user_data() -> Option<(String, String)> {
-    let path = user_data_path();
-    if !path.exists() {
-        return None;
-    }
-    let content = std::fs::read_to_string(path).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    let name = v
-        .get("username")
-        .and_then(|n| n.as_str())
-        .unwrap_or("")
-        .to_string();
-    let id = v
-        .get("userId")
-        .and_then(|i| i.as_str())
-        .unwrap_or("")
-        .to_string();
-    Some((name, id))
+#[derive(Default, Serialize, Deserialize)]
+struct UserData {
+    #[serde(default)]
+    username: String,
+    #[serde(default, rename = "userId")]
+    user_id: String,
 }
 
-fn save_user_data(name: &str, id: &str) {
-    let body = serde_json::json!({ "username": name, "userId": id }).to_string();
-    let _ = fs_util::write_atomic(&user_data_path(), body);
+fn read_user_data() -> Option<UserData> {
+    serde_json::from_str(&std::fs::read_to_string(user_data_path()).ok()?).ok()
+}
+
+fn save_user_data(user: &UserData) {
+    if let Ok(body) = serde_json::to_string(user) {
+        let _ = fs_util::write_atomic(&user_data_path(), body);
+    }
+}
+
+async fn store_game(client: &reqwest::Client, external_id: String) -> Option<StoreGame> {
+    let meta = match fetch_game_metadata(client, &external_id).await {
+        Ok(meta) => meta,
+        Err(e) => {
+            tracing::warn!("skipping {}: {}", external_id, e);
+            return None;
+        }
+    };
+    if meta.is_dlc {
+        tracing::debug!("skipping dlc {} ({})", meta.title, external_id);
+        return None;
+    }
+    Some(StoreGame {
+        banner: resolve_gog_image(&external_id, "banner", meta.banner.as_deref()),
+        coverart: resolve_gog_image(&external_id, "coverart", meta.coverart.as_deref()),
+        icon: resolve_gog_image(&external_id, "icon", meta.icon.as_deref()),
+        app_name: external_id,
+        title: meta.title,
+        is_installed: false,
+        install_path: None,
+    })
 }
 
 struct ProductMeta {
@@ -1120,3 +893,41 @@ fn extract_windows_reqs(v: &serde_json::Value) -> Vec<serde_json::Value> {
 }
 
 // TODO hide dlcs from the store cards, they're literally useless but i will do this in a year or something
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_sizes_from_new_shape() {
+        let body = r#"{
+            "size": {
+                "*": { "disk_size": 755, "download_size": 202 },
+                "en-US": { "disk_size": 22258049719, "download_size": 15862889094 },
+                "de-DE": { "disk_size": 22258049718, "download_size": 15862889094 }
+            }
+        }"#;
+        let v: serde_json::Value = serde_json::from_str(body).unwrap();
+        let (install, download) = extract_sizes(&v);
+        assert_eq!(install, 22258049719 + 755);
+        assert_eq!(download, 15862889094 + 202);
+    }
+
+    #[test]
+    fn extract_sizes_from_manifest_legacy() {
+        let body = r#"{ "manifest": { "disk_size": 1000, "download_size": 500 } }"#;
+        let v: serde_json::Value = serde_json::from_str(body).unwrap();
+        let (install, download) = extract_sizes(&v);
+        assert_eq!(install, 1000);
+        assert_eq!(download, 500);
+    }
+
+    #[test]
+    fn extract_sizes_no_data() {
+        let body = r#"{ "buildId": "x", "builds": { "items": [] } }"#;
+        let v: serde_json::Value = serde_json::from_str(body).unwrap();
+        let (install, download) = extract_sizes(&v);
+        assert_eq!(install, 0);
+        assert_eq!(download, 0);
+    }
+}

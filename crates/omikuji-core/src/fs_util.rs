@@ -1,3 +1,5 @@
+use std::fs::{DirEntry, ReadDir};
+use std::iter;
 use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
@@ -68,25 +70,37 @@ pub fn write_executable_atomic(path: &Path, body: impl AsRef<[u8]>) -> std::io::
     })
 }
 
-pub fn dir_size(path: &Path) -> u64 {
-    let mut total = 0;
-    let mut stack = vec![path.to_path_buf()];
-    while let Some(dir) = stack.pop() {
-        let Ok(entries) = std::fs::read_dir(&dir) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let Ok(meta) = entry.metadata() else {
-                continue;
-            };
-            if meta.is_dir() {
-                stack.push(entry.path());
-            } else if meta.is_file() {
-                total += meta.len();
+pub fn walk(root: &Path) -> impl Iterator<Item = DirEntry> {
+    let mut pending = vec![root.to_path_buf()];
+    let mut current: Option<ReadDir> = None;
+    iter::from_fn(move || {
+        loop {
+            match current.as_mut().and_then(Iterator::next) {
+                Some(Ok(entry)) => {
+                    if entry.file_type().is_ok_and(|t| t.is_dir()) {
+                        pending.push(entry.path());
+                    }
+                    return Some(entry);
+                }
+                Some(Err(_)) => continue,
+                None => current = std::fs::read_dir(pending.pop()?).ok(),
             }
         }
-    }
-    total
+    })
+}
+
+pub fn find_file_named(root: &Path, name: &str) -> Option<PathBuf> {
+    walk(root)
+        .find(|e| e.file_name() == name && e.file_type().is_ok_and(|t| t.is_file()))
+        .map(|e| e.path())
+}
+
+pub fn dir_size(path: &Path) -> u64 {
+    walk(path)
+        .filter_map(|e| e.metadata().ok())
+        .filter(|meta| meta.is_file())
+        .map(|meta| meta.len())
+        .sum()
 }
 
 pub fn move_file(src: &Path, dst: &Path) -> std::io::Result<()> {

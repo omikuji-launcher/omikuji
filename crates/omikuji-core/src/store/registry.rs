@@ -1,10 +1,16 @@
+use crate::fs_util::write_atomic;
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 // legendary's installed.json shape, we copy it for gog cause yes
+#[derive(Serialize, Deserialize)]
 pub struct Entry {
     pub install_path: PathBuf,
+    #[serde(default)]
     pub executable: String,
+    #[serde(default)]
     pub title: Option<String>,
 }
 
@@ -36,37 +42,36 @@ impl Entry {
 }
 
 pub fn read(path: &Path) -> HashMap<String, Entry> {
-    let mut map = HashMap::new();
     let Ok(content) = std::fs::read_to_string(path) else {
-        return map;
+        return HashMap::new();
     };
-    let Ok(v) = serde_json::from_str::<serde_json::Value>(&content) else {
+    let Ok(raw) = serde_json::from_str::<HashMap<String, serde_json::Value>>(&content) else {
         tracing::warn!("installed registry parse failed: {}", path.display());
-        return map;
+        return HashMap::new();
     };
-    let Some(obj) = v.as_object() else {
-        return map;
-    };
-    for (app_name, data) in obj {
-        let Some(install_path) = data.get("install_path").and_then(|p| p.as_str()) else {
-            continue;
-        };
-        map.insert(
-            app_name.clone(),
-            Entry {
-                install_path: PathBuf::from(install_path),
-                executable: data
-                    .get("executable")
-                    .and_then(|e| e.as_str())
-                    .unwrap_or("")
-                    .to_string(),
-                title: data.get("title").and_then(|t| t.as_str()).map(String::from),
-            },
-        );
-    }
-    map
+    raw.into_iter()
+        .filter_map(|(app_name, data)| Some((app_name, serde_json::from_value(data).ok()?)))
+        .collect()
 }
 
 pub fn entry(path: &Path, app_name: &str) -> Option<Entry> {
     read(path).remove(app_name)
+}
+
+pub fn insert(path: &Path, app_name: &str, entry: Entry) -> Result<()> {
+    let mut entries = read(path);
+    entries.insert(app_name.to_string(), entry);
+    write(path, &entries)
+}
+
+pub fn remove(path: &Path, app_name: &str) -> Result<()> {
+    let mut entries = read(path);
+    if entries.remove(app_name).is_none() {
+        return Ok(());
+    }
+    write(path, &entries)
+}
+
+fn write(path: &Path, entries: &HashMap<String, Entry>) -> Result<()> {
+    Ok(write_atomic(path, serde_json::to_string_pretty(entries)?)?)
 }
