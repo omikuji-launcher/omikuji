@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
 use futures_util::StreamExt;
 use std::sync::LazyLock;
+use std::time::Duration;
 
 // one client so the connection pool is actually reused; per-call clients redo TLS every time
 static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
@@ -12,6 +13,24 @@ static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
 
 pub fn client() -> &'static reqwest::Client {
     &CLIENT
+}
+
+pub async fn with_retries<T, F, Fut>(attempts: u32, mut op: F) -> Result<T>
+where
+    F: FnMut(u32) -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    let mut attempt = 1;
+    loop {
+        match op(attempt).await {
+            Err(e) if attempt < attempts => {
+                tracing::warn!("attempt {}/{} failed: {:#}", attempt, attempts, e);
+                tokio::time::sleep(Duration::from_secs(attempt.into())).await;
+                attempt += 1;
+            }
+            result => return result,
+        }
+    }
 }
 
 // signed cdn urls carry a query, never let it into a file name

@@ -9,6 +9,9 @@ use crate::downloads::limits::GachaLimits;
 use crate::downloads::rate::RateMeter;
 use crate::downloads::throttle;
 use crate::downloads::{ControlSignal, check_control, report_progress};
+use crate::http;
+
+const DOWNLOAD_ATTEMPTS: u32 = 4;
 
 // re-gating a verified list re-skips what the hashes condemned, i hate all of this
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -172,7 +175,26 @@ pub async fn download_one(
         return Ok(());
     }
 
-    let existing = std::fs::metadata(&dest_path).map(|m| m.len()).unwrap_or(0);
+    http::with_retries(DOWNLOAD_ATTEMPTS, |attempt| {
+        let dest_path = &dest_path;
+        async move {
+            if check_control(id) != ControlSignal::None {
+                return Ok(());
+            }
+            fetch_file(id, file, dest_path, progress, attempt > 1).await
+        }
+    })
+    .await
+}
+
+async fn fetch_file(
+    id: &str,
+    file: &SyncFile,
+    dest_path: &Path,
+    progress: &SyncProgress,
+    counted: bool,
+) -> Result<()> {
+    let existing = std::fs::metadata(dest_path).map(|m| m.len()).unwrap_or(0);
     let resume = existing > 0 && existing < file.size;
 
     let client = reqwest::Client::builder()
@@ -194,12 +216,12 @@ pub async fn download_one(
     // a full body means overwrite, only 206 is a real resume
     let append = status.as_u16() == 206 && resume;
     let mut writer: Box<dyn std::io::Write + Send> = if append {
-        Box::new(std::fs::OpenOptions::new().append(true).open(&dest_path)?)
+        Box::new(std::fs::OpenOptions::new().append(true).open(dest_path)?)
     } else {
         progress.rewind(existing);
-        Box::new(std::fs::File::create(&dest_path)?)
+        Box::new(std::fs::File::create(dest_path)?)
     };
-    if append {
+    if append && !counted {
         progress.advance(id, existing);
     }
 
@@ -208,7 +230,7 @@ pub async fn download_one(
         if check_control(id) != ControlSignal::None {
             return Ok(());
         }
-        let bytes = chunk.map_err(|e| anyhow!("network: {}", e))?;
+        let bytes = chunk.map_err(|e| anyhow::Error::new(e).context("network"))?;
         use std::io::Write;
         writer
             .write_all(&bytes)

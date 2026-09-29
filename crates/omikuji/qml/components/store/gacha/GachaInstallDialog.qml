@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import "../../lib/RunnerGrouping.js" as RG
 import "../../lib/ArchiveAssets.js" as AA
 import "../../lib/Format.js" as Format
+import "../../lib/Paths.js" as Paths
 
 DialogCard {
     sizeKey: "gacha_install"
@@ -105,12 +106,9 @@ DialogCard {
         return appIdPrefix + ":" + editionId
     }
 
-    readonly property string effectiveInstallPath: {
-        let folder = (installFolderName || "").replace(/[\\/:*?"<>|]/g, "").trim()
-        let base = (installPath || "").trim().replace(/\/+$/, "")
-        if (base === "" || folder === "") return ""
-        return base + "/" + folder
-    }
+    readonly property string effectiveInstallPath: installFolderName === ""
+        ? ""
+        : Paths.join(installPath, installFolderName)
 
     maxWidth: 480
 

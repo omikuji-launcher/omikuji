@@ -5,6 +5,7 @@ import omikuji 1.0
 import QtQuick.Layouts
 import "../../lib/RunnerGrouping.js" as RG
 import "../../lib/Format.js" as Format
+import "../../lib/Paths.js" as Paths
 
 DialogCard {
     sizeKey: "epic_install"
@@ -56,10 +57,7 @@ DialogCard {
     readonly property string effectiveInstallPath: {
         if (!gameData) return ""
         if (isImportMode) return gameData.installPath || ""
-        let safe = (gameData.title || "Game").replace(/[\\/:*?"<>|]/g, "").trim()
-        let base = (installPath || "").trim().replace(/\/+$/, "")
-        if (base === "" || safe === "") return ""
-        return base + "/" + safe
+        return Paths.join(installPath, gameData.title)
     }
 
     readonly property string resolvedInstallPath: _directUntracked ? (installPath || "").trim() : effectiveInstallPath
@@ -312,7 +310,7 @@ DialogCard {
                 readOnly: root.isImportMode
                 trailingHint: root.isImportMode || root._directUntracked || !root.gameData || !root.gameData.title
                     ? ""
-                    : "/" + (root.gameData.title || "").replace(/[\\/:*?"<>|]/g, "").trim()
+                    : "/" + Paths.folderName(root.gameData.title)
                 onTextEdited: (t) => root.installPath = t
                 onAccepted: (p) => root.installPath = p
 

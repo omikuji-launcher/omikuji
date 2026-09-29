@@ -7,6 +7,7 @@ pub mod session;
 pub mod source;
 pub mod throttle;
 
+use crate::fs_util::write_atomic;
 use crate::gacha::gryphline::source::GryphlineSource;
 use crate::gacha::hoyo::source::HoyoSource;
 use crate::gacha::kuro::source::KuroSource;
@@ -20,7 +21,7 @@ use crate::template_vars::TemplateVars;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock, Mutex};
 use tokio::sync::Notify;
 
@@ -210,6 +211,34 @@ struct Inner {
     sampler_running: bool,
 }
 
+impl Inner {
+    fn entry(&self, id: &str) -> Option<&DownloadEntry> {
+        self.entries.iter().find(|e| e.id == id)
+    }
+
+    fn entry_mut(&mut self, id: &str) -> Option<&mut DownloadEntry> {
+        self.entries.iter_mut().find(|e| e.id == id)
+    }
+
+    fn transition(&mut self, id: &str, status: DownloadStatus) {
+        if let Some(e) = self.entry_mut(id) {
+            e.status = status.clone();
+        }
+        self.events
+            .push_back(DownloadEvent::StatusChanged(id.to_string(), status));
+        save_queue(&self.entries);
+    }
+
+    fn remove_entry(&mut self, id: &str) -> Option<DownloadEntry> {
+        let idx = self.entries.iter().position(|e| e.id == id)?;
+        let entry = self.entries.remove(idx);
+        self.events
+            .push_back(DownloadEvent::Removed(id.to_string()));
+        save_queue(&self.entries);
+        Some(entry)
+    }
+}
+
 fn arm_threads(inner: &mut Inner) -> (bool, bool) {
     let worker = !inner.worker_started;
     inner.worker_started = true;
@@ -309,10 +338,6 @@ pub fn manager() -> &'static DownloadManager {
 }
 
 impl DownloadManager {
-    fn next_id() -> String {
-        generate_id()
-    }
-
     pub fn source_supports_import(&self, key: &str) -> bool {
         let inner = self.inner.lock().unwrap();
         inner.sources.get(key).is_some_and(|s| s.supports_import())
@@ -345,7 +370,7 @@ impl DownloadManager {
 
     fn promote_pre_download(&self, id: &str, req: &DownloadRequest) {
         let mut inner = self.inner.lock().unwrap();
-        let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+        let Some(e) = inner.entry_mut(id) else {
             return;
         };
         if !matches!(e.kind, DownloadKind::PreDownload { .. })
@@ -368,7 +393,7 @@ impl DownloadManager {
             return existing;
         }
 
-        let id = Self::next_id();
+        let id = generate_id();
         let start_paused = req.start_paused;
         let initial_status = if start_paused {
             DownloadStatus::Paused
@@ -420,87 +445,55 @@ impl DownloadManager {
 
     pub fn pause(&self, id: &str) {
         let mut inner = self.inner.lock().unwrap();
-        let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+        let Some(status) = inner.entry(id).map(|e| e.status.clone()) else {
             return;
         };
-        match e.status {
+        match status {
             DownloadStatus::Downloading | DownloadStatus::Starting => {
                 inner.control.insert(id.to_string(), ControlSignal::Pause);
             }
-            DownloadStatus::Queued => {
-                e.status = DownloadStatus::Paused;
-                inner.events.push_back(DownloadEvent::StatusChanged(
-                    id.to_string(),
-                    DownloadStatus::Paused,
-                ));
-                save_queue(&inner.entries);
-            }
+            DownloadStatus::Queued => inner.transition(id, DownloadStatus::Paused),
             _ => {}
         }
     }
 
     pub fn resume(&self, id: &str) {
-        let (should_notify, need) = {
+        let need = {
             let mut inner = self.inner.lock().unwrap();
-            let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+            if !inner
+                .entry(id)
+                .is_some_and(|e| e.status == DownloadStatus::Paused)
+            {
                 return;
-            };
-            if e.status == DownloadStatus::Paused {
-                e.status = DownloadStatus::Queued;
-                inner.events.push_back(DownloadEvent::StatusChanged(
-                    id.to_string(),
-                    DownloadStatus::Queued,
-                ));
-                save_queue(&inner.entries);
-                (true, arm_threads(&mut inner))
-            } else {
-                (false, (false, false))
             }
+            inner.transition(id, DownloadStatus::Queued);
+            arm_threads(&mut inner)
         };
         Self::spawn_threads(need);
-        if should_notify {
-            self.notify.notify_one();
-        }
+        self.notify.notify_one();
     }
 
     pub fn cancel(&self, id: &str) {
         let mut inner = self.inner.lock().unwrap();
-        let Some(idx) = inner.entries.iter().position(|e| e.id == id) else {
+        let Some(status) = inner.entry(id).map(|e| e.status.clone()) else {
             return;
         };
-        let status = inner.entries[idx].status.clone();
-        let entry_snapshot = inner.entries[idx].clone();
-        match status {
-            DownloadStatus::Downloading | DownloadStatus::Starting => {
-                inner.control.insert(id.to_string(), ControlSignal::Cancel);
-            }
-            DownloadStatus::Paused => {
-                // not running but partial files are on disk; drop them now
-                // for Update entries install_path holds the user's exsisting game, dont wipe it
-                // same for import flows (destructive_cleanup == false)
-                inner.entries.remove(idx);
-                inner
-                    .events
-                    .push_back(DownloadEvent::Removed(id.to_string()));
-                save_queue(&inner.entries);
-                drop(inner);
-                finish_bar(id, &entry_snapshot.display_name, "cancelled");
-                if matches!(entry_snapshot.kind, DownloadKind::Install)
-                    && entry_snapshot.destructive_cleanup
-                {
-                    cleanup_install_dir_blocking(&entry_snapshot.install_path);
-                }
-                cleanup_source_state(&entry_snapshot);
-            }
-            _ => {
-                inner.entries.remove(idx);
-                inner
-                    .events
-                    .push_back(DownloadEvent::Removed(id.to_string()));
-                save_queue(&inner.entries);
-                drop(inner);
-                finish_bar(id, &entry_snapshot.display_name, "removed");
-            }
+        if matches!(
+            status,
+            DownloadStatus::Downloading | DownloadStatus::Starting
+        ) {
+            inner.control.insert(id.to_string(), ControlSignal::Cancel);
+            return;
+        }
+        let Some(entry) = inner.remove_entry(id) else {
+            return;
+        };
+        drop(inner);
+        if status == DownloadStatus::Paused {
+            finish_bar(id, &entry.display_name, "cancelled");
+            discard_partial(&entry);
+        } else {
+            finish_bar(id, &entry.display_name, "removed");
         }
     }
 
@@ -510,11 +503,7 @@ impl DownloadManager {
     }
 
     pub fn retry(&self, id: &str) {
-        let entry_copy = {
-            let inner = self.inner.lock().unwrap();
-            inner.entries.iter().find(|e| e.id == id).cloned()
-        };
-        let Some(entry) = entry_copy else { return };
+        let Some(entry) = self.get(id) else { return };
         if !matches!(entry.status, DownloadStatus::Failed(_)) {
             return;
         }
@@ -525,16 +514,11 @@ impl DownloadManager {
 
         let need = {
             let mut inner = self.inner.lock().unwrap();
-            if let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) {
-                e.status = DownloadStatus::Queued;
+            if let Some(e) = inner.entry_mut(id) {
                 e.progress = 0.0;
                 e.bytes_downloaded = 0;
                 e.speed_bps = 0;
-                inner.events.push_back(DownloadEvent::StatusChanged(
-                    id.to_string(),
-                    DownloadStatus::Queued,
-                ));
-                save_queue(&inner.entries);
+                inner.transition(id, DownloadStatus::Queued);
             }
             arm_threads(&mut inner)
         };
@@ -576,13 +560,7 @@ impl DownloadManager {
     }
 
     pub fn get(&self, id: &str) -> Option<DownloadEntry> {
-        self.inner
-            .lock()
-            .unwrap()
-            .entries
-            .iter()
-            .find(|e| e.id == id)
-            .cloned()
+        self.inner.lock().unwrap().entry(id).cloned()
     }
 
     pub fn take_events(&self) -> Vec<DownloadEvent> {
@@ -658,22 +636,12 @@ impl DownloadManager {
             match (result, final_signal) {
                 (_, ControlSignal::Pause) => set_status(&entry.id, DownloadStatus::Paused),
                 (_, ControlSignal::Cancel) => {
-                    if matches!(entry.kind, DownloadKind::Install) && entry.destructive_cleanup {
-                        cleanup_install_dir_blocking(&entry.install_path);
-                    }
-                    cleanup_source_state(&entry);
+                    discard_partial(&entry);
                     finish_bar(&entry.id, &entry.display_name, "cancelled");
-                    let mut inner = mgr.inner.lock().unwrap();
-                    if let Some(idx) = inner.entries.iter().position(|e| e.id == entry.id) {
-                        inner.entries.remove(idx);
-                        inner
-                            .events
-                            .push_back(DownloadEvent::Removed(entry.id.clone()));
-                        save_queue(&inner.entries);
-                    }
+                    mgr.inner.lock().unwrap().remove_entry(&entry.id);
                 }
                 (Ok(()), ControlSignal::None) => complete(&entry),
-                (Err(e), ControlSignal::None) => set_failed(&entry.id, e.to_string()),
+                (Err(e), ControlSignal::None) => set_failed(&entry.id, format!("{e:#}")),
             }
         }
     }
@@ -716,7 +684,7 @@ fn sampler_loop() {
 }
 
 // usable from both the tokio worker and the Qt thread (which has no tokio runtime)
-pub fn cleanup_install_dir_blocking(path: &std::path::Path) {
+pub fn cleanup_install_dir_blocking(path: &Path) {
     if !path.exists() {
         return;
     }
@@ -735,76 +703,30 @@ pub fn cleanup_install_dir_blocking(path: &std::path::Path) {
 }
 
 // defense-in-depth guard, not a substitute for passing the right path, just a last line before remove_dir_all
-fn is_safe_to_wipe(path: &std::path::Path) -> bool {
-    use std::path::{Component, Path};
-
+fn is_safe_to_wipe(path: &Path) -> bool {
     // canonicalize strips `..`, symlinks, relative segments. if it fails (broken symlink, missing parent) refuse, we cant reason about it
     let canon = match path.canonicalize() {
         Ok(p) => p,
         Err(_) => return false,
     };
 
-    if canon.parent().is_none() {
+    if dirs::home_dir().is_some_and(|home| canon == home) {
         return false;
-    }
-
-    let comp_count = canon.components().count();
-    let first_named = canon
-        .components()
-        .filter_map(|c| match c {
-            std::path::Component::Normal(s) => Some(s.to_string_lossy().into_owned()),
-            _ => None,
-        })
-        .next()
-        .unwrap_or_default();
-    let min_components = if matches!(first_named.as_str(), "mnt" | "media" | "run") {
-        4
-    } else {
-        5
-    };
-    if comp_count < min_components {
-        return false;
-    }
-
-    if let Some(home) = dirs::home_dir() {
-        if canon == home {
-            return false;
-        }
-
-        if canon.parent() == Some(home.as_path()) {
-            return false;
-        }
     }
 
     let blacklist: &[&str] = &[
         "/", "/home", "/root", "/usr", "/etc", "/var", "/opt", "/bin", "/sbin", "/lib", "/lib64",
         "/boot", "/dev", "/proc", "/sys", "/mnt", "/media", "/run", "/tmp", "/srv",
-    ]; // may someone want to download stuff in weird places. 
-    for entry in blacklist {
-        if canon == Path::new(entry) {
-            return false;
-        }
-    }
-
-    let allowed_roots: &[&str] = &[
-        "home", "mnt", "media", "run", "tmp", "opt", "var", "srv", "data",
-    ];
-    let mut comps = canon.components();
-    if !matches!(comps.next(), Some(Component::RootDir)) {
-        return false;
-    }
-    let first = match comps.next() {
-        Some(Component::Normal(s)) => s.to_string_lossy().into_owned(),
-        _ => return false,
-    };
-    if !allowed_roots.iter().any(|r| *r == first) {
-        return false;
-    }
-
-    true
+    ]; // may someone want to download stuff in weird places.
+    !blacklist.iter().any(|entry| canon == Path::new(entry))
 }
 
-fn cleanup_source_state(entry: &DownloadEntry) {
+fn discard_partial(entry: &DownloadEntry) {
+    // for Update entries install_path holds the user's existing game, dont wipe it
+    // same for import flows (destructive_cleanup == false)
+    if matches!(entry.kind, DownloadKind::Install) && entry.destructive_cleanup {
+        cleanup_install_dir_blocking(&entry.install_path);
+    }
     if let Some(source) = MANAGER.source_for(entry) {
         source.cleanup_state(entry);
     }
@@ -812,7 +734,7 @@ fn cleanup_source_state(entry: &DownloadEntry) {
 
 pub fn set_display_name(id: &str, name: &str) {
     let mut inner = MANAGER.inner.lock().unwrap();
-    let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) else {
+    let Some(e) = inner.entry_mut(id) else {
         return;
     };
     if e.display_name == name {
@@ -834,12 +756,9 @@ pub fn report_progress(
     let mut inner = MANAGER.inner.lock().unwrap();
 
     let mut became_downloading = false;
-    let display_name = inner
-        .entries
-        .iter()
-        .find(|e| e.id == id)
-        .map(|e| e.display_name.clone());
-    if let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) {
+    let mut name = String::new();
+    if let Some(e) = inner.entry_mut(id) {
+        name = e.display_name.clone();
         if e.status == DownloadStatus::Starting {
             e.status = DownloadStatus::Downloading;
             became_downloading = true;
@@ -867,7 +786,6 @@ pub fn report_progress(
     });
 
     drop(inner);
-    let name = display_name.unwrap_or_default();
     let bar = get_or_create_bar(id, &name, bytes_total);
     bar.set_position(bytes_downloaded);
 }
@@ -882,40 +800,20 @@ pub fn check_control(id: &str) -> ControlSignal {
 }
 
 pub fn set_status(id: &str, status: DownloadStatus) {
-    let mut inner = MANAGER.inner.lock().unwrap();
-    if let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) {
-        e.status = status.clone();
+    MANAGER.inner.lock().unwrap().transition(id, status.clone());
+    if !status.is_active() {
+        return;
     }
-    inner
-        .events
-        .push_back(DownloadEvent::StatusChanged(id.to_string(), status.clone()));
-    save_queue(&inner.entries);
-    drop(inner);
-
-    let prefix = match status {
-        DownloadStatus::Downloading => "Downloading",
-        DownloadStatus::Verifying => "Verifying",
-        DownloadStatus::Extracting => "Extracting",
-        DownloadStatus::Patching => "Patching",
-        DownloadStatus::Starting => "Starting",
-        DownloadStatus::Paused => "Paused",
-        DownloadStatus::Queued => "Queued",
-        _ => return,
-    };
-    let bars = BARS.lock().unwrap();
-    if let Some(bar) = bars.get(id) {
-        bar.set_prefix(prefix);
+    if let Some(bar) = BARS.lock().unwrap().get(id) {
+        bar.set_prefix(status.short());
     }
 }
 
 fn set_failed(id: &str, err: String) {
     let mut inner = MANAGER.inner.lock().unwrap();
-    let name = inner
-        .entries
-        .iter()
-        .find(|e| e.id == id)
-        .map(|e| e.display_name.clone());
-    if let Some(e) = inner.entries.iter_mut().find(|e| e.id == id) {
+    let mut label = String::new();
+    if let Some(e) = inner.entry_mut(id) {
+        label = e.display_name.clone();
         e.status = DownloadStatus::Failed(err.clone());
     }
     inner
@@ -923,7 +821,6 @@ fn set_failed(id: &str, err: String) {
         .push_back(DownloadEvent::Failed(id.to_string(), err.clone()));
     save_queue(&inner.entries);
     drop(inner);
-    let label = name.unwrap_or_default();
     finish_bar(id, &label, "failed");
     let title = if label.is_empty() {
         "Download failed".to_string()
@@ -935,7 +832,7 @@ fn set_failed(id: &str, err: String) {
 
 fn complete(entry: &DownloadEntry) {
     let mut inner = MANAGER.inner.lock().unwrap();
-    if let Some(e) = inner.entries.iter_mut().find(|e| e.id == entry.id) {
+    if let Some(e) = inner.entry_mut(&entry.id) {
         e.status = DownloadStatus::Completed;
         e.progress = 100.0;
     }
@@ -968,12 +865,9 @@ fn save_queue(entries: &[DownloadEntry]) {
         return;
     }
 
-    if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
     match serde_json::to_string_pretty(entries) {
         Ok(json) => {
-            if let Err(e) = std::fs::write(&path, json) {
+            if let Err(e) = write_atomic(&path, json) {
                 tracing::error!("failed to save queue: {}", e);
             }
         }

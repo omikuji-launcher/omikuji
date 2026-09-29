@@ -18,9 +18,10 @@ use super::protos::{SophonPatchAssetChunk, SophonPatchAssetProperty, SophonPatch
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::throttle;
 use crate::external::hpatchz;
+use crate::http;
 
 const HOLD_LAST_FILE_SUFFIX: &str = "globalgamemanagers";
-const DEFAULT_RETRIES: u8 = 4;
+const DEFAULT_RETRIES: u32 = 4;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Stage {
@@ -310,28 +311,24 @@ async fn download_artifact(
         let _ = std::fs::remove_file(&artifact_path);
     }
 
-    let mut last_err: Option<anyhow::Error> = None;
-    for _ in 0..DEFAULT_RETRIES {
-        match try_download_once(task, &artifact_path).await {
-            Ok(()) => {
-                bytes_done.fetch_add(task.patch_length, Ordering::SeqCst);
-                on_progress(ProgressReport {
-                    stage: Stage::Downloading,
-                    current: 0,
-                    total: 0,
-                    bytes_done: bytes_done.load(Ordering::SeqCst),
-                    bytes_total,
-                    bytes_session: 0,
-                });
-                return Ok(());
-            }
-            Err(e) => {
-                let _ = std::fs::remove_file(&artifact_path);
-                last_err = Some(e);
-            }
+    http::with_retries(DEFAULT_RETRIES, |_| async {
+        let result = try_download_once(task, &artifact_path).await;
+        if result.is_err() {
+            let _ = std::fs::remove_file(&artifact_path);
         }
-    }
-    Err(last_err.unwrap_or_else(|| anyhow!("download failed after retries")))
+        result
+    })
+    .await?;
+    bytes_done.fetch_add(task.patch_length, Ordering::SeqCst);
+    on_progress(ProgressReport {
+        stage: Stage::Downloading,
+        current: 0,
+        total: 0,
+        bytes_done: bytes_done.load(Ordering::SeqCst),
+        bytes_total,
+        bytes_session: 0,
+    });
+    Ok(())
 }
 
 async fn try_download_once(task: &FileTask, out: &Path) -> Result<()> {

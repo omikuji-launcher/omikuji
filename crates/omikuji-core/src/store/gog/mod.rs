@@ -257,14 +257,16 @@ pub fn remove_install(app_name: &str) -> Result<()> {
     store::registry::remove(&registry_path(), app_name)
 }
 
-// must stay in sync with the folder-name sanitize in GogInstallDialog.qml
+// must stay in sync with folderName in qml/components/lib/Paths.js
 pub fn install_wrapper_dir_name(title: &str) -> String {
-    title
+    let name: String = title
         .chars()
         .filter(|c| !"\\/:*?\"<>|".contains(*c))
-        .collect::<String>()
-        .trim()
-        .to_string()
+        .collect();
+    match name.trim() {
+        "" => "Game".to_string(),
+        trimmed => trimmed.to_string(),
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
