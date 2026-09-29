@@ -198,7 +198,7 @@ Item {
                         uninstallConfirm.message = g.sourceKind === "epic"
                             ? qsTr("Legendary will delete the game files from disk. This cannot be undone.")
                             : qsTr("The game files will be deleted from disk. This cannot be undone.")
-                        uninstallConfirm.show({ id: g.gameId, kind: g.sourceKind })
+                        uninstallConfirm.show({ id: g.gameId })
                     }
                     break
                 }
@@ -223,10 +223,7 @@ Item {
         cancelText: qsTr("Keep")
         destructive: true
         onConfirmed: (payload) => {
-            if (!payload || !payload.id || !ctrl.gameModel) return
-            if (payload.kind === "gog") ctrl.gameModel.gog_uninstall(payload.id)
-            else if (payload.kind === "nile") ctrl.gameModel.nile_uninstall(payload.id)
-            else ctrl.gameModel.epic_uninstall(payload.id)
+            if (payload && payload.id && ctrl.gameModel) ctrl.gameModel.uninstall_store_game(payload.id)
         }
     }
 

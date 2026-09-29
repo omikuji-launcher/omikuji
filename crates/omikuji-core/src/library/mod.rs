@@ -710,6 +710,15 @@ impl Game {
         s.trim().to_lowercase()
     }
 
+    // falls back to metadata.id for games impoted before the source section existed
+    pub fn effective_app_id(&self) -> &str {
+        if self.source.app_id.is_empty() {
+            &self.metadata.id
+        } else {
+            &self.source.app_id
+        }
+    }
+
     // epic games are launched via legendary, not wine directly, i mean still wine but through legendary
     pub fn is_epic(&self) -> bool {
         self.source.kind == SourceKind::Epic

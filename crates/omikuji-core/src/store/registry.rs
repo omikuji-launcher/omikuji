@@ -1,5 +1,6 @@
 use crate::fs_util::write_atomic;
 use anyhow::Result;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -42,6 +43,10 @@ impl Entry {
 }
 
 pub fn read(path: &Path) -> HashMap<String, Entry> {
+    read_as(path)
+}
+
+pub fn read_as<T: DeserializeOwned>(path: &Path) -> HashMap<String, T> {
     let Ok(content) = std::fs::read_to_string(path) else {
         return HashMap::new();
     };

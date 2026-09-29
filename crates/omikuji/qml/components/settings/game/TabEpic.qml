@@ -3,13 +3,12 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 
-// these toggles have side-effects beyond toml writes, so refreshConfig instead of updateField
+// these toggles have side-effects beyond toml writes, so they call the model instead of updateField
 Item {
     id: root
 
     property var config: ({})
     property var updateField: function(key, value) {}
-    property var refreshConfig: function() {}
     property var gameModel: null
     property string gameId: ""
 
@@ -25,6 +24,13 @@ Item {
 
     onGameIdChanged: refreshDlcs()
     Component.onCompleted: refreshDlcs()
+
+    Connections {
+        target: root.gameModel
+        function onDraftRebased(gameId) {
+            if (gameId === root.gameId) root.refreshDlcs()
+        }
+    }
 
     Column {
         id: content
@@ -46,9 +52,7 @@ Item {
                 M3Switch {
                     checked: root.config["source.eos_overlay"] === true
                     onToggled: (val) => {
-                        if (!root.gameModel || root.gameId === "") return
-                        root.gameModel.epic_toggle_overlay(root.gameId, val)
-                        root.refreshConfig()
+                        if (root.gameModel && root.gameId !== "") root.gameModel.epic_toggle_overlay(root.gameId, val)
                     }
                 }
             }
@@ -67,9 +71,7 @@ Item {
                 M3Switch {
                     checked: root.config["source.cloud_saves"] === true
                     onToggled: (val) => {
-                        if (!root.gameModel || root.gameId === "") return
-                        root.gameModel.epic_set_cloud_saves(root.gameId, val)
-                        root.refreshConfig()
+                        if (root.gameModel && root.gameId !== "") root.gameModel.epic_set_cloud_saves(root.gameId, val)
                     }
                 }
             }
@@ -110,9 +112,7 @@ Item {
                 readOnly: true
                 removable: true
                 items: root.installedDlcs
-                onRemoveRequested: (id) => {
-                    if (root.gameModel.uninstall_dlc(root.gameId, id)) root.refreshDlcs()
-                }
+                onRemoveRequested: (id) => root.gameModel.uninstall_dlc(root.gameId, id)
             }
         }
     }

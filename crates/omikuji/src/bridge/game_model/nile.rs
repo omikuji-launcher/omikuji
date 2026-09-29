@@ -5,9 +5,8 @@ use cxx_qt_lib::QString;
 
 use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library, SourceKind};
-use omikuji_core::process::{self, ErrorAction, ErrorNotification};
 use omikuji_core::store::nile;
-use omikuji_core::{downloads, install_sizes, media, notifications};
+use omikuji_core::{install_sizes, media};
 
 use crate::bridge::expand_path;
 
@@ -160,66 +159,5 @@ impl super::qobject::GameModel {
 
         tracing::info!("imported '{}' as id '{}'", title, app_name_s);
         QString::from(&app_name_s)
-    }
-
-    pub fn nile_uninstall(self: Pin<&mut Self>, game_id: &QString) -> bool {
-        let id = game_id.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
-            tracing::error!("game '{}' not found", id);
-            return false;
-        };
-        if game.source.kind != SourceKind::Nile || game.source.app_id.is_empty() {
-            tracing::error!("game '{}' is not a nile entry", id);
-            return false;
-        }
-
-        let app_id = game.source.app_id.clone();
-        let name = game.metadata.name.clone();
-        let game_id_owned = game.metadata.id.clone();
-        let install_path = nile::find_installed_info(&app_id).map(|i| i.install_path);
-
-        std::thread::spawn(move || {
-            let entries_to_cancel: Vec<String> = downloads::manager()
-                .list()
-                .iter()
-                .filter(|e| e.app_id == app_id)
-                .map(|e| e.id.clone())
-                .collect();
-            for entry_id in entries_to_cancel {
-                downloads::manager().cancel(&entry_id);
-            }
-
-            notifications::info(&name, "Removing Amazon game...");
-
-            if let Err(e) = nile::uninstall(&app_id) {
-                tracing::error!("{}", e);
-            }
-
-            if let Some(path) = install_path
-                && path.exists()
-                && let Err(e) = std::fs::remove_dir_all(&path)
-            {
-                process::notify_error(ErrorNotification {
-                    game_id: game_id_owned.clone(),
-                    title: "Uninstall failed".to_string(),
-                    message: format!("Failed to remove install dir: {}", e),
-                    action: ErrorAction::None,
-                });
-                return;
-            }
-
-            if let Err(e) = Library::remove_game_file(&game_id_owned) {
-                tracing::error!("failed to remove game file: {}", e);
-            }
-            notifications::success(&name, "Uninstalled");
-        });
-
-        true
     }
 }

@@ -234,6 +234,19 @@ pub fn inflight_bytes(install_path: &Path) -> u64 {
 }
 
 pub fn uninstall(app_id: &str) -> Result<()> {
+    let install_path = find_installed_info(app_id).map(|i| i.install_path);
+    if let Err(e) = run_uninstall(app_id) {
+        tracing::error!("{}", e);
+    }
+    if let Some(path) = install_path
+        && path.exists()
+    {
+        std::fs::remove_dir_all(&path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
+    }
+    Ok(())
+}
+
+fn run_uninstall(app_id: &str) -> Result<()> {
     let output = blocking_command()?.arg("uninstall").arg(app_id).output()?;
     if !output.status.success() {
         anyhow::bail!(

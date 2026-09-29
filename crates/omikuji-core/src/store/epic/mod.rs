@@ -2,15 +2,102 @@ pub mod eos_overlay;
 pub mod source;
 pub mod updates;
 
-use crate::launch::build_launch;
+use crate::components::{self, SettingsKey};
+use crate::fs_util::find_executable_in_paths;
+use crate::launch::{ComponentMissing, build_launch};
 use crate::library::Game;
-use crate::store::epic::source::require_legendary;
 use crate::store::{self, StoreGame};
-use crate::{fs_util, http};
+use crate::{downloads, fs_util, http};
 use anyhow::{Result, anyhow};
+use serde::Deserialize;
+use serde::de::IgnoredAny;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 use tokio::process::Command as AsyncCommand;
+
+const STORE: &str = "epic";
+
+pub fn find_legendary() -> Option<PathBuf> {
+    components::path_for(SettingsKey::Legendary)
+}
+
+pub fn legendary_system_path() -> Option<PathBuf> {
+    find_executable_in_paths(
+        &["legendary"],
+        &[
+            "~/.local/bin/legendary",
+            "/usr/local/bin/legendary",
+            "/usr/bin/legendary",
+            "~/.local/share/pipx/venvs/legendary-gl/bin/legendary",
+        ],
+    )
+}
+
+pub fn require_legendary() -> Result<PathBuf> {
+    find_legendary().ok_or_else(|| {
+        anyhow::Error::new(ComponentMissing {
+            name: "Legendary".to_string(),
+        })
+    })
+}
+
+fn legendary_command() -> Result<Command> {
+    Ok(Command::new(require_legendary()?))
+}
+
+fn legendary_async() -> Result<AsyncCommand> {
+    Ok(AsyncCommand::from(legendary_command()?))
+}
+
+fn check_output(cmd: &Command, output: Output) -> Result<Output> {
+    if output.status.success() {
+        return Ok(output);
+    }
+    let subcommand = cmd
+        .get_args()
+        .map(|a| a.to_string_lossy())
+        .find(|a| !a.starts_with('-'))
+        .unwrap_or_default();
+    let err = String::from_utf8_lossy(&output.stderr);
+    anyhow::bail!("legendary {} failed: {}", subcommand, err.trim())
+}
+
+fn legendary_output(cmd: &mut Command) -> Result<Output> {
+    let output = cmd.output()?;
+    check_output(cmd, output)
+}
+
+async fn legendary_output_async(cmd: &mut AsyncCommand) -> Result<Output> {
+    let output = cmd.output().await?;
+    check_output(cmd.as_std(), output)
+}
+
+pub fn legendary_dir() -> PathBuf {
+    dirs::config_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("legendary")
+}
+
+fn user_json() -> PathBuf {
+    legendary_dir().join("user.json")
+}
+
+fn installed_json() -> PathBuf {
+    legendary_dir().join("installed.json")
+}
+
+fn metadata_json(app_name: &str) -> PathBuf {
+    legendary_dir()
+        .join("metadata")
+        .join(format!("{app_name}.json"))
+}
+
+fn resume_file(app_name: &str) -> PathBuf {
+    legendary_dir()
+        .join("tmp")
+        .join(format!("{app_name}.resume"))
+}
 
 pub struct EpicStore {
     pub display_name: String,
@@ -42,18 +129,7 @@ impl EpicStore {
     }
 
     pub async fn login(&mut self, code: &str) -> Result<String> {
-        let bin = require_legendary()?;
-        let output = AsyncCommand::new(&bin)
-            .arg("auth")
-            .arg("--code")
-            .arg(code.trim())
-            .output()
-            .await?;
-
-        if !output.status.success() {
-            let err = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("legendary auth failed: {}", err.trim());
-        }
+        legendary_output_async(legendary_async()?.args(["auth", "--code", code.trim()])).await?;
 
         self.refresh_display_name();
         if self.display_name.is_empty() {
@@ -63,18 +139,10 @@ impl EpicStore {
     }
 
     pub async fn logout(&mut self) -> Result<()> {
-        if let Ok(bin) = require_legendary() {
-            let _ = AsyncCommand::new(&bin)
-                .arg("auth")
-                .arg("--delete")
-                .output()
-                .await;
+        if let Ok(mut cmd) = legendary_async() {
+            let _ = cmd.args(["auth", "--delete"]).output().await;
         }
-        if let Some(path) = legendary_user_json()
-            && path.exists()
-        {
-            let _ = std::fs::remove_file(&path);
-        }
+        let _ = std::fs::remove_file(user_json());
         // drop cache so next login starts with an empty library, not the previous user's
         let _ = std::fs::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
@@ -82,26 +150,15 @@ impl EpicStore {
     }
 
     pub async fn list_games(&mut self) -> Result<Vec<StoreGame>> {
-        migrate_image_cache_once();
-        let bin = require_legendary()?;
         tracing::info!("fetching library via legendary list --json ...");
-        let output = AsyncCommand::new(&bin)
-            .arg("list")
-            .arg("--json")
-            .output()
-            .await?;
-
-        if !output.status.success() {
-            let err = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("legendary list failed: {}", err.trim());
-        }
+        let output = legendary_output_async(legendary_async()?.args(["list", "--json"])).await?;
 
         let raw: serde_json::Value = serde_json::from_slice(&output.stdout)?;
         let arr = raw
             .as_array()
             .ok_or_else(|| anyhow!("expected array from legendary list"))?;
 
-        let installed = list_installed_map().unwrap_or_default();
+        let installed = list_installed_map();
 
         let mut games = Vec::new();
         for entry in arr {
@@ -183,43 +240,38 @@ impl EpicStore {
     }
 }
 
-fn legendary_user_json() -> Option<PathBuf> {
-    Some(dirs::config_dir()?.join("legendary").join("user.json"))
-}
-
 pub fn logged_in() -> bool {
-    legendary_user_json().is_some_and(|p| p.exists())
+    user_json().exists()
 }
 
 fn read_display_name() -> Option<String> {
-    let path = legendary_user_json()?;
-    if !path.exists() {
-        return None;
-    }
-    let json = std::fs::read_to_string(path).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&json).ok()?;
-    v.get("displayName")
-        .and_then(|n| n.as_str())
-        .map(String::from)
-}
-
-fn installed_json() -> PathBuf {
-    dirs::config_dir()
-        .unwrap_or_default()
-        .join("legendary")
-        .join("installed.json")
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(user_json()).ok()?).ok()?;
+    v.get("displayName")?.as_str().map(String::from)
 }
 
 // only entries with BOTH install_path AND executable; partial installs (killed mid-download) would otherwise show up as "installed" in the ui
-fn list_installed_map() -> Result<HashMap<String, PathBuf>> {
-    Ok(store::registry::read(&installed_json())
+fn list_installed_map() -> HashMap<String, PathBuf> {
+    store::registry::read(&installed_json())
         .into_iter()
         .filter(|(_, e)| e.has_executable())
         .map(|(app_name, e)| (app_name, e.install_path))
-        .collect())
+        .collect()
 }
 
 pub use crate::store::registry::InstalledInfo;
+
+#[derive(Deserialize)]
+struct InstalledRecord {
+    version: String,
+    platform: String,
+    #[serde(default)]
+    save_path: Option<String>,
+}
+
+fn installed_record(app_name: &str) -> Option<InstalledRecord> {
+    store::registry::read_as(&installed_json()).remove(app_name)
+}
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct EpicDlc {
@@ -228,54 +280,42 @@ pub struct EpicDlc {
     pub image: String,
 }
 
-fn dlc_art_from_metadata(app_name: &str) -> std::collections::HashMap<String, String> {
-    let mut out = std::collections::HashMap::new();
-    let Some(dir) = dirs::config_dir() else {
-        return out;
-    };
-    let path = dir
-        .join("legendary")
-        .join("metadata")
-        .join(format!("{app_name}.json"));
-    let Ok(text) = std::fs::read_to_string(path) else {
-        return out;
-    };
-    let Ok(meta) = serde_json::from_str::<serde_json::Value>(&text) else {
-        return out;
-    };
-    let Some(list) = meta
-        .pointer("/metadata/dlcItemList")
+fn read_metadata(app_name: &str) -> Result<serde_json::Value> {
+    Ok(serde_json::from_str(&std::fs::read_to_string(
+        metadata_json(app_name),
+    )?)?)
+}
+
+fn dlc_items(meta: &serde_json::Value) -> &[serde_json::Value] {
+    meta.pointer("/metadata/dlcItemList")
         .and_then(|d| d.as_array())
-    else {
-        return out;
+        .map_or(&[], Vec::as_slice)
+}
+
+fn dlc_id(item: &serde_json::Value) -> Option<&str> {
+    item.pointer("/releaseInfo/0/appId")?.as_str()
+}
+
+fn dlc_image(item: &serde_json::Value) -> Option<&str> {
+    let images = item.get("keyImages")?.as_array()?;
+    let pick = |want: &str| {
+        images
+            .iter()
+            .find(|i| i.get("type").and_then(|t| t.as_str()) == Some(want))
+            .and_then(|i| i.get("url"))
+            .and_then(|u| u.as_str())
     };
-    for e in list {
-        let Some(id) = e
-            .pointer("/releaseInfo/0/appId")
-            .and_then(|a| a.as_str())
-            .map(|s| s.to_string())
-        else {
-            continue;
-        };
-        let Some(images) = e.get("keyImages").and_then(|i| i.as_array()) else {
-            continue;
-        };
-        let pick = |want: &str| {
-            images
-                .iter()
-                .find(|i| i.get("type").and_then(|t| t.as_str()) == Some(want))
-                .and_then(|i| i.get("url"))
-                .and_then(|u| u.as_str())
-        };
-        if let Some(url) = pick("DieselGameBox")
-            .or_else(|| pick("OfferImageWide"))
-            .or_else(|| pick("DieselGameBoxTall"))
-            .or_else(|| pick("OfferImageTall"))
-        {
-            out.insert(id, url.to_string());
-        }
-    }
-    out
+    pick("DieselGameBox")
+        .or_else(|| pick("OfferImageWide"))
+        .or_else(|| pick("DieselGameBoxTall"))
+        .or_else(|| pick("OfferImageTall"))
+}
+
+fn dlc_art(meta: &serde_json::Value) -> HashMap<String, String> {
+    dlc_items(meta)
+        .iter()
+        .filter_map(|e| Some((dlc_id(e)?.to_string(), dlc_image(e)?.to_string())))
+        .collect()
 }
 
 #[derive(Debug, Clone)]
@@ -286,10 +326,7 @@ pub struct InstallSize {
     pub dlcs: Vec<EpicDlc>,
 }
 
-fn extract_dlcs(
-    v: &serde_json::Value,
-    art: &std::collections::HashMap<String, String>,
-) -> Vec<EpicDlc> {
+fn extract_dlcs(v: &serde_json::Value, art: &HashMap<String, String>) -> Vec<EpicDlc> {
     let Some(list) = v.pointer("/game/owned_dlc").and_then(|d| d.as_array()) else {
         return Vec::new();
     };
@@ -313,21 +350,14 @@ fn extract_dlcs(
 }
 
 pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
-    let bin = require_legendary()?;
-    let output = AsyncCommand::new(&bin)
-        .arg("info")
-        .arg(app_name)
-        .arg("--json")
-        .arg("--platform")
-        .arg("Windows")
-        .output()
-        .await?;
-
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("legendary info failed: {}", err.trim());
-    }
-
+    let output = legendary_output_async(legendary_async()?.args([
+        "info",
+        app_name,
+        "--json",
+        "--platform",
+        "Windows",
+    ]))
+    .await?;
     let v: serde_json::Value = serde_json::from_slice(&output.stdout)?;
 
     let install_bytes = v
@@ -353,7 +383,12 @@ pub async fn fetch_install_size(app_name: &str) -> Result<InstallSize> {
         download_bytes,
         install_bytes,
         launch_exe,
-        dlcs: extract_dlcs(&v, &dlc_art_from_metadata(app_name)),
+        dlcs: extract_dlcs(
+            &v,
+            &read_metadata(app_name)
+                .map(|m| dlc_art(&m))
+                .unwrap_or_default(),
+        ),
     })
 }
 
@@ -361,56 +396,28 @@ pub fn inspect_existing_install(app_name: &str, install_path: &Path) -> (u64, bo
     if !install_path.exists() {
         return (0, false);
     }
-
-    let has_resume = dirs::config_dir()
-        .map(|c| {
-            c.join("legendary")
-                .join("tmp")
-                .join(format!("{}.resume", app_name))
-                .exists()
-        })
-        .unwrap_or(false);
-
-    (fs_util::dir_size(install_path), has_resume)
+    (
+        fs_util::dir_size(install_path),
+        resume_file(app_name).exists(),
+    )
 }
 
 pub fn installed_dlcs(app_name: &str) -> Vec<EpicDlc> {
-    let Some(dir) = dirs::config_dir() else {
+    let Ok(meta) = read_metadata(app_name) else {
         return Vec::new();
     };
-    let installed: serde_json::Value =
-        std::fs::read_to_string(dir.join("legendary/installed.json"))
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default();
-
-    let art = dlc_art_from_metadata(app_name);
-    let meta: serde_json::Value = std::fs::read_to_string(
-        dir.join("legendary/metadata")
-            .join(format!("{app_name}.json")),
-    )
-    .ok()
-    .and_then(|s| serde_json::from_str(&s).ok())
-    .unwrap_or_default();
-
-    let Some(list) = meta
-        .pointer("/metadata/dlcItemList")
-        .and_then(|d| d.as_array())
-    else {
-        return Vec::new();
-    };
-
-    list.iter()
+    let installed = store::registry::read_as::<IgnoredAny>(&installed_json());
+    dlc_items(&meta)
+        .iter()
         .filter_map(|e| {
-            let id = e.pointer("/releaseInfo/0/appId")?.as_str()?.to_string();
-            installed.get(&id)?;
-            let title = e
-                .get("title")
-                .and_then(|t| t.as_str())
-                .unwrap_or(&id)
-                .to_string();
-            let image = art.get(&id).cloned().unwrap_or_default();
-            Some(EpicDlc { id, title, image })
+            let id = dlc_id(e)?;
+            installed.get(id)?;
+            let title = e.get("title").and_then(|t| t.as_str()).unwrap_or(id);
+            Some(EpicDlc {
+                id: id.to_string(),
+                title: title.to_string(),
+                image: dlc_image(e).unwrap_or_default().to_string(),
+            })
         })
         .collect()
 }
@@ -421,34 +428,41 @@ pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
     Some(entry.resolved(exe_rel))
 }
 
-fn installed_save_path(app_name: &str) -> Option<String> {
-    let installed_json = dirs::config_dir()?.join("legendary").join("installed.json");
-    let content = std::fs::read_to_string(installed_json).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    v.get(app_name)?
-        .get("save_path")
-        .and_then(|p| p.as_str())
-        .map(String::from)
+pub fn uninstall(app_name: &str) -> Result<()> {
+    let install_path = find_installed_info(app_name).map(|i| i.install_path);
+    legendary_output(legendary_command()?.args(["-y", "uninstall", app_name]))?;
+    if let Some(path) = install_path
+        && path.exists()
+    {
+        tracing::warn!(
+            "legendary exited 0 but {} still exists, forcing cleanup",
+            path.display()
+        );
+        downloads::cleanup_install_dir_blocking(&path);
+    }
+    Ok(())
+}
+
+// not uninstall(): a dlc's install_path is the base game's dir, its leftover cleanup would wipe the game
+pub fn uninstall_dlc(dlc_id: &str) -> Result<()> {
+    legendary_output(legendary_command()?.args(["-y", "uninstall", dlc_id]))?;
+    Ok(())
 }
 
 pub fn discover_save_path(game: &Game) -> Result<String> {
-    let bin = require_legendary()?;
-    let app_name = if game.source.app_id.is_empty() {
-        &game.metadata.id
-    } else {
-        &game.source.app_id
-    };
-
+    let app_name = game.effective_app_id();
     let config = build_launch(game)?;
 
     tracing::info!("discovering save path for '{}'", app_name);
 
-    let status = std::process::Command::new(&bin)
-        .arg("sync-saves")
-        .arg(app_name)
-        .arg("--skip-upload")
-        .arg("--skip-download")
-        .arg("--accept-path")
+    let status = legendary_command()?
+        .args([
+            "sync-saves",
+            app_name,
+            "--skip-upload",
+            "--skip-download",
+            "--accept-path",
+        ])
         .envs(&config.env)
         .status()?;
 
@@ -456,28 +470,24 @@ pub fn discover_save_path(game: &Game) -> Result<String> {
         tracing::warn!("sync-saves path discovery exited with {}", status);
     }
 
-    Ok(installed_save_path(app_name).unwrap_or_default())
+    Ok(installed_record(app_name)
+        .and_then(|r| r.save_path)
+        .unwrap_or_default())
 }
 
 pub fn sync_saves_download(app_name: &str, save_path: &str) -> Result<()> {
     if save_path.is_empty() {
         return Ok(());
     }
-    let bin = require_legendary()?;
     tracing::info!("downloading saves for '{}' to '{}'", app_name, save_path);
-
-    let status = std::process::Command::new(&bin)
-        .arg("sync-saves")
-        .arg(app_name)
-        .arg("--skip-upload")
-        .arg("--save-path")
-        .arg(save_path)
-        .arg("-y")
-        .status()?;
-
-    if !status.success() {
-        anyhow::bail!("sync-saves download failed with {}", status);
-    }
+    legendary_output(legendary_command()?.args([
+        "sync-saves",
+        app_name,
+        "--skip-upload",
+        "--save-path",
+        save_path,
+        "-y",
+    ]))?;
     Ok(())
 }
 
@@ -485,57 +495,24 @@ pub fn sync_saves_upload(app_name: &str, save_path: &str) -> Result<()> {
     if save_path.is_empty() {
         return Ok(());
     }
-    let bin = require_legendary()?;
     tracing::info!("uploading saves for '{}' from '{}'", app_name, save_path);
-
-    let status = std::process::Command::new(&bin)
-        .arg("sync-saves")
-        .arg(app_name)
-        .arg("--skip-download")
-        .arg("--save-path")
-        .arg(save_path)
-        .arg("-y")
-        .status()?;
-
-    if !status.success() {
-        anyhow::bail!("sync-saves upload failed with {}", status);
-    }
+    legendary_output(legendary_command()?.args([
+        "sync-saves",
+        app_name,
+        "--skip-download",
+        "--save-path",
+        save_path,
+        "-y",
+    ]))?;
     Ok(())
 }
-
-const STORE: &str = "epic";
 
 fn thumbnail_url(url: &str) -> String {
     let sep = if url.contains('?') { '&' } else { '?' };
     format!("{}{}h=480&w=360&resize=1&quality=medium", url, sep)
 }
 
-fn migrate_image_cache_once() {
-    use std::sync::OnceLock;
-    static MIGRATED: OnceLock<()> = OnceLock::new();
-    MIGRATED.get_or_init(|| {
-        let dir = store::cache::cache_dir(STORE);
-        let marker = dir.join(".thumb-v1");
-        if marker.exists() {
-            return;
-        }
-        tracing::info!("migrating image cache to thumbnailed version");
-        if let Ok(entries) = std::fs::read_dir(&dir) {
-            for e in entries.flatten() {
-                let p = e.path();
-                if p.extension().and_then(|s| s.to_str()) == Some("img") {
-                    let _ = std::fs::remove_file(&p);
-                }
-            }
-        }
-        let _ = std::fs::remove_file(store::cache::library_path(STORE));
-        let _ = std::fs::create_dir_all(&dir);
-        let _ = std::fs::write(&marker, "v1");
-    });
-}
-
 pub fn load_cached_library() -> Vec<StoreGame> {
-    migrate_image_cache_once();
     store::cache::load_library(STORE)
 }
 
@@ -548,12 +525,7 @@ fn resolve_epic_image(app_name: &str, kind: &str, cdn_url: Option<&str>) -> Opti
 }
 
 pub async fn fetch_game_details(app_name: &str) -> Result<String> {
-    let path = dirs::config_dir()
-        .ok_or_else(|| anyhow!("no config dir"))?
-        .join("legendary")
-        .join("metadata")
-        .join(format!("{app_name}.json"));
-    let meta: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path)?)?;
+    let meta = read_metadata(app_name)?;
     let title = meta
         .pointer("/metadata/title")
         .and_then(|t| t.as_str())

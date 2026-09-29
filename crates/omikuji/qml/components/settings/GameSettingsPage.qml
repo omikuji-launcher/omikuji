@@ -113,19 +113,11 @@ Item {
         if (dllSetsDialog) dllSetsDialog.openForGame(root.config["wine.dll_overrides"] || "{}", root.config["wine.dll_override_sets"] || "[]", root.updateField)
     }
 
-    // lookup by id because index may shift after a refresh
-    function findIndex() {
-        if (!gameModel || gameId === "") return -1
-        for (let i = 0; i < gameModel.count; i++) {
-            let g = gameModel.get_game(i)
-            if (g && g["gameId"] === gameId) return i
+    Connections {
+        target: root.gameModel
+        function onDraftRebased(gameId) {
+            if (gameId === root.gameId) root.config = root.gameModel.get_draft_config()
         }
-        return -1
-    }
-
-    function refreshConfig() {
-        let idx = findIndex()
-        if (idx >= 0) config = gameModel.begin_edit_game(idx)
     }
 
     property real viewportHeight: 0
@@ -185,7 +177,6 @@ Item {
             sourceComponent: TabEpic {
                 config: root.config
                 updateField: root.updateField
-                refreshConfig: root.refreshConfig
                 gameModel: root.gameModel
                 gameId: root.gameId
             }

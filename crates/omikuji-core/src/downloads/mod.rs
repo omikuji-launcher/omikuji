@@ -556,6 +556,12 @@ impl DownloadManager {
         self.inner.lock().unwrap().entries.clone()
     }
 
+    pub fn cancel_app(&self, app_id: &str) {
+        for entry in self.list().iter().filter(|e| e.app_id == app_id) {
+            self.cancel(&entry.id);
+        }
+    }
+
     pub fn get(&self, id: &str) -> Option<DownloadEntry> {
         self.inner.lock().unwrap().entry(id).cloned()
     }

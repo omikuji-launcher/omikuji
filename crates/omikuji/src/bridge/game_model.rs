@@ -106,6 +106,10 @@ pub mod qobject {
         fn media_changed(self: Pin<&mut GameModel>, game_id: &QString);
 
         #[qsignal]
+        #[cxx_name = "draftRebased"]
+        fn draft_rebased(self: Pin<&mut GameModel>, game_id: &QString);
+
+        #[qsignal]
         #[cxx_name = "mediaCandidatesReady"]
         fn media_candidates_ready(
             self: Pin<&mut GameModel>,
@@ -494,6 +498,9 @@ pub mod qobject {
         fn uninstall_dlc(self: Pin<&mut GameModel>, game_id: &QString, dlc_id: &QString) -> bool;
 
         #[qinvokable]
+        fn uninstall_store_game(self: &GameModel, game_id: &QString) -> bool;
+
+        #[qinvokable]
         fn epic_dir_has_game(
             self: &GameModel,
             launch_exe: &QString,
@@ -581,9 +588,6 @@ pub mod qobject {
         ) -> QString;
 
         #[qinvokable]
-        fn gog_uninstall(self: Pin<&mut GameModel>, game_id: &QString) -> bool;
-
-        #[qinvokable]
         fn nile_check_existing_install(
             self: &GameModel,
             app_name: &QString,
@@ -608,9 +612,6 @@ pub mod qobject {
             prefix_path: &QString,
             runner_version: &QString,
         ) -> QString;
-
-        #[qinvokable]
-        fn nile_uninstall(self: Pin<&mut GameModel>, game_id: &QString) -> bool;
 
         #[qinvokable]
         fn list_gachas(self: &GameModel) -> QString;
@@ -666,9 +667,6 @@ pub mod qobject {
 
         #[qinvokable]
         fn epic_toggle_overlay(self: Pin<&mut GameModel>, game_id: &QString, enable: bool) -> bool;
-
-        #[qinvokable]
-        fn epic_uninstall(self: Pin<&mut GameModel>, game_id: &QString) -> bool;
 
         #[qinvokable]
         fn epic_overlay_is_installed(self: &GameModel) -> bool;
@@ -817,11 +815,42 @@ impl SortMode {
     }
 }
 
+// edits live apart from the snapshot so commit replays them onto the library game instead of clobbering whatever changed it meanwhile
+struct Draft {
+    game: Game,
+    edits: Vec<(String, String)>,
+}
+
+impl Draft {
+    fn new(game: Game) -> Self {
+        Self {
+            game,
+            edits: Vec::new(),
+        }
+    }
+
+    fn edit(&mut self, key: String, value: String) -> bool {
+        if !apply_field_to_game(&mut self.game, &key, &value) {
+            return false;
+        }
+        self.edits.retain(|(k, _)| *k != key);
+        self.edits.push((key, value));
+        true
+    }
+
+    fn rebase(&mut self, base: &Game) {
+        self.game = base.clone();
+        for (key, value) in &self.edits {
+            apply_field_to_game(&mut self.game, key, value);
+        }
+    }
+}
+
 pub struct GameModelRust {
     library: Library,
     count: i32,
     // in-memory staging slot for the add-game page. cleared on commit/discard.
-    draft: Option<Game>,
+    draft: Option<Draft>,
     preparing: bool,
     wine_command_running: bool,
     sort_mode: SortMode,
@@ -1291,24 +1320,56 @@ impl qobject::GameModel {
         let mut game = Game::new(String::new(), PathBuf::new());
         game.seed_from_defaults(&Defaults::load());
         let m = config_map(&game);
-        self.as_mut().rust_mut().get_mut().draft = Some(game);
+        self.as_mut().rust_mut().get_mut().draft = Some(Draft::new(game));
         m
     }
 
     fn get_draft_config(&self) -> QMap<QMapPair_QString_QVariant> {
         match &self.rust().draft {
-            Some(game) => config_map(game),
+            Some(draft) => config_map(&draft.game),
             None => QMap::<QMapPair_QString_QVariant>::default(),
         }
     }
 
     fn update_draft_field(mut self: Pin<&mut Self>, key: &QString, value: &QString) -> bool {
-        let k = key.to_string();
-        let v = value.to_string();
-        let Some(game) = self.as_mut().rust_mut().get_mut().draft.as_mut() else {
+        let Some(draft) = self.as_mut().rust_mut().get_mut().draft.as_mut() else {
             return false;
         };
-        apply_field_to_game(game, &k, &v)
+        draft.edit(key.to_string(), value.to_string())
+    }
+
+    fn rebase_draft(mut self: Pin<&mut Self>) {
+        let rust = self.as_mut().rust_mut().get_mut();
+        let Some(draft) = rust.draft.as_mut() else {
+            return;
+        };
+        let id = draft.game.metadata.id.clone();
+        let Some(base) = rust.library.game.iter().find(|g| g.metadata.id == id) else {
+            return;
+        };
+        draft.rebase(base);
+        self.as_mut().draft_rebased(&QString::from(&id));
+    }
+
+    pub(crate) fn update_game(
+        mut self: Pin<&mut Self>,
+        game_id: &str,
+        change: impl FnOnce(&mut Game),
+    ) -> Option<Game> {
+        let row = self
+            .library
+            .game
+            .iter()
+            .position(|g| g.metadata.id == game_id)?;
+        let game = &mut self.as_mut().rust_mut().get_mut().library.game[row];
+        change(game);
+        if let Err(e) = Library::save_game_static(game) {
+            tracing::error!("failed to save '{}': {}", game_id, e);
+        }
+        let updated = game.clone();
+        self.as_mut().notify_row(row);
+        self.as_mut().rebase_draft();
+        Some(updated)
     }
 
     pub(crate) fn insert_game_sorted(mut self: Pin<&mut Self>, game: Game) -> i32 {
@@ -1424,18 +1485,19 @@ impl qobject::GameModel {
 
     // on failure, draft is preserved so the user can fix fields and retry (a bit useless most of the times but may it be a connection error)
     fn commit_new_game(mut self: Pin<&mut Self>) -> QString {
-        let Some(mut game) = self.as_mut().rust_mut().get_mut().draft.take() else {
+        let Some(mut draft) = self.as_mut().rust_mut().get_mut().draft.take() else {
             tracing::warn!("commit_new_game: no draft");
             return QString::default();
         };
 
         // exe is allowed empty for non-wine runners (steam, flatpak, etc)
-        if game.metadata.name.trim().is_empty() {
+        if draft.game.metadata.name.trim().is_empty() {
             tracing::warn!("commit_new_game: name is required");
-            self.as_mut().rust_mut().get_mut().draft = Some(game);
+            self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return QString::default();
         }
 
+        let game = &mut draft.game;
         game.metadata.name = game.metadata.name.trim().to_string();
         game.metadata.added = rfc3339_now();
         game.launch.prune_alongside();
@@ -1443,13 +1505,13 @@ impl qobject::GameModel {
         let game_id = game.metadata.id.clone();
         let game_name = game.metadata.name.clone();
 
-        if let Err(e) = Library::save_game_static(&game) {
+        if let Err(e) = Library::save_game_static(game) {
             tracing::error!("commit_new_game: failed to save: {}", e);
-            self.as_mut().rust_mut().get_mut().draft = Some(game);
+            self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return QString::default();
         }
 
-        self.as_mut().insert_game_sorted(game);
+        self.as_mut().insert_game_sorted(draft.game);
 
         let new_id = QString::from(&*game_id);
         let qt_thread = self.as_mut().qt_thread();
@@ -1479,6 +1541,14 @@ impl qobject::GameModel {
         new_id
     }
 
+    fn notify_row(mut self: Pin<&mut Self>, row: usize) {
+        let idx = self
+            .as_ref()
+            .model_index(row as i32, 0, &QModelIndex::default());
+        let roles = cxx_qt_lib::QList::<i32>::default();
+        self.as_mut().data_changed(&idx, &idx, &roles);
+    }
+
     fn notify_media_row(mut self: Pin<&mut Self>, game_id: &str) {
         let Some(row) = self
             .library
@@ -1488,18 +1558,15 @@ impl qobject::GameModel {
         else {
             return;
         };
-        let idx = self
-            .as_ref()
-            .model_index(row as i32, 0, &QModelIndex::default());
-        let roles = cxx_qt_lib::QList::<i32>::default();
-        self.as_mut().data_changed(&idx, &idx, &roles);
+        self.as_mut().notify_row(row);
         self.as_mut().media_changed(&QString::from(game_id));
     }
 
     fn discard_draft(mut self: Pin<&mut Self>) {
         if let Some(draft) = self.as_mut().rust_mut().get_mut().draft.take() {
-            media::discard_pending(&draft.metadata.id);
-            self.as_mut().notify_media_row(&draft.metadata.id);
+            let id = &draft.game.metadata.id;
+            media::discard_pending(id);
+            self.as_mut().notify_media_row(id);
         }
     }
 
@@ -1515,7 +1582,7 @@ impl qobject::GameModel {
             }
             None => QMap::<QMapPair_QString_QVariant>::default(),
         };
-        self.as_mut().rust_mut().get_mut().draft = cloned;
+        self.as_mut().rust_mut().get_mut().draft = cloned.map(Draft::new);
         m
     }
 
@@ -1525,18 +1592,19 @@ impl qobject::GameModel {
             tracing::warn!("commit_edit_game: no draft");
             return false;
         };
-        draft.launch.prune_alongside();
         let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == id) else {
             tracing::warn!("commit_edit_game: game id '{}' not found", id);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return false;
         };
-        if let Err(e) = Library::save_game_static(&draft) {
+        draft.rebase(&self.library.game[idx]);
+        draft.game.launch.prune_alongside();
+        if let Err(e) = Library::save_game_static(&draft.game) {
             tracing::error!("commit_edit_game: failed to save: {}", e);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return false;
         }
-        self.as_mut().rust_mut().get_mut().library.game[idx] = draft;
+        self.as_mut().rust_mut().get_mut().library.game[idx] = draft.game;
         media::commit_pending(&id);
         self.as_mut().notify_media_row(&id);
         self.as_mut().resort_reset();
@@ -1607,45 +1675,53 @@ impl qobject::GameModel {
     fn uninstall_dlc(mut self: Pin<&mut Self>, game_id: &QString, dlc_id: &QString) -> bool {
         let gid = game_id.to_string();
         let did = dlc_id.to_string();
-        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return false;
         };
-        if self.library.game[idx].source.kind != SourceKind::Epic {
+        if game.source.kind != SourceKind::Epic {
             tracing::warn!("uninstall_dlc: only epic can remove a single dlc");
             return false;
         }
-        let Some(bin) = store::epic::source::find_legendary() else {
-            notifications::error(
-                "DLC",
-                "Legendary not found - reinstall it from Settings > Components",
-            );
+        let qt_thread = self.as_mut().qt_thread();
+        std::thread::spawn(move || {
+            if let Err(e) = store::epic::uninstall_dlc(&did) {
+                tracing::error!("dlc {} uninstall failed: {:#}", did, e);
+                notifications::error("DLC", format!("Could not remove the DLC: {e}"));
+                return;
+            }
+            let _ = qt_thread.queue(move |obj: Pin<&mut qobject::GameModel>| {
+                obj.update_game(&gid, |g| g.source.dlcs.retain(|d| d != &did));
+            });
+        });
+        true
+    }
+
+    fn uninstall_store_game(&self, game_id: &QString) -> bool {
+        let id = game_id.to_string();
+        let Some(game) = self
+            .library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == id)
+            .cloned()
+        else {
+            tracing::error!("game '{}' not found", id);
             return false;
         };
-        let out = std::process::Command::new(&bin)
-            .arg("-y")
-            .arg("uninstall")
-            .arg(&did)
-            .output();
-        match out {
-            Ok(o) if o.status.success() => {}
-            Ok(o) => {
-                let err = String::from_utf8_lossy(&o.stderr);
-                tracing::error!("legendary uninstall {} failed: {}", did, err.trim());
-                notifications::error("DLC", "Could not remove the DLC");
-                return false;
-            }
-            Err(e) => {
-                tracing::error!("legendary uninstall {} failed to spawn: {}", did, e);
-                return false;
-            }
-        }
 
-        let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
-        game.source.dlcs.retain(|d| d != &did);
-        let snapshot = game.clone();
-        if let Err(e) = Library::save_game_static(&snapshot) {
-            tracing::error!("failed to persist dlc removal: {}", e);
-        }
+        std::thread::spawn(move || {
+            let name = &game.metadata.name;
+            notifications::info(name, "Uninstalling...");
+            match store::uninstall(&game) {
+                Ok(()) => notifications::success(name, "Uninstalled"),
+                Err(e) => process::notify_error(ErrorNotification {
+                    game_id: game.metadata.id.clone(),
+                    title: "Uninstall failed".to_string(),
+                    message: format!("{e:#}"),
+                    action: ErrorAction::for_error(&e, ErrorAction::None),
+                }),
+            }
+        });
         true
     }
 
@@ -1744,6 +1820,7 @@ impl qobject::GameModel {
                 self.as_mut().rust_mut().get_mut().library = new_lib;
                 self.as_mut().set_count(new_count);
                 self.as_mut().end_reset_model();
+                self.as_mut().rebase_draft();
                 QString::from(&*selected_id)
             }
             Err(e) => {

@@ -2,12 +2,11 @@
 
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
-use std::path::PathBuf;
 use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
-use crate::components::{self, SettingsKey};
+use super::{legendary_async, resume_file};
 use crate::downloads::io_stats::track_child;
 use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
@@ -17,41 +16,13 @@ use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress, set_display_name,
 };
-use crate::fs_util::find_executable_in_paths;
 
 pub struct LegendarySource;
-
-pub fn find_legendary() -> Option<PathBuf> {
-    components::path_for(SettingsKey::Legendary)
-}
-
-pub fn legendary_system_path() -> Option<PathBuf> {
-    find_executable_in_paths(
-        &["legendary"],
-        &[
-            "~/.local/bin/legendary",
-            "/usr/local/bin/legendary",
-            "/usr/bin/legendary",
-            "~/.local/share/pipx/venvs/legendary-gl/bin/legendary",
-        ],
-    )
-}
-
-pub fn require_legendary() -> Result<PathBuf> {
-    find_legendary()
-        .ok_or_else(|| anyhow!("Legendary not found - reinstall it from Settings > Components"))
-}
 
 #[async_trait]
 impl DownloadSource for LegendarySource {
     fn cleanup_state(&self, entry: &DownloadEntry) {
-        let Some(cfg) = dirs::config_dir() else {
-            return;
-        };
-        let resume = cfg
-            .join("legendary")
-            .join("tmp")
-            .join(format!("{}.resume", entry.app_id));
+        let resume = resume_file(&entry.app_id);
         if !resume.exists() {
             return;
         }
@@ -63,7 +34,7 @@ impl DownloadSource for LegendarySource {
     }
 
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
-        let legendary = require_legendary()?;
+        let game_install = legendary_async()?;
 
         let base_path = entry.install_path.parent().ok_or_else(|| {
             anyhow!(
@@ -91,11 +62,8 @@ impl DownloadSource for LegendarySource {
                 "stale installed.json entry for {} - clearing before reinstall",
                 entry.app_id
             );
-            let _ = Command::new(&legendary)
-                .arg("-y")
-                .arg("uninstall")
-                .arg(&entry.app_id)
-                .arg("--keep-files")
+            let _ = legendary_async()?
+                .args(["-y", "uninstall", &entry.app_id, "--keep-files"])
                 .output()
                 .await;
         }
@@ -108,7 +76,7 @@ impl DownloadSource for LegendarySource {
         }
 
         run_install(
-            &legendary,
+            game_install,
             &entry.app_id,
             &base_path_str,
             &game_folder,
@@ -130,7 +98,8 @@ impl DownloadSource for LegendarySource {
                 &entry.id,
                 &format!("{} · DLC {}/{}", base_label, i + 1, entry.dlcs.len()),
             );
-            if let Err(e) = run_install(&legendary, dlc, &base_path_str, &game_folder, entry).await
+            let dlc_install = legendary_async()?;
+            if let Err(e) = run_install(dlc_install, dlc, &base_path_str, &game_folder, entry).await
             {
                 set_display_name(&entry.id, &base_label);
                 return Err(anyhow!("dlc {} failed to install: {}", dlc, e));
@@ -142,48 +111,30 @@ impl DownloadSource for LegendarySource {
     }
 
     async fn update(&self, entry: &DownloadEntry) -> Result<()> {
-        let legendary = require_legendary()?;
-
-        let mut cmd = Command::new(&legendary);
-        cmd.arg("update")
-            .arg(&entry.app_id)
-            .arg("-y")
-            .arg("--skip-sdl")
-            .args(StoreLimits::epic().args())
-            .envs(proxy::env_vars().await)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .process_group(0)
-            .kill_on_drop(true);
-
-        let child = cmd
-            .spawn()
-            .map_err(|e| anyhow!("failed to spawn legendary update: {}", e))?;
-
-        run_with_progress(child, entry).await
+        let mut cmd = legendary_async()?;
+        cmd.args(["update", &entry.app_id, "-y", "--skip-sdl"]);
+        run_download(cmd, entry).await
     }
 
     async fn import_existing(&self, entry: &DownloadEntry) -> Result<()> {
-        let legendary = require_legendary()?;
+        let mut import = legendary_async()?;
 
         // lets a game living somewhere else than installed.json says stilll import at the new path ig
         if super::find_installed_info(&entry.app_id).is_some() {
-            let _ = Command::new(&legendary)
-                .arg("-y")
-                .arg("uninstall")
-                .arg("--keep-files")
-                .arg("--skip-uninstaller")
-                .arg(&entry.app_id)
+            let _ = legendary_async()?
+                .args([
+                    "-y",
+                    "uninstall",
+                    "--keep-files",
+                    "--skip-uninstaller",
+                    &entry.app_id,
+                ])
                 .output()
                 .await;
         }
 
-        let output = Command::new(&legendary)
-            .arg("-y")
-            .arg("import")
-            .arg("--platform")
-            .arg("Windows")
-            .arg(&entry.app_id)
+        let output = import
+            .args(["-y", "import", "--platform", "Windows", &entry.app_id])
             .arg(&entry.install_path)
             .output()
             .await
@@ -213,25 +164,30 @@ impl DownloadSource for LegendarySource {
 }
 
 async fn run_install(
-    legendary: &std::path::Path,
+    mut cmd: Command,
     app_name: &str,
     base_path: &str,
     game_folder: &str,
     entry: &DownloadEntry,
 ) -> Result<()> {
-    let mut cmd = Command::new(legendary);
-    cmd.arg("install")
-        .arg(app_name)
-        .arg("-y")
-        .arg("--skip-sdl")
-        .arg("--skip-dlcs")
-        .arg("--platform")
-        .arg("Windows")
-        .arg("--base-path")
-        .arg(base_path)
-        .arg("--game-folder")
-        .arg(game_folder)
-        .args(StoreLimits::epic().args())
+    cmd.args([
+        "install",
+        app_name,
+        "-y",
+        "--skip-sdl",
+        "--skip-dlcs",
+        "--platform",
+        "Windows",
+        "--base-path",
+        base_path,
+        "--game-folder",
+        game_folder,
+    ]);
+    run_download(cmd, entry).await
+}
+
+async fn run_download(mut cmd: Command, entry: &DownloadEntry) -> Result<()> {
+    cmd.args(StoreLimits::epic().args())
         .envs(proxy::env_vars().await)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

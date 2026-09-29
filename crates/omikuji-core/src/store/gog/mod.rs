@@ -257,6 +257,29 @@ pub fn remove_install(app_name: &str) -> Result<()> {
     store::registry::remove(&registry_path(), app_name)
 }
 
+pub fn uninstall(app_name: &str, fallback_title: &str) -> Result<()> {
+    if let Some(installed) = find_installed_info(app_name)
+        && installed.install_path.exists()
+    {
+        let path = &installed.install_path;
+        std::fs::remove_dir_all(path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
+        let wrapper_name =
+            install_wrapper_dir_name(installed.title.as_deref().unwrap_or(fallback_title));
+        if !wrapper_name.is_empty()
+            && let Some(parent) = path.parent()
+            && parent
+                .file_name()
+                .is_some_and(|n| n.to_string_lossy() == wrapper_name)
+        {
+            let _ = std::fs::remove_dir(parent);
+        }
+    }
+    if let Err(e) = remove_install(app_name) {
+        tracing::error!("registry remove failed: {}", e);
+    }
+    Ok(())
+}
+
 // must stay in sync with folderName in qml/components/lib/Paths.js
 pub fn install_wrapper_dir_name(title: &str) -> String {
     let name: String = title

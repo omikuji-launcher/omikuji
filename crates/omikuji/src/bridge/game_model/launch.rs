@@ -208,7 +208,7 @@ impl super::qobject::GameModel {
 
     pub fn expand_vars(&self, text: &QString) -> QString {
         let vars = match self.draft.as_ref() {
-            Some(game) => TemplateVars::for_game(game),
+            Some(draft) => TemplateVars::for_game(&draft.game),
             None => TemplateVars::global(),
         };
         QString::from(&vars.expand(&text.to_string()))

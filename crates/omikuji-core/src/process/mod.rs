@@ -516,12 +516,16 @@ pub enum ErrorAction {
 
 impl ErrorAction {
     pub fn for_launch_error(e: &anyhow::Error) -> Self {
+        Self::for_error(e, Self::OpenGameSettings)
+    }
+
+    pub fn for_error(e: &anyhow::Error, fallback: Self) -> Self {
         if e.downcast_ref::<StoreSignedOut>().is_some() {
             Self::OpenEpicStore
         } else if e.downcast_ref::<ComponentMissing>().is_some() {
             Self::OpenGlobalSettings
         } else {
-            Self::OpenGameSettings
+            fallback
         }
     }
 

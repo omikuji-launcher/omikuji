@@ -1,7 +1,7 @@
 use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source};
 use crate::archive::ArchiveKind;
 use crate::launch::umu_system_path;
-use crate::store::epic::source::legendary_system_path;
+use crate::store::epic::legendary_system_path;
 
 pub fn all() -> &'static [ComponentSpec] {
     COMPONENTS

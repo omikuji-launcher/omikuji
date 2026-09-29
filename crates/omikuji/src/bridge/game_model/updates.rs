@@ -1,12 +1,12 @@
 use std::pin::Pin;
 
-use cxx_qt::{CxxQtType, Threading};
+use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
 use omikuji_core::defaults::Defaults;
 use omikuji_core::downloads::{self, DownloadKind};
 use omikuji_core::gacha::strategies;
-use omikuji_core::library::{Game, Library, SourceKind};
+use omikuji_core::library::{Game, SourceKind};
 use omikuji_core::{launch, notifications, process, runners, updates};
 
 impl super::qobject::GameModel {
@@ -39,16 +39,11 @@ impl super::qobject::GameModel {
         true
     }
 
-    pub fn dismiss_predownload(mut self: Pin<&mut Self>, game_id: &QString, version: &QString) {
-        let gid = game_id.to_string();
-        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == gid) else {
-            return;
-        };
-        let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
-        game.source.predownload_dismissed = version.to_string();
-        if let Err(e) = Library::save_game_static(game) {
-            tracing::error!("saving pre-download dismissal for '{}': {}", gid, e);
-        }
+    pub fn dismiss_predownload(self: Pin<&mut Self>, game_id: &QString, version: &QString) {
+        let version = version.to_string();
+        self.update_game(&game_id.to_string(), |g| {
+            g.source.predownload_dismissed = version
+        });
     }
 
     pub fn refresh_latest_runners(mut self: Pin<&mut Self>) {

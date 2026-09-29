@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use super::StoreSignedOut;
 use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
 use super::wine::{WineVariant, resolve_wine_exe};
-use super::{ComponentMissing, StoreSignedOut};
 use crate::desktop::ensure_steam_icon;
 use crate::library::{Game, RunnerType};
 use crate::store::epic;
@@ -76,28 +76,18 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
     }
 
     let mut command = if game.is_epic() {
-        let legendary = epic::source::find_legendary().ok_or_else(|| {
-            anyhow::Error::new(ComponentMissing {
-                name: "Legendary".to_string(),
-            })
-        })?;
+        let legendary = epic::require_legendary()?;
         if !epic::logged_in() {
             return Err(anyhow::Error::new(StoreSignedOut {
                 store: "Epic Games".to_string(),
             }));
         }
         let prefix = resolve_prefix(game);
-        // legendary wants the source app_id, falling back to metadata.id for games impoted before the source section existed
-        let app_id = if !game.source.app_id.is_empty() {
-            game.source.app_id.clone()
-        } else {
-            game.metadata.id.clone()
-        };
 
         let mut cmd = vec![
             legendary.to_string_lossy().to_string(),
             "launch".to_string(),
-            app_id.clone(),
+            game.effective_app_id().to_string(),
             "--wine".to_string(),
             wine_exe.to_string_lossy().to_string(),
             "--wine-prefix".to_string(),
@@ -180,21 +170,13 @@ fn apply_wrapping(
     }
 }
 
-fn effective_app_id(game: &Game) -> String {
-    if !game.source.app_id.is_empty() {
-        game.source.app_id.clone()
-    } else {
-        game.metadata.id.clone()
-    }
-}
-
 fn build_steam_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
-    let appid = effective_app_id(game);
+    let appid = game.effective_app_id();
     if appid.is_empty() {
         anyhow::bail!("Steam runner requires an Application ID");
     }
 
-    let mut command = build_steam_command(&appid, &game.launch.args);
+    let mut command = build_steam_command(appid, &game.launch.args);
 
     let mut env: HashMap<String, String> = std::env::vars().collect();
     env.extend(game_env_pairs(game));
@@ -205,7 +187,7 @@ fn build_steam_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunc
 }
 
 fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
-    let appid = effective_app_id(game);
+    let appid = game.effective_app_id();
     if appid.is_empty() {
         anyhow::bail!("Flatpak runner requires an Application ID (e.g. org.foo.App)");
     }
@@ -230,7 +212,7 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLau
         command.push(format!("--env={}={}", k, v));
     }
 
-    command.push(appid);
+    command.push(appid.to_string());
     for arg in &game.launch.args {
         command.push(arg.clone());
     }

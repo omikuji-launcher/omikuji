@@ -1,13 +1,12 @@
 use std::pin::Pin;
 
-use cxx_qt::{CxxQtType, Threading};
+use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 
 use omikuji_core::defaults::Defaults;
 use omikuji_core::library::{Game, Library, SourceKind};
-use omikuji_core::process::{self, ErrorAction, ErrorNotification};
 use omikuji_core::store::epic;
-use omikuji_core::{downloads, install_sizes, launch, media, notifications};
+use omikuji_core::{install_sizes, launch, media, notifications};
 
 use crate::bridge::expand_path;
 
@@ -159,115 +158,35 @@ impl super::qobject::GameModel {
         QString::from(&app_name_s)
     }
 
-    pub fn epic_uninstall(self: Pin<&mut Self>, game_id: &QString) -> bool {
-        let id = game_id.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
-            tracing::warn!("game '{}' not found", id);
-            return false;
-        };
-        if game.source.kind != SourceKind::Epic || game.source.app_id.is_empty() {
-            tracing::warn!("game '{}' is not an epic entry", id);
-            return false;
+    fn is_epic_game(&self, id: &str) -> bool {
+        match self.library.game.iter().find(|g| g.metadata.id == id) {
+            Some(game) if game.is_epic() => true,
+            Some(_) => {
+                tracing::warn!("game '{}' is not epic", id);
+                false
+            }
+            None => {
+                tracing::warn!("game '{}' not found", id);
+                false
+            }
         }
-
-        let app_id = game.source.app_id.clone();
-        let name = game.metadata.name.clone();
-        let game_id_owned = game.metadata.id.clone();
-        let install_path = epic::find_installed_info(&app_id).map(|i| i.install_path.clone());
-
-        std::thread::spawn(move || {
-            let Some(legendary_bin) = epic::source::find_legendary() else {
-                process::notify_error(ErrorNotification {
-                    game_id: game_id_owned.clone(),
-                    title: "Uninstall failed".to_string(),
-                    message: "`Legendary` not found".to_string(),
-                    action: ErrorAction::OpenGlobalSettings,
-                });
-                return;
-            };
-
-            let entries_to_cancel: Vec<String> = downloads::manager()
-                .list()
-                .iter()
-                .filter(|e| e.app_id == app_id)
-                .map(|e| e.id.clone())
-                .collect();
-            for entry_id in entries_to_cancel {
-                downloads::manager().cancel(&entry_id);
-            }
-
-            notifications::info(&name, "Uninstalling via Legendary...");
-
-            let result = std::process::Command::new(&legendary_bin)
-                .arg("-y")
-                .arg("uninstall")
-                .arg(&app_id)
-                .output();
-
-            match result {
-                Ok(out) if out.status.success() => {
-                    if let Some(path) = &install_path
-                        && path.exists()
-                    {
-                        tracing::warn!(
-                            "legendary exited 0 but {} still exists, forcing cleanup",
-                            path.display()
-                        );
-                        downloads::cleanup_install_dir_blocking(path);
-                    }
-                    if let Err(e) = Library::remove_game_file(&game_id_owned) {
-                        tracing::error!("failed to remove game file: {}", e);
-                    }
-                    notifications::success(&name, "Uninstalled");
-                }
-                Ok(out) => {
-                    let err = String::from_utf8_lossy(&out.stderr);
-                    process::notify_error(ErrorNotification {
-                        game_id: game_id_owned.clone(),
-                        title: "Uninstall failed".to_string(),
-                        message: format!("`legendary` returned an error: {}", err.trim()),
-                        action: ErrorAction::None,
-                    });
-                }
-                Err(e) => {
-                    process::notify_error(ErrorNotification {
-                        game_id: game_id_owned.clone(),
-                        title: "Uninstall failed".to_string(),
-                        message: format!("Couldn't run `legendary`: {}", e),
-                        action: ErrorAction::None,
-                    });
-                }
-            }
-        });
-
-        true
     }
 
     pub fn epic_toggle_overlay(mut self: Pin<&mut Self>, game_id: &QString, enable: bool) -> bool {
         let id = game_id.to_string();
-        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == id) else {
-            tracing::warn!("game '{}' not found", id);
-            return false;
-        };
-        if !self.library.game[idx].is_epic() {
-            tracing::warn!("game '{}' is not epic", id);
+        if !self.is_epic_game(&id) {
             return false;
         }
-
-        let (game_name, prefix) = {
-            let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
-            game.source.eos_overlay = enable;
-            let _ = Library::save_game_static(game);
-            (game.metadata.name.clone(), launch::resolve_prefix(game))
+        let Some(game) = self
+            .as_mut()
+            .update_game(&id, |g| g.source.eos_overlay = enable)
+        else {
+            return false;
         };
+        let game_name = game.metadata.name.clone();
+        let prefix = launch::resolve_prefix(&game);
 
-        let id_for_thread = id;
+        let qt_thread = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             use omikuji_core::store::epic::eos_overlay;
 
@@ -288,10 +207,9 @@ impl super::qobject::GameModel {
                 Err(e) => {
                     notifications::error("EOS Overlay", format!("{} failed: {}", verb, e));
                     // roll back the persisted flag so the ui toggle re-syncs to the real state
-                    if let Ok(Some(mut game)) = Library::load_game_by_id(&id_for_thread) {
-                        game.source.eos_overlay = !enable;
-                        let _ = Library::save_game_static(&game);
-                    }
+                    let _ = qt_thread.queue(move |obj: Pin<&mut super::qobject::GameModel>| {
+                        obj.update_game(&id, |g| g.source.eos_overlay = !enable);
+                    });
                 }
             }
         });
@@ -305,42 +223,34 @@ impl super::qobject::GameModel {
 
     pub fn epic_set_cloud_saves(mut self: Pin<&mut Self>, game_id: &QString, enable: bool) -> bool {
         let id = game_id.to_string();
-        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == id) else {
-            tracing::warn!("game '{}' not found", id);
-            return false;
-        };
-        if !self.library.game[idx].is_epic() {
-            tracing::warn!("game '{}' is not epic", id);
+        if !self.is_epic_game(&id) {
             return false;
         }
 
         // persist the flag first; only probe legendary if save_path is still empty
-        let (game_name, should_probe, game_clone) = {
-            let game = &mut self.as_mut().rust_mut().get_mut().library.game[idx];
-            let needs_probe = enable && game.source.save_path.is_empty();
-            game.source.cloud_saves = enable;
-            let _ = Library::save_game_static(game);
-            (game.metadata.name.clone(), needs_probe, game.clone())
+        let Some(game) = self
+            .as_mut()
+            .update_game(&id, |g| g.source.cloud_saves = enable)
+        else {
+            return false;
         };
-
-        if !should_probe {
+        if !enable || !game.source.save_path.is_empty() {
             return true;
         }
 
-        let id_for_thread = id;
+        let qt_thread = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             notifications::info(
                 "Cloud Saves",
-                format!("Discovering save path for {}…", game_name),
+                format!("Discovering save path for {}…", game.metadata.name),
             );
 
-            match epic::discover_save_path(&game_clone) {
+            match epic::discover_save_path(&game) {
                 Ok(path) if !path.is_empty() => {
-                    if let Ok(Some(mut game)) = Library::load_game_by_id(&id_for_thread) {
-                        game.source.save_path = path.clone();
-                        let _ = Library::save_game_static(&game);
-                    }
                     notifications::success("Cloud Saves", format!("Save path resolved: {}", path));
+                    let _ = qt_thread.queue(move |obj: Pin<&mut super::qobject::GameModel>| {
+                        obj.update_game(&id, |g| g.source.save_path = path);
+                    });
                 }
                 Ok(_) => {
                     notifications::warning(
