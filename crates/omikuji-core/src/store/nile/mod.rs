@@ -2,6 +2,7 @@ pub mod fuel;
 pub mod source;
 pub mod updates;
 
+use crate::components::{self, SettingsKey};
 use crate::fs_util::dir_size;
 use crate::store::{self, StoreGame};
 use anyhow::{Result, anyhow};
@@ -42,11 +43,7 @@ fn current_user_json() -> PathBuf {
 }
 
 pub fn find_nile() -> Option<PathBuf> {
-    let bundled = crate::runtime_dir().join("nile");
-    if bundled.exists() {
-        return Some(bundled);
-    }
-    which::which("nile").ok()
+    components::path_for(SettingsKey::Nile)
 }
 
 pub fn require_nile() -> Result<PathBuf> {

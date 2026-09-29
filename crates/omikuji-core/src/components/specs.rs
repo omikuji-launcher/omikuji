@@ -1,6 +1,7 @@
 use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source};
 use crate::archive::ArchiveKind;
 use crate::launch::umu_system_path;
+use crate::store::epic::source::legendary_system_path;
 
 pub fn all() -> &'static [ComponentSpec] {
     COMPONENTS
@@ -41,7 +42,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "legendary",
         settings_key: SettingsKey::Legendary,
-        system_probe: None,
+        system_probe: Some(legendary_system_path),
     },
     ComponentSpec {
         name: "gogdl",
@@ -51,7 +52,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "gogdl",
         settings_key: SettingsKey::Gogdl,
-        system_probe: None,
+        system_probe: Some(|| which::which("gogdl").ok()),
     },
     ComponentSpec {
         name: "nile",
@@ -61,7 +62,7 @@ static COMPONENTS: &[ComponentSpec] = &[
         extract: ExtractStrategy::Raw,
         dest: "nile",
         settings_key: SettingsKey::Nile,
-        system_probe: None,
+        system_probe: Some(|| which::which("nile").ok()),
     },
     ComponentSpec {
         name: "egl-dummy",

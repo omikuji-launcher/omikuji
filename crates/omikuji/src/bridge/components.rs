@@ -117,6 +117,13 @@ fn fresh_entry(spec: &core_components::ComponentSpec, latest: String) -> Compone
             latest,
             ..Default::default()
         },
+        core_components::ComponentStatus::Custom { path } => ComponentStatusEntry {
+            status: "custom".into(),
+            percent: 100.0,
+            path: path.display().to_string(),
+            latest,
+            ..Default::default()
+        },
         core_components::ComponentStatus::System { path } => ComponentStatusEntry {
             status: "system".into(),
             percent: 100.0,

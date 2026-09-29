@@ -11,7 +11,7 @@ pub struct ComponentSpec {
     pub system_probe: Option<fn() -> Option<PathBuf>>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SettingsKey {
     UmuRun,
     Hpatchz,
@@ -40,6 +40,7 @@ pub enum ExtractStrategy {
 #[derive(Debug, Clone)]
 pub enum ComponentStatus {
     Installed { version: String, path: PathBuf },
+    Custom { path: PathBuf },
     System { path: PathBuf },
     Missing,
 }
@@ -47,7 +48,9 @@ pub enum ComponentStatus {
 impl ComponentStatus {
     pub fn into_path(self) -> Option<PathBuf> {
         match self {
-            Self::Installed { path, .. } | Self::System { path } => Some(path),
+            Self::Installed { path, .. } | Self::Custom { path } | Self::System { path } => {
+                Some(path)
+            }
             Self::Missing => None,
         }
     }

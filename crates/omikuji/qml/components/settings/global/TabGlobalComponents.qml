@@ -253,6 +253,8 @@ Item {
                         readonly property var meta: root.runtimeMeta[modelData] || ({ label: modelData, desc: "" })
                         readonly property var status: root.runtimeStatuses[modelData] || ({ status: "missing", version: "", path: "", latest: "", percent: 0, error: "" })
                         readonly property bool isSystem: status.status === "system"
+                        readonly property bool isCustom: status.status === "custom"
+                        readonly property bool isExternal: isSystem || isCustom
                         readonly property bool hasUpdate: status.version && status.latest && status.latest !== status.version
                         readonly property bool busy: status.status === "installing"
                             || status.status === "downloading"
@@ -281,7 +283,7 @@ Item {
                                 height: 10
                                 radius: 5
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: runtimeRow.status.status === "completed" || runtimeRow.isSystem ? Theme.success
+                                color: runtimeRow.status.status === "completed" || runtimeRow.isExternal ? Theme.success
                                     : runtimeRow.status.status === "failed" ? Theme.error
                                     : runtimeRow.busy ? Theme.accent
                                     : Theme.textFaint
@@ -303,7 +305,7 @@ Item {
                                     }
                                     Text {
                                         visible: text.length > 0
-                                        text: runtimeRow.isSystem
+                                        text: runtimeRow.isExternal
                                             ? (runtimeRow.status.path || "")
                                             : runtimeRow.hasUpdate
                                                 ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
@@ -329,7 +331,9 @@ Item {
                                         ? runtimeRow.status.error
                                         : runtimeRow.isSystem
                                             ? qsTr("Provided by your system. Install to use omikuji's own copy instead.")
-                                            : runtimeRow.meta.desc
+                                            : runtimeRow.isCustom
+                                                ? qsTr("Not installed by omikuji. Install to replace it with omikuji's own copy.")
+                                                : runtimeRow.meta.desc
                                     color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
                                     font.pixelSize: Theme.type.caption.size
                                     elide: Text.ElideRight
@@ -367,7 +371,7 @@ Item {
                                 : runtimeRow.status.status === "completed" ? qsTr("Reinstall")
                                 : runtimeRow.status.status === "failed" ? qsTr("Retry")
                                 : qsTr("Install")
-                            variant: (busyState || runtimeRow.isSystem || (runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
+                            variant: (busyState || runtimeRow.isExternal ||(runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
                             danger: runtimeRow.status.status === "failed" && !busyState
                             enabled: !busyState
                             onClicked: {

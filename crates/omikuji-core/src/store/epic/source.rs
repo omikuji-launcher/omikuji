@@ -7,6 +7,7 @@ use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
 
+use crate::components::{self, SettingsKey};
 use crate::downloads::io_stats::track_child;
 use crate::downloads::limits::StoreLimits;
 use crate::downloads::proc_tree::shutdown;
@@ -16,25 +17,24 @@ use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress, set_display_name,
 };
+use crate::fs_util::find_executable_in_paths;
 
 pub struct LegendarySource;
 
 pub fn find_legendary() -> Option<PathBuf> {
-    let bundled = crate::runtime_dir().join("legendary");
-    if bundled.exists() {
-        return Some(bundled);
-    }
-    if let Ok(p) = which::which("legendary") {
-        return Some(p);
-    }
-    let candidates = [
-        dirs::home_dir().map(|h| h.join(".local/bin/legendary")),
-        Some(PathBuf::from("/usr/local/bin/legendary")),
-        Some(PathBuf::from("/usr/bin/legendary")),
-        // pipx default
-        dirs::home_dir().map(|h| h.join(".local/share/pipx/venvs/legendary-gl/bin/legendary")),
-    ];
-    candidates.into_iter().flatten().find(|p| p.exists())
+    components::path_for(SettingsKey::Legendary)
+}
+
+pub fn legendary_system_path() -> Option<PathBuf> {
+    find_executable_in_paths(
+        &["legendary"],
+        &[
+            "~/.local/bin/legendary",
+            "/usr/local/bin/legendary",
+            "/usr/bin/legendary",
+            "~/.local/share/pipx/venvs/legendary-gl/bin/legendary",
+        ],
+    )
 }
 
 pub fn require_legendary() -> Result<PathBuf> {

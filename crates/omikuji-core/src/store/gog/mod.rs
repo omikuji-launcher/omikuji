@@ -2,6 +2,7 @@
 pub mod source;
 pub mod updates;
 
+use crate::components::{self, SettingsKey};
 use crate::store::{self, StoreGame};
 use crate::{fs_util, http};
 use anyhow::{Result, anyhow};
@@ -626,14 +627,7 @@ fn latest_build_id(info: &serde_json::Value) -> Option<String> {
 }
 
 pub fn find_gogdl() -> Option<PathBuf> {
-    let bundled = crate::runtime_dir().join("gogdl");
-    if bundled.exists() {
-        return Some(bundled);
-    }
-    if let Ok(p) = which::which("gogdl") {
-        return Some(p);
-    }
-    None
+    components::path_for(SettingsKey::Gogdl)
 }
 
 pub fn gog_auth_path() -> PathBuf {

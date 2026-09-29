@@ -39,24 +39,23 @@ pub fn status_for(spec: &ComponentSpec) -> ComponentStatus {
             version: ver,
             path: canary,
         },
-        _ => match spec.system_probe.and_then(|probe| probe()) {
+        (true, None) => ComponentStatus::Custom { path: canary },
+        (false, _) => match spec.system_probe.and_then(|probe| probe()) {
             Some(path) => ComponentStatus::System { path },
             None => ComponentStatus::Missing,
         },
     }
 }
 
+pub fn path_for(key: SettingsKey) -> Option<PathBuf> {
+    let spec = specs::all().iter().find(|s| s.settings_key == key)?;
+    status_for(spec).into_path()
+}
+
 pub fn check_all() -> Vec<&'static ComponentSpec> {
     specs::all()
         .iter()
         .filter(|s| matches!(status_for(s), ComponentStatus::Missing))
-        .collect()
-}
-
-pub fn umu() -> Vec<&'static ComponentSpec> {
-    specs::all()
-        .iter()
-        .filter(|s| matches!(s.settings_key, SettingsKey::UmuRun))
         .collect()
 }
 
