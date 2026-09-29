@@ -1,17 +1,16 @@
 use super::{InputKind, Script, Step, StepAction, interpolate};
+use crate::archive::ArchiveKind;
 use crate::library::{Game, RunnerType, generate_id};
 use crate::template_vars::TemplateVars;
 use crate::wine_tools::{self, WineTool};
 use crate::{media, prefixes};
 use anyhow::{Context, Result, bail};
-use flate2::read::GzDecoder;
 use regex::Regex;
 use reqwest::blocking;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::{BufRead, Read, Write};
 use std::path::{Path, PathBuf};
-use xz2::read::XzDecoder;
 
 pub struct ExecOutcome {
     pub game: Option<Game>,
@@ -253,38 +252,18 @@ fn shell<F: FnMut(&str)>(text: &str, prefix: &Path, cwd: &Path, on_line: &mut F)
     Ok(())
 }
 
-type TarDecoder = fn(std::io::BufReader<std::fs::File>) -> Result<Box<dyn Read>>;
-
-const TAR_DECODERS: &[(&str, TarDecoder)] = &[
-    (".tar.gz", |r| Ok(Box::new(GzDecoder::new(r)))),
-    (".tgz", |r| Ok(Box::new(GzDecoder::new(r)))),
-    (".tar.xz", |r| Ok(Box::new(XzDecoder::new(r)))),
-    (".tar.zst", |r| {
-        Ok(Box::new(zstd::stream::read::Decoder::new(r)?))
-    }),
-    (".tar", |r| Ok(Box::new(r))),
-];
-
 fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
     let name = archive
         .file_name()
         .and_then(|s| s.to_str())
-        .unwrap_or_default()
-        .to_lowercase();
-    let file =
-        std::fs::File::open(archive).with_context(|| format!("opening {}", archive.display()))?;
-    let reader = std::io::BufReader::new(file);
-    std::fs::create_dir_all(dest)?;
-
-    if name.ends_with(".zip") {
-        zip::ZipArchive::new(reader)?.extract(dest)?;
-        return Ok(());
-    }
-    let Some((_, decode)) = TAR_DECODERS.iter().find(|(s, _)| name.ends_with(s)) else {
+        .unwrap_or_default();
+    let Some(kind) = ArchiveKind::from_name(name) else {
         bail!("unsupported archive type: {name} (zip, tar.gz, tar.xz, tar.zst, tar)");
     };
-    tar::Archive::new(decode(reader)?).unpack(dest)?;
-    Ok(())
+    let file =
+        std::fs::File::open(archive).with_context(|| format!("opening {}", archive.display()))?;
+    std::fs::create_dir_all(dest)?;
+    kind.unpack(std::io::BufReader::new(file), dest)
 }
 
 fn registry_exe(prefix: &Path, key: &str, relative: &str) -> Option<PathBuf> {

@@ -1,5 +1,5 @@
 use crate::app_settings::AppSettings;
-use crate::archive_source;
+use crate::archive_source::{self, RepoLink};
 use crate::components_config::{self, ArchiveSource};
 use crate::fs_util::copy_dir_all;
 use crate::store::steam::local as steam_local;
@@ -225,21 +225,12 @@ impl AdvisedRunner {
 }
 
 pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
-    let repo = archive_source::RepoLink::parse(link)?;
-    let rest = link.split_once("://").map(|(_, r)| r).unwrap_or(link);
-    let mut tail = rest.trim_end_matches('/').split('/').skip(3);
-    let tag = match (tail.next(), tail.next()) {
-        (Some("releases"), Some("tag")) => tail.next()?.to_string(),
-        _ => return None,
-    };
-    if tag.is_empty() {
-        return None;
-    }
+    let repo = RepoLink::parse(link)?;
+    let tag = repo.tag.clone()?;
 
-    let needle = repo.slug();
     if let Some(source) = list_sources()
         .into_iter()
-        .find(|s| s.api_url.contains(&needle))
+        .find(|s| RepoLink::parse(&s.api_url).is_some_and(|known| known.slug() == repo.slug()))
     {
         return Some(AdvisedRunner {
             source,

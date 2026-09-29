@@ -1,4 +1,5 @@
 use super::spec::{ComponentSpec, ExtractStrategy, SettingsKey, Source};
+use crate::archive::ArchiveKind;
 use crate::launch::umu_system_path;
 
 pub fn all() -> &'static [ComponentSpec] {
@@ -11,7 +12,8 @@ static COMPONENTS: &[ComponentSpec] = &[
         source: Source::GithubRelease {
             asset_matcher: |n| n.ends_with("-zipapp.tar"),
         },
-        extract: ExtractStrategy::Tar {
+        extract: ExtractStrategy::Archive {
+            kind: ArchiveKind::Tar,
             inner_path: "umu-run",
         },
         dest: "umu-run",
@@ -23,7 +25,8 @@ static COMPONENTS: &[ComponentSpec] = &[
         source: Source::GithubRelease {
             asset_matcher: |n| n.contains("linux64") && n.ends_with(".zip"),
         },
-        extract: ExtractStrategy::Zip {
+        extract: ExtractStrategy::Archive {
+            kind: ArchiveKind::Zip,
             inner_path: "hpatchz",
         },
         dest: "hpatchz",

@@ -3,15 +3,16 @@
 // adding a new source is a 5-line paste in settings.rs, no code change here. yayyyy =m=
 
 use anyhow::{Result, anyhow};
-use flate2::read::GzDecoder;
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::{self, Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
+use crate::archive::{self, ArchiveKind};
 use crate::components_config::ArchiveSource;
 use crate::event_queue::EventQueue;
 use crate::http;
-use xz2::read::XzDecoder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseInfo {
@@ -31,27 +32,40 @@ pub struct AssetInfo {
     pub size: u64,
 }
 
+const GITHUB_HOST: &str = "github.com";
+const GITHUB_API_HOST: &str = "api.github.com";
+const GITHUB_API_PREFIX: &[&str] = &["repos"];
+const FORGE_API_PREFIX: &[&str] = &["api", "v1", "repos"];
+
 #[derive(Debug, Clone)]
 pub struct RepoLink {
     pub host: String,
     pub owner: String,
     pub repo: String,
+    pub tag: Option<String>,
 }
 
 impl RepoLink {
     pub fn parse(link: &str) -> Option<Self> {
-        let rest = link.split_once("://").map(|(_, r)| r).unwrap_or(link);
-        let mut parts = rest.trim_end_matches('/').split('/');
-        let host = parts.next()?;
-        let owner = parts.next()?;
-        let repo = parts.next()?;
-        if host.is_empty() || owner.is_empty() || repo.is_empty() {
+        let url = Url::parse(link.trim()).ok()?;
+        let path: Vec<&str> = url.path_segments()?.filter(|s| !s.is_empty()).collect();
+        let (host, rest) = match url.host_str()? {
+            GITHUB_API_HOST => (GITHUB_HOST, path.strip_prefix(GITHUB_API_PREFIX)?),
+            host => (host, path.strip_prefix(FORGE_API_PREFIX).unwrap_or(&path)),
+        };
+        let [owner, repo, tail @ ..] = rest else {
             return None;
-        }
+        };
+        let tag = match tail {
+            ["releases", "tag", tag, ..] => Some(tag.to_string()),
+            [] | ["releases" | "tags", ..] => None,
+            _ => return None,
+        };
         Some(Self {
             host: host.to_string(),
             owner: owner.to_string(),
-            repo: repo.to_string(),
+            repo: repo.trim_end_matches(".git").to_string(),
+            tag,
         })
     }
 
@@ -60,16 +74,15 @@ impl RepoLink {
     }
 
     pub fn releases_api_url(&self) -> String {
-        if self.host == "github.com" {
-            format!("https://api.github.com/repos/{}/releases", self.slug())
-        } else {
-            format!(
-                "https://{}/api/v1/repos/{}/releases",
-                self.host,
-                self.slug()
-            )
+        match self.host.as_str() {
+            GITHUB_HOST => format!("https://{GITHUB_API_HOST}/repos/{}/releases", self.slug()),
+            host => format!("https://{host}/api/v1/repos/{}/releases", self.slug()),
         }
     }
+}
+
+pub fn normalize_releases_url(link: &str) -> String {
+    RepoLink::parse(link).map_or_else(|| link.trim().to_string(), |repo| repo.releases_api_url()) // uhm
 }
 
 #[derive(Debug, Clone)]
@@ -111,33 +124,12 @@ fn push(ev: ArchiveEvent) {
     EVENTS.push(ev);
 }
 
-const ARCHIVE_EXTS: &[(&str, &str)] = &[
-    (".tar.gz", "tar_gz"),
-    (".tar.xz", "tar_xz"),
-    (".tar.zst", "tar_zst"),
-    (".zip", "zip"),
-];
-
-pub fn asset_stem(name: &str) -> &str {
-    ARCHIVE_EXTS
-        .iter()
-        .find_map(|(ext, _)| name.strip_suffix(ext))
-        .unwrap_or(name)
-}
-
-fn extract_strategy(name: &str) -> Option<&'static str> {
-    ARCHIVE_EXTS
-        .iter()
-        .find(|(ext, _)| name.ends_with(ext))
-        .map(|(_, strategy)| *strategy)
-}
-
 fn installable_assets(assets: &[serde_json::Value]) -> Vec<AssetInfo> {
     assets
         .iter()
         .filter_map(|a| {
             let name = a.get("name").and_then(|v| v.as_str())?;
-            extract_strategy(name)?;
+            ArchiveKind::from_name(name)?;
             Some(AssetInfo {
                 name: name.to_string(),
                 url: a
@@ -316,9 +308,8 @@ async fn install_named(
 }
 
 struct ExtractProgress<'a> {
-    inner: std::io::Cursor<&'a [u8]>,
+    inner: Cursor<&'a [u8]>,
     total: u64,
-    read: u64,
     last_pct: f64,
     category: String,
     source: String,
@@ -328,9 +319,8 @@ struct ExtractProgress<'a> {
 impl<'a> ExtractProgress<'a> {
     fn new(bytes: &'a [u8], category: &str, source: &ArchiveSource, release: &ReleaseInfo) -> Self {
         Self {
-            inner: std::io::Cursor::new(bytes),
+            inner: Cursor::new(bytes),
             total: bytes.len() as u64,
-            read: 0,
             last_pct: -1.0,
             category: category.to_string(),
             source: source.name.clone(),
@@ -339,14 +329,19 @@ impl<'a> ExtractProgress<'a> {
     }
 }
 
-impl std::io::Read for ExtractProgress<'_> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+impl Seek for ExtractProgress<'_> {
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> {
+        self.inner.seek(pos)
+    }
+}
+
+impl Read for ExtractProgress<'_> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let n = self.inner.read(buf)?;
         if self.total == 0 {
             return Ok(n);
         }
-        self.read += n as u64;
-        let pct = (self.read as f64 / self.total as f64) * 100.0;
+        let pct = (self.inner.position() as f64 / self.total as f64) * 100.0;
         if pct - self.last_pct >= 1.0 {
             push(ArchiveEvent::Progress {
                 category: self.category.clone(),
@@ -380,33 +375,17 @@ async fn install_inner(
         percent: 0.0,
     });
 
+    let kind = ArchiveKind::from_name(&release.asset_name)
+        .ok_or_else(|| anyhow!("unknown archive type: {}", release.asset_name))?;
     let staging = dest_root.join(format!(".staging-{}-{}", source.name, release.tag));
     let _ = fs::remove_dir_all(&staging);
     fs::create_dir_all(&staging)?;
+    kind.unpack(
+        ExtractProgress::new(&bytes, category, source, release),
+        &staging,
+    )?;
 
-    match extract_strategy(&release.asset_name).unwrap_or_default() {
-        "tar_gz" => {
-            let src = ExtractProgress::new(&bytes, category, source, release);
-            tar::Archive::new(GzDecoder::new(src)).unpack(&staging)?;
-        }
-        "tar_xz" => {
-            let src = ExtractProgress::new(&bytes, category, source, release);
-            tar::Archive::new(XzDecoder::new(src)).unpack(&staging)?;
-        }
-        "tar_zst" => {
-            let src = ExtractProgress::new(&bytes, category, source, release);
-            tar::Archive::new(zstd::stream::read::Decoder::new(src)?).unpack(&staging)?;
-        }
-        "zip" => {
-            zip::ZipArchive::new(std::io::Cursor::new(&bytes))?.extract(&staging)?;
-        }
-        _ => {
-            let _ = fs::remove_dir_all(&staging);
-            return Err(anyhow!("unknown archive type: {}", release.asset_name));
-        }
-    }
-
-    let stem = asset_stem(&release.asset_name);
+    let stem = archive::stem(&release.asset_name);
     let default_name = if stem.is_empty() {
         release.tag.as_str()
     } else {

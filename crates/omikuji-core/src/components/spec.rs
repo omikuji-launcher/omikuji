@@ -1,3 +1,4 @@
+use crate::archive::ArchiveKind;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -30,9 +31,10 @@ pub enum Source {
 #[derive(Debug, Clone, Copy)]
 pub enum ExtractStrategy {
     Raw,
-    Tar { inner_path: &'static str },
-    TarGz { inner_path: &'static str },
-    Zip { inner_path: &'static str },
+    Archive {
+        kind: ArchiveKind,
+        inner_path: &'static str,
+    },
 }
 
 #[derive(Debug, Clone)]

@@ -3,13 +3,13 @@ pub mod specs;
 
 pub use spec::{ComponentSpec, ComponentStatus, ExtractStrategy, SettingsKey, Source};
 
+use crate::archive::ArchiveKind;
 use crate::event_queue::EventQueue;
 use crate::gacha::strategies::InstallStrategy;
 use crate::{http, settings};
 use anyhow::{Result, anyhow};
-use flate2::read::GzDecoder;
 use std::fs;
-use std::io::Write;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
 fn version_marker(name: &str) -> PathBuf {
@@ -359,45 +359,17 @@ fn install_bytes(spec: &ComponentSpec, bytes: &[u8]) -> Result<()> {
             chmod_exec(&tmp)?;
             fs::rename(&tmp, &dest)?;
         }
-        ExtractStrategy::Tar { inner_path } => {
-            promote_from_tar(spec, bytes, None, inner_path, &dest)?;
-        }
-        ExtractStrategy::TarGz { inner_path } => {
-            promote_from_tar(spec, bytes, Some(()), inner_path, &dest)?;
-        }
-        ExtractStrategy::Zip { inner_path } => {
-            let reader = std::io::Cursor::new(bytes);
-            let mut archive = zip::ZipArchive::new(reader)?;
-
-            let idx = (0..archive.len())
-                .find(|&i| {
-                    let Ok(e) = archive.by_index(i) else {
-                        return false;
-                    };
-                    let name = e.name();
-                    name == *inner_path
-                        || name.ends_with(&format!("/{}", inner_path))
-                        || name.rsplit('/').next() == Some(*inner_path)
-                })
-                .ok_or_else(|| anyhow!("{} not found in zip archive", inner_path))?;
-
-            let mut zfile = archive.by_index(idx)?;
-            let tmp = dest.with_extension("dl-tmp");
-            let mut out = fs::File::create(&tmp)?;
-            std::io::copy(&mut zfile, &mut out)?;
-            out.flush()?;
-            drop(out);
-            chmod_exec(&tmp)?;
-            fs::rename(&tmp, &dest)?;
+        ExtractStrategy::Archive { kind, inner_path } => {
+            promote_from_archive(spec, bytes, *kind, inner_path, &dest)?;
         }
     }
     Ok(())
 }
 
-fn promote_from_tar(
+fn promote_from_archive(
     spec: &ComponentSpec,
     bytes: &[u8],
-    gzipped: Option<()>,
+    kind: ArchiveKind,
     inner_path: &str,
     dest: &Path,
 ) -> Result<()> {
@@ -405,17 +377,11 @@ fn promote_from_tar(
     let staging = runtime.join(format!(".staging-{}", spec.name));
     let _ = fs::remove_dir_all(&staging);
     fs::create_dir_all(&staging)?;
-
-    if gzipped.is_some() {
-        let gz = GzDecoder::new(bytes);
-        tar::Archive::new(gz).unpack(&staging)?;
-    } else {
-        tar::Archive::new(std::io::Cursor::new(bytes)).unpack(&staging)?;
-    }
+    kind.unpack(Cursor::new(bytes), &staging)?;
 
     let src = find_by_filename(&staging, inner_path).ok_or_else(|| {
         anyhow!(
-            "{} not found after extracting tarball. contents:\n  - {}",
+            "{} not found after extracting. contents:\n  - {}",
             inner_path,
             list_tree(&staging)
         )

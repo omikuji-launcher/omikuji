@@ -64,20 +64,13 @@ DialogCard {
 
     onCloseRequested: close()
 
-    function normalizedUrl() {
-        const u = urlValue.trim()
-        let m = u.match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/(?:releases|tags)(?:\/.*)?)?\/?$/)
-        if (m) return "https://api.github.com/repos/" + m[1] + "/" + m[2] + "/releases"
-        m = u.match(/^https?:\/\/codeberg\.org\/([^\/]+)\/([^\/]+?)(?:\.git)?(?:\/(?:releases|tags)(?:\/.*)?)?\/?$/)
-        if (m) return "https://codeberg.org/api/v1/repos/" + m[1] + "/" + m[2] + "/releases"
-        return u
-    }
+    readonly property string normalizedUrl: urlValue.trim() === "" ? "" : archiveManager.normalizeReleasesUrl(urlValue)
 
     function submit() {
         const payload = JSON.stringify({
             name: nameValue.trim(),
             kind: kindValue,
-            api_url: normalizedUrl(),
+            api_url: urlValue.trim(),
             desc: descValue.trim(),
             asset_priority: priorityValue.trim().split(/\s+/).filter(p => p.length > 0),
             require_asset_match: requireMatchValue
@@ -136,9 +129,9 @@ DialogCard {
         }
 
         Text {
-            visible: root.urlValue.trim() !== "" && root.normalizedUrl() !== root.urlValue.trim()
+            visible: root.normalizedUrl !== "" && root.normalizedUrl !== root.urlValue.trim()
             width: parent.width
-            text: root.normalizedUrl()
+            text: root.normalizedUrl
             color: Theme.textSubtle
             font.pixelSize: Theme.type.micro.size
             font.family: Theme.mono
@@ -147,7 +140,7 @@ DialogCard {
 
         Text {
             width: parent.width
-            text: qsTr("GitHub and Codeberg repo links are converted to their releases API automatically.")
+            text: qsTr("Repo links are converted to their releases API automatically.")
             color: Theme.textSubtle
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap

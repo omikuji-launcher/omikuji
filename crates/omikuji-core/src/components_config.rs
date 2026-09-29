@@ -1,3 +1,4 @@
+use crate::archive_source::normalize_releases_url;
 use crate::fs_util::write_atomic;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -16,6 +17,15 @@ pub struct ArchiveSource {
     pub require_asset_match: bool,
     #[serde(default)]
     pub prefix_install_version: String,
+}
+
+impl ArchiveSource {
+    fn normalized(self) -> Self {
+        Self {
+            api_url: normalize_releases_url(&self.api_url),
+            ..self
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -165,6 +175,7 @@ fn list_mut<'a>(
 }
 
 pub fn add_source(category: &str, source: ArchiveSource) -> anyhow::Result<()> {
+    let source = source.normalized();
     mutate(|config| {
         let list = list_mut(config, category)
             .ok_or_else(|| anyhow::anyhow!("unknown source category: {}", category))?;
@@ -186,6 +197,7 @@ pub fn add_source(category: &str, source: ArchiveSource) -> anyhow::Result<()> {
 }
 
 pub fn update_source(category: &str, name: &str, source: ArchiveSource) -> anyhow::Result<()> {
+    let source = source.normalized();
     mutate(|config| {
         let list = list_mut(config, category)
             .ok_or_else(|| anyhow::anyhow!("unknown source category: {}", category))?;

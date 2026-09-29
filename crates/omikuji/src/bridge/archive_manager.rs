@@ -7,6 +7,7 @@
 
 use cxx_qt::Threading;
 use cxx_qt_lib::QString;
+use omikuji_core::archive;
 use omikuji_core::archive_source::{self, ReleaseInfo};
 use omikuji_core::components_config::{self, ArchiveSource};
 use omikuji_core::dll_packs;
@@ -153,6 +154,10 @@ pub mod qobject {
             source: QString,
             tag: QString,
         );
+
+        #[qinvokable]
+        #[cxx_name = "normalizeReleasesUrl"]
+        fn normalize_releases_url(self: &ArchiveManagerBridge, link: QString) -> QString;
 
         #[qinvokable]
         #[cxx_name = "addSource"]
@@ -385,7 +390,7 @@ impl qobject::ArchiveManagerBridge {
             let stems: Vec<String> = release
                 .assets
                 .iter()
-                .map(|a| archive_source::asset_stem(&a.name).to_string())
+                .map(|a| archive::stem(&a.name).to_string())
                 .collect();
             emit(
                 serde_json::json!({
@@ -523,6 +528,10 @@ impl qobject::ArchiveManagerBridge {
                 QString::from(&format!("delete: {:#}", e)),
             );
         }
+    }
+
+    fn normalize_releases_url(&self, link: QString) -> QString {
+        QString::from(&archive_source::normalize_releases_url(&link.to_string()))
     }
 
     fn add_source(mut self: Pin<&mut Self>, category: QString, source_json: QString) -> QString {
