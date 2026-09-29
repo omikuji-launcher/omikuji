@@ -64,7 +64,7 @@ impl SyncProgress {
         })
     }
 
-    fn advance(&self, id: &str, delta: u64) {
+    pub(crate) fn advance(&self, id: &str, delta: u64) {
         self.done.fetch_add(delta, Ordering::Relaxed);
         self.tick(id);
     }

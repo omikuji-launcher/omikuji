@@ -19,6 +19,7 @@ use crate::{fs_util, http, notifications};
 
 const PATCH_STAGING: &str = ".omikuji-patch";
 const PATCH_SCRATCH: &str = ".hpatchz";
+const EXTRACTED_MARKER: &str = ".extracted";
 
 pub struct GryphlineSource;
 
@@ -113,7 +114,7 @@ impl DownloadSource for GryphlineSource {
         }
 
         match resp.patch.as_ref().filter(|p| !p.patches.is_empty()) {
-            Some(patch) => apply_patch_bundle(entry, patch).await?,
+            Some(patch) => apply_patch_bundle(entry, patch, &target_version).await?,
             None => {
                 let rand = api::rand_str_from(&resp);
                 let game_version = major_minor(&target_version);
@@ -156,24 +157,33 @@ impl DownloadSource for GryphlineSource {
     }
 }
 
-async fn apply_patch_bundle(entry: &DownloadEntry, patch: &api::PatchInfo) -> Result<()> {
+async fn apply_patch_bundle(
+    entry: &DownloadEntry,
+    patch: &api::PatchInfo,
+    target_version: &str,
+) -> Result<()> {
     let staging = entry.install_path.join(PATCH_STAGING);
-    let _ = std::fs::remove_dir_all(&staging);
-    std::fs::create_dir_all(&staging)?;
+    let marker = staging.join(EXTRACTED_MARKER);
+    let extracted = std::fs::read_to_string(&marker).is_ok_and(|v| v == target_version);
+    if !extracted {
+        let _ = std::fs::remove_dir_all(&staging);
+        std::fs::create_dir_all(&staging)?;
 
-    let password = (!patch.cd_key.is_empty()).then_some(patch.cd_key.as_str());
-    download_and_extract(entry, &patch.patches, "patch", &staging, password).await?;
+        let password = (!patch.cd_key.is_empty()).then_some(patch.cd_key.as_str());
+        download_and_extract(entry, &patch.patches, "patch", &staging, password).await?;
 
-    if check_control(&entry.id) != ControlSignal::None {
-        return Ok(());
+        if check_control(&entry.id) != ControlSignal::None {
+            return Ok(());
+        }
+        std::fs::write(&marker, target_version)?;
     }
 
     let delete_list_path = staging.join("delete_files.txt");
     let mut obsolete = read_delete_list(&delete_list_path);
 
     let manifest_path = staging.join("patch.json");
+    let vfs_files = staging.join("vfs_files");
     if let Some(manifest) = read_bundle_manifest(&manifest_path)? {
-        let vfs_files = staging.join("vfs_files");
         let whole_files = vfs_files.join("files");
         if whole_files.is_dir() {
             fs_util::move_dir_all(&whole_files, &staging)?;
@@ -185,18 +195,19 @@ async fn apply_patch_bundle(entry: &DownloadEntry, patch: &api::PatchInfo) -> Re
             &vfs_files.join("vfs_patch"),
             &mut obsolete,
         )?;
-        let _ = std::fs::remove_dir_all(&vfs_files);
-        let _ = std::fs::remove_file(&manifest_path);
     }
 
     if check_control(&entry.id) != ControlSignal::None {
         return Ok(());
     }
 
+    let _ = std::fs::remove_dir_all(&vfs_files);
+    let _ = std::fs::remove_file(&manifest_path);
     for rel in &obsolete {
         let _ = std::fs::remove_file(entry.install_path.join(rel));
     }
     let _ = std::fs::remove_file(&delete_list_path);
+    let _ = std::fs::remove_file(&marker);
 
     set_status(&entry.id, DownloadStatus::Extracting);
     fs_util::move_dir_all(&staging, &entry.install_path)?;
@@ -258,6 +269,7 @@ fn apply_bundle_diffs(
             Err(e) => {
                 tracing::warn!("patch {}: {}", file.name, e);
                 failed.push(file.name.clone());
+                continue;
             }
         }
 

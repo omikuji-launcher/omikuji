@@ -27,7 +27,7 @@ Item {
     readonly property real shrink: width > 0 ? Math.min(1, width / designWidth) : 1
     implicitHeight: Math.round(196 * shrink)
 
-    readonly property bool isUninterruptible: status === "Extracting" || status === "Patching"
+    readonly property bool isUninterruptible: status === "Extracting"
     readonly property bool isPaused: status === "Paused"
 
     property var netSamples: []

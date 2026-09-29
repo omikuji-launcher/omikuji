@@ -1,5 +1,5 @@
 use anyhow::{Result, anyhow, bail};
-use futures_util::{StreamExt, stream};
+use futures_util::{StreamExt, TryStreamExt, stream};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -21,12 +21,37 @@ pub(super) async fn run_patch_update(
 ) -> Result<bool> {
     let result = patch_into_staging(entry, info, patch, pidx).await;
     if result.is_err() {
-        let _ = std::fs::remove_dir_all(entry.install_path.join(STAGING_DIR));
+        discard_staging(&entry.install_path);
     }
     result
 }
 
 const STAGING_DIR: &str = ".omikuji-patch";
+
+pub(super) fn discard_staging(install_root: &Path) {
+    let _ = std::fs::remove_dir_all(install_root.join(STAGING_DIR));
+}
+
+#[derive(Debug)]
+struct Interrupted;
+
+impl std::fmt::Display for Interrupted {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("patching interrupted")
+    }
+}
+
+impl std::error::Error for Interrupted {}
+
+enum GroupOutcome {
+    Applied(Result<()>),
+    NoDiff,
+    Skipped,
+}
+
+fn patch_workers() -> usize {
+    std::thread::available_parallelism().map_or(1, |n| n.get().min(4))
+}
 
 async fn patch_into_staging(
     entry: &DownloadEntry,
@@ -106,35 +131,78 @@ async fn patch_into_staging(
         }
     }
     let mut staged: Vec<&str> = Vec::new();
-    for group in &pidx.group_infos {
-        if check_control(&entry.id) != ControlSignal::None {
-            return Ok(false);
-        }
-        let diff_path = dl_root.join(sanitize_rel(&group.dest));
-        if diff_path.exists() {
-            let apply = {
-                let diff_path = diff_path.clone();
-                let install_root = install_root.clone();
-                let out_root = out_root.clone();
-                let dst_files = group.dst_files.clone();
-                tokio::task::spawn_blocking(move || {
-                    apply_group(&diff_path, &install_root, &out_root, &dst_files)
-                })
-            };
-            match apply.await? {
-                Ok(()) => staged.extend(group.dst_files.iter().map(|f| f.dest.as_str())),
-                Err(e) => {
-                    tracing::warn!(
-                        "krpdiff group {} failed, its files fall back to full download: {}",
-                        group.dest,
-                        e
-                    );
-                    for f in &group.dst_files {
-                        let _ = std::fs::remove_file(out_root.join(sanitize_rel(&f.dest)));
+    let patch_progress = SyncProgress::new(
+        pidx.group_infos
+            .iter()
+            .filter(|g| dl_root.join(sanitize_rel(&g.dest)).exists())
+            .flat_map(|g| &g.dst_files)
+            .map(|f| f.size)
+            .sum(),
+    );
+    let mut groups = stream::iter(0..pidx.group_infos.len())
+        .map(|i| {
+            let group = &pidx.group_infos[i];
+            let id = entry.id.clone();
+            let diff_path = dl_root.join(sanitize_rel(&group.dest));
+            let install_root = install_root.clone();
+            let out_root = out_root.clone();
+            let dst_files = group.dst_files.clone();
+            let progress = patch_progress.clone();
+            async move {
+                if check_control(&id) != ControlSignal::None {
+                    return Ok((i, GroupOutcome::Skipped));
+                }
+                if !diff_path.exists() {
+                    return Ok((i, GroupOutcome::NoDiff));
+                }
+                let outcome = tokio::task::spawn_blocking(move || {
+                    let on_bytes = |n| {
+                        progress.advance(&id, n);
+                        match check_control(&id) {
+                            ControlSignal::None => Ok(()),
+                            _ => Err(Interrupted.into()),
+                        }
+                    };
+                    match apply_group(&diff_path, &install_root, &out_root, &dst_files, on_bytes) {
+                        Err(e) if e.is::<Interrupted>() => GroupOutcome::Skipped,
+                        applied => {
+                            let _ = std::fs::remove_file(&diff_path);
+                            GroupOutcome::Applied(applied)
+                        }
                     }
+                })
+                .await?;
+                Ok::<_, anyhow::Error>((i, outcome))
+            }
+        })
+        .buffer_unordered(patch_workers());
+
+    let mut settled: HashSet<&str> = HashSet::new();
+    let mut interrupted = false;
+    while let Some(res) = groups.next().await {
+        let (i, outcome) = res?;
+        let group = &pidx.group_infos[i];
+        match outcome {
+            GroupOutcome::Skipped => {
+                interrupted = true;
+                continue;
+            }
+            GroupOutcome::NoDiff => {}
+            GroupOutcome::Applied(Ok(())) => {
+                let dests = group.dst_files.iter().map(|f| f.dest.as_str());
+                staged.extend(dests.clone());
+                settled.extend(dests);
+            }
+            GroupOutcome::Applied(Err(e)) => {
+                tracing::warn!(
+                    "krpdiff group {} failed, its files fall back to full download: {}",
+                    group.dest,
+                    e
+                );
+                for f in &group.dst_files {
+                    let _ = std::fs::remove_file(out_root.join(sanitize_rel(&f.dest)));
                 }
             }
-            let _ = std::fs::remove_file(&diff_path);
         }
         for s in &group.src_files {
             if let Some(n) = pending_src.get_mut(s.dest.as_str()) {
@@ -143,33 +211,40 @@ async fn patch_into_staging(
         }
         flush_staged(&mut staged, &pending_src, &out_root, &install_root);
     }
+    drop(groups);
+    if interrupted {
+        return Ok(false);
+    }
 
-    let mut seen: HashSet<&str> = HashSet::new();
     let candidates: Vec<ResourceFile> = pidx
         .group_infos
         .iter()
         .flat_map(|g| g.dst_files.iter())
-        .filter(|f| seen.insert(f.dest.as_str()))
+        .filter(|f| settled.insert(f.dest.as_str()))
         .cloned()
         .collect();
 
-    let fallback = {
-        let out_root = out_root.clone();
-        let install_root = install_root.clone();
-        tokio::task::spawn_blocking(move || {
-            candidates
-                .into_iter()
-                .filter(|f| {
-                    let rel = sanitize_rel(&f.dest);
-                    let want = expected_md5(&f.md5);
-                    // apply_group already hashed out_root
-                    is_stale(&out_root.join(&rel), f.size, None)
-                        && is_stale(&install_root.join(&rel), f.size, want.as_deref())
-                })
-                .collect::<Vec<_>>()
+    let fallback: Vec<ResourceFile> = stream::iter(candidates)
+        .map(|f| {
+            let id = entry.id.clone();
+            let path = install_root.join(sanitize_rel(&f.dest));
+            tokio::task::spawn_blocking(move || {
+                if check_control(&id) != ControlSignal::None {
+                    return None;
+                }
+                let want = expected_md5(&f.md5);
+                is_stale(&path, f.size, want.as_deref()).then_some(f)
+            })
         })
+        .buffer_unordered(patch_workers())
+        .try_collect::<Vec<_>>()
         .await?
-    };
+        .into_iter()
+        .flatten()
+        .collect();
+    if check_control(&entry.id) != ControlSignal::None {
+        return Ok(false);
+    }
     if !fallback.is_empty() {
         tracing::warn!("kuro patch: {} files need a full download", fallback.len());
         set_status(&entry.id, DownloadStatus::Downloading);
@@ -218,9 +293,10 @@ fn apply_group(
     old_root: &Path,
     out_root: &Path,
     dst_files: &[ResourceFile],
+    on_bytes: impl FnMut(u64) -> Result<()>,
 ) -> Result<()> {
     let kr = Krpdiff::open(diff)?;
-    kr.apply(old_root, out_root, |_| {})?;
+    kr.apply(old_root, out_root, on_bytes)?;
     for f in dst_files {
         let path = out_root.join(sanitize_rel(&f.dest));
         let size = std::fs::metadata(&path)

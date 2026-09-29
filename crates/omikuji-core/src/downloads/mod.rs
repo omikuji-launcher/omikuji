@@ -449,7 +449,7 @@ impl DownloadManager {
             return;
         };
         match status {
-            DownloadStatus::Downloading | DownloadStatus::Starting => {
+            DownloadStatus::Downloading | DownloadStatus::Starting | DownloadStatus::Patching => {
                 inner.control.insert(id.to_string(), ControlSignal::Pause);
             }
             DownloadStatus::Queued => inner.transition(id, DownloadStatus::Paused),

@@ -10,6 +10,10 @@ pub struct KuroSource;
 
 #[async_trait]
 impl DownloadSource for KuroSource {
+    fn cleanup_state(&self, entry: &DownloadEntry) {
+        super::patcher::discard_staging(&entry.install_path);
+    }
+
     async fn install(&self, entry: &DownloadEntry) -> Result<()> {
         run_sync(entry).await
     }

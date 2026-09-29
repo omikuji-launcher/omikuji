@@ -50,7 +50,7 @@ impl Krpdiff {
         &self,
         old_root: &Path,
         out_root: &Path,
-        mut on_bytes: impl FnMut(u64),
+        mut on_bytes: impl FnMut(u64) -> Result<()>,
     ) -> Result<()> {
         for fe in &self.old_files {
             let full = old_root.join(&fe.path);
@@ -175,7 +175,7 @@ fn pump(
     rle: &mut Option<RleState>,
     mut n: u64,
     buf: &mut [u8],
-    on_bytes: &mut impl FnMut(u64),
+    on_bytes: &mut impl FnMut(u64) -> Result<()>,
 ) -> Result<()> {
     while n > 0 {
         let step = (buf.len() as u64).min(n) as usize;
@@ -184,7 +184,7 @@ fn pump(
             rle.add_over(&mut buf[..step])?;
         }
         out.write_all(&buf[..step])?;
-        on_bytes(step as u64);
+        on_bytes(step as u64)?;
         n -= step as u64;
     }
     Ok(())

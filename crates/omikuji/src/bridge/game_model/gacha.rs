@@ -227,6 +227,7 @@ impl super::qobject::GameModel {
             },
             launch: LaunchConfig {
                 env: manifest.env.clone(),
+                args: manifest.args.clone(),
                 ..LaunchConfig::default()
             },
             graphics: GraphicsConfig::default(),

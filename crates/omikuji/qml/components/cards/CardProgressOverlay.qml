@@ -13,7 +13,7 @@ Item {
     property real progress: 0
     property bool animate: true
 
-    readonly property bool isUninterruptible: status === "Extracting" || status === "Patching"
+    readonly property bool isUninterruptible: status === "Extracting"
     readonly property bool isPaused: status === "Paused"
 
     readonly property real bannerInset: bannerArea ? bannerArea.x : 0

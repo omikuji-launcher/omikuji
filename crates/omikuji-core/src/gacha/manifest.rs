@@ -45,6 +45,8 @@ pub struct GachaManifest {
     pub options: Vec<ManifestOption>,
     #[serde(default)]
     pub env: IndexMap<String, String>,
+    #[serde(default)]
+    pub args: Vec<String>,
 
     #[serde(default)]
     pub letter_fallback: String,
