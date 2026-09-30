@@ -11,7 +11,8 @@ Chip {
         update: qsTr("Update"),
         predownload: qsTr("Pre-download"),
         repair: qsTr("Repair"),
-        "import": qsTr("Import")
+        "import": qsTr("Import"),
+        add_pack: qsTr("Add pack")
     })
 
     tone: root.kind === "repair" ? Theme.warning : Theme.secondary

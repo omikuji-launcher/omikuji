@@ -35,6 +35,10 @@ pub trait DownloadSource: Send + Sync {
         ))
     }
 
+    async fn add_pack(&self, _entry: &DownloadEntry, _pack: &str) -> Result<()> {
+        Err(anyhow!("this source has no optional packs"))
+    }
+
     // scratch left behind by a cancelled download
     fn cleanup_state(&self, _entry: &DownloadEntry) {}
 

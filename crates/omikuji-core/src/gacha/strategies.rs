@@ -1,13 +1,14 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-use super::hoyo::{self, HoyoEdition, VoiceLocale};
+use super::hoyo::{self, HoyoEdition};
 use super::manifest::GachaManifest;
 use super::{art, gryphline, kuro, yostar};
 use crate::downloads::{self, DownloadKind, DownloadRequest};
 use crate::library::Game;
 use crate::process::UpdateKind;
+use crate::updates;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -39,12 +40,21 @@ pub struct InstallSize {
     pub install_bytes: u64,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct PackInfo {
+    pub id: String,
+    pub label: String,
+    pub installed: bool,
+    pub downloading: bool,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct ExistingInstallInfo {
     pub scratch_bytes: u64,
     pub segments: u32,
     pub has_install: bool,
     pub installed_version: Option<String>,
+    pub installed_packs: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -100,7 +110,7 @@ pub fn build_app_id(manifest: &GachaManifest, edition_id: &str) -> String {
     format!("{}:{}", manifest.app_id_prefix, edition_id)
 }
 
-// older installs carry a third ":voices" segment, split just ignores it
+// older installs carry a third ":voices" segment that split just ignores
 pub fn find_for_app_id(app_id: &str) -> Option<(GachaManifest, String)> {
     let mut parts = app_id.split(':');
     let prefix = parts.next()?;
@@ -187,11 +197,7 @@ pub async fn fetch_install_size(
         InstallStrategy::HoyoSophon => {
             let edition = HoyoEdition::from_id(edition_id)?;
             let biz_id = hoyo::biz_id(manifest, edition_id)?;
-            let voice_locales: Vec<_> = voices
-                .iter()
-                .filter_map(|v| VoiceLocale::from_api_name(v))
-                .collect();
-            let s = hoyo::api::fetch_install_size(&biz_id, edition, &voice_locales).await?;
+            let s = hoyo::api::fetch_install_size(&biz_id, edition, voices).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
@@ -280,6 +286,65 @@ pub fn game_install_root(game: &Game) -> PathBuf {
         .unwrap_or_else(|| exe.clone())
 }
 
+pub fn packs(game: &Game) -> Vec<PackInfo> {
+    let Some((manifest, edition_id)) = find_for_app_id(&game.source.app_id) else {
+        return Vec::new();
+    };
+    let Some(edition) = manifest.edition(&edition_id) else {
+        return Vec::new();
+    };
+    if manifest.strategy_for(edition) != InstallStrategy::HoyoSophon {
+        return Vec::new();
+    }
+    let root = game_install_root(game);
+    // sophon writes straight into the game dir so a queued pack's folder exists long before it's whole
+    let in_queue = downloads::manager().packs_in_queue(&game.metadata.id);
+    manifest
+        .voice_locales
+        .iter()
+        .map(|voice| {
+            let queued = in_queue.contains(&voice.id);
+            PackInfo {
+                id: voice.id.clone(),
+                label: voice.label.clone(),
+                installed: !queued && hoyo::voice_installed(&manifest, edition, voice, &root),
+                downloading: queued,
+            }
+        })
+        .collect()
+}
+
+// cancelling a pack job deletes that pack's files so it must never be queued over one that's already there
+pub fn queue_pack(game: &Game, pack: &str) -> Result<String> {
+    if packs(game).iter().any(|p| p.id == pack && p.installed) {
+        bail!("{pack} is already installed");
+    }
+    let kind = DownloadKind::AddPack {
+        pack: pack.to_string(),
+    };
+    let req = updates::download_request(game, kind)
+        .ok_or_else(|| anyhow!("{} can't download packs", game.metadata.name))?;
+    Ok(downloads::manager().enqueue(req))
+}
+
+pub fn remove_pack(game: &Game, pack: &str) -> Result<()> {
+    if downloads::manager().has_active_for_game(&game.metadata.id) {
+        bail!(
+            "wait for {}'s downloads to finish first",
+            game.metadata.name
+        );
+    }
+    let (manifest, edition_id) = find_for_app_id(&game.source.app_id)
+        .ok_or_else(|| anyhow!("no manifest for {}", game.source.app_id))?;
+    let edition = manifest.require_edition(&edition_id)?;
+    match manifest.strategy_for(edition) {
+        InstallStrategy::HoyoSophon => {
+            hoyo::remove_voice_pack(&manifest, edition, &game_install_root(game), pack)
+        }
+        _ => bail!("{} has no removable packs", game.metadata.name),
+    }
+}
+
 pub fn read_install_version(
     manifest: &GachaManifest,
     edition_id: &str,
@@ -317,7 +382,7 @@ pub fn inspect_existing(
                 scratch_bytes: bytes,
                 segments,
                 has_install,
-                installed_version: None,
+                ..Default::default()
             }
         }
         InstallStrategy::GryphlineResourcePatch => {
@@ -330,22 +395,25 @@ pub fn inspect_existing(
                 scratch_bytes: bytes,
                 segments,
                 has_install,
-                installed_version: None,
+                ..Default::default()
             }
         }
         InstallStrategy::KuroResourceIndex | InstallStrategy::YostarFileIndex => {
             let has_install = edition_exe_name(manifest, edition_id)
                 .is_some_and(|exe| install_path.join(exe).exists());
             ExistingInstallInfo {
-                scratch_bytes: 0,
-                segments: 0,
                 has_install,
-                installed_version: None,
+                ..Default::default()
             }
         }
     };
     if info.has_install {
         info.installed_version = read_install_version(manifest, edition_id, install_path);
+        if strategy == InstallStrategy::HoyoSophon
+            && let Some(edition) = manifest.edition(edition_id)
+        {
+            info.installed_packs = hoyo::installed_voice_ids(manifest, edition, install_path);
+        }
     }
     info
 }

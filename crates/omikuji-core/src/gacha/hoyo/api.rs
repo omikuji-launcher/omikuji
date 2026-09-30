@@ -1,8 +1,6 @@
 use anyhow::{Result, anyhow};
-use serde::Deserialize;
 
-use super::{HoyoEdition, VoiceLocale};
-use crate::http;
+use super::HoyoEdition;
 
 #[derive(Debug, Clone, Copy)]
 pub struct InstallSize {
@@ -13,7 +11,7 @@ pub struct InstallSize {
 pub async fn fetch_install_size(
     biz_id: &str,
     edition: HoyoEdition,
-    voices: &[VoiceLocale],
+    voices: &[String],
 ) -> Result<InstallSize> {
     let branches = super::sophon::api::fetch_game_branches(edition).await?;
     let branch = branches
@@ -38,8 +36,8 @@ pub async fn fetch_install_size(
     if let Some(game) = build.get_for("game") {
         accumulate(game);
     }
-    for locale in voices {
-        if let Some(audio) = build.get_for(locale.api_name()) {
+    for voice in voices {
+        if let Some(audio) = build.get_for(voice) {
             accumulate(audio);
         }
     }
@@ -50,225 +48,24 @@ pub async fn fetch_install_size(
     })
 }
 
-#[derive(Debug, Clone)]
-pub struct GamePackageInfo {
-    pub version: String,
-    pub game_packages: Vec<PackageFile>,
-    pub audio_packages: Vec<AudioPackage>,
-}
-
-#[derive(Debug, Clone)]
-pub struct PackageFile {
-    pub url: String,
-    pub md5: String,
-    pub size: u64,
-    pub decompressed_size: u64,
-}
-
-#[derive(Debug, Clone)]
-pub struct AudioPackage {
-    pub locale: VoiceLocale,
-    pub file: PackageFile,
-}
-
-pub async fn fetch_packages(biz_id: &str, edition: HoyoEdition) -> Result<GamePackageInfo> {
-    let url = format!(
-        "{}/getGamePackages?launcher_id={}",
-        edition.api_base(),
-        edition.launcher_id()
-    );
-
-    let resp: ApiResponse<GamePackagesData> = http::client()
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| anyhow!("failed to reach hoyo api: {}", e))?
-        .json()
-        .await
-        .map_err(|e| anyhow!("failed to parse hoyo api response: {}", e))?;
-
-    if resp.retcode != 0 {
-        return Err(anyhow!("hoyo api error {}: {}", resp.retcode, resp.message));
-    }
-
-    let data = resp
-        .data
-        .ok_or_else(|| anyhow!("hoyo api returned no data"))?;
-
-    let entry = data
-        .game_packages
-        .into_iter()
-        .find(|gp| gp.game.id == biz_id)
-        .ok_or_else(|| anyhow!("game {} not found in api response", biz_id))?;
-
-    let major = entry
-        .main
-        .major
-        .ok_or_else(|| anyhow!("no major version in api response"))?;
-
-    let game_packages = major
-        .game_pkgs
-        .into_iter()
-        .filter(|p| !p.url.is_empty())
-        .map(|p| PackageFile {
-            url: p.url,
-            md5: p.md5,
-            size: parse_size(&p.size),
-            decompressed_size: parse_size(&p.decompressed_size),
-        })
-        .collect();
-
-    let audio_packages = major
-        .audio_pkgs
-        .into_iter()
-        .filter(|p| !p.url.is_empty())
-        .filter_map(|p| {
-            let locale = VoiceLocale::from_api_name(&p.language)?;
-            Some(AudioPackage {
-                locale,
-                file: PackageFile {
-                    url: p.url,
-                    md5: p.md5,
-                    size: parse_size(&p.size),
-                    decompressed_size: parse_size(&p.decompressed_size),
-                },
-            })
-        })
-        .collect();
-
-    Ok(GamePackageInfo {
-        version: major.version,
-        game_packages,
-        audio_packages,
-    })
-}
-
-#[derive(Deserialize)]
-struct ApiResponse<T> {
-    retcode: i32,
-    message: String,
-    data: Option<T>,
-}
-
-#[derive(Deserialize)]
-struct GamePackagesData {
-    game_packages: Vec<GamePackageEntry>,
-}
-
-#[derive(Deserialize)]
-struct GamePackageEntry {
-    game: GameRef,
-    main: MainVersion,
-}
-
-#[derive(Deserialize)]
-struct GameRef {
-    id: String,
-}
-
-#[derive(Deserialize)]
-struct MainVersion {
-    major: Option<MajorVersion>,
-}
-
-#[derive(Deserialize)]
-struct MajorVersion {
-    version: String,
-    game_pkgs: Vec<RawPackage>,
-    audio_pkgs: Vec<RawAudioPackage>,
-}
-
-#[derive(Deserialize)]
-struct RawPackage {
-    url: String,
-    md5: String,
-    size: String,
-    decompressed_size: String,
-}
-
-#[derive(Deserialize)]
-struct RawAudioPackage {
-    language: String,
-    url: String,
-    md5: String,
-    size: String,
-    decompressed_size: String,
-}
-
-fn parse_size(s: &str) -> u64 {
-    s.parse().unwrap_or(0)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gacha::hoyo::{HoyoEdition, VoiceLocale};
 
     // genshin global biz_id, hardcoded for live test only
     const GENSHIN_GLOBAL: &str = "gopR6Cufr3";
-    const HSR_GLOBAL: &str = "4ziysqXOQ8";
 
     #[tokio::test]
     #[ignore]
     async fn fetch_genshin_global_size_live() {
         let r =
-            fetch_install_size(GENSHIN_GLOBAL, HoyoEdition::Global, &[VoiceLocale::English]).await;
+            fetch_install_size(GENSHIN_GLOBAL, HoyoEdition::Global, &["en-us".to_string()]).await;
         match r {
             Ok(s) => {
                 println!("download={} install={}", s.download_bytes, s.install_bytes);
                 assert!(s.install_bytes > 0, "install size should be non-zero");
             }
             Err(e) => panic!("fetch failed: {}", e),
-        }
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn inspect_hsr_packages() {
-        let info = fetch_packages(HSR_GLOBAL, HoyoEdition::Global)
-            .await
-            .unwrap();
-        println!("version: {}", info.version);
-        println!("game_packages ({}):", info.game_packages.len());
-        for (i, p) in info.game_packages.iter().enumerate() {
-            let fname = p.url.rsplit('/').next().unwrap_or(&p.url);
-            println!(
-                "  [{}] dl={:>12} inst={:>12}  {}",
-                i, p.size, p.decompressed_size, fname
-            );
-        }
-        println!("audio_packages ({}):", info.audio_packages.len());
-        for (i, a) in info.audio_packages.iter().enumerate() {
-            let fname = a.file.url.rsplit('/').next().unwrap_or(&a.file.url);
-            println!(
-                "  [{}] {:?} dl={:>12} inst={:>12}  {}",
-                i, a.locale, a.file.size, a.file.decompressed_size, fname
-            );
-        }
-    }
-
-    #[tokio::test]
-    #[ignore]
-    async fn inspect_genshin_packages() {
-        let info = fetch_packages(GENSHIN_GLOBAL, HoyoEdition::Global)
-            .await
-            .unwrap();
-        println!("version: {}", info.version);
-        println!("game_packages ({}):", info.game_packages.len());
-        for (i, p) in info.game_packages.iter().enumerate() {
-            let fname = p.url.rsplit('/').next().unwrap_or(&p.url);
-            println!(
-                "  [{}] dl={:>12} inst={:>12}  {}",
-                i, p.size, p.decompressed_size, fname
-            );
-        }
-        println!("audio_packages ({}):", info.audio_packages.len());
-        for (i, a) in info.audio_packages.iter().enumerate() {
-            let fname = a.file.url.rsplit('/').next().unwrap_or(&a.file.url);
-            println!(
-                "  [{}] {:?} dl={:>12} inst={:>12}  {}",
-                i, a.locale, a.file.size, a.file.decompressed_size, fname
-            );
         }
     }
 }

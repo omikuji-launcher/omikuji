@@ -199,6 +199,21 @@ impl super::qobject::GameModel {
 
         enqueue(game, DownloadKind::Repair)
     }
+
+    pub fn add_gacha_pack(self: Pin<&mut Self>, game_id: &QString, pack: &QString) -> QString {
+        let gid = game_id.to_string();
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+            tracing::error!("add_gacha_pack: game '{}' not found", gid);
+            return QString::from("");
+        };
+        match strategies::queue_pack(game, &pack.to_string()) {
+            Ok(id) => QString::from(&id),
+            Err(e) => {
+                tracing::error!("add_gacha_pack: {e:#}");
+                QString::from("")
+            }
+        }
+    }
 }
 
 fn enqueue(game: &Game, kind: DownloadKind) -> QString {

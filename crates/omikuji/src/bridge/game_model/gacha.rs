@@ -77,6 +77,32 @@ impl super::qobject::GameModel {
         ))
     }
 
+    pub fn gacha_packs(&self, game_id: &QString) -> QString {
+        let gid = game_id.to_string();
+        let packs = self
+            .library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == gid)
+            .map(gacha::strategies::packs)
+            .unwrap_or_default();
+        QString::from(&serde_json::to_string(&packs).unwrap_or_else(|_| "[]".into()))
+    }
+
+    pub fn remove_gacha_pack(&self, game_id: &QString, pack: &QString) -> QString {
+        let gid = game_id.to_string();
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+            return QString::from("game not found");
+        };
+        match gacha::strategies::remove_pack(game, &pack.to_string()) {
+            Ok(()) => QString::default(),
+            Err(e) => {
+                tracing::error!("removing {} from {}: {e:?}", pack, game.metadata.name);
+                QString::from(&format!("{e:#}"))
+            }
+        }
+    }
+
     pub fn gacha_posters(&self) -> QString {
         let manifests = gacha::manifest::load_all();
         let mut map = serde_json::Map::new();
@@ -141,14 +167,14 @@ impl super::qobject::GameModel {
             Some(std::path::PathBuf::from(temp_s.trim()))
         };
         let info = gacha::strategies::inspect_existing(&manifest, &eid, &install, temp.as_deref());
-        let version_json = match &info.installed_version {
-            Some(v) => format!(r#""{}""#, v.replace('"', "")),
-            None => "null".to_string(),
-        };
-        QString::from(&format!(
-            r#"{{"bytes":{},"segments":{},"has_install":{},"installed_version":{}}}"#,
-            info.scratch_bytes, info.segments, info.has_install, version_json
-        ))
+        let json = serde_json::json!({
+            "bytes": info.scratch_bytes,
+            "segments": info.segments,
+            "has_install": info.has_install,
+            "installed_version": info.installed_version,
+            "installed_packs": info.installed_packs,
+        });
+        QString::from(&json.to_string())
     }
 
     pub fn gacha_import_after_install(

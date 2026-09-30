@@ -80,6 +80,7 @@ DialogCard {
     property int existingTempSegments: 0
     property bool existingInstall: false
     property string existingVersion: ""
+    property var installedPacks: []
     property string detectedEdition: ""
     property string importDir: ""
     readonly property bool directImport: existingInstall && importDir !== "" && importDir === (installPath || "").trim()
@@ -117,11 +118,13 @@ DialogCard {
     }
 
     function voicesSelected() {
-        let out = []
-        for (let i = 0; i < voiceLocales.length; i++) {
-            if (voiceChecks[i]) out.push(voiceLocales[i].id)
-        }
-        return out
+        return voiceLocales
+            .filter((voice, i) => voiceChecks[i] && !installedPacks.includes(voice.id))
+            .map(voice => voice.id)
+    }
+
+    function defaultVoiceChecks() {
+        return voiceLocales.map((voice, i) => !existingInstall && i === 0)
     }
 
     function toggleVoice(index) {
@@ -155,6 +158,7 @@ DialogCard {
         refreshExisting()
     }
     onVoiceChecksChanged: if (root.shown) sizeFetchDebounce.restart()
+    onExistingInstallChanged: voiceChecks = defaultVoiceChecks()
 
     Timer {
         id: sizeFetchDebounce
@@ -197,12 +201,8 @@ DialogCard {
         installBytes = -1
         sizeError = ""
         _sizeRequestId = ""
-        existingTempBytes = 0
-        existingTempSegments = 0
-        existingInstall = false
-        existingVersion = ""
+        clearExisting()
         detectedEdition = ""
-        importDir = ""
         advised = null
         assetIndex = 0
         runnerInstalling = false
@@ -230,9 +230,7 @@ DialogCard {
         resetState()
         manifest = m
 
-        let vs = []
-        for (let i = 0; i < voiceLocales.length; i++) vs.push(i === 0)
-        voiceChecks = vs
+        voiceChecks = defaultVoiceChecks()
 
         installPath = defaultInstallPath()
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
@@ -322,6 +320,7 @@ DialogCard {
                 manifestId, editionId, importDir, runner, prefixPath,
                 optionsCsv()
             )
+            if (gid) voicesSelected().forEach(pack => gameModel.add_gacha_pack(gid, pack))
             imported(gid || "")
             close()
             return
@@ -415,10 +414,17 @@ DialogCard {
         return out
     }
 
+    function clearExisting() {
+        existingTempBytes = 0
+        existingTempSegments = 0
+        existingInstall = false
+        existingVersion = ""
+        importDir = ""
+        installedPacks = []
+    }
+
     function refreshExisting() {
-        if (!gameModel || !manifest) {
-            existingTempBytes = 0; existingTempSegments = 0; existingInstall = false; existingVersion = ""; importDir = ""; return
-        }
+        if (!gameModel || !manifest) { clearExisting(); return }
         let rawPath = (installPath || "").trim()
         if (rawPath !== "") {
             let direct = _inspect(rawPath, "")
@@ -427,19 +433,19 @@ DialogCard {
                 existingInstall = true
                 existingVersion = (typeof direct.installed_version === "string") ? direct.installed_version : ""
                 importDir = rawPath
+                installedPacks = direct.installed_packs || []
                 _adoptDetectedEdition(rawPath)
                 return
             }
         }
-        if (effectiveInstallPath === "") {
-            existingTempBytes = 0; existingTempSegments = 0; existingInstall = false; existingVersion = ""; importDir = ""; return
-        }
+        if (effectiveInstallPath === "") { clearExisting(); return }
         let nested = _inspect(effectiveInstallPath, tempPath.trim())
         existingTempBytes = parseInt(nested.bytes) || 0
         existingTempSegments = parseInt(nested.segments) || 0
         existingInstall = nested.has_install === true
         existingVersion = (typeof nested.installed_version === "string") ? nested.installed_version : ""
         importDir = existingInstall ? effectiveInstallPath : ""
+        installedPacks = existingInstall ? (nested.installed_packs || []) : []
         if (existingInstall) _adoptDetectedEdition(importDir)
         else detectedEdition = ""
     }
@@ -500,10 +506,13 @@ DialogCard {
                         id: localeRow
                         required property var modelData
                         required property int index
+                        readonly property bool onDisk: root.installedPacks.includes(modelData.id)
 
                         Layout.fillWidth: true
                         minHeight: 0
-                        checked: root.voiceChecks[index] === true
+                        enabled: !onDisk
+                        opacity: onDisk ? 0.55 : 1
+                        checked: onDisk || root.voiceChecks[index] === true
                         onToggled: root.toggleVoice(index)
 
                         Text {

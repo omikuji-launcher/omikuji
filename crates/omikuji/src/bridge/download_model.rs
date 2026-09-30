@@ -34,6 +34,7 @@ fn kind_label(k: &DownloadKind) -> &'static str {
         DownloadKind::PreDownload { .. } => "predownload",
         DownloadKind::Repair => "repair",
         DownloadKind::ImportExisting => "import",
+        DownloadKind::AddPack { .. } => "add_pack",
     }
 }
 

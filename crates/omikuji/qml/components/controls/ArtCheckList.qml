@@ -10,6 +10,7 @@ Item {
     property var items: []
     property var checkedIds: []
     property var lockedIds: []
+    property string lockedHint: ""
     property bool readOnly: false
     property bool removable: false
     property string title: ""
@@ -168,6 +169,16 @@ Item {
                         hoverEnabled: enabled
                         cursorShape: (root.readOnly || itemRow.locked) ? Qt.ArrowCursor : Qt.PointingHandCursor
                         onActivated: if (!root.readOnly) root.toggle(itemRow.modelData.id)
+                    }
+
+                    HoverHandler {
+                        id: lockHover
+                        enabled: itemRow.locked && root.lockedHint !== ""
+                    }
+
+                    Tooltip {
+                        text: root.lockedHint
+                        tipVisible: lockHover.hovered
                     }
                 }
             }

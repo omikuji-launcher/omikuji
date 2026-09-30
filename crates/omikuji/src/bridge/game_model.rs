@@ -433,6 +433,9 @@ pub mod qobject {
         fn enqueue_game_repair(self: Pin<&mut GameModel>, game_id: &QString) -> QString;
 
         #[qinvokable]
+        fn add_gacha_pack(self: Pin<&mut GameModel>, game_id: &QString, pack: &QString) -> QString;
+
+        #[qinvokable]
         fn game_supports_repair(self: &GameModel, game_id: &QString) -> bool;
 
         #[qinvokable]
@@ -634,6 +637,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn gacha_posters(self: &GameModel) -> QString;
+
+        #[qinvokable]
+        fn gacha_packs(self: &GameModel, game_id: &QString) -> QString;
+
+        #[qinvokable]
+        fn remove_gacha_pack(self: &GameModel, game_id: &QString, pack: &QString) -> QString;
 
         #[qinvokable]
         fn fetch_gacha_install_size(

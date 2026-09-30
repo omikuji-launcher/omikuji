@@ -6,6 +6,7 @@ Item {
     id: root
 
     property var gameModel: null
+    property var downloadModel: null
     property int gameIndex: -1
     property var envSetsDialog: null
     property var dllSetsDialog: null
@@ -50,8 +51,14 @@ Item {
         if (root.config["source.kind"] === "gog") {
             base.push({ label: "GOG", kind: "gog", icon: "gog" })
         }
+        if (root.hasGachaPacks) {
+            base.push({ label: qsTr("Gacha"), kind: "gacha", icon: "local_activity" })
+        }
         return base
     }
+    readonly property bool hasGachaPacks: root.config["source.kind"] === "gacha"
+        && gameModel !== null && gameId !== ""
+        && JSON.parse(gameModel.gacha_packs(gameId) || "[]").length > 0
     property int currentTabIndex: 0
     readonly property string currentKind:
         tabs[currentTabIndex] ? tabs[currentTabIndex].kind : "info"
@@ -203,6 +210,18 @@ Item {
                 gameModel: root.gameModel
                 gameId: root.gameId
                 viewportHeight: root.viewportHeight
+            }
+        }
+
+        Loader {
+            width: parent.width
+            active: root.draftLoaded && root.currentKind === "gacha"
+            visible: active
+            sourceComponent: TabGacha {
+                config: root.config
+                gameModel: root.gameModel
+                downloadModel: root.downloadModel
+                gameId: root.gameId
             }
         }
     }

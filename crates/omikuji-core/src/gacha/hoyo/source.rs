@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use async_trait::async_trait;
 use futures_util::StreamExt;
 use nix::fcntl::{PosixFadviseAdvice, posix_fadvise};
@@ -7,8 +7,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+use super::HoyoEdition;
 use super::sophon;
-use super::{HoyoEdition, VoiceLocale};
 use crate::downloads::io_stats::track_child;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::rate::RateMeter;
@@ -17,32 +17,25 @@ use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadKind, DownloadSource, DownloadStatus, check_control,
     report_progress, set_status,
 };
+use crate::gacha::manifest::{GachaManifest, ManifestEdition};
 use crate::gacha::{state, strategies};
 
 struct ParsedHoyoApp {
     biz_id: String,
-    game_slug: String,
-    display_name: String,
     edition: HoyoEdition,
-    voice_folders: Vec<(VoiceLocale, PathBuf)>,
+    manifest: GachaManifest,
+    manifest_edition: ManifestEdition,
 }
 
 impl ParsedHoyoApp {
-    // a fresh install asks for its packs, everything else goes by what's on disk
-    fn voice_locales(&self, entry: &DownloadEntry) -> Vec<VoiceLocale> {
-        let requested = entry
-            .packs
-            .iter()
-            .filter_map(|p| VoiceLocale::from_api_name(p));
-        let installed = self
-            .voice_folders
-            .iter()
-            .filter(|(_, folder)| entry.install_path.join(folder).is_dir())
-            .map(|(locale, _)| *locale);
-        let mut locales: Vec<_> = requested.chain(installed).collect();
-        locales.sort_unstable();
-        locales.dedup();
-        locales
+    // a fresh install asks for its packs and everything else goes by what's on disk
+    fn voice_packs(&self, entry: &DownloadEntry) -> Vec<String> {
+        let installed =
+            super::installed_voice_ids(&self.manifest, &self.manifest_edition, &entry.install_path);
+        let mut packs: Vec<_> = entry.packs.iter().cloned().chain(installed).collect();
+        packs.sort_unstable();
+        packs.dedup();
+        packs
     }
 }
 
@@ -56,6 +49,9 @@ impl DownloadSource for HoyoSource {
             &entry.install_path,
             entry.temp_dir.as_deref(),
         );
+        if let DownloadKind::AddPack { pack } = &entry.kind {
+            discard_partial_pack(entry, pack);
+        }
     }
 
     // segments are suspect after a failure, dont re-extract the same corrupt archive
@@ -74,7 +70,7 @@ impl DownloadSource for HoyoSource {
                 "no diff path from {} to {} for {}, falling back to full reinstall",
                 from_version,
                 job.package.tag,
-                job.parsed.display_name
+                job.parsed.manifest.display_name
             );
             return self.install(entry).await;
         };
@@ -85,7 +81,7 @@ impl DownloadSource for HoyoSource {
         }
 
         state::write_installed_version(
-            &job.parsed.game_slug,
+            &job.parsed.manifest.game_slug,
             job.parsed.edition.id(),
             &job.package.tag,
         );
@@ -104,7 +100,7 @@ impl DownloadSource for HoyoSource {
                 "no pre-download patch from {} to {} for {}",
                 from_version,
                 job.package.tag,
-                job.parsed.display_name
+                job.parsed.manifest.display_name
             ));
         };
 
@@ -129,39 +125,55 @@ impl DownloadSource for HoyoSource {
             .ok_or_else(|| anyhow!("no 'game' category in sophon build"))?
             .clone();
         let mut entries = vec![game_entry];
-        for locale in parsed.voice_locales(entry) {
-            if let Some(audio_entry) = build.get_for(locale.api_name()) {
+        for voice in parsed.voice_packs(entry) {
+            if let Some(audio_entry) = build.get_for(&voice) {
                 entries.push(audio_entry.clone());
             }
         }
 
         fs_err::create_dir_all(&entry.install_path)?;
-
-        set_status(&entry.id, DownloadStatus::Downloading);
-
-        let callbacks = sophon_callbacks(&entry.id);
-        sophon::installer::apply_install(
-            &entries,
-            entry.install_path.clone(),
-            callbacks.on_progress,
-            callbacks.is_cancelled,
-        )
-        .await?;
-
+        install_entries(entry, &entries).await?;
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
         }
 
-        state::write_installed_version(&parsed.game_slug, parsed.edition.id(), &target_version);
-        let total = callbacks.total_bytes.load(Ordering::SeqCst);
-        report_progress(&entry.id, 100.0, total, total, 0);
+        state::write_installed_version(
+            &parsed.manifest.game_slug,
+            parsed.edition.id(),
+            &target_version,
+        );
         tracing::info!(
             "installed {} {} v{}",
-            parsed.display_name,
+            parsed.manifest.display_name,
             parsed.edition.display_name(),
             target_version
         );
         Ok(())
+    }
+
+    async fn add_pack(&self, entry: &DownloadEntry, pack: &str) -> Result<()> {
+        let parsed = parse_app_id(&entry.app_id)?;
+        if !parsed.manifest.voice_locales.iter().any(|v| v.id == pack) {
+            bail!("unknown voice pack: {pack}");
+        }
+        let main = fetch_package(&parsed, PackageChannel::Main).await?;
+        if let Some(installed) =
+            super::read_install_version(&entry.install_path, &parsed.manifest_edition.data_folder)
+            && strategies::normalize_version(&installed) != strategies::normalize_version(&main.tag)
+        {
+            bail!(
+                "update {} to {} before adding voice packs",
+                parsed.manifest.display_name,
+                main.tag
+            );
+        }
+
+        let build = sophon::api::fetch_build(parsed.edition, &main).await?;
+        let voice = build
+            .get_for(pack)
+            .ok_or_else(|| anyhow!("no {pack} voice pack in the {} build", main.tag))?
+            .clone();
+        install_entries(entry, &[voice]).await
     }
 
     fn supports_repair(&self) -> bool {
@@ -658,22 +670,13 @@ pub fn extract_archive_with_password(
 fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
     let (manifest, edition_id) = strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
-    let edition = manifest.require_edition(&edition_id)?;
-    let voice_folders = manifest
-        .voice_locales
-        .iter()
-        .filter_map(|voice| {
-            let locale = VoiceLocale::from_api_name(&voice.id)?;
-            Some((locale, manifest.voice_folder(edition, voice)))
-        })
-        .collect();
+    let manifest_edition = manifest.require_edition(&edition_id)?.clone();
 
     Ok(ParsedHoyoApp {
         biz_id: super::biz_id(&manifest, &edition_id)?,
-        game_slug: manifest.game_slug.clone(),
-        display_name: manifest.display_name.clone(),
         edition: HoyoEdition::from_id(&edition_id)?,
-        voice_folders,
+        manifest_edition,
+        manifest,
     })
 }
 
@@ -711,9 +714,29 @@ async fn fetch_package(
         anyhow!(
             "no {} package info for {}",
             channel.label(),
-            parsed.display_name
+            parsed.manifest.display_name
         )
     })
+}
+
+async fn install_entries(
+    entry: &DownloadEntry,
+    entries: &[sophon::api::SophonManifestEntry],
+) -> Result<()> {
+    set_status(&entry.id, DownloadStatus::Downloading);
+    let callbacks = sophon_callbacks(&entry.id);
+    sophon::installer::apply_install(
+        entries,
+        entry.install_path.clone(),
+        callbacks.on_progress,
+        callbacks.is_cancelled,
+    )
+    .await?;
+    if check_control(&entry.id) == ControlSignal::None {
+        let total = callbacks.total_bytes.load(Ordering::SeqCst);
+        report_progress(&entry.id, 100.0, total, total, 0);
+    }
+    Ok(())
 }
 
 struct SophonCallbacks {
@@ -776,7 +799,7 @@ enum PatchMode {
 
 struct PatchJob {
     parsed: ParsedHoyoApp,
-    voice_locales: Vec<VoiceLocale>,
+    voice_packs: Vec<String>,
     temp_root: PathBuf,
     package: sophon::api::PackageInfo,
     diff_key: Option<String>,
@@ -800,7 +823,7 @@ async fn plan_patch(
         .cloned();
 
     Ok(PatchJob {
-        voice_locales: parsed.voice_locales(entry),
+        voice_packs: parsed.voice_packs(entry),
         parsed,
         temp_root,
         package,
@@ -819,9 +842,9 @@ async fn run_patch(
         .get_for("game")
         .ok_or_else(|| anyhow!("no 'game' diff in sophon response"))?;
     let voice_diffs = job
-        .voice_locales
+        .voice_packs
         .iter()
-        .filter_map(|locale| diffs.get_for(locale.api_name()))
+        .filter_map(|voice| diffs.get_for(voice))
         .filter(|diff| diff.stats.contains_key(diff_key));
 
     let callbacks = sophon_callbacks(&entry.id);
@@ -980,4 +1003,18 @@ fn remove_scratch(dir: &Path) {
 pub fn cleanup_hoyo_state(app_id: &str, install_path: &Path, temp_dir: Option<&Path>) {
     remove_scratch(&scratch_dir_for(app_id, install_path, temp_dir));
     remove_scratch(&update_scratch_dir(app_id, install_path));
+}
+
+fn discard_partial_pack(entry: &DownloadEntry, pack: &str) {
+    let removed = parse_app_id(&entry.app_id).and_then(|parsed| {
+        super::remove_voice_pack(
+            &parsed.manifest,
+            &parsed.manifest_edition,
+            &entry.install_path,
+            pack,
+        )
+    });
+    if let Err(e) = removed {
+        tracing::warn!("discarding the partial {pack} pack: {e:#}");
+    }
 }

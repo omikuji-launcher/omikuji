@@ -98,6 +98,9 @@ pub enum DownloadKind {
     },
     Repair,
     ImportExisting,
+    AddPack {
+        pack: String,
+    },
 }
 
 impl DownloadKind {
@@ -112,6 +115,15 @@ impl DownloadKind {
             Self::PreDownload { .. } => "pre-download",
             Self::Repair => "repair",
             Self::ImportExisting => "import",
+            Self::AddPack { .. } => "add pack",
+        }
+    }
+
+    fn can_adopt(&self, incoming: &Self) -> bool {
+        match (self, incoming) {
+            (Self::AddPack { pack: a }, Self::AddPack { pack: b }) => a == b,
+            (Self::AddPack { .. }, _) | (_, Self::AddPack { .. }) => false,
+            _ => true,
         }
     }
 }
@@ -351,15 +363,20 @@ impl DownloadManager {
         inner.sources.get(key).is_some_and(|s| s.supports_repair())
     }
 
-    fn active_for(&self, source: &str, app_id: &str) -> Option<String> {
-        if app_id.is_empty() {
+    fn active_for(&self, req: &DownloadRequest) -> Option<String> {
+        if req.app_id.is_empty() {
             return None;
         }
         let inner = self.inner.lock().unwrap();
         inner
             .entries
             .iter()
-            .find(|e| e.status.is_active() && e.source == source && e.app_id == app_id)
+            .find(|e| {
+                e.status.is_active()
+                    && e.source == req.source
+                    && e.app_id == req.app_id
+                    && e.kind.can_adopt(&req.kind)
+            })
             .map(|e| e.id.clone())
     }
 
@@ -369,6 +386,19 @@ impl DownloadManager {
             .entries
             .iter()
             .any(|e| e.status.is_active() && e.game_id == game_id)
+    }
+
+    pub fn packs_in_queue(&self, game_id: &str) -> Vec<String> {
+        let inner = self.inner.lock().unwrap();
+        inner
+            .entries
+            .iter()
+            .filter(|e| e.status.is_active() && e.game_id == game_id)
+            .filter_map(|e| match &e.kind {
+                DownloadKind::AddPack { pack } => Some(pack.clone()),
+                _ => None,
+            })
+            .collect()
     }
 
     fn promote_pre_download(&self, id: &str, req: &DownloadRequest) {
@@ -390,7 +420,7 @@ impl DownloadManager {
     }
 
     pub fn enqueue(&self, req: DownloadRequest) -> String {
-        if let Some(existing) = self.active_for(&req.source, &req.app_id) {
+        if let Some(existing) = self.active_for(&req) {
             self.promote_pre_download(&existing, &req);
             self.resume(&existing);
             return existing;
@@ -630,6 +660,7 @@ impl DownloadManager {
                 DownloadKind::PreDownload { .. } => source.pre_download(&entry).await,
                 DownloadKind::Repair => source.repair(&entry).await,
                 DownloadKind::ImportExisting => source.import_existing(&entry).await,
+                DownloadKind::AddPack { pack } => source.add_pack(&entry, pack).await,
             };
 
             let final_signal = {
@@ -905,4 +936,25 @@ fn load_queue() -> Vec<DownloadEntry> {
         e.speed_bps = 0;
     }
     entries
+}
+
+#[cfg(test)]
+mod tests {
+    use super::DownloadKind;
+
+    fn pack(id: &str) -> DownloadKind {
+        DownloadKind::AddPack { pack: id.into() }
+    }
+
+    #[test]
+    fn packs_only_adopt_themselves() {
+        let update = DownloadKind::Update {
+            from_version: "1.0".into(),
+        };
+        assert!(pack("ja-jp").can_adopt(&pack("ja-jp")));
+        assert!(!pack("ja-jp").can_adopt(&pack("en-us")));
+        assert!(!update.can_adopt(&pack("ja-jp")));
+        assert!(!pack("ja-jp").can_adopt(&update));
+        assert!(update.can_adopt(&DownloadKind::Repair));
+    }
 }
