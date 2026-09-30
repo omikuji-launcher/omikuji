@@ -14,3 +14,17 @@ where
         complete(result);
     });
 }
+
+pub fn block_on<F, Fut, T>(fetch: F) -> Result<T, String>
+where
+    F: FnOnce() -> Fut + Send + 'static,
+    Fut: std::future::Future<Output = T>,
+    T: Send + 'static,
+{
+    std::thread::spawn(move || match tokio::runtime::Runtime::new() {
+        Ok(rt) => Ok(rt.block_on(fetch())),
+        Err(e) => Err(format!("tokio runtime: {}", e)),
+    })
+    .join()
+    .map_err(|_| "background worker panicked".to_string())?
+}

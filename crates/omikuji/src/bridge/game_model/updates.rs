@@ -118,7 +118,7 @@ impl super::qobject::GameModel {
         let games = self.library.game.clone();
         let sender = self.as_mut().qt_thread();
         std::thread::spawn(move || {
-            let Some(counts) = updates::boot_scan(&games) else {
+            let Some(counts) = updates::boot(&games) else {
                 return;
             };
             let _ = sender.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {

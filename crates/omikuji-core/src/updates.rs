@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::thread;
+
+use anyhow::anyhow;
 
 use crate::app_settings::AppSettings;
+use crate::background;
 use crate::downloads::{self, DownloadKind, DownloadRequest};
+use crate::gacha::remote;
 use crate::gacha::strategies::{self, GachaUpdateInfo};
 use crate::launch;
 use crate::library::{Game, SourceKind};
@@ -53,7 +56,23 @@ pub fn pre_launch_check(game: &Game) -> Option<UpdateNotification> {
     }
 }
 
-pub fn boot_scan(games: &[Game]) -> Option<ScanCounts> {
+pub fn boot(games: &[Game]) -> Option<ScanCounts> {
+    if games.iter().any(|g| g.source.kind == SourceKind::Gacha) {
+        refresh_gacha_manifests();
+    }
+    boot_scan(games)
+}
+
+fn refresh_gacha_manifests() {
+    let fetched = background::block_on(remote::ensure_all_fetched)
+        .map_err(|e| anyhow!(e))
+        .and_then(|fetched| fetched);
+    if let Err(e) = fetched {
+        tracing::warn!("gacha manifest refresh failed: {e:#}");
+    }
+}
+
+fn boot_scan(games: &[Game]) -> Option<ScanCounts> {
     let behavior = AppSettings::load().behavior;
     if !behavior.auto_check_updates_on_boot {
         return None;
@@ -238,23 +257,10 @@ fn unmuted_gacha_update(game: &Game) -> Option<GachaUpdateInfo> {
     blocking_check_gacha_update(game).filter(|info| !info.is_muted_for(game))
 }
 
-// callers can sit on a thread already inside the tokio runtime, and nesting a second one panics
 fn blocking_check_gacha_update(game: &Game) -> Option<GachaUpdateInfo> {
     let game = game.clone();
-    thread::spawn(move || {
-        let rt = match tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-        {
-            Ok(rt) => rt,
-            Err(e) => {
-                tracing::error!("update check: runtime build failed: {}", e);
-                return None;
-            }
-        };
-        rt.block_on(strategies::check_game_for_update(&game))
-    })
-    .join()
-    .ok()
-    .flatten()
+    background::block_on(move || async move { strategies::check_game_for_update(&game).await })
+        .inspect_err(|e| tracing::error!("update check: {e}"))
+        .ok()
+        .flatten()
 }
