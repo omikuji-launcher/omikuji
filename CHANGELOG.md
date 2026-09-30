@@ -13,6 +13,21 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.2
+Added:
+- Gacha settings tab (HoYo games and WuWa): packs + launch toggles
+- WuWa texture packs (SD/HD/UHD) chooser + new launcher index
+- Timeout fix toggle for HoYo games (game's Gacha settings tab)
+- Gacha manifests refresh on boot if any gacha game present in the library
+- Components list refreshing after source edit
+
+Changed:
+- Reworked HoYo voice packs
+- Better file error logging
+
+Fixed:
+- WuWa CN now installing actual CN lmao
+
 ## 0.20.1
 Added:
 - Pause/resume on patch (Kuro, HoYo, Endfield)

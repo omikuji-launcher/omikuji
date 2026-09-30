@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.1
+Version:        0.20.2
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,15 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Wed Sep 30 2026 reakjra <reakjra@proton.me> - 0.20.2-1
+- Gacha settings tab (HoYo Games and WuWa): packs + launch toggles
+- wuwa texture packs + new index
+- timeout fix toggle for hoyo games
+- gacha manifests refresh on app boot if any present in library
+- reworkd hoyo voice packs
+- fixed wuwa china edition installing global (ok lol)
+- better file errors
+
 * Wed Sep 30 2026 reakjra <reakjra@proton.me> - 0.20.1-1
 - Pause/resume on patch (Kuro, HoYo, Endfield)
 - Patching progress for Kuro

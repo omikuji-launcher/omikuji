@@ -22,6 +22,19 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.2" date="2026-09-30">
+      <description>
+        <ul>
+          <li>Gacha settings tab (HoYo Games and WuWa): packs + launch toggles</li>
+          <li>wuwa texture packs + new index</li>
+          <li>timeout fix toggle for hoyo games</li>
+          <li>gacha manifests refresh on app boot if any present in library</li>
+          <li>reworkd hoyo voice packs</li>
+          <li>fixed wuwa china edition installing global (ok lol)</li>
+          <li>better file errors</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.1" date="2026-09-30">
       <description>
         <ul>
