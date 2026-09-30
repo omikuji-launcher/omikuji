@@ -1,4 +1,5 @@
 use std::iter;
+use std::sync::Arc;
 
 use anyhow::{Result, anyhow, bail};
 use async_trait::async_trait;
@@ -56,7 +57,7 @@ impl DownloadSource for KuroSource {
                 remote.version
             );
         }
-        sync_pack(entry, pack, remote).await
+        sync_pack(entry, pack, remote, None).await
     }
 }
 
@@ -123,13 +124,25 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
         DownloadKind::Install => config.install_packs(&entry.packs, &manifest.display_name)?,
         _ => config.installed_packs(&entry.install_path).collect(),
     };
-    for pack_id in iter::once(base_id).chain(tiers) {
+    let pack_ids: Vec<&str> = iter::once(base_id).chain(tiers).collect();
+    let total = pack_ids
+        .iter()
+        .map(|id| index.pack(id).map(|p| p.download_bytes))
+        .sum::<Result<u64>>()?;
+    // one bar across every pack otherwise it restarts at 0% per pack and looks like a second download
+    let shared = (matches!(entry.kind, DownloadKind::Install) && total > 0)
+        .then(|| SyncProgress::new(total));
+
+    for pack_id in pack_ids {
         let pack = index.pack(pack_id)?;
         let stamp = format!("{} {}", entry.id, pack.version);
         if patcher::is_pack_done(&entry.install_path, pack_id, &stamp) {
+            if let Some(progress) = &shared {
+                progress.advance(&entry.id, pack.download_bytes);
+            }
             continue;
         }
-        sync_pack(entry, pack_id, pack).await?;
+        sync_pack(entry, pack_id, pack, shared.as_ref()).await?;
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
         }
@@ -141,7 +154,12 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     Ok(())
 }
 
-async fn sync_pack(entry: &DownloadEntry, pack_id: &str, pack: &Pack) -> Result<()> {
+async fn sync_pack(
+    entry: &DownloadEntry,
+    pack_id: &str,
+    pack: &Pack,
+    shared: Option<&Arc<SyncProgress>>,
+) -> Result<()> {
     let mut patch_stale: Vec<String> = Vec::new();
     // NOTE: lets hope this works 😭
     if let DownloadKind::Update { from_version } = &entry.kind
@@ -194,7 +212,7 @@ async fn sync_pack(entry: &DownloadEntry, pack_id: &str, pack: &Pack) -> Result<
 
     set_status(&entry.id, DownloadStatus::Downloading);
     let total: u64 = files.iter().map(|f| f.size).sum();
-    let progress = SyncProgress::new(total);
+    let progress = shared.cloned().unwrap_or_else(|| SyncProgress::new(total));
     let skip = if verified {
         Skip::Never
     } else {
