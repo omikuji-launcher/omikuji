@@ -25,6 +25,8 @@ A QtQuick based games/apps launcher for Linux. Built 'cause I couldn't bear havi
 | <img src="docs/screenshots/epic_games_store.png"/> | <img src="docs/screenshots/epic_games_store_download.png"/> |
 | Gacha Store                                      | Gacha Install Dialog                                      |
 | <img src="docs/screenshots/gacha_store.png"/>    | <img src="docs/screenshots/gacha_store_download.png"/>    |
+| Gacha Tab                                      | Gacha Tab                                   |
+| <img src="docs/screenshots/gacha_tab1.png"/>    | <img src="docs/screenshots/gacha_tab2.png"/>    |
 | Interface Settings                               | Components Settings                                       |
 | <img src="docs/screenshots/settings_page_interface.png"/> | <img src="docs/screenshots/settings_page_components.png"/> |
 | Omikuji Spirit                               | Omikuji Draw                                       |

@@ -87,9 +87,9 @@ One thing specific to Amazon Games: `nile` can't resume a partially downloaded f
 
 ![gacha](ss/gacha_install.png)
 
-Gacha games are similar to Epic Games / GOG installations. However, some of them may come with the ability to toggle various voice packs installation. Also, if the game supports, you're able to change the version (Global, CN, JP, etc.)
+Gacha games are similar to Epic Games / GOG installations. However, some of them come with packs to pick: HoYo games have `Voice Packs` (check as many as you want, the first one is preselected), and Wuthering Waves has `Texture Packs` (`SD`, `HD` or `UHD`, pick one, `HD` is preselected). The install size shown includes the packs you picked. Packs can also be added or removed later from the game's `Gacha` settings tab. Also, if the game supports, you're able to change the version (Global, CN, JP, etc.)
 
-Some gacha may come with additional things like, for example, Genshin Impact has a toggle to install the `Fps Unlocker`. If checked, it will install the latter alongside the game and will apply, in the game's settings, the `Run Alongside` field filled with the path to the unlocker executable.
+Some gacha may come with additional things like, for example, Genshin Impact has a toggle to install the `Fps Unlocker`. If checked, it will install the latter alongside the game and will apply, in the game's settings, the `Run Alongside` field filled with the path to the unlocker executable. Other toggles only add launch arguments or environment variables, like `DirectX 12` for Zenless Zone Zero, and can be changed later from the game's `Gacha` settings tab. Some toggles, like the HoYo `Timeout fix`, only show up there and not in the install dialog.
 
 Or additionally, some gacha may have a 'suggested' runner, which, if selected, will be installed on the spot and applied to that game (for example, hsr, that needs a specific `Dawn Winery` Proton to run). You still are able to select any other runner from the list and ignore the suggested one.
 
@@ -145,7 +145,9 @@ For Gacha games the pattern is the same, with the difference that you'll always 
 
 Also, for most games it'll detect the installed game version automatically.
 
-Regarding repairs, for now only `HoYo` games support them.
+For games with packs, the packs already on disk are detected: voice packs found on disk are locked in the list, and for Wuthering Waves an installed texture pack is preselected. Picking packs that aren't on disk queues them for download right after the import.
+
+Regarding repairs, `HoYo` and `Kuro` games support them.
 
 ### Downloads
 
@@ -336,6 +338,22 @@ But! If the page is empty, there's a cute dino!
 
 ![dino](ss/game_gog_dino.png)
 
+### Gacha
+
+![gacha_game](ss/game_gacha.png)
+
+Only appears for gacha games that have packs or launch toggles.
+
+\- **Launch**: toggles and choices that come from the game's manifest. They don't store anything on their own: each one adds or removes launch arguments and environment variables on the game, the same ones shown in the `System` / `Runner` tabs. A toggle checks whether its own arguments are already set in the game's settings (launch args or environment variables). If they are, it reads as on, and turning it off removes those same arguments.
+
+\- **Active pack** (Wuthering Waves): which texture pack the game loads, through its `-krqlv` launch argument. Only installed packs are listed. `None` removes the argument, and the game won't start without one as far as I know.
+
+\- **Timeout fix** (HoYo games): sets `WINE_TIMEOUT_FIX=1` and `UMU_USE_STEAM=1`. Try enabling it if the game crashes on boot.
+
+\- **DirectX 12** (Zenless Zone Zero): adds the `-use-d3d12` launch argument.
+
+\- **Voice Packs / Texture Packs**: `Installed` lists the packs on disk with the space they take, `Available` lists the rest with their download size. Check the ones you want and hit `Install selected` to queue them in the downloads page. The game has to be on its latest version to add a pack. To remove one, hover it and click the `x` on the right. Removing the active `texture pack` (wuwa) asks for confirmation and switches the game to another installed pack first (the default one, HD, if it's there). Removing a pack happens right away and doesn't wait for `Save`, so be careful with that.
+
 ## App Settings
 
 You can configure the app settings in the `Settings` tab in the left navbar.
@@ -420,7 +438,7 @@ Right clicking on a game card will open a context menu. Its entries are:
 
 \- **Remove**: removes the game entry. Hold `shift` and it becomes `Remove + prefix`, it will open a dialog to confirm. It will remove the game entry from the library and delete the game prefix.
 
-### HoYo Games
+### HoYo & Kuro Games
 
 \- **Repair**: repairs the game installation.
 
