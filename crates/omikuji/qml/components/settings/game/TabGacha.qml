@@ -18,18 +18,19 @@ Item {
     property var checkedIds: []
     property var controls: []
     property var selection: ({})
+    property var sizes: ({})
     property string errorText: ""
 
-    readonly property var installed: packs.filter(p => p.installed).map(root.asItem)
-    readonly property var available: packs.filter(p => !p.installed).map(root.asItem)
+    readonly property var installed: packs.filter(p => p.installed).map(p => root.asItem(p, p.disk_bytes))
+    readonly property var available: packs.filter(p => !p.installed).map(p => root.asItem(p, root.sizes[p.id] || 0))
     readonly property var downloading: packs.filter(p => p.downloading).map(p => p.id)
     readonly property var choiceControls: controls.filter(c => c.kind === "choice")
     readonly property var toggleControls: controls.filter(c => c.kind === "toggle")
 
     implicitHeight: content.height
 
-    function asItem(pack) {
-        return { id: pack.id, title: pack.label, short: pack.short }
+    function asItem(pack, downloadBytes) {
+        return { id: pack.id, title: pack.label, short: pack.short, downloadBytes: downloadBytes }
     }
 
     function refresh() {
@@ -97,9 +98,23 @@ Item {
         refresh()
     }
 
-    onGameIdChanged: refresh()
+    function fetchSizes() {
+        sizes = ({})
+        if (gameModel && gameId !== "") gameModel.fetch_gacha_pack_sizes(gameId)
+    }
+
+    onGameIdChanged: { refresh(); fetchSizes() }
     onConfigChanged: refreshControls()
-    Component.onCompleted: refresh()
+    Component.onCompleted: { refresh(); fetchSizes() }
+
+    Connections {
+        target: root.gameModel
+        function onPackSizesReady(gameId, payload) {
+            if (gameId !== root.gameId) return
+            try { root.sizes = JSON.parse(payload || "{}") || {} }
+            catch (e) { root.sizes = ({}) }
+        }
+    }
 
     Connections {
         target: root.downloadModel

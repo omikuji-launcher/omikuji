@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::iter;
 
 use anyhow::{Result, anyhow};
@@ -267,6 +268,19 @@ pub async fn fetch_install_size(
         total.install_bytes += size.install_bytes;
     }
     Ok(total)
+}
+
+pub async fn pack_sizes(
+    manifest: &GachaManifest,
+    edition_id: &str,
+) -> Result<HashMap<String, u64>> {
+    let config = super::KuroConfig::load(manifest, edition_id)?;
+    let index = fetch_index(&config.index_url).await?;
+    let mut sizes = HashMap::new();
+    for id in config.packs.keys() {
+        sizes.insert(id.clone(), pack_size(index.pack(id)?).await?.download_bytes);
+    }
+    Ok(sizes)
 }
 
 async fn pack_size(pack: &Pack) -> Result<InstallSize> {

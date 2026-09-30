@@ -85,7 +85,7 @@ impl KuroConfig {
 }
 
 impl PackDef {
-    fn dir(&self, root: &Path) -> PathBuf {
+    pub fn dir(&self, root: &Path) -> PathBuf {
         root.join(sanitize_rel(&self.folder))
     }
 

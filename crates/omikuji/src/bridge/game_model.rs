@@ -119,6 +119,10 @@ pub mod qobject {
         );
 
         #[qsignal]
+        #[cxx_name = "packSizesReady"]
+        fn pack_sizes_ready(self: Pin<&mut GameModel>, game_id: &QString, payload: &QString);
+
+        #[qsignal]
         #[cxx_name = "prepareOutput"]
         fn prepare_output(self: Pin<&mut GameModel>, line: &QString);
 
@@ -650,6 +654,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn gacha_pack_removal(self: &GameModel, pack: &QString) -> QString;
+
+        #[qinvokable]
+        fn fetch_gacha_pack_sizes(self: Pin<&mut GameModel>, game_id: &QString);
 
         #[qinvokable]
         fn gacha_launch_controls(self: &GameModel) -> QString;

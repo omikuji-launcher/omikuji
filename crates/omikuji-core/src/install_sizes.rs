@@ -1,3 +1,4 @@
+use crate::background;
 use crate::event_queue::EventQueue;
 // poll pattern instead of qt_thread.queue becuase queued closures werent reaching qml reliably
 
@@ -21,23 +22,6 @@ pub fn take_pending() -> Vec<InstallSizeResult> {
     SIZE_QUEUE.drain()
 }
 
-// os thread + fresh runtime: cant call block_on inside the app's existing tokio context
-fn spawn_blocking_fetch<F, Fut, T, C>(fetch: F, complete: C)
-where
-    F: FnOnce() -> Fut + Send + 'static,
-    Fut: std::future::Future<Output = Result<T, String>>,
-    T: Send + 'static,
-    C: FnOnce(Result<T, String>) + Send + 'static,
-{
-    std::thread::spawn(move || {
-        let result = match tokio::runtime::Runtime::new() {
-            Ok(rt) => rt.block_on(fetch()),
-            Err(e) => Err(format!("tokio runtime: {}", e)),
-        };
-        complete(result);
-    });
-}
-
 pub fn spawn_fetch<F, Fut>(request_id: String, fetch: F)
 where
     F: FnOnce() -> Fut + Send + 'static,
@@ -55,7 +39,7 @@ where
     F: FnOnce() -> Fut + Send + 'static,
     Fut: std::future::Future<Output = Result<(u64, u64, String, String), String>>,
 {
-    spawn_blocking_fetch(fetch, move |result| {
+    background::spawn(fetch, move |result| {
         let pushed = match result {
             Ok((download_bytes, install_bytes, launch_exe, dlcs)) => InstallSizeResult {
                 request_id,
@@ -98,7 +82,7 @@ where
     F: FnOnce() -> Fut + Send + 'static,
     Fut: std::future::Future<Output = Result<String, String>>,
 {
-    spawn_blocking_fetch(fetch, move |result| {
+    background::spawn(fetch, move |result| {
         let payload = match result {
             Ok(p) => p,
             Err(e) => {

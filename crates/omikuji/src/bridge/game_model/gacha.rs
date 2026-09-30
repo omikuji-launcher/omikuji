@@ -7,7 +7,7 @@ use omikuji_core::defaults::Defaults;
 use omikuji_core::gacha::controls;
 use omikuji_core::library::{Game, Library, SourceKind, generate_id};
 use omikuji_core::media::MediaSlot;
-use omikuji_core::{anyhow, components, gacha, install_sizes, notifications};
+use omikuji_core::{anyhow, background, components, gacha, install_sizes, notifications};
 
 use super::{Draft, args_to_text};
 use crate::bridge::{csv_ids, expand_path};
@@ -147,6 +147,37 @@ impl super::qobject::GameModel {
                 QString::from(&format!("{e:#}"))
             }
         }
+    }
+
+    pub fn fetch_gacha_pack_sizes(mut self: Pin<&mut Self>, game_id: &QString) {
+        let gid = game_id.to_string();
+        let Some((manifest, edition_id)) = self
+            .library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == gid)
+            .and_then(|g| gacha::strategies::find_for_app_id(&g.source.app_id))
+        else {
+            return;
+        };
+        let qt_thread = self.as_mut().qt_thread();
+        background::spawn(
+            move || async move {
+                gacha::strategies::pack_sizes(&manifest, &edition_id)
+                    .await
+                    .map_err(|e| format!("{e:#}"))
+            },
+            move |result| match result {
+                Ok(sizes) => {
+                    let payload = serde_json::to_string(&sizes).unwrap_or_default();
+                    let _ = qt_thread.queue(move |mut m: Pin<&mut super::qobject::GameModel>| {
+                        m.as_mut()
+                            .pack_sizes_ready(&QString::from(&gid), &QString::from(&payload));
+                    });
+                }
+                Err(e) => tracing::warn!("pack sizes for {gid}: {e}"),
+            },
+        );
     }
 
     pub fn gacha_launch_controls(&self) -> QString {

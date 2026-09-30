@@ -1,11 +1,13 @@
 use anyhow::{Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use super::hoyo::{self, HoyoEdition};
 use super::manifest::{GachaManifest, ManifestVoice};
 use super::{art, gryphline, kuro, yostar};
 use crate::downloads::{self, DownloadKind, DownloadRequest};
+use crate::fs_util;
 use crate::library::{Game, LaunchConfig};
 use crate::process::UpdateKind;
 use crate::updates;
@@ -54,6 +56,7 @@ pub struct PackInfo {
     pub pack: PackOption,
     pub installed: bool,
     pub downloading: bool,
+    pub disk_bytes: u64,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -231,6 +234,23 @@ pub async fn fetch_install_size(
     }
 }
 
+pub async fn pack_sizes(
+    manifest: &GachaManifest,
+    edition_id: &str,
+) -> Result<HashMap<String, u64>> {
+    match strategy(manifest, edition_id)? {
+        InstallStrategy::HoyoSophon => {
+            let edition = HoyoEdition::from_id(edition_id)?;
+            let biz_id = hoyo::biz_id(manifest, edition_id)?;
+            hoyo::api::voice_sizes(&biz_id, edition, &manifest.voice_locales).await
+        }
+        InstallStrategy::KuroResourceIndex => kuro::api::pack_sizes(manifest, edition_id).await,
+        InstallStrategy::GryphlineResourcePatch | InstallStrategy::YostarFileIndex => {
+            Ok(HashMap::new())
+        }
+    }
+}
+
 pub async fn check_for_update(
     manifest: &GachaManifest,
     edition_id: &str,
@@ -311,6 +331,7 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
             .map(|voice| {
                 pack_info(&in_queue, PackOption::voice(voice), || {
                     hoyo::voice_installed(&manifest, edition, voice, &root)
+                        .then(|| root.join(manifest.voice_folder(edition, voice)))
                 })
             })
             .collect(),
@@ -321,7 +342,7 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
                     .iter()
                     .map(|(id, def)| {
                         pack_info(&in_queue, PackOption::kuro(id, def), || {
-                            def.is_installed(&root)
+                            def.is_installed(&root).then(|| def.dir(&root))
                         })
                     })
                     .collect()
@@ -338,12 +359,18 @@ pub fn pack_kind(game: &Game) -> Option<PackKind> {
         .pack_kind()
 }
 
-fn pack_info(in_queue: &[String], pack: PackOption, on_disk: impl FnOnce() -> bool) -> PackInfo {
+fn pack_info(
+    in_queue: &[String],
+    pack: PackOption,
+    installed_dir: impl FnOnce() -> Option<PathBuf>,
+) -> PackInfo {
     let queued = in_queue.contains(&pack.id);
+    let dir = (!queued).then(installed_dir).flatten();
     PackInfo {
         pack,
-        installed: !queued && on_disk(),
+        installed: dir.is_some(),
         downloading: queued,
+        disk_bytes: dir.map_or(0, |d| fs_util::dir_size(&d)),
     }
 }
 
