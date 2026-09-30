@@ -48,16 +48,21 @@ DialogCard {
     property var sources: []
     property bool showSources: false
 
-    function loadSources() {
-        if (!archiveManager || !showSources) {
-            sources = []
-            return
-        }
+    function listSources() {
+        if (!archiveManager) return []
         try {
-            sources = JSON.parse(archiveManager.listSources(category)) || []
+            return JSON.parse(archiveManager.listSources(category)) || []
         } catch (e) {
-            sources = []
+            return []
         }
+    }
+
+    function findSource(name) {
+        return listSources().find(s => s.name === name)
+    }
+
+    function loadSources() {
+        sources = showSources ? listSources() : []
     }
 
     function selectSource(name, kind) {
@@ -168,6 +173,11 @@ DialogCard {
         function onInstallFailed(cat, name, tag, err) {
             if (!root.ownsInstall(cat, name)) return
             root.errorText = err
+        }
+        function onSourcesChanged() {
+            root.loadSources()
+            const current = root.findSource(root.sourceName)
+            if (current) root.selectSource(current.name, current.kind)
         }
     }
 

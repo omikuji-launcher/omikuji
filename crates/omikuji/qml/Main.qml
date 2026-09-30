@@ -1133,13 +1133,7 @@ property real cardZoom: appSettings.cardZoom
             if (category === "runners") root.runnersVersion++
         }
         onEditSourceRequested: (category, sourceName) => {
-            let list = []
-            try {
-                list = JSON.parse(archiveManager.listSources(category)) || []
-            } catch (e) {
-                return
-            }
-            let source = list.find(s => s.name === sourceName)
+            const source = archiveManageDialog.findSource(sourceName)
             if (!source) return
             archiveManageDialog.escEnabled = false
             archiveSourceDialog.showEdit(category, source)
