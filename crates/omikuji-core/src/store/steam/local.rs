@@ -3,8 +3,8 @@ use crate::library::{Game, SourceKind};
 use crate::runners::is_proton_dir;
 use crate::settings;
 use anyhow::{Context, Result, anyhow};
+use fs_err as fs;
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 const STEAM_DATA_DIRS: &[&str] = &[
@@ -262,9 +262,7 @@ pub fn write_vdf(map: &HashMap<String, VdfValue>) -> String {
 }
 
 fn read_library_folders(steam_dir: &Path) -> Result<HashMap<String, HashMap<String, String>>> {
-    let path = steam_dir.join("config/libraryfolders.vdf");
-    let content =
-        fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let content = fs::read_to_string(steam_dir.join("config/libraryfolders.vdf"))?;
 
     let vdf = parse_vdf(&content);
     let mut result = HashMap::new();
@@ -367,8 +365,7 @@ pub struct AppManifest {
 
 impl AppManifest {
     pub fn from_file(path: &Path) -> Result<Self> {
-        let content =
-            fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+        let content = fs::read_to_string(path)?;
 
         let vdf = parse_vdf(&content);
 
@@ -471,7 +468,7 @@ pub fn find_local_library_image(appid: &str) -> Option<PathBuf> {
     if !appid_dir.exists() {
         return None;
     }
-    if let Ok(entries) = std::fs::read_dir(&appid_dir) {
+    if let Ok(entries) = fs_err::read_dir(&appid_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
@@ -521,7 +518,7 @@ pub fn find_steam_prefix(appid: &str) -> Option<PathBuf> {
 pub fn find_steam_proton_version(appid: &str) -> Option<String> {
     for steamapps_dir in get_steamapps_dirs() {
         let f = steamapps_dir.join("compatdata").join(appid).join("version");
-        if let Ok(s) = std::fs::read_to_string(&f) {
+        if let Ok(s) = fs_err::read_to_string(&f) {
             let name = s.trim();
             if !name.is_empty() {
                 return Some(name.to_string());
@@ -544,7 +541,7 @@ pub fn iter_steam_protons() -> Vec<(String, PathBuf)> {
 }
 
 fn push_protons_from(parent: &Path, out: &mut Vec<(String, PathBuf)>) {
-    let Ok(entries) = std::fs::read_dir(parent) else {
+    let Ok(entries) = fs_err::read_dir(parent) else {
         return;
     };
     for e in entries.flatten() {
@@ -574,8 +571,7 @@ pub fn proton_display_name(dir: &Path) -> Option<String> {
 
 pub fn set_compat_tool_name(dir: &Path, name: &str) -> Result<()> {
     let path = dir.join("compatibilitytool.vdf");
-    let content =
-        fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let content = fs::read_to_string(&path)?;
     let mut vdf = parse_vdf(&content);
 
     let tools = vdf
@@ -598,7 +594,7 @@ pub fn set_compat_tool_name(dir: &Path, name: &str) -> Result<()> {
     }
     tools.insert(name.to_string(), tool);
 
-    fs::write(&path, write_vdf(&vdf)).with_context(|| format!("writing {}", path.display()))
+    Ok(fs::write(&path, write_vdf(&vdf))?)
 }
 
 pub fn find_proton_install(name: &str) -> Option<PathBuf> {

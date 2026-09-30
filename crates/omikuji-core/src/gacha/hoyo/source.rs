@@ -71,7 +71,7 @@ impl DownloadSource for HoyoSource {
             job.parsed.edition.id(),
             &job.package.tag,
         );
-        let _ = std::fs::remove_dir_all(&job.temp_root);
+        let _ = fs_err::remove_dir_all(&job.temp_root);
         Ok(())
     }
 
@@ -95,7 +95,7 @@ impl DownloadSource for HoyoSource {
             return Ok(());
         }
 
-        std::fs::write(job.temp_root.join(PREDOWNLOAD_MARKER), &job.package.tag)?;
+        fs_err::write(job.temp_root.join(PREDOWNLOAD_MARKER), &job.package.tag)?;
         Ok(())
     }
 
@@ -117,7 +117,7 @@ impl DownloadSource for HoyoSource {
             }
         }
 
-        std::fs::create_dir_all(&entry.install_path)?;
+        fs_err::create_dir_all(&entry.install_path)?;
 
         set_status(&entry.id, DownloadStatus::Downloading);
 
@@ -188,7 +188,7 @@ async fn download_file_conn(
     use tokio::io::{AsyncSeekExt, AsyncWriteExt};
 
     if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
 
     let client = reqwest::Client::builder()
@@ -232,7 +232,7 @@ async fn download_file_conn(
     };
 
     if file_size < 10 * 1024 * 1024 {
-        let _ = std::fs::remove_file(parts_path(dest));
+        let _ = fs_err::remove_file(parts_path(dest));
         return download_file_simple(
             url,
             dest,
@@ -256,7 +256,7 @@ async fn download_file_conn(
     let completed = read_completed_parts(dest);
 
     if completed.len() == pieces.len()
-        && let Ok(meta) = std::fs::metadata(dest)
+        && let Ok(meta) = fs_err::metadata(dest)
         && meta.len() == file_size
     {
         tracing::debug!("already downloaded: {}", dest.display());
@@ -265,7 +265,7 @@ async fn download_file_conn(
 
     if completed.is_empty()
         && !parts_path(dest).exists()
-        && let Ok(meta) = std::fs::metadata(dest)
+        && let Ok(meta) = fs_err::metadata(dest)
         && meta.len() == file_size
     {
         tracing::debug!(
@@ -276,7 +276,7 @@ async fn download_file_conn(
     }
 
     {
-        let f = std::fs::OpenOptions::new()
+        let f = fs_err::OpenOptions::new()
             .create(true)
             .truncate(false)
             .write(true)
@@ -284,7 +284,7 @@ async fn download_file_conn(
         f.set_len(file_size)?;
     }
 
-    let _ = std::fs::OpenOptions::new()
+    let _ = fs_err::OpenOptions::new()
         .create(true)
         .append(true)
         .open(parts_path(dest));
@@ -343,7 +343,7 @@ async fn download_file_conn(
                     ));
                 }
 
-                let file = tokio::fs::OpenOptions::new()
+                let file = fs_err::tokio::OpenOptions::new()
                     .write(true)
                     .open(&dest)
                     .await?;
@@ -426,7 +426,7 @@ async fn download_file_conn(
     }
 
     if !cancelled.load(Ordering::Relaxed) {
-        let _ = std::fs::remove_file(parts_path(dest));
+        let _ = fs_err::remove_file(parts_path(dest));
     }
 
     Ok(())
@@ -449,7 +449,7 @@ async fn download_file_simple(
         .unwrap_or_default();
 
     // resume support: server responds 206 (resume) or 200 (full, ignoring Ragne)
-    let existing = std::fs::metadata(dest).map(|m| m.len()).unwrap_or(0);
+    let existing = fs_err::metadata(dest).map(|m| m.len()).unwrap_or(0);
     let mut req = client.get(url).header("Accept-Encoding", "identity");
     if existing > 0 {
         tracing::debug!("resuming single-stream from {}", format_bytes(existing));
@@ -480,12 +480,12 @@ async fn download_file_simple(
     }
 
     let raw_file = if resumed {
-        tokio::fs::OpenOptions::new()
+        fs_err::tokio::OpenOptions::new()
             .append(true)
             .open(dest)
             .await?
     } else {
-        tokio::fs::File::create(dest).await?
+        fs_err::tokio::File::create(dest).await?
     };
 
     let mut file = tokio::io::BufWriter::with_capacity(512 * 1024, raw_file);
@@ -536,7 +536,7 @@ pub fn extract_archive_with_password(
     entry_id: Option<&str>,
     password: Option<&str>,
 ) -> Result<()> {
-    std::fs::create_dir_all(dest)?;
+    fs_err::create_dir_all(dest)?;
 
     let ext = archive_path
         .extension()
@@ -774,7 +774,7 @@ async fn plan_patch(
 ) -> Result<PatchJob> {
     let parsed = parse_app_id(&entry.app_id)?;
     let temp_root = update_scratch_dir(&entry.app_id, &entry.install_path);
-    let _ = std::fs::create_dir_all(&temp_root);
+    let _ = fs_err::create_dir_all(&temp_root);
 
     let package = fetch_package(&parsed, channel).await?;
     let target = strategies::normalize_version(from_version);
@@ -859,7 +859,7 @@ fn parts_path(dest: &Path) -> std::path::PathBuf {
 }
 
 fn read_completed_parts(dest: &Path) -> std::collections::HashSet<usize> {
-    std::fs::read_to_string(parts_path(dest))
+    fs_err::read_to_string(parts_path(dest))
         .unwrap_or_default()
         .lines()
         .filter_map(|l| l.trim().parse::<usize>().ok())
@@ -868,7 +868,7 @@ fn read_completed_parts(dest: &Path) -> std::collections::HashSet<usize> {
 
 fn mark_part_complete(dest: &Path, idx: usize) -> std::io::Result<()> {
     use std::io::Write;
-    let mut f = std::fs::OpenOptions::new()
+    let mut f = fs_err::OpenOptions::new()
         .create(true)
         .append(true)
         .open(parts_path(dest))?;
@@ -903,7 +903,7 @@ pub fn inspect_hoyo_temp(app_id: &str, install_path: &Path, temp_dir: Option<&Pa
 
     let mut bytes: u64 = 0;
     let mut segments: u32 = 0;
-    let Ok(entries) = std::fs::read_dir(&parent) else {
+    let Ok(entries) = fs_err::read_dir(&parent) else {
         return (0, 0);
     };
     for entry in entries.flatten() {
@@ -917,7 +917,7 @@ pub fn inspect_hoyo_temp(app_id: &str, install_path: &Path, temp_dir: Option<&Pa
         if !dir.is_dir() {
             continue;
         }
-        let Ok(children) = std::fs::read_dir(&dir) else {
+        let Ok(children) = fs_err::read_dir(&dir) else {
             continue;
         };
         for c in children.flatten() {
@@ -925,7 +925,7 @@ pub fn inspect_hoyo_temp(app_id: &str, install_path: &Path, temp_dir: Option<&Pa
             if p.extension().and_then(|s| s.to_str()) == Some("parts") {
                 continue;
             }
-            if let Ok(meta) = std::fs::metadata(&p)
+            if let Ok(meta) = fs_err::metadata(&p)
                 && meta.is_file()
             {
                 bytes += meta.len();
@@ -947,7 +947,7 @@ fn update_scratch_dir(app_id: &str, install_path: &Path) -> PathBuf {
 
 pub fn predownloaded_version(app_id: &str, install_path: &Path) -> Option<String> {
     let marker = update_scratch_dir(app_id, install_path).join(PREDOWNLOAD_MARKER);
-    std::fs::read_to_string(marker)
+    fs_err::read_to_string(marker)
         .ok()
         .map(|tag| tag.trim().to_string())
 }
@@ -956,7 +956,7 @@ fn remove_scratch(dir: &Path) {
     if !dir.exists() {
         return;
     }
-    match std::fs::remove_dir_all(dir) {
+    match fs_err::remove_dir_all(dir) {
         Ok(()) => tracing::debug!("cleaned {}", dir.display()),
         Err(e) => tracing::warn!("failed to clean {}: {}", dir.display(), e),
     }

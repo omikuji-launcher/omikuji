@@ -88,9 +88,9 @@ pub fn install_remote(entry: &RemoteScript) -> Result<PathBuf> {
     Script::parse(&text)?;
 
     let dir = crate::scripts_dir().join(&entry.author).join(&entry.slug);
-    std::fs::create_dir_all(&dir)?;
+    fs_err::create_dir_all(&dir)?;
     let toml_path = dir.join(toml_name);
-    std::fs::write(&toml_path, &text)?;
+    fs_err::write(&toml_path, &text)?;
 
     if !entry.icon.is_empty() {
         let icon_name = entry
@@ -107,7 +107,7 @@ pub fn install_remote(entry: &RemoteScript) -> Result<PathBuf> {
                 .and_then(|r| r.bytes());
             match fetched {
                 Ok(bytes) => {
-                    let _ = std::fs::write(dir.join(icon_name), &bytes);
+                    let _ = fs_err::write(dir.join(icon_name), &bytes);
                 }
                 Err(e) => tracing::warn!("script icon fetch failed: {e}"),
             }

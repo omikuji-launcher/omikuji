@@ -1,5 +1,5 @@
 use cxx_qt_build::{CxxQtBuilder, QmlFile, QmlModule};
-use std::fs;
+use fs_err as fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 

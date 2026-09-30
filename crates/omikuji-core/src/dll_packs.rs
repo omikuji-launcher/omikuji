@@ -284,7 +284,7 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
                 let src = nvidia_wine_dir.join(name);
                 if src.exists() {
                     let dest = system32.join(name);
-                    if let Err(e) = std::fs::copy(&src, &dest) {
+                    if let Err(e) = fs_err::copy(&src, &dest) {
                         tracing::error!("failed to copy {}: {}", name, e);
                     } else {
                         copied = true;
@@ -310,8 +310,8 @@ pub fn inject_all(game: &Game, env: &HashMap<String, String>) -> Result<()> {
 }
 
 pub fn copy_dll_dir(from: &Path, to: &Path) -> Result<()> {
-    std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
+    fs_err::create_dir_all(to)?;
+    for entry in fs_err::read_dir(from)? {
         let entry = entry?;
         let path = entry.path();
         if path
@@ -324,14 +324,14 @@ pub fn copy_dll_dir(from: &Path, to: &Path) -> Result<()> {
             if same_size(&path, &dest) {
                 continue;
             }
-            std::fs::copy(&path, &dest)?;
+            fs_err::copy(&path, &dest)?;
         }
     }
     Ok(())
 }
 
 fn same_size(src: &Path, dest: &Path) -> bool {
-    match (std::fs::metadata(src), std::fs::metadata(dest)) {
+    match (fs_err::metadata(src), fs_err::metadata(dest)) {
         (Ok(a), Ok(b)) => a.len() == b.len(),
         _ => false,
     }

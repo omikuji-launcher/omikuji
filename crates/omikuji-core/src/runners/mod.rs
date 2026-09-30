@@ -306,21 +306,21 @@ pub fn move_to_steam_dir(src: &Path, roots: &[PathBuf]) -> Result<()> {
     let mut targets = vec![];
     for root in roots {
         let ctd = root.join("compatibilitytools.d");
-        std::fs::create_dir_all(&ctd)?;
+        fs_err::create_dir_all(&ctd)?;
         targets.push(ctd.join(name));
     }
     for dest in &targets {
-        let _ = std::fs::remove_dir_all(dest);
+        let _ = fs_err::remove_dir_all(dest);
     }
     if let [dest] = targets.as_slice()
-        && std::fs::rename(src, dest).is_ok()
+        && fs_err::rename(src, dest).is_ok()
     {
         return Ok(());
     }
     for dest in &targets {
         copy_dir_all(src, dest)?;
     }
-    std::fs::remove_dir_all(src)?;
+    fs_err::remove_dir_all(src)?;
     Ok(())
 }
 
@@ -329,9 +329,9 @@ fn clear_compat_entry(dest: &Path) -> Result<()> {
         return Ok(());
     };
     if meta.is_symlink() {
-        std::fs::remove_file(dest)?;
+        fs_err::remove_file(dest)?;
     } else {
-        std::fs::remove_dir_all(dest)?;
+        fs_err::remove_dir_all(dest)?;
     }
     Ok(())
 }
@@ -339,11 +339,11 @@ fn clear_compat_entry(dest: &Path) -> Result<()> {
 pub fn steam_links(src: &Path) -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = steam_local::iter_compat_tools_dirs()
         .into_iter()
-        .flat_map(|ctd| std::fs::read_dir(ctd).into_iter().flatten().flatten())
+        .flat_map(|ctd| fs_err::read_dir(ctd).into_iter().flatten().flatten())
         .map(|e| e.path())
-        .filter(|p| std::fs::read_link(p).is_ok_and(|t| t == src))
+        .filter(|p| fs_err::read_link(p).is_ok_and(|t| t == src))
         .filter_map(|p| {
-            let ctd = std::fs::canonicalize(p.parent()?).ok()?;
+            let ctd = fs_err::canonicalize(p.parent()?).ok()?;
             Some(ctd.join(p.file_name()?))
         })
         .collect();
@@ -377,10 +377,10 @@ pub fn set_steam_links(src: &Path, roots: &[PathBuf]) -> Result<()> {
     }
     for dest in &wanted {
         if let Some(ctd) = dest.parent() {
-            std::fs::create_dir_all(ctd)?;
+            fs_err::create_dir_all(ctd)?;
         }
         clear_compat_entry(dest)?;
-        std::os::unix::fs::symlink(src, dest)?;
+        fs_err::os::unix::fs::symlink(src, dest)?;
     }
 
     if wanted.is_empty() {
@@ -403,7 +403,7 @@ pub fn delete_found_runner(path: &Path) -> Result<()> {
         anyhow::bail!("not a runner directory: {}", path.display());
     }
     unlink_from_steam(path)?;
-    std::fs::remove_dir_all(path)?;
+    fs_err::remove_dir_all(path)?;
     Ok(())
 }
 
@@ -413,7 +413,7 @@ pub fn installed_runner_dir(version: &str) -> Option<PathBuf> {
     if direct.is_dir() {
         return Some(direct);
     }
-    std::fs::read_dir(&root)
+    fs_err::read_dir(&root)
         .ok()?
         .flatten()
         .map(|e| e.path().join(version))
@@ -437,7 +437,7 @@ pub fn runner_dir(version: &str) -> Option<PathBuf> {
 
 fn iter_local_runner_dirs() -> Vec<PathBuf> {
     let mut dirs = vec![];
-    if let Ok(entries) = std::fs::read_dir(runners_dir()) {
+    if let Ok(entries) = fs_err::read_dir(runners_dir()) {
         for entry in entries.flatten() {
             let path = entry.path();
             if !path.is_dir() {
@@ -447,7 +447,7 @@ fn iter_local_runner_dirs() -> Vec<PathBuf> {
                 dirs.push(path);
                 continue;
             }
-            if let Ok(children) = std::fs::read_dir(&path) {
+            if let Ok(children) = fs_err::read_dir(&path) {
                 for child in children.flatten() {
                     let child_path = child.path();
                     if child_path.is_dir() && is_runner_dir(&child_path) {
@@ -625,7 +625,7 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
         }
     }
 
-    if let Ok(entries) = std::fs::read_dir("/usr/lib") {
+    if let Ok(entries) = fs_err::read_dir("/usr/lib") {
         for entry in entries.flatten() {
             let dir = entry.path();
             let Some(name) = dir.file_name().and_then(|n| n.to_str()) else {
@@ -642,7 +642,7 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
 
     let primary = which::which("wine")
         .ok()
-        .and_then(|p| std::fs::canonicalize(p).ok());
+        .and_then(|p| fs_err::canonicalize(p).ok());
     for dir in std::env::var_os("PATH")
         .iter()
         .flat_map(std::env::split_paths)
@@ -651,7 +651,7 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
         if !bin.is_file() {
             continue;
         }
-        let Ok(real) = std::fs::canonicalize(&bin) else {
+        let Ok(real) = fs_err::canonicalize(&bin) else {
             continue;
         };
         if primary.as_ref() == Some(&real) {
@@ -659,7 +659,7 @@ pub fn system_wine_paths() -> HashMap<String, PathBuf> {
         }
         if paths
             .values()
-            .any(|p| std::fs::canonicalize(p).ok().as_ref() == Some(&real))
+            .any(|p| fs_err::canonicalize(p).ok().as_ref() == Some(&real))
         {
             continue;
         }

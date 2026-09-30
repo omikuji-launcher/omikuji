@@ -45,7 +45,7 @@ fn patch_path(runner_dir: &Path) -> PathBuf {
 }
 
 fn hooks_present(runner_dir: &Path) -> bool {
-    let Ok(script) = std::fs::read_to_string(runner_dir.join("proton")) else {
+    let Ok(script) = fs_err::read_to_string(runner_dir.join("proton")) else {
         return false;
     };
     script.contains("import user_settings") && script.contains("self.dlloverrides")
@@ -55,7 +55,7 @@ pub fn status(runner_dir: &Path) -> PatchState {
     if !super::is_proton_dir(runner_dir) {
         return PatchState::NotProton;
     }
-    match std::fs::read_to_string(patch_path(runner_dir)) {
+    match fs_err::read_to_string(patch_path(runner_dir)) {
         Ok(existing) if existing.starts_with(MARKER) => PatchState::Ready,
         Ok(_) => PatchState::Foreign,
         Err(_) if hooks_present(runner_dir) => PatchState::Ready,
@@ -68,7 +68,7 @@ pub fn ensure_installed(runner_dir: &Path) -> PatchState {
         return PatchState::NotProton;
     }
     let path = patch_path(runner_dir);
-    match std::fs::read_to_string(&path) {
+    match fs_err::read_to_string(&path) {
         Ok(existing) if existing == SOURCE => return PatchState::Ready,
         Ok(existing) if !existing.starts_with(MARKER) => {
             tracing::warn!(
@@ -83,10 +83,10 @@ pub fn ensure_installed(runner_dir: &Path) -> PatchState {
     if !hooks_present(runner_dir) {
         return PatchState::Unsupported;
     }
-    match std::fs::write(&path, SOURCE) {
+    match fs_err::write(&path, SOURCE) {
         Ok(()) => PatchState::Ready,
         Err(e) => {
-            tracing::warn!("could not write {}: {}", path.display(), e);
+            tracing::warn!("{e}");
             PatchState::Unsupported
         }
     }

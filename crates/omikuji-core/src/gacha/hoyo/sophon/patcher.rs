@@ -2,10 +2,10 @@
 // mid-update leaves the install consistently "old" rather than half-patched
 
 use anyhow::{Result, anyhow};
+use fs_err::File;
 use futures_util::stream::{self, StreamExt};
 use md5::{Digest, Md5};
 use reqwest::header::RANGE;
-use std::fs::File;
 use std::io::{Cursor, Read, Seek, SeekFrom, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -155,8 +155,8 @@ fn patches_temp(temp_root: &Path, matching_field: &str) -> PathBuf {
 }
 
 fn ensure_temp_dirs(temp_root: &Path, matching_field: &str) -> std::io::Result<()> {
-    std::fs::create_dir_all(files_temp(temp_root, matching_field))?;
-    std::fs::create_dir_all(patches_temp(temp_root, matching_field))?;
+    fs_err::create_dir_all(files_temp(temp_root, matching_field))?;
+    fs_err::create_dir_all(patches_temp(temp_root, matching_field))?;
     Ok(())
 }
 
@@ -168,7 +168,7 @@ fn file_md5(path: &Path) -> std::io::Result<String> {
 }
 
 fn check_file(path: &Path, expected_size: u64, expected_md5: &str) -> std::io::Result<bool> {
-    let Ok(meta) = std::fs::metadata(path) else {
+    let Ok(meta) = fs_err::metadata(path) else {
         return Ok(false);
     };
     if meta.len() != expected_size {
@@ -181,7 +181,7 @@ fn ensure_parent(path: &Path) -> std::io::Result<()> {
     if let Some(parent) = path.parent()
         && !parent.exists()
     {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     Ok(())
 }
@@ -190,11 +190,11 @@ fn add_user_write_perm(path: &Path) -> std::io::Result<()> {
     if !path.exists() {
         return Ok(());
     }
-    let mut perms = std::fs::metadata(path)?.permissions();
+    let mut perms = fs_err::metadata(path)?.permissions();
     if perms.readonly() {
         let mode = perms.mode() | 0o200;
         perms.set_mode(mode);
-        std::fs::set_permissions(path, perms)?;
+        fs_err::set_permissions(path, perms)?;
     }
     Ok(())
 }
@@ -211,7 +211,7 @@ fn finalize_file(tmp: &Path, target: &Path, size: u64, md5: &str) -> Result<()> 
     }
     ensure_parent(target)?;
     add_user_write_perm(target)?;
-    std::fs::copy(tmp, target)?;
+    fs_err::copy(tmp, target)?;
     Ok(())
 }
 
@@ -295,7 +295,7 @@ async fn download_artifact(
     bytes_total: u64,
 ) -> Result<()> {
     let artifact_path = patches_dir.join(task.artifact_filename());
-    if let Ok(meta) = std::fs::metadata(&artifact_path) {
+    if let Ok(meta) = fs_err::metadata(&artifact_path) {
         if meta.len() == task.patch_length {
             bytes_done.fetch_add(task.patch_length, Ordering::SeqCst);
             on_progress(ProgressReport {
@@ -308,13 +308,13 @@ async fn download_artifact(
             });
             return Ok(());
         }
-        let _ = std::fs::remove_file(&artifact_path);
+        let _ = fs_err::remove_file(&artifact_path);
     }
 
     http::with_retries(DEFAULT_RETRIES, |_| async {
         let result = try_download_once(task, &artifact_path).await;
         if result.is_err() {
-            let _ = std::fs::remove_file(&artifact_path);
+            let _ = fs_err::remove_file(&artifact_path);
         }
         result
     })
@@ -353,9 +353,7 @@ async fn try_download_once(task: &FileTask, out: &Path) -> Result<()> {
         ));
     }
 
-    let mut file = tokio::fs::File::create(out)
-        .await
-        .map_err(|e| anyhow!("create {}: {}", out.display(), e))?;
+    let mut file = fs_err::tokio::File::create(out).await?;
     let mut stream = resp.bytes_stream();
     let mut written: u64 = 0;
     while let Some(chunk) = stream.next().await {
@@ -413,7 +411,7 @@ fn apply_file_task_blocking(
         let tmp_src = files_dir.join(task.tmp_src_filename());
         let tmp_out = files_dir.join(task.tmp_out_filename());
 
-        let _ = std::fs::copy(&orig, &tmp_src).map_err(|e| anyhow!("copy orig to tmp: {}", e))?;
+        let _ = fs_err::copy(&orig, &tmp_src).map_err(|e| anyhow!("copy orig to tmp: {}", e))?;
         hpatchz::patch(&tmp_src, &artifact, &tmp_out).map_err(|e| anyhow!("hpatchz: {}", e))?;
 
         finalize_file(
@@ -423,8 +421,8 @@ fn apply_file_task_blocking(
             &task.asset_hash_md5,
         )?;
 
-        let _ = std::fs::remove_file(&tmp_src);
-        let _ = std::fs::remove_file(&tmp_out);
+        let _ = fs_err::remove_file(&tmp_src);
+        let _ = fs_err::remove_file(&tmp_out);
     } else {
         let mut f = File::open(&artifact).map_err(|e| anyhow!("open artifact: {}", e))?;
         let blob_path = match parse_hdiff13_header(&mut f) {
@@ -439,7 +437,7 @@ fn apply_file_task_blocking(
             &task.asset_hash_md5,
         )?;
         if blob_path != artifact {
-            let _ = std::fs::remove_file(&blob_path);
+            let _ = fs_err::remove_file(&blob_path);
         }
     }
     Ok(())
@@ -654,7 +652,7 @@ pub async fn apply_update(
     if let Some(unused) = manifest.unused_assets.get(&from_version) {
         let total_del = unused.assets.len() as u64;
         for asset in &unused.assets {
-            let _ = std::fs::remove_file(game_dir.join(&asset.file_name));
+            let _ = fs_err::remove_file(game_dir.join(&asset.file_name));
             deleted += 1;
             on_progress(ProgressReport {
                 stage: Stage::Deleting,
@@ -667,7 +665,7 @@ pub async fn apply_update(
         }
     }
 
-    let _ = std::fs::remove_dir_all(&files_dir);
+    let _ = fs_err::remove_dir_all(&files_dir);
 
     Ok(PatchOutcome {
         files_patched: patched.load(Ordering::SeqCst),

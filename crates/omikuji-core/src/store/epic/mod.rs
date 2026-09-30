@@ -142,9 +142,9 @@ impl EpicStore {
         if let Ok(mut cmd) = legendary_async() {
             let _ = cmd.args(["auth", "--delete"]).output().await;
         }
-        let _ = std::fs::remove_file(user_json());
+        let _ = fs_err::remove_file(user_json());
         // drop cache so next login starts with an empty library, not the previous user's
-        let _ = std::fs::remove_file(store::cache::library_path(STORE));
+        let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         Ok(())
     }
@@ -246,7 +246,7 @@ pub fn logged_in() -> bool {
 
 fn read_display_name() -> Option<String> {
     let v: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(user_json()).ok()?).ok()?;
+        serde_json::from_str(&fs_err::read_to_string(user_json()).ok()?).ok()?;
     v.get("displayName")?.as_str().map(String::from)
 }
 
@@ -281,7 +281,7 @@ pub struct EpicDlc {
 }
 
 fn read_metadata(app_name: &str) -> Result<serde_json::Value> {
-    Ok(serde_json::from_str(&std::fs::read_to_string(
+    Ok(serde_json::from_str(&fs_err::read_to_string(
         metadata_json(app_name),
     )?)?)
 }

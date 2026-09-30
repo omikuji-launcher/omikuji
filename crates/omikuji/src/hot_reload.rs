@@ -1,8 +1,8 @@
 use crate::qml_tree;
+use fs_err as fs;
+use fs_err::os::unix::fs::symlink;
 use std::fmt::Write;
-use std::fs;
 use std::io;
-use std::os::unix::fs::symlink;
 use std::path::{Path, PathBuf};
 
 const MODULE: &str = "omikuji";

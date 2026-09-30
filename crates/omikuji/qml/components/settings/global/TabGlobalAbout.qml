@@ -12,6 +12,7 @@ Item {
     signal tourRequested()
 
     readonly property string appVersion: gameModel ? gameModel.app_version() : ""
+    readonly property string sessionLogPath: gameModel ? gameModel.session_log_path() : ""
     readonly property string repoUrl: "https://github.com/omikuji-launcher/omikuji"
     readonly property string assetsRepoUrl: "https://github.com/omikuji-launcher/omikuji-assets"
     readonly property string docsUrl: "https://omikuji-launcher.github.io/omikuji/"
@@ -65,6 +66,25 @@ Item {
                     text: qsTr("Start")
                     variant: "tonal"
                     onClicked: root.tourRequested()
+                }
+            }
+        }
+
+        SettingsSection {
+            label: qsTr("Logs")
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Session log")
+                description: qsTr("Everything omikuji logged since it started. Attach it when reporting a bug.")
+                labelWidth: 200
+                contentRightMargin: 0
+
+                M3Button {
+                    text: qsTr("Open")
+                    variant: "tonal"
+                    enabled: root.sessionLogPath !== ""
+                    onClicked: Qt.openUrlExternally("file://" + root.sessionLogPath)
                 }
             }
         }

@@ -644,7 +644,10 @@ impl DownloadManager {
                     mgr.inner.lock().unwrap().remove_entry(&entry.id);
                 }
                 (Ok(()), ControlSignal::None) => complete(&entry),
-                (Err(e), ControlSignal::None) => set_failed(&entry.id, format!("{e:#}")),
+                (Err(e), ControlSignal::None) => {
+                    tracing::error!("{} failed: {e:?}", entry.display_name);
+                    set_failed(&entry.id, format!("{e:#}"));
+                }
             }
         }
     }
@@ -698,8 +701,8 @@ pub fn cleanup_install_dir_blocking(path: &Path) {
         );
         return;
     }
-    if let Err(e) = std::fs::remove_dir_all(path) {
-        tracing::error!("failed to clean up {}: {}", path.display(), e);
+    if let Err(e) = fs_err::remove_dir_all(path) {
+        tracing::error!("cleanup failed: {e}");
     } else {
         tracing::info!("cleaned up {}", path.display());
     }
@@ -864,7 +867,7 @@ fn queue_path() -> PathBuf {
 fn save_queue(entries: &[DownloadEntry]) {
     let path = queue_path();
     if entries.is_empty() {
-        let _ = std::fs::remove_file(&path);
+        let _ = fs_err::remove_file(&path);
         return;
     }
 
@@ -880,7 +883,7 @@ fn save_queue(entries: &[DownloadEntry]) {
 
 fn load_queue() -> Vec<DownloadEntry> {
     let path = queue_path();
-    let data = match std::fs::read_to_string(&path) {
+    let data = match fs_err::read_to_string(&path) {
         Ok(d) => d,
         Err(_) => return Vec::new(),
     };

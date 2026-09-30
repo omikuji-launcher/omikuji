@@ -21,7 +21,7 @@ pub fn track_child(pid: u32) {
 }
 
 fn read_write_bytes(path: &str) -> Option<u64> {
-    let data = std::fs::read_to_string(path).ok()?;
+    let data = fs_err::read_to_string(path).ok()?;
     data.lines()
         .find_map(|l| l.strip_prefix("write_bytes: "))
         .and_then(|v| v.trim().parse().ok())

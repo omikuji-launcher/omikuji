@@ -26,8 +26,8 @@ impl DownloadSource for LegendarySource {
         if !resume.exists() {
             return;
         }
-        if let Err(e) = std::fs::remove_file(&resume) {
-            tracing::error!("failed to clear resume state {}: {}", resume.display(), e);
+        if let Err(e) = fs_err::remove_file(&resume) {
+            tracing::error!("failed to clear resume state: {e}");
         } else {
             tracing::debug!("cleared resume state for {}", entry.app_id);
         }
@@ -68,7 +68,7 @@ impl DownloadSource for LegendarySource {
                 .await;
         }
 
-        if let Err(e) = std::fs::create_dir_all(&entry.install_path) {
+        if let Err(e) = fs_err::create_dir_all(&entry.install_path) {
             return Err(anyhow!(
                 "failed to create install dir {}: {e}",
                 entry.install_path.display()

@@ -17,7 +17,7 @@ pub fn library_path(store: &str) -> PathBuf {
 }
 
 pub fn load_library<T: DeserializeOwned>(store: &str) -> Vec<T> {
-    let Ok(data) = std::fs::read_to_string(library_path(store)) else {
+    let Ok(data) = fs_err::read_to_string(library_path(store)) else {
         return Vec::new();
     };
     match serde_json::from_str::<Vec<T>>(&data) {

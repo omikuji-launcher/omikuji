@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
+use fs_err::DirEntry;
 use std::collections::VecDeque;
-use std::fs::DirEntry;
 use std::path::{Path, PathBuf};
 use std::process::{self, Stdio};
 use tokio::io::{AsyncBufReadExt, BufReader};
@@ -26,7 +26,7 @@ impl DownloadSource for GogdlSource {
     fn cleanup_state(&self, entry: &DownloadEntry) {
         let support = super::gog_dir().join("support").join(&entry.app_id);
         if support.exists() {
-            let _ = std::fs::remove_dir_all(&support);
+            let _ = fs_err::remove_dir_all(&support);
         }
     }
 
@@ -55,7 +55,7 @@ impl DownloadSource for GogdlSource {
             super::wipe_gogdl_manifest_for(&entry.app_id);
         }
 
-        if let Err(e) = std::fs::create_dir_all(&entry.install_path) {
+        if let Err(e) = fs_err::create_dir_all(&entry.install_path) {
             return Err(anyhow!(
                 "failed to create install dir {}: {e}",
                 entry.install_path.display()
@@ -139,7 +139,7 @@ fn dlc_args(dlcs: &[String]) -> Vec<String> {
 
 async fn spawn_download(gogdl: process::Command, entry: &DownloadEntry) -> Result<Child> {
     let support_dir = super::gog_dir().join("support").join(&entry.app_id);
-    let _ = std::fs::create_dir_all(&support_dir);
+    let _ = fs_err::create_dir_all(&support_dir);
 
     let mut cmd = Command::from(gogdl);
     cmd.arg("download")
@@ -239,7 +239,7 @@ fn log_dir_listing(dir: &Path) {
         "listing {} (diagnostic - no info marker found):",
         dir.display()
     );
-    let Ok(entries) = std::fs::read_dir(dir) else {
+    let Ok(entries) = fs_err::read_dir(dir) else {
         tracing::debug!("  <unreadable>");
         return;
     };
@@ -250,7 +250,7 @@ fn log_dir_listing(dir: &Path) {
             e.file_name().to_string_lossy(),
             if is_dir { "/" } else { "" }
         );
-        if is_dir && let Ok(sub) = std::fs::read_dir(e.path()) {
+        if is_dir && let Ok(sub) = fs_err::read_dir(e.path()) {
             for se in sub.flatten().take(8) {
                 tracing::debug!("    {}", se.file_name().to_string_lossy());
             }
@@ -265,7 +265,7 @@ fn is_info_marker(entry: &DirEntry) -> bool {
 }
 
 fn subdirs(dir: &Path) -> impl Iterator<Item = DirEntry> {
-    std::fs::read_dir(dir)
+    fs_err::read_dir(dir)
         .into_iter()
         .flatten()
         .flatten()
@@ -274,7 +274,7 @@ fn subdirs(dir: &Path) -> impl Iterator<Item = DirEntry> {
 
 pub fn dir_has_info_marker(dir: &Path, app_id: &str) -> bool {
     dir.join(format!("goggame-{}.info", app_id)).exists()
-        || std::fs::read_dir(dir).is_ok_and(|entries| entries.flatten().any(|e| is_info_marker(&e)))
+        || fs_err::read_dir(dir).is_ok_and(|entries| entries.flatten().any(|e| is_info_marker(&e)))
 }
 
 // gogdl can nest a folder_name subdir inside --path (paths with ™ etc), so BFS to depth 3 for the marker
@@ -313,7 +313,7 @@ fn scan_with_subdirs(dir: &Path, scan: impl Fn(&Path) -> Option<String>) -> Opti
 }
 
 fn scan_dir_for_info(dir: &Path) -> Option<String> {
-    std::fs::read_dir(dir)
+    fs_err::read_dir(dir)
         .ok()?
         .flatten()
         .filter(is_info_marker)
@@ -321,7 +321,7 @@ fn scan_dir_for_info(dir: &Path) -> Option<String> {
 }
 
 fn parse_info_for_exe(info_path: &Path) -> Option<String> {
-    let content = std::fs::read_to_string(info_path).ok()?;
+    let content = fs_err::read_to_string(info_path).ok()?;
     let v: serde_json::Value = serde_json::from_str(&content).ok()?;
     let tasks = v.get("playTasks").and_then(|t| t.as_array())?;
 
@@ -359,7 +359,7 @@ fn scan_dir_for_exe(dir: &Path) -> Option<String> {
     let skip_prefixes = [
         "setup", "install", "unins", "redist", "dxsetup", "vcredist", "directx",
     ];
-    std::fs::read_dir(dir)
+    fs_err::read_dir(dir)
         .ok()?
         .flatten()
         .filter_map(|e| {

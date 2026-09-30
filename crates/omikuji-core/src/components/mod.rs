@@ -9,7 +9,7 @@ use crate::fs_util::{find_file_named, walk, write_executable_atomic};
 use crate::gacha::strategies::InstallStrategy;
 use crate::{http, settings};
 use anyhow::{Result, anyhow};
-use std::fs;
+use fs_err as fs;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 
@@ -115,7 +115,7 @@ pub fn remove(spec: &ComponentSpec) -> Result<()> {
         version_marker(spec.name),
     ] {
         if path.exists() {
-            fs::remove_file(&path).map_err(|e| anyhow!("remove {}: {}", path.display(), e))?;
+            fs::remove_file(&path)?;
         }
     }
     Ok(())

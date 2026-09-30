@@ -3,8 +3,8 @@ use crate::library::{Game, Library, generate_id, rfc3339_now};
 use crate::media::{MediaType, media_path};
 use crate::store::steam;
 use anyhow::{Context, Result};
+use fs_err as fs;
 use nix::sys::statvfs::statvfs;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -20,7 +20,7 @@ pub fn desktop_dir() -> Option<PathBuf> {
         .unwrap_or_else(|| PathBuf::from("~/.config"))
         .join("user-dirs.dirs");
 
-    if let Ok(content) = std::fs::read_to_string(&user_dirs) {
+    if let Ok(content) = fs_err::read_to_string(&user_dirs) {
         for line in content.lines() {
             if line.starts_with("XDG_DESKTOP_DIR=") {
                 let path_str = line
@@ -93,13 +93,12 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
     }
 
     let dir = icons_dir();
-    fs::create_dir_all(&dir).with_context(|| format!("creating icon dir {}", dir.display()))?;
+    fs::create_dir_all(&dir)?;
 
     let appid = steam::synthetic_appid(&game.metadata.id);
     let link = dir.join(format!("steam_icon_{}.png", appid));
     let _ = fs::remove_file(&link);
-    std::os::unix::fs::symlink(&src, &link)
-        .with_context(|| format!("linking {}", link.display()))?;
+    fs_err::os::unix::fs::symlink(&src, &link)?;
 
     Ok(())
 }
@@ -208,16 +207,14 @@ fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
     dir.join(desktop_filename(&game_slug(game), &game.metadata.id))
 }
 
-fn write_shortcut(game: &Game, path: &Path, label: &str) -> Result<()> {
-    fs::write(path, generate_desktop_content(game))
-        .with_context(|| format!("writing {} file {}", label, path.display()))?;
-    set_executable(path).with_context(|| format!("setting permissions on {}", path.display()))
+fn write_shortcut(game: &Game, path: &Path) -> Result<()> {
+    fs::write(path, generate_desktop_content(game))?;
+    Ok(set_executable(path)?)
 }
 
-fn remove_shortcut(path: &Path, label: &str) -> Result<()> {
+fn remove_shortcut(path: &Path) -> Result<()> {
     if path.exists() {
-        fs::remove_file(path)
-            .with_context(|| format!("removing {} file {}", label, path.display()))?;
+        fs::remove_file(path)?;
     }
     Ok(())
 }
@@ -226,33 +223,31 @@ pub fn create_desktop_shortcut(game: &Game) -> Result<PathBuf> {
     let desktop = desktop_dir()
         .or_else(|| dirs::home_dir().map(|h| h.join("Desktop")))
         .context("could not find or create desktop directory")?;
-    fs::create_dir_all(&desktop)
-        .with_context(|| format!("creating desktop directory {}", desktop.display()))?;
+    fs::create_dir_all(&desktop)?;
 
     let path = shortcut_path(game, &desktop);
-    write_shortcut(game, &path, "desktop")?;
+    write_shortcut(game, &path)?;
     Ok(path)
 }
 
 pub fn create_menu_shortcut(game: &Game) -> Result<PathBuf> {
     let apps_dir = applications_dir();
-    fs::create_dir_all(&apps_dir)
-        .with_context(|| format!("creating applications directory {}", apps_dir.display()))?;
+    fs::create_dir_all(&apps_dir)?;
 
     let path = shortcut_path(game, &apps_dir);
-    write_shortcut(game, &path, "menu")?;
+    write_shortcut(game, &path)?;
     Ok(path)
 }
 
 pub fn remove_desktop_shortcut(game: &Game) -> Result<()> {
     match desktop_dir() {
-        Some(desktop) => remove_shortcut(&shortcut_path(game, &desktop), "desktop"),
+        Some(desktop) => remove_shortcut(&shortcut_path(game, &desktop)),
         None => Ok(()),
     }
 }
 
 pub fn remove_menu_shortcut(game: &Game) -> Result<()> {
-    remove_shortcut(&shortcut_path(game, &applications_dir()), "menu")
+    remove_shortcut(&shortcut_path(game, &applications_dir()))
 }
 
 pub fn desktop_shortcut_exists(game: &Game) -> bool {

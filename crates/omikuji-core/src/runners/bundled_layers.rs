@@ -80,7 +80,7 @@ pub fn apply_for_launch(
 
 fn restore_legacy_swap(runner_dir: &Path) {
     let sidecar = runner_dir.join(SIDECAR);
-    let Ok(raw) = std::fs::read_to_string(&sidecar) else {
+    let Ok(raw) = fs_err::read_to_string(&sidecar) else {
         return;
     };
     let state: BTreeMap<String, KindOverride> = serde_json::from_str(&raw).unwrap_or_default();
@@ -90,11 +90,11 @@ fn restore_legacy_swap(runner_dir: &Path) {
             RestoreAction::Backup => {
                 let bak = bak_of(&target);
                 if bak.exists() {
-                    let _ = std::fs::rename(&bak, &target);
+                    let _ = fs_err::rename(&bak, &target);
                 }
             }
             RestoreAction::Delete => {
-                let _ = std::fs::remove_file(&target);
+                let _ = fs_err::remove_file(&target);
             }
         }
     }
@@ -106,7 +106,7 @@ fn restore_legacy_swap(runner_dir: &Path) {
             restore_baks_in(&dir);
         }
     }
-    let _ = std::fs::remove_file(&sidecar);
+    let _ = fs_err::remove_file(&sidecar);
     tracing::info!("restored the stock dll bundle of {}", runner_dir.display());
 }
 
@@ -117,7 +117,7 @@ fn bak_of(target: &Path) -> PathBuf {
 }
 
 fn restore_baks_in(dir: &Path) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
+    let Ok(entries) = fs_err::read_dir(dir) else {
         return;
     };
     for entry in entries.flatten() {
@@ -126,7 +126,7 @@ fn restore_baks_in(dir: &Path) {
             continue;
         };
         if let Some(orig) = name.strip_suffix(BAK_SUFFIX) {
-            let _ = std::fs::rename(&bak, dir.join(orig));
+            let _ = fs_err::rename(&bak, dir.join(orig));
         }
     }
 }

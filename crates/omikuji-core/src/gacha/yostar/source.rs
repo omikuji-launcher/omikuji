@@ -51,7 +51,7 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     }
 
     let install_root = entry.install_path.clone();
-    std::fs::create_dir_all(&install_root)?;
+    fs_err::create_dir_all(&install_root)?;
 
     let progress = SyncProgress::new(index.total_size());
     if !file_sync::sync_all(

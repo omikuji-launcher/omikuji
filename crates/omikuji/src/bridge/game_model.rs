@@ -348,6 +348,9 @@ pub mod qobject {
         fn app_version(self: &GameModel) -> QString;
 
         #[qinvokable]
+        fn session_log_path(self: &GameModel) -> QString;
+
+        #[qinvokable]
         fn changelog_pending(self: &GameModel) -> QString;
 
         #[qinvokable]
@@ -772,6 +775,7 @@ use omikuji_core::process::{self, ErrorAction, ErrorNotification};
 use omikuji_core::{desktop, dll_packs, notifications, prefixes, runners, store, system_info};
 
 use super::expand_path;
+use crate::app_log;
 
 const ROLE_ID: i32 = 0x0100;
 const ROLE_NAME: i32 = 0x0101;
@@ -2250,6 +2254,12 @@ impl qobject::GameModel {
 
     fn app_version(&self) -> QString {
         QString::from(env!("CARGO_PKG_VERSION"))
+    }
+
+    fn session_log_path(&self) -> QString {
+        app_log::session_path()
+            .map(|path| QString::from(&*path.to_string_lossy()))
+            .unwrap_or_default()
     }
 
     fn cpu_core_count(&self) -> i32 {

@@ -52,7 +52,7 @@ pub fn execute<F: FnMut(&str)>(
     let cache = crate::cache_dir()
         .join("scripts")
         .join(format!("{slug}-{id}"));
-    std::fs::create_dir_all(&cache)?;
+    fs_err::create_dir_all(&cache)?;
 
     let (prefix, prefix_literal) = match script.prefix_input() {
         Some(input) => {
@@ -100,7 +100,7 @@ pub fn execute<F: FnMut(&str)>(
         on_line(&format!("[{}/{}] {}", i + 1, total, step.describe()));
         match &step.action {
             StepAction::InitPrefix => {
-                std::fs::create_dir_all(&prefix)?;
+                fs_err::create_dir_all(&prefix)?;
                 prefixes::bootstrap_prefix(&tool_game, &mut on_line)?;
             }
             StepAction::Winetricks { verbs } => {
@@ -203,7 +203,7 @@ pub fn execute<F: FnMut(&str)>(
         },
     };
 
-    let _ = std::fs::remove_dir_all(&cache);
+    let _ = fs_err::remove_dir_all(&cache);
     on_line("done");
     Ok(outcome)
 }
@@ -260,9 +260,8 @@ fn extract_archive(archive: &Path, dest: &Path) -> Result<()> {
     let Some(kind) = ArchiveKind::from_name(name) else {
         bail!("unsupported archive type: {name} (zip, tar.gz, tar.xz, tar.zst, tar)");
     };
-    let file =
-        std::fs::File::open(archive).with_context(|| format!("opening {}", archive.display()))?;
-    std::fs::create_dir_all(dest)?;
+    let file = fs_err::File::open(archive)?;
+    fs_err::create_dir_all(dest)?;
     kind.unpack(std::io::BufReader::new(file), dest)
 }
 
@@ -331,7 +330,7 @@ fn download_to<F: FnMut(&str)>(
     on_line: &mut F,
 ) -> Result<()> {
     if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     let client = blocking::Client::builder()
         .user_agent("omikuji")
@@ -344,7 +343,7 @@ fn download_to<F: FnMut(&str)>(
         .error_for_status()?;
     let total = resp.content_length().unwrap_or(0);
 
-    let mut file = std::fs::File::create(dest)?;
+    let mut file = fs_err::File::create(dest)?;
     let mut hasher = Sha256::new();
     let mut buf = [0u8; 128 * 1024];
     let mut done: u64 = 0;
@@ -374,7 +373,7 @@ fn download_to<F: FnMut(&str)>(
     if !sha256.is_empty() {
         let got = format!("{:x}", hasher.finalize());
         if !got.eq_ignore_ascii_case(sha256) {
-            let _ = std::fs::remove_file(dest);
+            let _ = fs_err::remove_file(dest);
             bail!("sha256 mismatch for {url}: expected {sha256}, got {got}");
         }
     }

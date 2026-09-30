@@ -1,9 +1,9 @@
+use fs_err::File;
 use std::backtrace::Backtrace;
 use std::borrow::Cow;
 use std::ffi::{CStr, c_char, c_int};
-use std::fs::File;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -35,6 +35,7 @@ unsafe extern "C" {
 
 struct SessionLog {
     file: File,
+    path: PathBuf,
     written: AtomicU64,
 }
 
@@ -59,6 +60,10 @@ impl Write for &SessionLog {
 }
 
 static SESSION: OnceLock<SessionLog> = OnceLock::new();
+
+pub fn session_path() -> Option<&'static Path> {
+    SESSION.get().map(|log| log.path.as_path())
+}
 
 struct SessionWriter;
 
@@ -101,8 +106,8 @@ pub fn init() {
 
 pub fn start_session() {
     let dir = omikuji_core::logs_dir();
-    if let Err(e) = std::fs::create_dir_all(&dir) {
-        tracing::warn!("couldn't create {}: {}", dir.display(), e);
+    if let Err(e) = fs_err::create_dir_all(&dir) {
+        tracing::warn!("{e}");
         return;
     }
     prune_sessions(&dir);
@@ -111,12 +116,13 @@ pub fn start_session() {
     let file = match File::create(&path) {
         Ok(file) => file,
         Err(e) => {
-            tracing::warn!("couldn't create {}: {}", path.display(), e);
+            tracing::warn!("{e}");
             return;
         }
     };
     let log = SessionLog {
         file,
+        path: path.clone(),
         written: AtomicU64::new(0),
     };
     if SESSION.set(log).is_err() {
@@ -133,7 +139,7 @@ pub fn start_session() {
 }
 
 fn prune_sessions(dir: &Path) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
+    let Ok(entries) = fs_err::read_dir(dir) else {
         return;
     };
     let mut sessions: Vec<_> = entries
@@ -144,8 +150,8 @@ fn prune_sessions(dir: &Path) {
     sessions.sort();
     let excess = (sessions.len() + 1).saturating_sub(KEEP_SESSIONS);
     for path in sessions.into_iter().take(excess) {
-        if let Err(e) = std::fs::remove_file(&path) {
-            tracing::warn!("couldn't remove {}: {}", path.display(), e);
+        if let Err(e) = fs_err::remove_file(&path) {
+            tracing::warn!("{e}");
         }
     }
 }

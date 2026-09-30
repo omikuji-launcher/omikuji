@@ -28,7 +28,7 @@ impl FileWatcher {
             .map(|s| s.to_os_string())
             .ok_or_else(|| notify::Error::generic("watched path has no filename"))?;
 
-        std::fs::create_dir_all(&parent).ok();
+        fs_err::create_dir_all(&parent).ok();
 
         let (tx, rx) = mpsc::channel::<notify::Result<notify::Event>>();
         let mut watcher = notify::recommended_watcher(move |res| {
@@ -94,7 +94,7 @@ impl DirWatcher {
         F: Fn(&Path) -> bool + Send + 'static,
         G: Fn() + Send + 'static,
     {
-        std::fs::create_dir_all(&dir).ok();
+        fs_err::create_dir_all(&dir).ok();
 
         let (tx, rx) = mpsc::channel::<notify::Result<notify::Event>>();
         let mut watcher = notify::recommended_watcher(move |res| {

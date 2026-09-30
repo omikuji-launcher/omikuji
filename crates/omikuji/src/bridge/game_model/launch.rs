@@ -294,15 +294,15 @@ impl super::qobject::GameModel {
             return QString::from("");
         }
         let dir = omikuji_core::logs_dir();
-        if let Err(e) = std::fs::create_dir_all(&dir) {
-            tracing::error!("couldn't create {}: {}", dir.display(), e);
+        if let Err(e) = fs_err::create_dir_all(&dir) {
+            tracing::error!("{e}");
             return QString::from("");
         }
         let file = omikuji_core::stamped_log_path(&id);
-        match std::fs::write(&file, body) {
+        match fs_err::write(&file, body) {
             Ok(_) => QString::from(file.to_string_lossy().as_ref()),
             Err(e) => {
-                tracing::error!("write {} failed: {}", file.display(), e);
+                tracing::error!("{e}");
                 QString::from("")
             }
         }

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use tokio::process::Child;
 
 pub(super) fn start_time(pid: u32) -> Option<u64> {
-    let stat = std::fs::read_to_string(format!("/proc/{}/stat", pid)).ok()?;
+    let stat = fs_err::read_to_string(format!("/proc/{}/stat", pid)).ok()?;
     stat.rsplit(')')
         .next()?
         .split_whitespace()
@@ -18,11 +18,11 @@ pub(super) fn descendants(root: u32, out: &mut HashSet<u32>) {
         if !out.insert(pid) {
             continue;
         }
-        let Ok(tasks) = std::fs::read_dir(format!("/proc/{}/task", pid)) else {
+        let Ok(tasks) = fs_err::read_dir(format!("/proc/{}/task", pid)) else {
             continue;
         };
         for task in tasks.flatten() {
-            let Ok(kids) = std::fs::read_to_string(task.path().join("children")) else {
+            let Ok(kids) = fs_err::read_to_string(task.path().join("children")) else {
                 continue;
             };
             queue.extend(
@@ -36,7 +36,7 @@ pub(super) fn descendants(root: u32, out: &mut HashSet<u32>) {
 fn shm_mapped_paths(pids: &HashSet<u32>) -> HashSet<PathBuf> {
     let mut out = HashSet::new();
     for pid in pids {
-        let Ok(maps) = std::fs::read_to_string(format!("/proc/{}/maps", pid)) else {
+        let Ok(maps) = fs_err::read_to_string(format!("/proc/{}/maps", pid)) else {
             continue;
         };
         for line in maps.lines() {
@@ -92,9 +92,9 @@ pub(crate) async fn shutdown(child: &mut Child) {
         if !p.exists() {
             continue;
         }
-        match std::fs::remove_file(&p) {
+        match fs_err::remove_file(&p) {
             Ok(()) => tracing::info!("removed orphaned shm segment {}", p.display()),
-            Err(e) => tracing::warn!("failed to remove shm segment {}: {}", p.display(), e),
+            Err(e) => tracing::warn!("orphaned shm segment: {e}"),
         }
     }
 }

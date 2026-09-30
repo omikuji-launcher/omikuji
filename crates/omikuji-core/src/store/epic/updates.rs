@@ -20,7 +20,7 @@ pub fn refresh_assets_cache() -> Result<()> {
 pub fn find_update_for(app_id: &str) -> Option<UpdateInfo> {
     let installed_entry = installed_record(app_id)?;
 
-    let assets_raw = std::fs::read_to_string(legendary_dir().join("assets.json")).ok()?;
+    let assets_raw = fs_err::read_to_string(legendary_dir().join("assets.json")).ok()?;
     let assets: HashMap<String, Vec<AssetEntry>> = serde_json::from_str(&assets_raw).ok()?;
     let asset_list = assets.get(&installed_entry.platform)?;
     let asset = asset_list.iter().find(|a| a.app_name == app_id)?;

@@ -3,10 +3,10 @@ use crate::dll_packs;
 use crate::fs_util::write_atomic;
 use crate::media::slugify;
 use anyhow::{Context, Result};
+use fs_err as fs;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
 use std::path::PathBuf;
 use toml::ser;
 
@@ -476,7 +476,7 @@ impl Library {
     pub fn game_ids_by_app_id(kind: SourceKind) -> HashMap<String, String> {
         let mut out = HashMap::new();
         let dir = Self::library_dir();
-        let Ok(entries) = std::fs::read_dir(&dir) else {
+        let Ok(entries) = fs_err::read_dir(&dir) else {
             return out;
         };
         for entry in entries.flatten() {
@@ -484,7 +484,7 @@ impl Library {
             if path.extension().and_then(|e| e.to_str()) != Some("toml") {
                 continue;
             }
-            let Ok(content) = std::fs::read_to_string(&path) else {
+            let Ok(content) = fs_err::read_to_string(&path) else {
                 continue;
             };
             let Ok(game) = toml::from_str::<Game>(&content) else {
@@ -532,7 +532,7 @@ impl Library {
                     }
                     games.push(game)
                 }
-                Err(e) => tracing::warn!("failed to load game {}: {}", path.display(), e),
+                Err(e) => tracing::warn!("failed to load game: {e:#}"),
             }
         }
 
@@ -542,8 +542,7 @@ impl Library {
     }
 
     fn load_game(path: &PathBuf) -> Result<Game> {
-        let contents =
-            fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
+        let contents = fs::read_to_string(path)?;
         let game: Game =
             toml::from_str(&contents).with_context(|| format!("parsing {}", path.display()))?;
         Ok(game)

@@ -104,7 +104,7 @@ pub fn gpu_launch_env(uuid: &str) -> Vec<(String, String)> {
 }
 
 fn os_release(key: &str) -> Option<String> {
-    let content = std::fs::read_to_string("/etc/os-release").ok()?;
+    let content = fs_err::read_to_string("/etc/os-release").ok()?;
     for line in content.lines() {
         if let Some(val) = line.strip_prefix(key).and_then(|r| r.strip_prefix('=')) {
             return Some(val.trim().trim_matches('"').to_string());
@@ -120,7 +120,7 @@ fn distro() -> String {
 }
 
 fn kernel() -> String {
-    std::fs::read_to_string("/proc/sys/kernel/osrelease")
+    fs_err::read_to_string("/proc/sys/kernel/osrelease")
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|_| "unknown".into())
 }
@@ -140,7 +140,7 @@ fn desktop() -> String {
 }
 
 fn cpu() -> String {
-    if let Ok(info) = std::fs::read_to_string("/proc/cpuinfo") {
+    if let Ok(info) = fs_err::read_to_string("/proc/cpuinfo") {
         for line in info.lines() {
             if let Some(rest) = line.strip_prefix("model name")
                 && let Some(idx) = rest.find(':')
@@ -153,7 +153,7 @@ fn cpu() -> String {
 }
 
 fn ram() -> String {
-    if let Ok(info) = std::fs::read_to_string("/proc/meminfo") {
+    if let Ok(info) = fs_err::read_to_string("/proc/meminfo") {
         for line in info.lines() {
             if let Some(rest) = line.strip_prefix("MemTotal:")
                 && let Some(kb) = rest
@@ -254,7 +254,7 @@ fn icd_files(loader: &str) -> String {
     let mut files = Vec::new();
     for dir in VULKAN_DATA_DIRS {
         let icd_dir = std::path::Path::new(dir).join("vulkan").join("icd.d");
-        let Ok(entries) = std::fs::read_dir(&icd_dir) else {
+        let Ok(entries) = fs_err::read_dir(&icd_dir) else {
             continue;
         };
         let mut found: Vec<String> = entries

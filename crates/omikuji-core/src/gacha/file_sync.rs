@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use futures_util::{StreamExt, stream};
 use serde::de::Error as _;
 use std::path::{Path, PathBuf};
@@ -28,7 +28,7 @@ pub fn file_md5(path: &Path) -> Result<String> {
     use md5::{Digest, Md5};
     use std::io::Read;
 
-    let mut file = std::fs::File::open(path)?;
+    let mut file = fs_err::File::open(path)?;
     let mut hasher = Md5::new();
     let mut buf = vec![0u8; 1024 * 1024];
     loop {
@@ -109,7 +109,7 @@ pub fn sanitize_rel(rel: &str) -> PathBuf {
 }
 
 fn size_matches(path: &Path, size: u64) -> bool {
-    matches!(std::fs::metadata(path), Ok(m) if m.len() == size)
+    matches!(fs_err::metadata(path), Ok(m) if m.len() == size)
 }
 
 pub fn is_stale(path: &Path, size: u64, md5: Option<&str>) -> bool {
@@ -167,7 +167,7 @@ pub async fn download_one(
 ) -> Result<()> {
     let dest_path = dest_root.join(sanitize_rel(&file.rel_path));
     if let Some(parent) = dest_path.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
 
     if skip == Skip::SameSize && size_matches(&dest_path, file.size) {
@@ -181,7 +181,9 @@ pub async fn download_one(
             if check_control(id) != ControlSignal::None {
                 return Ok(());
             }
-            fetch_file(id, file, dest_path, progress, attempt > 1).await
+            fetch_file(id, file, dest_path, progress, attempt > 1)
+                .await
+                .with_context(|| format!("download {}", file.rel_path))
         }
     })
     .await
@@ -194,7 +196,7 @@ async fn fetch_file(
     progress: &SyncProgress,
     counted: bool,
 ) -> Result<()> {
-    let existing = std::fs::metadata(dest_path).map(|m| m.len()).unwrap_or(0);
+    let existing = fs_err::metadata(dest_path).map(|m| m.len()).unwrap_or(0);
     let resume = existing > 0 && existing < file.size;
 
     let client = reqwest::Client::builder()
@@ -216,10 +218,10 @@ async fn fetch_file(
     // a full body means overwrite, only 206 is a real resume
     let append = status.as_u16() == 206 && resume;
     let mut writer: Box<dyn std::io::Write + Send> = if append {
-        Box::new(std::fs::OpenOptions::new().append(true).open(dest_path)?)
+        Box::new(fs_err::OpenOptions::new().append(true).open(dest_path)?)
     } else {
         progress.rewind(existing);
-        Box::new(std::fs::File::create(dest_path)?)
+        Box::new(fs_err::File::create(dest_path)?)
     };
     if append && !counted {
         progress.advance(id, existing);

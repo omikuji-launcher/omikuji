@@ -15,7 +15,7 @@ pub fn is_installed() -> bool {
 
 pub fn install() -> Result<()> {
     let path = eos_overlay_dir();
-    std::fs::create_dir_all(&path)?;
+    fs_err::create_dir_all(&path)?;
 
     tracing::info!("installing EOS overlay to {} ...", path.display());
     legendary_output(

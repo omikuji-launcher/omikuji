@@ -426,7 +426,7 @@ impl ScriptEntry {
 pub fn list_installed() -> Vec<ScriptEntry> {
     let mut out = Vec::new();
     let root = crate::scripts_dir();
-    let Ok(authors) = std::fs::read_dir(&root) else {
+    let Ok(authors) = fs_err::read_dir(&root) else {
         return out;
     };
     for author in authors.flatten() {
@@ -435,7 +435,7 @@ pub fn list_installed() -> Vec<ScriptEntry> {
             continue;
         }
         let author_name = author.file_name().to_string_lossy().into_owned();
-        let Ok(entries) = std::fs::read_dir(&author_dir) else {
+        let Ok(entries) = fs_err::read_dir(&author_dir) else {
             continue;
         };
         for entry in entries.flatten() {
@@ -446,12 +446,12 @@ pub fn list_installed() -> Vec<ScriptEntry> {
             let Some(toml_path) = first_toml(&dir) else {
                 continue;
             };
-            let parsed = std::fs::read_to_string(&toml_path)
+            let parsed = fs_err::read_to_string(&toml_path)
                 .map_err(anyhow::Error::from)
                 .and_then(|t| Script::parse(&t));
             match parsed {
                 Ok(script) => {
-                    let modified = std::fs::metadata(&toml_path)
+                    let modified = fs_err::metadata(&toml_path)
                         .and_then(|m| m.modified())
                         .ok()
                         .map(|t| {
@@ -483,7 +483,7 @@ pub fn list_installed() -> Vec<ScriptEntry> {
 }
 
 fn first_toml(dir: &Path) -> Option<PathBuf> {
-    std::fs::read_dir(dir)
+    fs_err::read_dir(dir)
         .ok()?
         .flatten()
         .map(|e| e.path())
@@ -499,9 +499,9 @@ pub fn remove_script(dir: &Path) -> Result<()> {
             dir.display()
         );
     }
-    std::fs::remove_dir_all(&target)?;
+    fs_err::remove_dir_all(&target)?;
     if let Some(author_dir) = target.parent() {
-        let _ = std::fs::remove_dir(author_dir);
+        let _ = fs_err::remove_dir(author_dir);
     }
     Ok(())
 }

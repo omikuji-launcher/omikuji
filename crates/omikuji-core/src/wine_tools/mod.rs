@@ -241,7 +241,7 @@ fn ca_bundle() -> Option<PathBuf> {
     ] {
         let path = Path::new(candidate);
         if path.exists() {
-            return Some(std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()));
+            return Some(fs_err::canonicalize(path).unwrap_or_else(|_| path.to_path_buf()));
         }
     }
     None
@@ -255,12 +255,12 @@ fn staged_ca_bundle() -> Option<PathBuf> {
             PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".cache")
         });
     let dir = cache.join("omikuji");
-    if std::fs::create_dir_all(&dir).is_err() {
+    if fs_err::create_dir_all(&dir).is_err() {
         return Some(src);
     }
     let dst = dir.join("ca-bundle.crt");
-    let _ = std::fs::remove_file(&dst);
-    match std::fs::copy(&src, &dst) {
+    let _ = fs_err::remove_file(&dst);
+    match fs_err::copy(&src, &dst) {
         Ok(_) => Some(dst),
         Err(_) => Some(src),
     }

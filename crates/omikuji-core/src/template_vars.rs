@@ -51,7 +51,7 @@ type UserVarsCache = Option<(SystemTime, Vec<(String, String)>)>;
 static USER_VARS: Mutex<UserVarsCache> = Mutex::new(None);
 
 fn user_vars() -> Vec<(String, String)> {
-    let mtime = std::fs::metadata(app_settings_path())
+    let mtime = fs_err::metadata(app_settings_path())
         .and_then(|m| m.modified())
         .unwrap_or(SystemTime::UNIX_EPOCH);
     let mut guard = USER_VARS.lock().unwrap();

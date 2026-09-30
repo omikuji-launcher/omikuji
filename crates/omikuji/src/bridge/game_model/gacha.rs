@@ -266,7 +266,7 @@ impl super::qobject::GameModel {
                 gacha::state::write_installed_version(&manifest.game_slug, &edition.id, &version);
                 let dotversion = install_path_buf.join(".version");
                 if !dotversion.exists() {
-                    let _ = std::fs::write(&dotversion, &version);
+                    let _ = fs_err::write(&dotversion, &version);
                 }
                 tracing::info!(
                     "detected version {} for {} {}",

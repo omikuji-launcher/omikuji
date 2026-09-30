@@ -2,10 +2,10 @@ use crate::fs_util::write_atomic;
 use crate::http;
 use crate::template_vars::TemplateVars;
 use anyhow::{Context, Result};
+use fs_err as fs;
 use reqwest::blocking;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -181,7 +181,7 @@ pub fn commit_pending(game_id: &str) {
         if pending.is_file() {
             let live = media_path_in(MediaSlot::Live, game_id, &media_type);
             if let Err(e) = fs::rename(&pending, &live) {
-                tracing::error!("committing {}: {}", pending.display(), e);
+                tracing::error!("committing pending art: {e}");
             }
         }
     }

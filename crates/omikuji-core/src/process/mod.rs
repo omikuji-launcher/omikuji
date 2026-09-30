@@ -5,12 +5,13 @@ use crate::library::{Game, Library};
 use crate::store::epic;
 use crate::{discord, dll_packs, game_logs, runners};
 use anyhow::Result;
+use fs_err::{self as fs, OpenOptions};
 use nix::fcntl::{Flock, FlockArg};
 use nix::unistd::setsid;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Write};
+use std::os::fd::OwnedFd;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -124,7 +125,7 @@ impl ProcessManager {
 
         // save_game_logs is opt-in; we still run the reader so the log viewer works
         let log_path = if AppSettings::load().behavior.save_game_logs {
-            tokio::fs::create_dir_all(&self.logs_dir).await.ok();
+            fs_err::tokio::create_dir_all(&self.logs_dir).await.ok();
             Some(crate::stamped_log_path(&config.game_id))
         } else {
             None
@@ -363,7 +364,7 @@ pub fn is_launching(game_id: &str) -> bool {
 }
 
 pub struct LaunchSoulGuard {
-    _lock: Flock<fs::File>,
+    _lock: Flock<OwnedFd>,
 }
 // yes this is a dbd reference, yes im mentally ill, yes fuck you too
 
@@ -389,7 +390,7 @@ pub fn try_claim_launch(game_id: &str) -> Option<LaunchSoulGuard> {
         .open(launch_lock_path(game_id))
         .ok()?;
 
-    Flock::lock(file, FlockArg::LockExclusiveNonblock)
+    Flock::lock(OwnedFd::from(file), FlockArg::LockExclusiveNonblock)
         .ok()
         .map(|lock| LaunchSoulGuard { _lock: lock })
 }

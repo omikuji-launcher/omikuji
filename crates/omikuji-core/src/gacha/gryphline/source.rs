@@ -1,8 +1,8 @@
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
+use fs_err::File;
 use md5::{Digest, Md5};
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -164,10 +164,10 @@ async fn apply_patch_bundle(
 ) -> Result<()> {
     let staging = entry.install_path.join(PATCH_STAGING);
     let marker = staging.join(EXTRACTED_MARKER);
-    let extracted = std::fs::read_to_string(&marker).is_ok_and(|v| v == target_version);
+    let extracted = fs_err::read_to_string(&marker).is_ok_and(|v| v == target_version);
     if !extracted {
-        let _ = std::fs::remove_dir_all(&staging);
-        std::fs::create_dir_all(&staging)?;
+        let _ = fs_err::remove_dir_all(&staging);
+        fs_err::create_dir_all(&staging)?;
 
         let password = (!patch.cd_key.is_empty()).then_some(patch.cd_key.as_str());
         download_and_extract(entry, &patch.patches, "patch", &staging, password).await?;
@@ -175,7 +175,7 @@ async fn apply_patch_bundle(
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
         }
-        std::fs::write(&marker, target_version)?;
+        fs_err::write(&marker, target_version)?;
     }
 
     let delete_list_path = staging.join("delete_files.txt");
@@ -201,17 +201,17 @@ async fn apply_patch_bundle(
         return Ok(());
     }
 
-    let _ = std::fs::remove_dir_all(&vfs_files);
-    let _ = std::fs::remove_file(&manifest_path);
+    let _ = fs_err::remove_dir_all(&vfs_files);
+    let _ = fs_err::remove_file(&manifest_path);
     for rel in &obsolete {
-        let _ = std::fs::remove_file(entry.install_path.join(rel));
+        let _ = fs_err::remove_file(entry.install_path.join(rel));
     }
-    let _ = std::fs::remove_file(&delete_list_path);
-    let _ = std::fs::remove_file(&marker);
+    let _ = fs_err::remove_file(&delete_list_path);
+    let _ = fs_err::remove_file(&marker);
 
     set_status(&entry.id, DownloadStatus::Extracting);
     fs_util::move_dir_all(&staging, &entry.install_path)?;
-    let _ = std::fs::remove_dir_all(&staging);
+    let _ = fs_err::remove_dir_all(&staging);
     Ok(())
 }
 
@@ -219,8 +219,7 @@ fn read_bundle_manifest(path: &Path) -> Result<Option<api::ResourcePatchManifest
     if !path.is_file() {
         return Ok(None);
     }
-    let body =
-        std::fs::read_to_string(path).map_err(|e| anyhow!("read {}: {}", path.display(), e))?;
+    let body = fs_err::read_to_string(path)?;
     serde_json::from_str(&body)
         .map(Some)
         .map_err(|e| anyhow!("bundle patch.json is malformed: {}", e))
@@ -245,7 +244,7 @@ fn apply_bundle_diffs(
     set_status(&entry.id, DownloadStatus::Patching);
     let vfs_root = entry.install_path.join(&manifest.vfs_base_path);
     let scratch = staging.join(PATCH_SCRATCH);
-    std::fs::create_dir_all(&scratch)?;
+    fs_err::create_dir_all(&scratch)?;
 
     let mut base_refs: HashMap<&str, usize> = HashMap::new();
     for file in &pending {
@@ -286,7 +285,7 @@ fn apply_bundle_diffs(
             }
             let rel = join_rel(&manifest.vfs_base_path, &variant.base_file);
             if obsolete.remove(&rel) {
-                let _ = std::fs::remove_file(entry.install_path.join(&rel));
+                let _ = fs_err::remove_file(entry.install_path.join(&rel));
                 reclaimed += 1;
             }
         }
@@ -295,7 +294,7 @@ fn apply_bundle_diffs(
         report_progress(&entry.id, pct, 0, 0, 0);
     }
 
-    let _ = std::fs::remove_dir_all(&scratch);
+    let _ = fs_err::remove_dir_all(&scratch);
 
     tracing::info!(
         "bundle diffs: {} patched, {} skipped (base not installed), {} failed (of {}), {} bases reclaimed during the pass",
@@ -325,7 +324,7 @@ fn patch_bundle_file(
     let target = vfs_root.join(&file.name);
     let want = file.md5.to_ascii_lowercase();
 
-    if matches!(std::fs::metadata(&target), Ok(m) if m.len() == file.size)
+    if matches!(fs_err::metadata(&target), Ok(m) if m.len() == file.size)
         && md5_of_file(&target)? == want
     {
         return Ok(true);
@@ -341,7 +340,7 @@ fn patch_bundle_file(
             continue;
         }
         if variant.base_size != 0
-            && std::fs::metadata(&base).map(|m| m.len()).unwrap_or(0) != variant.base_size
+            && fs_err::metadata(&base).map(|m| m.len()).unwrap_or(0) != variant.base_size
         {
             continue;
         }
@@ -353,11 +352,11 @@ fn patch_bundle_file(
                     fs_util::move_file(&out, &target)?;
                     return Ok(true);
                 }
-                let _ = std::fs::remove_file(&out);
+                let _ = fs_err::remove_file(&out);
                 last_err = Some(anyhow!("md5 mismatch: expected {} got {}", file.md5, got));
             }
             Err(e) => {
-                let _ = std::fs::remove_file(&out);
+                let _ = fs_err::remove_file(&out);
                 last_err = Some(anyhow!("hpatchz: {}", e));
             }
         }
@@ -370,7 +369,7 @@ fn patch_bundle_file(
 }
 
 fn read_delete_list(list: &Path) -> HashSet<String> {
-    let Ok(body) = std::fs::read_to_string(list) else {
+    let Ok(body) = fs_err::read_to_string(list) else {
         return HashSet::new();
     };
     body.lines()
@@ -411,7 +410,7 @@ async fn apply_resource_patches(
             .to_path_buf(),
     };
     let scratch_root = scratch_parent.join(format!(".omikuji-update-{}", safe_id));
-    let _ = std::fs::create_dir_all(&scratch_root);
+    let _ = fs_err::create_dir_all(&scratch_root);
     let mut manifests: Vec<(api::ResourceRef, api::ResourcePatchManifest)> = Vec::new();
     for resource in &resources.resources {
         if check_control(&entry.id) != ControlSignal::None {
@@ -448,7 +447,7 @@ async fn apply_resource_patches(
 
     for (resource, manifest) in &manifests {
         let resource_scratch = scratch_root.join(&resource.name);
-        let _ = std::fs::create_dir_all(&resource_scratch);
+        let _ = fs_err::create_dir_all(&resource_scratch);
 
         for file in &manifest.files {
             if check_control(&entry.id) != ControlSignal::None {
@@ -488,7 +487,7 @@ async fn apply_resource_patches(
     let index_matches_install = not_materialized < total_files;
     let success = unpatchable == 0 && index_matches_install;
     if success {
-        let _ = std::fs::remove_dir_all(&scratch_root);
+        let _ = fs_err::remove_dir_all(&scratch_root);
     }
     Ok(success)
 }
@@ -606,7 +605,7 @@ async fn apply_variant(
         .unwrap_or("patch.hdiff");
     let blob_path = scratch.join(blob_name);
 
-    let need_dl = !matches!(std::fs::metadata(&blob_path), Ok(m) if m.len() == variant.patch_size);
+    let need_dl = !matches!(fs_err::metadata(&blob_path), Ok(m) if m.len() == variant.patch_size);
     if need_dl {
         hoyo_source::download_file(&url, &blob_path, &entry.id, 0, variant.patch_size).await?;
     }
@@ -625,7 +624,7 @@ async fn apply_variant(
 
     let got = md5_of_file(&tmp_out)?;
     if got != file.md5.to_ascii_lowercase() {
-        let _ = std::fs::remove_file(&tmp_out);
+        let _ = fs_err::remove_file(&tmp_out);
         return Err(anyhow!(
             "md5 mismatch after hpatchz for {}: expected {} got {}",
             file.name,
@@ -635,9 +634,9 @@ async fn apply_variant(
     }
 
     if let Some(parent) = target_abs.parent() {
-        let _ = std::fs::create_dir_all(parent);
+        let _ = fs_err::create_dir_all(parent);
     }
-    std::fs::rename(&tmp_out, &target_abs).map_err(|e| {
+    fs_err::rename(&tmp_out, &target_abs).map_err(|e| {
         anyhow!(
             "rename {} -> {}: {}",
             tmp_out.display(),
@@ -646,7 +645,7 @@ async fn apply_variant(
         )
     })?;
 
-    let _ = std::fs::remove_file(&blob_path);
+    let _ = fs_err::remove_file(&blob_path);
     Ok(FileOutcome::Applied)
 }
 
@@ -694,7 +693,7 @@ fn install_path_for(
 }
 
 fn md5_of_file(path: &Path) -> Result<String> {
-    let mut f = File::open(path).map_err(|e| anyhow!("open {}: {}", path.display(), e))?;
+    let mut f = File::open(path)?;
     let mut hasher = Md5::new();
     let mut buf = [0u8; 64 * 1024];
     loop {
@@ -733,7 +732,7 @@ async fn download_and_extract(
             .to_path_buf(),
     };
     let temp_dir = scratch_parent.join(format!(".omikuji-dl-{}", safe_id));
-    let _ = std::fs::create_dir_all(&temp_dir);
+    let _ = fs_err::create_dir_all(&temp_dir);
 
     let total_bytes: u64 = files.iter().map(|f| f.package_size).sum();
     let mut so_far: u64 = 0;
@@ -782,11 +781,11 @@ async fn download_and_extract(
         hoyo_source::extract_archive_with_password(first, dest, Some(&entry.id), password)?;
 
         for segment in &segments {
-            let _ = std::fs::remove_file(segment);
+            let _ = fs_err::remove_file(segment);
         }
     }
 
-    let _ = std::fs::remove_dir_all(&temp_dir);
+    let _ = fs_err::remove_dir_all(&temp_dir);
     Ok(())
 }
 
@@ -801,7 +800,7 @@ pub fn cleanup_gryphline_state(app_id: &str, install_path: &Path, temp_dir: Opti
     candidates.push(install_path.join(PATCH_STAGING));
     for dir in candidates {
         if dir.exists()
-            && let Err(e) = std::fs::remove_dir_all(&dir)
+            && let Err(e) = fs_err::remove_dir_all(&dir)
         {
             tracing::warn!("clean {} failed: {}", dir.display(), e);
         }
@@ -830,7 +829,7 @@ pub fn inspect_gryphline_temp(
         if !dir.is_dir() {
             continue;
         }
-        let Ok(rd) = std::fs::read_dir(dir) else {
+        let Ok(rd) = fs_err::read_dir(dir) else {
             continue;
         };
         for entry in rd.flatten() {
@@ -865,7 +864,7 @@ mod tests {
     fn list_from(body: &str) -> HashSet<String> {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("delete_files.txt");
-        std::fs::write(&path, body).unwrap();
+        fs_err::write(&path, body).unwrap();
         read_delete_list(&path)
     }
 

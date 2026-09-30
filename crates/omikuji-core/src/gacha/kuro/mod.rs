@@ -56,7 +56,7 @@ pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -
 
 fn read_wuwa_resources_version(install_path: &std::path::Path) -> Option<String> {
     let resources_dir = install_path.join("Client/Saved/Resources");
-    let entries = std::fs::read_dir(&resources_dir).ok()?;
+    let entries = fs_err::read_dir(&resources_dir).ok()?;
 
     let mut best: Option<(u32, u32, u32)> = None;
     for entry in entries.flatten() {
@@ -85,7 +85,7 @@ fn read_wuwa_resources_version(install_path: &std::path::Path) -> Option<String>
 }
 
 fn read_package_version_json(install_path: &std::path::Path) -> Option<String> {
-    let s = std::fs::read_to_string(install_path.join("version.json")).ok()?;
+    let s = fs_err::read_to_string(install_path.join("version.json")).ok()?;
     let colon = s.find(':')?;
     let after = &s[colon + 1..];
     let end = after.find('}').unwrap_or(after.len());

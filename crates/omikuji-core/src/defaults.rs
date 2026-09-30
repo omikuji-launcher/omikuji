@@ -291,7 +291,7 @@ impl Defaults {
         if !path.exists() {
             return Self::default();
         }
-        match std::fs::read_to_string(&path) {
+        match fs_err::read_to_string(&path) {
             Ok(body) => toml::from_str::<Defaults>(&body).unwrap_or_else(|e| {
                 tracing::warn!(
                     "couldn't parse {}: {} - using empty defaults",
@@ -301,11 +301,7 @@ impl Defaults {
                 Self::default()
             }),
             Err(e) => {
-                tracing::warn!(
-                    "couldn't read {}: {} - using empty defaults",
-                    path.display(),
-                    e
-                );
+                tracing::warn!("{e} - using empty defaults");
                 Self::default()
             }
         }

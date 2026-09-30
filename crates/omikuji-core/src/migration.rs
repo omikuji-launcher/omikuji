@@ -8,8 +8,8 @@ use crate::library::{Game, Library};
 use crate::settings::{self, Settings};
 use crate::store::gog::gog_dir;
 use anyhow::{Context, Result};
+use fs_err as fs;
 use serde::Deserialize;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Default, Deserialize)]
@@ -124,7 +124,7 @@ fn nest_layers(root: &Path, on_line: &mut impl FnMut(String)) -> Result<()> {
             on_line(format!("skipping {} (already at destination)", name));
             continue;
         }
-        fs::rename(&src, &dest).with_context(|| format!("moving {}", src.display()))?;
+        fs::rename(&src, &dest)?;
         on_line(format!("layers: {} -> components/layers/{}", name, name));
     }
     Ok(())
@@ -164,7 +164,7 @@ fn move_runners(
         if let Some(parent) = dest.parent() {
             fs::create_dir_all(parent)?;
         }
-        fs::rename(&path, &dest).with_context(|| format!("moving {}", path.display()))?;
+        fs::rename(&path, &dest)?;
         on_line(format!("runners: {} -> {}{}", name, dest_prefix, label));
     }
     if old_root != new_root {

@@ -8,7 +8,7 @@ const HIVES: [&str; 2] = ["system.reg", "user.reg"];
 pub fn read_key(prefix: &Path, key: &str) -> Option<Values> {
     for candidate in key_views(key) {
         for hive in HIVES {
-            let Ok(body) = std::fs::read_to_string(prefix.join(hive)) else {
+            let Ok(body) = fs_err::read_to_string(prefix.join(hive)) else {
                 continue;
             };
             match find_key(&body, &candidate) {

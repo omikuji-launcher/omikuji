@@ -1,11 +1,11 @@
-use std::fs::{DirEntry, ReadDir};
+use fs_err::{DirEntry, ReadDir};
 use std::iter;
 use std::path::{Path, PathBuf};
 
 #[cfg(unix)]
 pub fn is_executable(path: &Path) -> bool {
     use std::os::unix::fs::PermissionsExt;
-    if let Ok(metadata) = std::fs::metadata(path) {
+    if let Ok(metadata) = fs_err::metadata(path) {
         let mode = metadata.permissions().mode();
         mode & 0o111 != 0
     } else {
@@ -41,7 +41,7 @@ pub fn find_executable_in_paths(names: &[&str], extra_paths: &[&str]) -> Option<
 
 pub fn set_executable(path: &Path) -> std::io::Result<()> {
     use std::os::unix::fs::PermissionsExt;
-    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755))
+    fs_err::set_permissions(path, std::fs::Permissions::from_mode(0o755))
 }
 
 fn replace_via_tmp(
@@ -49,23 +49,23 @@ fn replace_via_tmp(
     write: impl FnOnce(&Path) -> std::io::Result<()>,
 ) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     let tmp = match path.extension() {
         Some(ext) => path.with_extension(format!("{}.tmp", ext.to_string_lossy())),
         None => path.with_extension("tmp"),
     };
     write(&tmp)?;
-    std::fs::rename(&tmp, path)
+    fs_err::rename(&tmp, path)
 }
 
 pub fn write_atomic(path: &Path, body: impl AsRef<[u8]>) -> std::io::Result<()> {
-    replace_via_tmp(path, |tmp| std::fs::write(tmp, body))
+    replace_via_tmp(path, |tmp| fs_err::write(tmp, body))
 }
 
 pub fn write_executable_atomic(path: &Path, body: impl AsRef<[u8]>) -> std::io::Result<()> {
     replace_via_tmp(path, |tmp| {
-        std::fs::write(tmp, body)?;
+        fs_err::write(tmp, body)?;
         set_executable(tmp)
     })
 }
@@ -83,7 +83,7 @@ pub fn walk(root: &Path) -> impl Iterator<Item = DirEntry> {
                     return Some(entry);
                 }
                 Some(Err(_)) => continue,
-                None => current = std::fs::read_dir(pending.pop()?).ok(),
+                None => current = fs_err::read_dir(pending.pop()?).ok(),
             }
         }
     })
@@ -105,24 +105,24 @@ pub fn dir_size(path: &Path) -> u64 {
 
 pub fn move_file(src: &Path, dst: &Path) -> std::io::Result<()> {
     if let Some(parent) = dst.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
-    if std::fs::rename(src, dst).is_ok() {
+    if fs_err::rename(src, dst).is_ok() {
         return Ok(());
     }
-    std::fs::copy(src, dst)?;
-    std::fs::remove_file(src)
+    fs_err::copy(src, dst)?;
+    fs_err::remove_file(src)
 }
 
 pub fn move_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
-    std::fs::create_dir_all(dst)?;
-    for entry in std::fs::read_dir(src)? {
+    fs_err::create_dir_all(dst)?;
+    for entry in fs_err::read_dir(src)? {
         let entry = entry?;
         let from = entry.path();
         let to = dst.join(entry.file_name());
         if entry.file_type()?.is_dir() {
             move_dir_all(&from, &to)?;
-            let _ = std::fs::remove_dir(&from);
+            let _ = fs_err::remove_dir(&from);
         } else {
             move_file(&from, &to)?;
         }
@@ -131,18 +131,18 @@ pub fn move_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
 }
 
 pub fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
-    std::fs::create_dir_all(dst)?;
-    for entry in std::fs::read_dir(src)? {
+    fs_err::create_dir_all(dst)?;
+    for entry in fs_err::read_dir(src)? {
         let entry = entry?;
         let ty = entry.file_type()?;
         let to = dst.join(entry.file_name());
         if ty.is_symlink() {
-            let target = std::fs::read_link(entry.path())?;
-            std::os::unix::fs::symlink(target, &to)?;
+            let target = fs_err::read_link(entry.path())?;
+            fs_err::os::unix::fs::symlink(target, &to)?;
         } else if ty.is_dir() {
             copy_dir_all(&entry.path(), &to)?;
         } else {
-            std::fs::copy(entry.path(), &to)?;
+            fs_err::copy(entry.path(), &to)?;
         }
     }
     Ok(())

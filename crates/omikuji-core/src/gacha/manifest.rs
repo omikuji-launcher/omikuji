@@ -212,12 +212,12 @@ pub fn find(id: &str) -> Option<GachaManifest> {
 }
 
 fn walk_manifests(root: &std::path::Path) -> Vec<GachaManifest> {
-    let Ok(games) = std::fs::read_dir(root) else {
+    let Ok(games) = fs_err::read_dir(root) else {
         return Vec::new();
     };
     let mut out = Vec::new();
     for manifest_path in games.flatten().map(|e| e.path().join("manifest.json")) {
-        let Ok(data) = std::fs::read_to_string(&manifest_path) else {
+        let Ok(data) = fs_err::read_to_string(&manifest_path) else {
             continue;
         };
         match serde_json::from_str::<GachaManifest>(&data) {
@@ -236,7 +236,7 @@ fn walk_manifests(root: &std::path::Path) -> Vec<GachaManifest> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
+    use fs_err as fs;
     use tempfile::tempdir;
 
     fn example_manifest() -> GachaManifest {

@@ -16,6 +16,7 @@ json5 = "0.4"
 indexmap = { version = "2", features = ["serde"] }
 toml = "0.9"
 anyhow = "1"
+fs-err = { version = "3", features = ["tokio"] }
 reqwest = { version = "0.12", features = ["json", "stream", "blocking", "gzip"] }
 tracing = "0.1"
 dirs = "6"

@@ -76,7 +76,7 @@ struct SocketGuard(Arc<PathBuf>);
 
 impl Drop for SocketGuard {
     fn drop(&mut self) {
-        let _ = std::fs::remove_file(self.0.as_ref());
+        let _ = fs_err::remove_file(self.0.as_ref());
     }
 }
 
@@ -95,9 +95,9 @@ pub async fn check() -> bool {
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     }
 
-    let _ = std::fs::remove_file(&path);
+    let _ = fs_err::remove_file(&path);
     if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
+        let _ = fs_err::create_dir_all(parent);
     }
 
     let listener = match UnixListener::bind(&path) {

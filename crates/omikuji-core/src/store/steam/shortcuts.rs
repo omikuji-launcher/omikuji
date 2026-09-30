@@ -3,7 +3,7 @@ use crate::fs_util::write_atomic;
 use crate::library::Game;
 use crate::media::{MediaType, media_path};
 use anyhow::{Context, Result};
-use std::fs;
+use fs_err as fs;
 use std::path::{Path, PathBuf};
 
 const TYPE_OBJ: u8 = 0x00;
@@ -138,7 +138,7 @@ fn read_entries(path: &Path) -> Result<Vec<Entry>> {
     if !path.exists() {
         return Ok(vec![]);
     }
-    let buf = fs::read(path).with_context(|| format!("reading {}", path.display()))?;
+    let buf = fs::read(path)?;
     parse_entries(&buf)
 }
 
@@ -294,7 +294,7 @@ fn remove_artwork(config: &Path, appid: u32) {
 fn set_artwork(config: &Path, appid: u32, game: &Game) {
     let grid = config.join("grid");
     if let Err(e) = fs::create_dir_all(&grid) {
-        tracing::warn!("creating {} failed: {}", grid.display(), e);
+        tracing::warn!("steam grid dir: {e}");
         return;
     }
 
@@ -310,7 +310,7 @@ fn set_artwork(config: &Path, appid: u32, game: &Game) {
             && !target.exists()
             && let Err(e) = fs::copy(source, &target)
         {
-            tracing::warn!("steam artwork copy to {} failed: {}", target.display(), e);
+            tracing::warn!("steam artwork: {e}");
         }
     }
 }

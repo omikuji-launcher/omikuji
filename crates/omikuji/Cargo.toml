@@ -18,6 +18,7 @@ omikuji-core = { path = "../omikuji-core" }
 
 # gui-only deps
 tokio = { version = "1", features = ["full"] }
+fs-err = "3"
 serde = "1"
 serde_json = "1"
 regex = "1"
@@ -32,6 +33,7 @@ gilrs = "0.11"
 cxx-qt-build = { version = "0.10", features = ["link_qt_object_files"] }
 kushi = "0.1"
 cc = { version = "1", features = ["parallel"] }
+fs-err = "3"
 
 [package.metadata.generate-rpm]
 auto-req = "no"

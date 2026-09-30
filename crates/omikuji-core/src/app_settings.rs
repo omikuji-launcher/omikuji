@@ -393,15 +393,10 @@ pub fn app_settings_path() -> PathBuf {
     if path.exists() || !legacy.exists() {
         return path;
     }
-    match std::fs::rename(&legacy, &path) {
+    match fs_err::rename(&legacy, &path) {
         Ok(()) => path,
         Err(e) => {
-            tracing::warn!(
-                "couldn't rename {} to {}: {} - reading the legacy path",
-                legacy.display(),
-                path.display(),
-                e
-            );
+            tracing::warn!("{e} - reading the legacy path");
             legacy
         }
     }
@@ -422,7 +417,7 @@ impl AppSettings {
             return defaults;
         }
 
-        match std::fs::read_to_string(&path) {
+        match fs_err::read_to_string(&path) {
             Ok(body) => match toml::from_str::<AppSettings>(&body) {
                 Ok(mut settings) => {
                     let moved = settings.migrate_legacy_app_state();
@@ -437,7 +432,7 @@ impl AppSettings {
                 }
             },
             Err(e) => {
-                tracing::warn!("couldn't read {}: {} - using defaults", path.display(), e);
+                tracing::warn!("{e} - using defaults");
                 Self::default()
             }
         }

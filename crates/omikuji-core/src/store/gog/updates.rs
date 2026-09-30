@@ -28,7 +28,7 @@ pub fn blocking_check_gog_update(app_id: &str) -> Option<UpdateInfo> {
 
 fn read_installed_meta(install_path: &Path, app_id: &str) -> Option<(String, Option<String>)> {
     let info_path = install_path.join(format!("goggame-{}.info", app_id));
-    let content = std::fs::read_to_string(info_path).ok()?;
+    let content = fs_err::read_to_string(info_path).ok()?;
     let info: GoggameInfo = serde_json::from_str(&content).ok()?;
     let build_id = info.build_id?;
     Some((build_id, info.version_name))

@@ -3,9 +3,9 @@
 // adding a new source is a 5-line paste in settings.rs, no code change here. yayyyy =m=
 
 use anyhow::{Result, anyhow};
+use fs_err as fs;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::io::{self, Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 

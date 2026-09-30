@@ -47,7 +47,7 @@ pub fn read(path: &Path) -> HashMap<String, Entry> {
 }
 
 pub fn read_as<T: DeserializeOwned>(path: &Path) -> HashMap<String, T> {
-    let Ok(content) = std::fs::read_to_string(path) else {
+    let Ok(content) = fs_err::read_to_string(path) else {
         return HashMap::new();
     };
     let Ok(raw) = serde_json::from_str::<HashMap<String, serde_json::Value>>(&content) else {

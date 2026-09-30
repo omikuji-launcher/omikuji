@@ -51,7 +51,7 @@ fn cfg_str(value: &serde_json::Value, key: &str) -> Option<String> {
 fn disk_game_tag(manifest: &GachaManifest, install_path: &std::path::Path) -> Option<String> {
     for edition in &manifest.editions {
         let info = install_path.join(&edition.data_folder).join("app.info");
-        if let Ok(text) = std::fs::read_to_string(&info)
+        if let Ok(text) = fs_err::read_to_string(&info)
             && let Some(tag) = text.lines().nth(1).map(str::trim).filter(|s| !s.is_empty())
         {
             return Some(tag.to_string());

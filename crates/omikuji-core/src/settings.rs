@@ -158,7 +158,7 @@ fn load_or_default() -> Settings {
         return defaults;
     }
 
-    match std::fs::read_to_string(&path) {
+    match fs_err::read_to_string(&path) {
         Ok(contents) => match toml::from_str::<Settings>(&contents) {
             Ok(s) => s,
             Err(e) => {
@@ -167,7 +167,7 @@ fn load_or_default() -> Settings {
             }
         },
         Err(e) => {
-            tracing::warn!("couldn't read {}: {} - using defaults", path.display(), e);
+            tracing::warn!("{e} - using defaults");
             Settings::default()
         }
     }
@@ -176,14 +176,14 @@ fn load_or_default() -> Settings {
 pub fn save(settings: &Settings) -> std::io::Result<()> {
     let path = settings_path();
     if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
     let body = toml::to_string_pretty(settings).map_err(std::io::Error::other)?;
     let header = "# omikuji settings\n\
                   # edit and restart the launcher to apply.\n\
                   # paths accept `~` (expanded to $HOME on read).\n\n\
                   # !! data_dir is not changeable! Even if editing the line, it won't actually change it. It's to avoid handling ugly behaviours.\n\n";
-    std::fs::write(path, format!("{}{}", header, body))
+    fs_err::write(path, format!("{}{}", header, body))
 }
 
 pub fn expand(path: &str) -> PathBuf {

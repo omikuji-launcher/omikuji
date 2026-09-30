@@ -29,7 +29,7 @@ pub(super) async fn run_patch_update(
 const STAGING_DIR: &str = ".omikuji-patch";
 
 pub(super) fn discard_staging(install_root: &Path) {
-    let _ = std::fs::remove_dir_all(install_root.join(STAGING_DIR));
+    let _ = fs_err::remove_dir_all(install_root.join(STAGING_DIR));
 }
 
 #[derive(Debug)]
@@ -77,8 +77,8 @@ async fn patch_into_staging(
     let staging = install_root.join(STAGING_DIR);
     let dl_root = staging.join("dl");
     let out_root = staging.join("out");
-    std::fs::create_dir_all(&dl_root)?;
-    std::fs::create_dir_all(&out_root)?;
+    fs_err::create_dir_all(&dl_root)?;
+    fs_err::create_dir_all(&out_root)?;
 
     let total: u64 = pidx.resource.iter().map(|r| r.size).sum();
     let progress = SyncProgress::new(total);
@@ -166,7 +166,7 @@ async fn patch_into_staging(
                     match apply_group(&diff_path, &install_root, &out_root, &dst_files, on_bytes) {
                         Err(e) if e.is::<Interrupted>() => GroupOutcome::Skipped,
                         applied => {
-                            let _ = std::fs::remove_file(&diff_path);
+                            let _ = fs_err::remove_file(&diff_path);
                             GroupOutcome::Applied(applied)
                         }
                     }
@@ -200,7 +200,7 @@ async fn patch_into_staging(
                     e
                 );
                 for f in &group.dst_files {
-                    let _ = std::fs::remove_file(out_root.join(sanitize_rel(&f.dest)));
+                    let _ = fs_err::remove_file(out_root.join(sanitize_rel(&f.dest)));
                 }
             }
         }
@@ -281,10 +281,10 @@ async fn patch_into_staging(
     for stale in &pidx.delete_files {
         let p = install_root.join(sanitize_rel(stale));
         if p.exists() {
-            let _ = std::fs::remove_file(&p);
+            let _ = fs_err::remove_file(&p);
         }
     }
-    let _ = std::fs::remove_dir_all(&staging);
+    let _ = fs_err::remove_dir_all(&staging);
     Ok(true)
 }
 
@@ -299,7 +299,7 @@ fn apply_group(
     kr.apply(old_root, out_root, on_bytes)?;
     for f in dst_files {
         let path = out_root.join(sanitize_rel(&f.dest));
-        let size = std::fs::metadata(&path)
+        let size = fs_err::metadata(&path)
             .map_err(|e| anyhow!("patched output missing {}: {}", f.dest, e))?
             .len();
         if size != f.size {
@@ -320,14 +320,14 @@ fn apply_group(
 }
 
 fn move_tree(from: &Path, to: &Path) -> Result<()> {
-    for entry in std::fs::read_dir(from)? {
+    for entry in fs_err::read_dir(from)? {
         let entry = entry?;
         let target = to.join(entry.file_name());
         if entry.file_type()?.is_dir() {
-            std::fs::create_dir_all(&target)?;
+            fs_err::create_dir_all(&target)?;
             move_tree(&entry.path(), &target)?;
         } else {
-            std::fs::rename(entry.path(), &target)?;
+            fs_err::rename(entry.path(), &target)?;
         }
     }
     Ok(())
@@ -335,9 +335,9 @@ fn move_tree(from: &Path, to: &Path) -> Result<()> {
 
 fn move_file(from: &Path, to: &Path) -> Result<()> {
     if let Some(parent) = to.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
-    std::fs::rename(from, to)?;
+    fs_err::rename(from, to)?;
     Ok(())
 }
 

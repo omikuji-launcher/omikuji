@@ -150,7 +150,7 @@ impl qobject::ScriptsBridge {
 
     fn load_json(&self, toml_path: &QString) -> QString {
         let path = std::path::PathBuf::from(toml_path.to_string());
-        let loaded = std::fs::read_to_string(&path)
+        let loaded = fs_err::read_to_string(&path)
             .map_err(anyhow::Error::from)
             .and_then(|text| core_scripts::Script::parse(&text).map(|s| (s, text)));
         let json = match loaded {
@@ -172,7 +172,7 @@ impl qobject::ScriptsBridge {
         let qt = self.as_mut().qt_thread();
         std::thread::spawn(move || {
             let line_qt = qt.clone();
-            let res = std::fs::read_to_string(&path)
+            let res = fs_err::read_to_string(&path)
                 .map_err(anyhow::Error::from)
                 .and_then(|text| core_scripts::Script::parse(&text))
                 .and_then(|script| {

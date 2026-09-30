@@ -133,13 +133,13 @@ fn load_from_disk() -> ComponentsConfig {
     if !path.exists() {
         return ComponentsConfig::default();
     }
-    match std::fs::read_to_string(&path) {
+    match fs_err::read_to_string(&path) {
         Ok(body) => toml::from_str::<ComponentsConfig>(&body).unwrap_or_else(|e| {
             tracing::warn!("couldn't parse {}: {} - using defaults", path.display(), e);
             ComponentsConfig::default()
         }),
         Err(e) => {
-            tracing::warn!("couldn't read {}: {} - using defaults", path.display(), e);
+            tracing::warn!("{e} - using defaults");
             ComponentsConfig::default()
         }
     }

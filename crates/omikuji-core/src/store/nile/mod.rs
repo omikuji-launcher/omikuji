@@ -80,7 +80,7 @@ struct CurrentUser {
 }
 
 pub fn read_display_name() -> Option<String> {
-    let raw = std::fs::read_to_string(current_user_json()).ok()?;
+    let raw = fs_err::read_to_string(current_user_json()).ok()?;
     let user: CurrentUser = serde_json::from_str(&raw).ok()?;
     (!user.name.is_empty()).then_some(user.name)
 }
@@ -125,7 +125,7 @@ struct ProductDetails {
 }
 
 fn read_entitlements() -> Vec<Entitlement> {
-    let Ok(raw) = std::fs::read_to_string(library_json()) else {
+    let Ok(raw) = fs_err::read_to_string(library_json()) else {
         return Vec::new();
     };
     match serde_json::from_str::<Vec<Entitlement>>(&raw) {
@@ -161,7 +161,7 @@ pub struct InstalledEntry {
 }
 
 pub fn read_installed() -> HashMap<String, InstalledEntry> {
-    let Ok(raw) = std::fs::read_to_string(installed_json()) else {
+    let Ok(raw) = fs_err::read_to_string(installed_json()) else {
         return HashMap::new();
     };
     match serde_json::from_str::<Vec<InstalledEntry>>(&raw) {
@@ -178,13 +178,9 @@ pub fn clear_orphan_manifest(app_id: &str) {
     if read_installed().contains_key(app_id) || !path.exists() {
         return;
     }
-    match std::fs::remove_file(&path) {
+    match fs_err::remove_file(&path) {
         Ok(()) => tracing::info!("removed orphan nile manifest {}", path.display()),
-        Err(e) => tracing::warn!(
-            "couldn't remove orphan nile manifest {}: {}",
-            path.display(),
-            e
-        ),
+        Err(e) => tracing::warn!("couldn't remove orphan nile manifest: {e}"),
     }
 }
 
@@ -214,7 +210,7 @@ pub fn finished_bytes(install_path: &Path) -> u64 {
 // nile writes each file to <name>.patch and deletes it on the next run instead of appending
 pub fn inflight_bytes(install_path: &Path) -> u64 {
     fn walk(dir: &Path, total: &mut u64) {
-        let Ok(entries) = std::fs::read_dir(dir) else {
+        let Ok(entries) = fs_err::read_dir(dir) else {
             return;
         };
         for entry in entries.flatten() {
@@ -241,7 +237,7 @@ pub fn uninstall(app_id: &str) -> Result<()> {
     if let Some(path) = install_path
         && path.exists()
     {
-        std::fs::remove_dir_all(&path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
+        fs_err::remove_dir_all(&path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
     }
     Ok(())
 }
@@ -400,7 +396,7 @@ impl NileStore {
             let err = String::from_utf8_lossy(&output.stderr);
             tracing::error!("nile auth --logout failed: {}", err.trim());
         }
-        let _ = std::fs::remove_file(store::cache::library_path(STORE));
+        let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.pending_login = None;
         self.display_name.clear();
         Ok(())

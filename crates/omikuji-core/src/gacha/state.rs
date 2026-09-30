@@ -13,7 +13,7 @@ pub fn version_file(game_slug: &str, edition_id: &str) -> PathBuf {
 
 pub fn read_installed_version(game_slug: &str, edition_id: &str) -> Option<String> {
     let path = version_file(game_slug, edition_id);
-    std::fs::read_to_string(&path)
+    fs_err::read_to_string(&path)
         .ok()
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
@@ -22,13 +22,13 @@ pub fn read_installed_version(game_slug: &str, edition_id: &str) -> Option<Strin
 pub fn write_installed_version(game_slug: &str, edition_id: &str, version: &str) {
     let path = version_file(game_slug, edition_id);
     if let Some(parent) = path.parent()
-        && let Err(e) = std::fs::create_dir_all(parent)
+        && let Err(e) = fs_err::create_dir_all(parent)
     {
-        tracing::error!("create_dir_all({}) failed: {}", parent.display(), e);
+        tracing::error!("{e}");
         return;
     }
-    if let Err(e) = std::fs::write(&path, version) {
-        tracing::error!("write({}) failed: {}", path.display(), e);
+    if let Err(e) = fs_err::write(&path, version) {
+        tracing::error!("{e}");
     }
 }
 
@@ -37,14 +37,14 @@ pub fn flatten_publisher_dirs_once() {
     static FLATTENED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
     FLATTENED.get_or_init(|| {
         let root = crate::gachas_dir();
-        let Ok(entries) = std::fs::read_dir(&root) else {
+        let Ok(entries) = fs_err::read_dir(&root) else {
             return;
         };
         for publisher in entries.flatten().map(|e| e.path()) {
             if !publisher.is_dir() || publisher.join("manifest.json").exists() {
                 continue;
             }
-            let Ok(games) = std::fs::read_dir(&publisher) else {
+            let Ok(games) = fs_err::read_dir(&publisher) else {
                 continue;
             };
             for game in games.flatten().map(|e| e.path()).filter(|p| p.is_dir()) {
@@ -54,19 +54,19 @@ pub fn flatten_publisher_dirs_once() {
                 let dest = root.join(name);
                 match move_dir_all(&game, &dest) {
                     Ok(()) => {
-                        let _ = std::fs::remove_dir(&game);
+                        let _ = fs_err::remove_dir(&game);
                         tracing::info!("moved {} to {}", game.display(), dest.display());
                     }
                     Err(e) => tracing::warn!("couldn't move {}: {}", game.display(), e),
                 }
             }
-            let _ = std::fs::remove_dir(&publisher);
+            let _ = fs_err::remove_dir(&publisher);
         }
     });
 }
 
 pub fn read_install_dotversion(install_path: &Path) -> Option<String> {
-    let bytes = std::fs::read(install_path.join(".version")).ok()?;
+    let bytes = fs_err::read(install_path.join(".version")).ok()?;
     if bytes.len() == 3 {
         return Some(format!("{}.{}.{}", bytes[0], bytes[1], bytes[2]));
     }
@@ -96,7 +96,7 @@ pub fn scan_globalgamemanagers(
 
 pub fn scan_unity_file(file_path: &Path, skip: u64, take: usize, terminator: u8) -> Option<String> {
     use std::io::{Read, Seek, SeekFrom};
-    let mut file = std::fs::File::open(file_path).ok()?;
+    let mut file = fs_err::File::open(file_path).ok()?;
     file.seek(SeekFrom::Start(skip)).ok()?;
     let mut buf = vec![0u8; take];
     let n = file.read(&mut buf).ok()?;

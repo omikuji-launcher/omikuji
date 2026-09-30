@@ -268,7 +268,7 @@ pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
 // a depot husk keeps the dir but loses the v* payload proton's ntdll loads from
 fn anticheat_runtime(appid: &str) -> Option<String> {
     let dir = steam_local::get_game_install_dir(appid)?;
-    let has_payload = std::fs::read_dir(&dir)
+    let has_payload = fs_err::read_dir(&dir)
         .ok()?
         .flatten()
         .any(|entry| entry.file_name().to_string_lossy().starts_with('v') && entry.path().is_dir());

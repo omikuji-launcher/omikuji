@@ -203,9 +203,9 @@ impl GogStore {
     }
 
     pub fn logout(&mut self) {
-        let _ = std::fs::remove_file(gog_auth_path());
-        let _ = std::fs::remove_file(user_data_path());
-        let _ = std::fs::remove_file(store::cache::library_path(STORE));
+        let _ = fs_err::remove_file(gog_auth_path());
+        let _ = fs_err::remove_file(user_data_path());
+        let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         self.user_id.clear();
     }
@@ -262,7 +262,7 @@ pub fn uninstall(app_name: &str, fallback_title: &str) -> Result<()> {
         && installed.install_path.exists()
     {
         let path = &installed.install_path;
-        std::fs::remove_dir_all(path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
+        fs_err::remove_dir_all(path).map_err(|e| anyhow!("Failed to remove install dir: {e}"))?;
         let wrapper_name =
             install_wrapper_dir_name(installed.title.as_deref().unwrap_or(fallback_title));
         if !wrapper_name.is_empty()
@@ -271,7 +271,7 @@ pub fn uninstall(app_name: &str, fallback_title: &str) -> Result<()> {
                 .file_name()
                 .is_some_and(|n| n.to_string_lossy() == wrapper_name)
         {
-            let _ = std::fs::remove_dir(parent);
+            let _ = fs_err::remove_dir(parent);
         }
     }
     if let Err(e) = remove_install(app_name) {
@@ -545,7 +545,7 @@ pub async fn read_credentials() -> Result<GogCredentials> {
 
     // auth.json is keyed by user_id at teh top level: { "<user_id>": { access_token, .... } }
     if auth.exists() {
-        let body = std::fs::read_to_string(&auth)?;
+        let body = fs_err::read_to_string(&auth)?;
         if let Ok(v) = serde_json::from_str::<serde_json::Value>(&body) {
             let creds_val = if v.get("access_token").is_some() {
                 &v
@@ -618,7 +618,7 @@ fn gogdl_bin() -> Result<PathBuf> {
 
 fn gogdl_command() -> Result<Command> {
     let config = gogdl_config_dir();
-    let _ = std::fs::create_dir_all(&config);
+    let _ = fs_err::create_dir_all(&config);
     let mut cmd = Command::new(gogdl_bin()?);
     cmd.env("GOGDL_CONFIG_PATH", &config)
         .arg("--auth-config-path")
@@ -668,7 +668,7 @@ pub fn installed_dlcs(app_name: &str) -> Vec<GogDlc> {
     let Some(path) = fs_util::find_file_named(&gogdl_config_dir(), app_name) else {
         return Vec::new();
     };
-    let Ok(text) = std::fs::read_to_string(&path) else {
+    let Ok(text) = fs_err::read_to_string(&path) else {
         return Vec::new();
     };
     let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
@@ -706,9 +706,9 @@ pub fn wipe_gogdl_manifest_for(app_id: &str) {
         .collect();
     for path in stale {
         let removed = if path.is_dir() {
-            std::fs::remove_dir_all(&path)
+            fs_err::remove_dir_all(&path)
         } else {
-            std::fs::remove_file(&path)
+            fs_err::remove_file(&path)
         };
         if removed.is_ok() {
             tracing::debug!("cleared stale gogdl state: {}", path.display());
@@ -729,7 +729,7 @@ struct UserData {
 }
 
 fn read_user_data() -> Option<UserData> {
-    serde_json::from_str(&std::fs::read_to_string(user_data_path()).ok()?).ok()
+    serde_json::from_str(&fs_err::read_to_string(user_data_path()).ok()?).ok()
 }
 
 fn save_user_data(user: &UserData) {

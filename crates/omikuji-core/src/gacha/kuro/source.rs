@@ -88,7 +88,7 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     }
 
     let install_root = entry.install_path.clone();
-    std::fs::create_dir_all(&install_root)?;
+    fs_err::create_dir_all(&install_root)?;
 
     let mut files: Vec<SyncFile> = index
         .resource
@@ -120,7 +120,7 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
     for stale in index.delete_files.iter().chain(patch_stale.iter()) {
         let p = install_root.join(file_sync::sanitize_rel(stale));
         if p.exists() {
-            let _ = std::fs::remove_file(&p);
+            let _ = fs_err::remove_file(&p);
         }
     }
     state::write_installed_version(&game_slug, &edition_id, &info.version);

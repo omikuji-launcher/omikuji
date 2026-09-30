@@ -47,7 +47,6 @@ pub fn path_in(install_root: &Path) -> PathBuf {
 
 pub fn load(install_root: &Path) -> Result<Fuel> {
     let path = path_in(install_root);
-    let raw =
-        std::fs::read_to_string(&path).map_err(|e| anyhow!("read {}: {}", path.display(), e))?;
+    let raw = fs_err::read_to_string(&path)?;
     json5::from_str(&raw).map_err(|e| anyhow!("parse {}: {}", path.display(), e))
 }

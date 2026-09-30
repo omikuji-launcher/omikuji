@@ -6,8 +6,8 @@ use crate::library::{Game, Library, SourceKind};
 use crate::store::steam::local as steam_local;
 use crate::wine_tools::{self, WineTool};
 use crate::{dll_packs, media};
+use fs_err::File;
 use std::collections::BTreeMap;
-use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -29,7 +29,7 @@ struct Acc {
 }
 
 fn canonical(p: &Path) -> PathBuf {
-    std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+    fs_err::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
 }
 
 pub fn windows_dir(prefix: &Path) -> PathBuf {
@@ -88,7 +88,7 @@ pub fn list_prefixes() -> Vec<PrefixInfo> {
     let games = Library::load().map(|l| l.game).unwrap_or_default();
     let mut acc: BTreeMap<PathBuf, Acc> = BTreeMap::new();
 
-    if let Ok(entries) = std::fs::read_dir(crate::prefixes_dir()) {
+    if let Ok(entries) = fs_err::read_dir(crate::prefixes_dir()) {
         for entry in entries.flatten() {
             let path = entry.path();
             if !path.is_dir() {
@@ -234,7 +234,7 @@ pub fn create_prefix<F: FnMut(&str)>(
         anyhow::bail!("prefix name is empty");
     }
     let dir = crate::prefixes_dir().join(&folder);
-    std::fs::create_dir_all(&dir)?;
+    fs_err::create_dir_all(&dir)?;
 
     let game = Game::new("Ofuda".to_string(), PathBuf::new())
         .with_prefix(dir.to_string_lossy())
@@ -268,9 +268,9 @@ pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {
         return None;
     }
     let link = prefix.join("dosdevices").join(format!("{letter}:"));
-    let root = std::fs::canonicalize(&link)
+    let root = fs_err::canonicalize(&link)
         .ok()
-        .or_else(|| std::fs::read_link(&link).ok())?;
+        .or_else(|| fs_err::read_link(&link).ok())?;
     let rest = win_path[2..].replace('\\', "/");
     let mut out = root;
     for part in rest.split('/').filter(|p| !p.is_empty() && *p != ".") {
@@ -287,7 +287,7 @@ fn resolve_component(dir: &Path, name: &str) -> Option<PathBuf> {
     if exact.exists() {
         return Some(exact);
     }
-    std::fs::read_dir(dir)
+    fs_err::read_dir(dir)
         .ok()?
         .flatten()
         .find(|e| e.file_name().to_string_lossy().eq_ignore_ascii_case(name))
@@ -306,7 +306,7 @@ pub fn delete_prefix(target: &Path) -> bool {
         );
         return false;
     }
-    match std::fs::remove_dir_all(target) {
+    match fs_err::remove_dir_all(target) {
         Ok(_) => true,
         Err(e) => {
             tracing::error!("delete_prefix failed: {e}");
@@ -330,8 +330,7 @@ mod tests {
     #[test]
     fn native_dll_present_reads_the_wine_stamp() {
         let dir = tempfile::tempdir().unwrap();
-        let write =
-            |name: &str, bytes: &[u8]| std::fs::write(dir.path().join(name), bytes).unwrap();
+        let write = |name: &str, bytes: &[u8]| fs_err::write(dir.path().join(name), bytes).unwrap();
         write("builtin.dll", &dll_with_stamp(b"Wine builtin DLL\0"));
         write(
             "placeholder.dll",

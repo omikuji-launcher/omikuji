@@ -59,7 +59,7 @@ pub fn wineserver_alive(prefix: &Path) -> bool {
     use std::os::unix::io::AsRawFd;
 
     server_lock_paths(prefix).iter().any(|lock| {
-        let Ok(file) = std::fs::File::open(lock) else {
+        let Ok(file) = fs_err::File::open(lock) else {
             return false;
         };
         let taken = unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0;
@@ -74,7 +74,7 @@ pub fn resolve_prefix(game: &Game) -> PathBuf {
     let prefix = prefix_path_for(game);
     if game.wine.prefix.is_empty()
         && !prefix.exists()
-        && let Err(e) = std::fs::create_dir_all(&prefix)
+        && let Err(e) = fs_err::create_dir_all(&prefix)
     {
         tracing::error!("failed to create prefix dir: {}", e);
     }
@@ -111,12 +111,12 @@ pub fn prepare_epic_prefix(
     let dummy_src = crate::runtime_dir().join("EpicGamesLauncher.exe");
     if dummy_src.exists() {
         let dest_dir = windows_dir(&prefix).join("command");
-        if let Err(e) = std::fs::create_dir_all(&dest_dir) {
+        if let Err(e) = fs_err::create_dir_all(&dest_dir) {
             tracing::error!("failed to create command dir in prefix: {}", e);
         } else {
             let dest_file = dest_dir.join("EpicGamesLauncher.exe");
             if !dest_file.exists()
-                && let Err(e) = std::fs::copy(&dummy_src, &dest_file)
+                && let Err(e) = fs_err::copy(&dummy_src, &dest_file)
             {
                 tracing::error!("failed to copy dummy EpicGamesLauncher.exe: {}", e);
             }

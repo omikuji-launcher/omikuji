@@ -1,5 +1,5 @@
-use anyhow::{Result, anyhow, bail};
-use std::fs::File;
+use anyhow::{Context, Result, bail};
+use fs_err::File;
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use zstd::zstd_safe::DParameter;
@@ -54,9 +54,7 @@ impl Krpdiff {
     ) -> Result<()> {
         for fe in &self.old_files {
             let full = old_root.join(&fe.path);
-            let actual = std::fs::metadata(&full)
-                .map_err(|e| anyhow!("old file missing {}: {}", full.display(), e))?
-                .len();
+            let actual = fs_err::metadata(&full).context("old file missing")?.len();
             if actual != fe.size {
                 bail!(
                     "old file size mismatch {}: expected {}, got {}",
@@ -68,12 +66,12 @@ impl Krpdiff {
         }
 
         for d in &self.new_dirs {
-            std::fs::create_dir_all(out_root.join(d.trim_end_matches('/')))?;
+            fs_err::create_dir_all(out_root.join(d.trim_end_matches('/')))?;
         }
         for p in &self.new_empty_files {
             let full = out_root.join(p);
             if let Some(parent) = full.parent() {
-                std::fs::create_dir_all(parent)?;
+                fs_err::create_dir_all(parent)?;
             }
             File::create(&full)?;
         }
@@ -335,7 +333,7 @@ impl SeqWriter {
                 self.next += 1;
                 let full = self.root.join(&fe.path);
                 if let Some(parent) = full.parent() {
-                    std::fs::create_dir_all(parent)?;
+                    fs_err::create_dir_all(parent)?;
                 }
                 let file = File::create(&full)?;
                 if fe.size == 0 {
@@ -365,7 +363,7 @@ impl SeqWriter {
             }
             let full = self.root.join(&fe.path);
             if let Some(parent) = full.parent() {
-                std::fs::create_dir_all(parent)?;
+                fs_err::create_dir_all(parent)?;
             }
             File::create(&full)?;
         }

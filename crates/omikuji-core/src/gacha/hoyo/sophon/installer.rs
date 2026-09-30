@@ -1,10 +1,10 @@
 use anyhow::{Result, anyhow};
+use fs_err::OpenOptions;
+use fs_err::os::unix::fs::FileExt;
 use futures_util::stream::{self, StreamExt};
 use md5::{Digest, Md5};
 use std::collections::HashSet;
-use std::fs::OpenOptions;
 use std::io::Write;
-use std::os::unix::fs::FileExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -47,7 +47,7 @@ pub async fn apply_install(
         return Err(anyhow!("manifest contains zero files"));
     }
 
-    std::fs::create_dir_all(&target_dir)?;
+    fs_err::create_dir_all(&target_dir)?;
 
     let done_bytes = Arc::new(AtomicU64::new(0));
     let session_bytes = Arc::new(AtomicU64::new(0));
@@ -131,12 +131,12 @@ async fn install_one_file(
 ) -> Result<()> {
     let dest = target_dir.join(sanitize_rel(&file.name));
     if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent)?;
+        fs_err::create_dir_all(parent)?;
     }
 
     let parts_p = parts_path(&dest);
 
-    if let Ok(meta) = std::fs::metadata(&dest)
+    if let Ok(meta) = fs_err::metadata(&dest)
         && meta.len() == file.size
         && !parts_p.exists()
     {
@@ -159,8 +159,7 @@ async fn install_one_file(
         .create(true)
         .write(true)
         .truncate(false)
-        .open(&dest)
-        .map_err(|e| anyhow!("open {}: {}", dest.display(), e))?;
+        .open(&dest)?;
     f.set_len(file.size)?;
     let handle = Arc::new(f);
 
@@ -318,7 +317,7 @@ fn report(
 
 fn hash_file(path: &Path) -> Result<String> {
     use std::io::Read;
-    let mut f = std::fs::File::open(path)?;
+    let mut f = fs_err::File::open(path)?;
     let mut hasher = Md5::new();
     let mut buf = [0u8; 65536];
     loop {
@@ -348,7 +347,7 @@ fn parts_path(dest: &Path) -> PathBuf {
 }
 
 fn read_completed_chunks(dest: &Path) -> HashSet<usize> {
-    let Ok(content) = std::fs::read_to_string(parts_path(dest)) else {
+    let Ok(content) = fs_err::read_to_string(parts_path(dest)) else {
         return HashSet::new();
     };
     content
@@ -364,5 +363,5 @@ fn mark_chunk_complete(dest: &Path, idx: usize) -> std::io::Result<()> {
 }
 
 fn clear_parts(dest: &Path) {
-    let _ = std::fs::remove_file(parts_path(dest));
+    let _ = fs_err::remove_file(parts_path(dest));
 }
