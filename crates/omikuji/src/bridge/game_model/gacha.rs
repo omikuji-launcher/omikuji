@@ -68,7 +68,7 @@ impl super::qobject::GameModel {
 
     pub fn gacha_manifest_for_app_id(&self, app_id: &QString) -> QString {
         let aid = app_id.to_string();
-        let Some((manifest, edition_id, _voices)) = gacha::strategies::find_for_app_id(&aid) else {
+        let Some((manifest, edition_id)) = gacha::strategies::find_for_app_id(&aid) else {
             return QString::default();
         };
         QString::from(&format!(
@@ -97,16 +97,11 @@ impl super::qobject::GameModel {
         let rid = request_id.to_string();
         let mid = manifest_id.to_string();
         let eid = edition_id.to_string();
-        let voices_str = voices_csv.to_string();
+        let voices = csv_ids(voices_csv);
 
         install_sizes::spawn_fetch(rid, move || async move {
             let manifest =
                 gacha::manifest::find(&mid).ok_or_else(|| format!("unknown manifest: {}", mid))?;
-            let voices: Vec<String> = voices_str
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .filter(|s| !s.is_empty())
-                .collect();
             gacha::strategies::fetch_install_size(&manifest, &eid, &voices)
                 .await
                 .map(|s| (s.download_bytes, s.install_bytes))
@@ -185,7 +180,7 @@ impl super::qobject::GameModel {
             return QString::default();
         };
         let display_s = manifest.display_name_for(edition);
-        let app_id = gacha::strategies::build_app_id(&manifest, &eid, &[]);
+        let app_id = gacha::strategies::build_app_id(&manifest, &eid);
 
         let exe = std::path::Path::new(&install_s).join(&edition.exe_name);
 

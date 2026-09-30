@@ -50,7 +50,7 @@ async fn run_sync(entry: &DownloadEntry) -> Result<()> {
         return Err(anyhow!("KuroSource: unexpected DownloadKind"));
     }
 
-    let (manifest, edition_id, _) = strategies::find_for_app_id(&entry.app_id)
+    let (manifest, edition_id) = strategies::find_for_app_id(&entry.app_id)
         .ok_or_else(|| anyhow!("no manifest for app_id {}", entry.app_id))?;
     let game_slug = manifest.game_slug.clone();
 

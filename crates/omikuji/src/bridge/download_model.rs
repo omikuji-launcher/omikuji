@@ -129,7 +129,7 @@ impl qobject::DownloadModel {
         self: Pin<&mut Self>,
         manifest_id: &QString,
         edition_id: &QString,
-        voices_csv: &QString,
+        packs_csv: &QString,
         install_path: &QString,
         runner_version: &QString,
         prefix_path: &QString,
@@ -143,14 +143,13 @@ impl qobject::DownloadModel {
             return QString::default();
         };
         let eid = edition_id.to_string();
-        let voices = csv_ids(voices_csv);
         let prefix = prefix_path.to_string();
         let temp = temp_path.to_string();
 
         let mut req = match strategies::build_install_request(
             &manifest,
             &eid,
-            &voices,
+            csv_ids(packs_csv),
             PathBuf::from(install_path.to_string()),
             if prefix.is_empty() {
                 None
@@ -307,7 +306,7 @@ impl qobject::DownloadModel {
                 }
                 DownloadEvent::Replaced(entry) => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == entry.id) {
-                        self.as_mut().rust_mut().get_mut().entries[idx] = entry;
+                        self.as_mut().rust_mut().get_mut().entries[idx] = *entry;
                         self.as_mut().notify_row_changed(idx as i32);
                     }
                 }

@@ -95,41 +95,20 @@ pub fn source_key(manifest: &GachaManifest, edition_id: &str) -> Result<&'static
     strategy(manifest, edition_id).map(InstallStrategy::source_key)
 }
 
-/// app_id format: "{app_id_prefix}:{edition_id}" or "{app_id_prefix}:{edition_id}:{voices_csv}"
-pub fn build_app_id(manifest: &GachaManifest, edition_id: &str, voices: &[String]) -> String {
-    if voices.is_empty() {
-        format!("{}:{}", manifest.app_id_prefix, edition_id)
-    } else {
-        format!(
-            "{}:{}:{}",
-            manifest.app_id_prefix,
-            edition_id,
-            voices.join(",")
-        )
-    }
+/// app_id format: "{app_id_prefix}:{edition_id}"
+pub fn build_app_id(manifest: &GachaManifest, edition_id: &str) -> String {
+    format!("{}:{}", manifest.app_id_prefix, edition_id)
 }
 
-pub fn find_for_app_id(app_id: &str) -> Option<(GachaManifest, String, Vec<String>)> {
-    let parts: Vec<&str> = app_id.splitn(3, ':').collect();
-    if parts.len() < 2 {
-        return None;
-    }
-    let prefix = parts[0];
-    let edition_id = parts[1].to_string();
-    let voices: Vec<String> = parts
-        .get(2)
-        .map(|s| {
-            s.split(',')
-                .map(|v| v.trim())
-                .filter(|v| !v.is_empty())
-                .map(|v| v.to_string())
-                .collect()
-        })
-        .unwrap_or_default();
+// older installs carry a third ":voices" segment, split just ignores it
+pub fn find_for_app_id(app_id: &str) -> Option<(GachaManifest, String)> {
+    let mut parts = app_id.split(':');
+    let prefix = parts.next()?;
+    let edition_id = parts.next()?.to_string();
     let manifest = super::manifest::load_all()
         .into_iter()
         .find(|m| m.app_id_prefix == prefix)?;
-    Some((manifest, edition_id, voices))
+    Some((manifest, edition_id))
 }
 
 pub fn edition_exe_name<'a>(manifest: &'a GachaManifest, edition_id: &str) -> Option<&'a str> {
@@ -140,7 +119,7 @@ pub fn edition_exe_name<'a>(manifest: &'a GachaManifest, edition_id: &str) -> Op
 }
 
 pub fn install_root_for(app_id: &str, exe: &Path) -> Option<PathBuf> {
-    let (manifest, edition_id, _) = find_for_app_id(app_id)?;
+    let (manifest, edition_id) = find_for_app_id(app_id)?;
     let rel = Path::new(edition_exe_name(&manifest, &edition_id)?);
     if !exe.ends_with(rel) {
         return None;
@@ -153,7 +132,7 @@ pub fn install_root_for(app_id: &str, exe: &Path) -> Option<PathBuf> {
 pub fn build_install_request(
     manifest: &GachaManifest,
     edition_id: &str,
-    voices: &[String],
+    packs: Vec<String>,
     install_path: PathBuf,
     prefix_path: Option<PathBuf>,
     runner_version: String,
@@ -161,7 +140,7 @@ pub fn build_install_request(
 ) -> Result<DownloadRequest> {
     let edition = manifest.require_edition(edition_id)?;
     let source = manifest.strategy_for(edition).source_key().to_string();
-    let app_id = build_app_id(manifest, edition_id, voices);
+    let app_id = build_app_id(manifest, edition_id);
     let banner_url = resolve_poster(manifest);
     Ok(DownloadRequest {
         source,
@@ -182,6 +161,7 @@ pub fn build_install_request(
         start_paused: false,
         dlcs: Vec::new(),
         options: Vec::new(),
+        packs,
     })
 }
 
@@ -271,7 +251,7 @@ pub async fn check_for_update(
 }
 
 pub async fn check_game_for_update(game: &Game) -> Option<GachaUpdateInfo> {
-    let (manifest, edition_id, _) = find_for_app_id(&game.source.app_id)?;
+    let (manifest, edition_id) = find_for_app_id(&game.source.app_id)?;
     let mut info = check_for_update(&manifest, &edition_id).await?;
     let staged = staged_version(&manifest, &edition_id, game);
     if staged.as_deref() == Some(info.to_version.as_str()) {
@@ -326,7 +306,7 @@ pub fn inspect_existing(
     let Ok(strategy) = strategy(manifest, edition_id) else {
         return ExistingInstallInfo::default();
     };
-    let app_id = build_app_id(manifest, edition_id, &[]);
+    let app_id = build_app_id(manifest, edition_id);
     let mut info = match strategy {
         InstallStrategy::HoyoSophon => {
             let (bytes, segments) =

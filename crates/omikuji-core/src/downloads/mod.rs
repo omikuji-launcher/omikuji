@@ -132,6 +132,7 @@ pub struct DownloadRequest {
     pub start_paused: bool,
     pub dlcs: Vec<String>,
     pub options: Vec<String>,
+    pub packs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -156,6 +157,8 @@ pub struct DownloadEntry {
     pub dlcs: Vec<String>,
     #[serde(default)]
     pub options: Vec<String>,
+    #[serde(default)]
+    pub packs: Vec<String>,
     pub status: DownloadStatus,
     pub progress: f64,
     pub bytes_downloaded: u64,
@@ -192,7 +195,7 @@ pub enum DownloadEvent {
     Failed(String, String),
     Removed(String),
     Renamed(String, String),
-    Replaced(DownloadEntry),
+    Replaced(Box<DownloadEntry>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -381,7 +384,7 @@ impl DownloadManager {
         }
         e.kind = req.kind.clone();
         e.display_name = req.display_name.clone();
-        let replaced = e.clone();
+        let replaced = Box::new(e.clone());
         inner.events.push_back(DownloadEvent::Replaced(replaced));
         save_queue(&inner.entries);
     }
@@ -417,6 +420,7 @@ impl DownloadManager {
             destructive_cleanup: req.destructive_cleanup,
             dlcs: req.dlcs,
             options: req.options,
+            packs: req.packs,
             status: initial_status,
             progress: 0.0,
             bytes_downloaded: 0,

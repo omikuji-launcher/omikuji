@@ -1,5 +1,6 @@
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 use super::strategies::InstallStrategy;
 use crate::archive_source;
@@ -26,6 +27,8 @@ pub struct GachaManifest {
 
     #[serde(default)]
     pub voice_locales: Vec<ManifestVoice>,
+    #[serde(default)]
+    pub voice_dir: String,
 
     pub default_library_template: String,
     pub install_folder_name: String,
@@ -74,6 +77,12 @@ impl GachaManifest {
 
     pub fn strategy_for(&self, edition: &ManifestEdition) -> InstallStrategy {
         edition.install_strategy.unwrap_or(self.install_strategy)
+    }
+
+    pub fn voice_folder(&self, edition: &ManifestEdition, voice: &ManifestVoice) -> PathBuf {
+        [&edition.data_folder, &self.voice_dir, &voice.folder_name]
+            .iter()
+            .collect()
     }
 
     pub fn apply_options(
@@ -258,6 +267,7 @@ mod tests {
                 strategy_config: serde_json::Value::Null,
             }],
             voice_locales: vec![],
+            voice_dir: String::new(),
             default_library_template: "{home}/Games".into(),
             install_folder_name: "Test Game".into(),
             category: "Test".into(),

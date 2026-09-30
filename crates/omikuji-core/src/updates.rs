@@ -110,6 +110,7 @@ pub fn download_request(game: &Game, kind: DownloadKind) -> Option<DownloadReque
         start_paused: false,
         dlcs: game.source.dlcs.clone(),
         options: Vec::new(),
+        packs: Vec::new(),
     })
 }
 
@@ -136,7 +137,7 @@ fn download_source(game: &Game) -> Option<(String, Option<String>)> {
 }
 
 fn gacha_source(app_id: &str) -> Option<(String, Option<String>)> {
-    let Some((manifest, edition_id, _)) = strategies::find_for_app_id(app_id) else {
+    let Some((manifest, edition_id)) = strategies::find_for_app_id(app_id) else {
         tracing::error!("no gacha manifest for app_id '{}'", app_id);
         return None;
     };

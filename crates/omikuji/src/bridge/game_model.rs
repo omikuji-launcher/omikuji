@@ -2053,7 +2053,7 @@ impl qobject::GameModel {
         };
         let name = game.metadata.name.clone();
         let gacha_manifest = if game.source.kind == SourceKind::Gacha {
-            strategies::find_for_app_id(&game.source.app_id).map(|(m, _, _)| m)
+            strategies::find_for_app_id(&game.source.app_id).map(|(m, _)| m)
         } else {
             None
         };

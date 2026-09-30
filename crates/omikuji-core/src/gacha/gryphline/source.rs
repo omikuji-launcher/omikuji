@@ -31,7 +31,7 @@ struct ParsedGryphlineApp {
 }
 
 fn parse_app_id(app_id: &str) -> Result<ParsedGryphlineApp> {
-    let (manifest, edition_id, _) = strategies::find_for_app_id(app_id)
+    let (manifest, edition_id) = strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
     let edition_label = manifest
         .edition(&edition_id)

@@ -1,5 +1,3 @@
-// voice packs ride in runner_version as a comma-separated locale list
-
 use anyhow::{Result, anyhow};
 use async_trait::async_trait;
 use futures_util::StreamExt;
@@ -26,6 +24,26 @@ struct ParsedHoyoApp {
     game_slug: String,
     display_name: String,
     edition: HoyoEdition,
+    voice_folders: Vec<(VoiceLocale, PathBuf)>,
+}
+
+impl ParsedHoyoApp {
+    // a fresh install asks for its packs, everything else goes by what's on disk
+    fn voice_locales(&self, entry: &DownloadEntry) -> Vec<VoiceLocale> {
+        let requested = entry
+            .packs
+            .iter()
+            .filter_map(|p| VoiceLocale::from_api_name(p));
+        let installed = self
+            .voice_folders
+            .iter()
+            .filter(|(_, folder)| entry.install_path.join(folder).is_dir())
+            .map(|(locale, _)| *locale);
+        let mut locales: Vec<_> = requested.chain(installed).collect();
+        locales.sort_unstable();
+        locales.dedup();
+        locales
+    }
 }
 
 pub struct HoyoSource;
@@ -111,7 +129,7 @@ impl DownloadSource for HoyoSource {
             .ok_or_else(|| anyhow!("no 'game' category in sophon build"))?
             .clone();
         let mut entries = vec![game_entry];
-        for locale in voice_locales_for(&entry.app_id) {
+        for locale in parsed.voice_locales(entry) {
             if let Some(audio_entry) = build.get_for(locale.api_name()) {
                 entries.push(audio_entry.clone());
             }
@@ -638,28 +656,25 @@ pub fn extract_archive_with_password(
 }
 
 fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
-    let (manifest, edition_id, _) = strategies::find_for_app_id(app_id)
+    let (manifest, edition_id) = strategies::find_for_app_id(app_id)
         .ok_or_else(|| anyhow!("no manifest found for app_id: {}", app_id))?;
+    let edition = manifest.require_edition(&edition_id)?;
+    let voice_folders = manifest
+        .voice_locales
+        .iter()
+        .filter_map(|voice| {
+            let locale = VoiceLocale::from_api_name(&voice.id)?;
+            Some((locale, manifest.voice_folder(edition, voice)))
+        })
+        .collect();
 
     Ok(ParsedHoyoApp {
         biz_id: super::biz_id(&manifest, &edition_id)?,
         game_slug: manifest.game_slug.clone(),
         display_name: manifest.display_name.clone(),
         edition: HoyoEdition::from_id(&edition_id)?,
+        voice_folders,
     })
-}
-
-fn parse_voice_locales(s: &str) -> Vec<VoiceLocale> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    s.split(',')
-        .filter_map(VoiceLocale::from_api_name)
-        .collect()
-}
-
-fn voice_locales_for(app_id: &str) -> Vec<VoiceLocale> {
-    parse_voice_locales(app_id.splitn(3, ':').nth(2).unwrap_or(""))
 }
 
 #[derive(Clone, Copy)]
@@ -785,7 +800,7 @@ async fn plan_patch(
         .cloned();
 
     Ok(PatchJob {
-        voice_locales: voice_locales_for(&entry.app_id),
+        voice_locales: parsed.voice_locales(entry),
         parsed,
         temp_root,
         package,

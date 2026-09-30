@@ -175,8 +175,7 @@ impl super::qobject::GameModel {
         if game.source.kind != SourceKind::Gacha {
             return false;
         }
-        let Some((manifest, edition_id, _)) = strategies::find_for_app_id(&game.source.app_id)
-        else {
+        let Some((manifest, edition_id)) = strategies::find_for_app_id(&game.source.app_id) else {
             return false;
         };
         match strategies::source_key(&manifest, &edition_id) {
