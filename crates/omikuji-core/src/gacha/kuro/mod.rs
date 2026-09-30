@@ -25,6 +25,8 @@ pub struct KuroConfig {
 #[derive(Debug, Clone, Deserialize)]
 pub struct PackDef {
     pub label: String,
+    #[serde(default)]
+    pub short: String,
     pub folder: String,
     #[serde(flatten)]
     pub effect: LaunchEffect,

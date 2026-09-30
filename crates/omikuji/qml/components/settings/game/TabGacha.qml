@@ -14,6 +14,7 @@ Item {
     property string gameId: ""
 
     property var packs: []
+    property string packKind: ""
     property var checkedIds: []
     property var controls: []
     property var selection: ({})
@@ -28,13 +29,16 @@ Item {
     implicitHeight: content.height
 
     function asItem(pack) {
-        return { id: pack.id, title: pack.label }
+        return { id: pack.id, title: pack.label, short: pack.short }
     }
 
     function refresh() {
         if (!gameModel || gameId === "") { packs = []; return }
-        try { packs = JSON.parse(gameModel.gacha_packs(gameId) || "[]") }
-        catch (e) { packs = [] }
+        let listing = {}
+        try { listing = JSON.parse(gameModel.gacha_packs(gameId) || "{}") || {} }
+        catch (e) { listing = {} }
+        packs = listing.packs || []
+        packKind = listing.kind || ""
         checkedIds = checkedIds.filter(id => available.some(p => p.id === id) && !downloading.includes(id))
         refreshControls()
     }
@@ -151,7 +155,7 @@ Item {
 
         SettingsSection {
             visible: root.packs.length > 0
-            label: qsTr("Packs")
+            label: PackLabels.section(root.packKind)
             icon: "layers"
             width: parent.width
 

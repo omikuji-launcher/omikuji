@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 use super::hoyo::{self, HoyoEdition};
-use super::manifest::GachaManifest;
+use super::manifest::{GachaManifest, ManifestVoice};
 use super::{art, gryphline, kuro, yostar};
 use crate::downloads::{self, DownloadKind, DownloadRequest};
 use crate::library::{Game, LaunchConfig};
@@ -29,6 +29,14 @@ impl InstallStrategy {
         }
     }
 
+    pub fn pack_kind(self) -> Option<PackKind> {
+        match self {
+            Self::HoyoSophon => Some(PackKind::Voice),
+            Self::KuroResourceIndex => Some(PackKind::Texture),
+            Self::GryphlineResourcePatch | Self::YostarFileIndex => None,
+        }
+    }
+
     pub fn needs_hpatchz(self) -> bool {
         matches!(self, Self::HoyoSophon | Self::GryphlineResourcePatch)
     }
@@ -42,8 +50,8 @@ pub struct InstallSize {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct PackInfo {
-    pub id: String,
-    pub label: String,
+    #[serde(flatten)]
+    pub pack: PackOption,
     pub installed: bool,
     pub downloading: bool,
 }
@@ -301,7 +309,7 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
             .voice_locales
             .iter()
             .map(|voice| {
-                pack_info(&in_queue, &voice.id, &voice.label, || {
+                pack_info(&in_queue, PackOption::voice(voice), || {
                     hoyo::voice_installed(&manifest, edition, voice, &root)
                 })
             })
@@ -312,7 +320,9 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
                     .packs
                     .iter()
                     .map(|(id, def)| {
-                        pack_info(&in_queue, id, &def.label, || def.is_installed(&root))
+                        pack_info(&in_queue, PackOption::kuro(id, def), || {
+                            def.is_installed(&root)
+                        })
                     })
                     .collect()
             })
@@ -321,16 +331,17 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
     }
 }
 
-fn pack_info(
-    in_queue: &[String],
-    id: &str,
-    label: &str,
-    on_disk: impl FnOnce() -> bool,
-) -> PackInfo {
-    let queued = in_queue.iter().any(|q| q == id);
+pub fn pack_kind(game: &Game) -> Option<PackKind> {
+    let (manifest, edition_id) = find_for_app_id(&game.source.app_id)?;
+    manifest
+        .strategy_for(manifest.edition(&edition_id)?)
+        .pack_kind()
+}
+
+fn pack_info(in_queue: &[String], pack: PackOption, on_disk: impl FnOnce() -> bool) -> PackInfo {
+    let queued = in_queue.contains(&pack.id);
     PackInfo {
-        id: id.to_string(),
-        label: label.to_string(),
+        pack,
         installed: !queued && on_disk(),
         downloading: queued,
     }
@@ -338,15 +349,22 @@ fn pack_info(
 
 // cancelling a pack job deletes that pack's files so it must never be queued over one that's already there
 pub fn queue_pack(game: &Game, pack: &str) -> Result<String> {
-    if packs(game).iter().any(|p| p.id == pack && p.installed) {
-        bail!("{pack} is already installed");
+    let info = packs(game)
+        .into_iter()
+        .find(|p| p.pack.id == pack)
+        .ok_or_else(|| anyhow!("unknown pack: {pack}"))?;
+    if info.installed {
+        bail!("{} is already installed", info.pack.label);
     }
     let kind = DownloadKind::AddPack {
         pack: pack.to_string(),
     };
     let req = updates::download_request(game, kind)
         .ok_or_else(|| anyhow!("{} can't download packs", game.metadata.name))?;
-    Ok(downloads::manager().enqueue(req))
+    Ok(downloads::manager().enqueue(DownloadRequest {
+        display_name: format!("{} · {}", req.display_name, info.pack.label),
+        ..req
+    }))
 }
 
 pub fn remove_pack(game: &Game, pack: &str) -> Result<()> {
@@ -468,10 +486,35 @@ pub enum PackKind {
     Texture,
 }
 
+impl PackKind {
+    pub fn is_single(self) -> bool {
+        self == Self::Texture
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct PackOption {
     pub id: String,
     pub label: String,
+    pub short: String,
+}
+
+impl PackOption {
+    fn voice(voice: &ManifestVoice) -> Self {
+        Self {
+            id: voice.id.clone(),
+            label: voice.label.clone(),
+            short: voice.short.clone(),
+        }
+    }
+
+    fn kuro(id: &str, def: &kuro::PackDef) -> Self {
+        Self {
+            id: id.to_string(),
+            label: def.label.clone(),
+            short: def.short.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -484,42 +527,40 @@ pub struct PackPicker {
 
 pub fn pack_picker(manifest: &GachaManifest, edition_id: &str) -> Option<PackPicker> {
     let edition = manifest.edition(edition_id)?;
-    let picker = match manifest.strategy_for(edition) {
-        InstallStrategy::HoyoSophon => PackPicker {
-            kind: PackKind::Voice,
-            single: false,
-            defaults: manifest
+    let strategy = manifest.strategy_for(edition);
+    let kind = strategy.pack_kind()?;
+    let (defaults, packs) = match strategy {
+        InstallStrategy::HoyoSophon => (
+            manifest
                 .voice_locales
                 .first()
                 .map(|v| v.id.clone())
                 .into_iter()
                 .collect(),
-            packs: manifest
+            manifest
                 .voice_locales
                 .iter()
-                .map(|v| PackOption {
-                    id: v.id.clone(),
-                    label: v.label.clone(),
-                })
+                .map(PackOption::voice)
                 .collect(),
-        },
+        ),
         InstallStrategy::KuroResourceIndex => {
             let config = kuro::KuroConfig::load(manifest, edition_id).ok()?;
-            PackPicker {
-                kind: PackKind::Texture,
-                single: true,
-                defaults: config.default_pack.clone().into_iter().collect(),
-                packs: config
+            (
+                config.default_pack.clone().into_iter().collect(),
+                config
                     .packs
-                    .into_iter()
-                    .map(|(id, def)| PackOption {
-                        id,
-                        label: def.label,
-                    })
+                    .iter()
+                    .map(|(id, def)| PackOption::kuro(id, def))
                     .collect(),
-            }
+            )
         }
         _ => return None,
+    };
+    let picker = PackPicker {
+        kind,
+        single: kind.is_single(),
+        defaults,
+        packs,
     };
     (!picker.packs.is_empty()).then_some(picker)
 }

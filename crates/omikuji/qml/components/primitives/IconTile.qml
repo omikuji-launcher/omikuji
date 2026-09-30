@@ -8,6 +8,7 @@ Item {
 
     property string icon: ""
     property string monogram: ""
+    property string badge: ""
     property url source: ""
     property bool cache: true
     property int iconSize: 18
@@ -36,7 +37,7 @@ Item {
     Text {
         anchors.centerIn: parent
         visible: !root.hasImage && root.icon === ""
-        text: root.monogram.charAt(0).toUpperCase()
+        text: root.badge !== "" ? root.badge : root.monogram.charAt(0).toUpperCase()
         color: Theme.secondary
         font.pixelSize: Theme.type.title.size
         font.weight: Font.DemiBold

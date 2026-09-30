@@ -46,7 +46,7 @@ DialogCard {
     property var manifest: null
 
     readonly property var optionRows:
-        root.manifest && root.manifest.options ? root.manifest.options : []
+        root.manifest && root.manifest.options ? root.manifest.options.filter(o => o.at_install !== false) : []
     property var acceptedOptions: ({})
 
     function optionsCsv() {
@@ -500,7 +500,7 @@ DialogCard {
 
         DialogSection {
             Layout.fillWidth: true
-            label: root.packPicker && root.packPicker.kind === "texture" ? qsTr("Texture Pack") : qsTr("Voice Packs")
+            label: PackLabels.section(root.packPicker ? root.packPicker.kind : "")
             visible: root.pickerPacks.length > 0
 
             SegmentedControl {

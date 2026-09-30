@@ -81,14 +81,16 @@ impl super::qobject::GameModel {
 
     pub fn gacha_packs(&self, game_id: &QString) -> QString {
         let gid = game_id.to_string();
-        let packs = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == gid)
-            .map(gacha::strategies::packs)
-            .unwrap_or_default();
-        QString::from(&serde_json::to_string(&packs).unwrap_or_else(|_| "[]".into()))
+        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+            return QString::default();
+        };
+        QString::from(
+            &serde_json::json!({
+                "kind": gacha::strategies::pack_kind(game),
+                "packs": gacha::strategies::packs(game),
+            })
+            .to_string(),
+        )
     }
 
     pub fn gacha_pack_removal(&self, pack: &QString) -> QString {

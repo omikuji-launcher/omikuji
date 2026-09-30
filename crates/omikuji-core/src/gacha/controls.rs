@@ -102,7 +102,7 @@ fn pack_control(game: &Game, manifest: &GachaManifest, edition_id: &str) -> Opti
     let installed: Vec<String> = strategies::packs(game)
         .into_iter()
         .filter(|p| p.installed)
-        .map(|p| p.id)
+        .map(|p| p.pack.id)
         .collect();
     let choices = config
         .packs

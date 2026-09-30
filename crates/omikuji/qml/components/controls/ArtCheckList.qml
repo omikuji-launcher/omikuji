@@ -109,6 +109,7 @@ Item {
                         height: 32
                         source: itemRow.modelData.image || ""
                         monogram: itemRow.modelData.title || "?"
+                        badge: itemRow.modelData.short || ""
                     }
 
                     Column {

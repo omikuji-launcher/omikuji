@@ -59,7 +59,7 @@ Item {
     }
     readonly property bool hasGachaTab: root.config["source.kind"] === "gacha"
         && gameModel !== null && gameId !== ""
-        && (JSON.parse(gameModel.gacha_packs(gameId) || "[]").length > 0
+        && ((JSON.parse(gameModel.gacha_packs(gameId) || "{}").packs || []).length > 0
             || JSON.parse(gameModel.gacha_launch_controls() || "[]").length > 0)
     property int currentTabIndex: 0
     readonly property string currentKind:

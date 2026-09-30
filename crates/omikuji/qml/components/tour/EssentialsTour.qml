@@ -23,7 +23,7 @@ QtObject {
         {
             keys: ["add.game"],
             title: qsTr("Adding a game"),
-            body: qsTr("Pick 'Add game' to set it up by hand."),
+            body: qsTr("Pick 'Add game' to set one up by hand. Don't forget! Games from a store, and gachas omikuji supports, should NOT be added from here. Use their store page instead!"),
             until: () => app.activeModal === "addGame"
         },
         {

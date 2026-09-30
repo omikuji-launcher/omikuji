@@ -128,6 +128,8 @@ pub struct ManifestOption {
     pub effect: LaunchEffect,
     #[serde(default)]
     pub alongside: Option<ManifestAlongside>,
+    #[serde(default = "default_true")]
+    pub at_install: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
@@ -230,6 +232,8 @@ pub struct ManifestEdition {
 pub struct ManifestVoice {
     pub id: String,
     pub label: String,
+    #[serde(default)]
+    pub short: String,
     pub folder_name: String,
 }
 
