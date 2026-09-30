@@ -6,7 +6,7 @@ use super::hoyo::{self, HoyoEdition};
 use super::manifest::GachaManifest;
 use super::{art, gryphline, kuro, yostar};
 use crate::downloads::{self, DownloadKind, DownloadRequest};
-use crate::library::Game;
+use crate::library::{Game, LaunchConfig};
 use crate::process::UpdateKind;
 use crate::updates;
 
@@ -191,13 +191,13 @@ pub fn supports_import(manifest: &GachaManifest, edition_id: &str) -> bool {
 pub async fn fetch_install_size(
     manifest: &GachaManifest,
     edition_id: &str,
-    voices: &[String],
+    packs: &[String],
 ) -> Result<InstallSize> {
     match strategy(manifest, edition_id)? {
         InstallStrategy::HoyoSophon => {
             let edition = HoyoEdition::from_id(edition_id)?;
             let biz_id = hoyo::biz_id(manifest, edition_id)?;
-            let s = hoyo::api::fetch_install_size(&biz_id, edition, voices).await?;
+            let s = hoyo::api::fetch_install_size(&biz_id, edition, packs).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
@@ -211,7 +211,7 @@ pub async fn fetch_install_size(
             })
         }
         InstallStrategy::KuroResourceIndex => {
-            let s = kuro::api::fetch_install_size(manifest, edition_id).await?;
+            let s = kuro::api::fetch_install_size(manifest, edition_id, packs).await?;
             Ok(InstallSize {
                 download_bytes: s.download_bytes,
                 install_bytes: s.install_bytes,
@@ -293,25 +293,47 @@ pub fn packs(game: &Game) -> Vec<PackInfo> {
     let Some(edition) = manifest.edition(&edition_id) else {
         return Vec::new();
     };
-    if manifest.strategy_for(edition) != InstallStrategy::HoyoSophon {
-        return Vec::new();
-    }
     let root = game_install_root(game);
     // sophon writes straight into the game dir so a queued pack's folder exists long before it's whole
     let in_queue = downloads::manager().packs_in_queue(&game.metadata.id);
-    manifest
-        .voice_locales
-        .iter()
-        .map(|voice| {
-            let queued = in_queue.contains(&voice.id);
-            PackInfo {
-                id: voice.id.clone(),
-                label: voice.label.clone(),
-                installed: !queued && hoyo::voice_installed(&manifest, edition, voice, &root),
-                downloading: queued,
-            }
-        })
-        .collect()
+    match manifest.strategy_for(edition) {
+        InstallStrategy::HoyoSophon => manifest
+            .voice_locales
+            .iter()
+            .map(|voice| {
+                pack_info(&in_queue, &voice.id, &voice.label, || {
+                    hoyo::voice_installed(&manifest, edition, voice, &root)
+                })
+            })
+            .collect(),
+        InstallStrategy::KuroResourceIndex => kuro::KuroConfig::load(&manifest, &edition_id)
+            .map(|config| {
+                config
+                    .packs
+                    .iter()
+                    .map(|(id, def)| {
+                        pack_info(&in_queue, id, &def.label, || def.is_installed(&root))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    }
+}
+
+fn pack_info(
+    in_queue: &[String],
+    id: &str,
+    label: &str,
+    on_disk: impl FnOnce() -> bool,
+) -> PackInfo {
+    let queued = in_queue.iter().any(|q| q == id);
+    PackInfo {
+        id: id.to_string(),
+        label: label.to_string(),
+        installed: !queued && on_disk(),
+        downloading: queued,
+    }
 }
 
 // cancelling a pack job deletes that pack's files so it must never be queued over one that's already there
@@ -340,6 +362,18 @@ pub fn remove_pack(game: &Game, pack: &str) -> Result<()> {
     match manifest.strategy_for(edition) {
         InstallStrategy::HoyoSophon => {
             hoyo::remove_voice_pack(&manifest, edition, &game_install_root(game), pack)
+        }
+        InstallStrategy::KuroResourceIndex => {
+            let config = kuro::KuroConfig::load(&manifest, &edition_id)?;
+            let def = config.pack(pack)?;
+            if def.effect.is_applied(&game.launch) {
+                bail!(
+                    "{} is {}'s active pack, switch to another one first",
+                    def.label,
+                    game.metadata.name
+                );
+            }
+            config.remove_pack(&game_install_root(game), pack)
         }
         _ => bail!("{} has no removable packs", game.metadata.name),
     }
@@ -409,13 +443,107 @@ pub fn inspect_existing(
     };
     if info.has_install {
         info.installed_version = read_install_version(manifest, edition_id, install_path);
-        if strategy == InstallStrategy::HoyoSophon
-            && let Some(edition) = manifest.edition(edition_id)
-        {
-            info.installed_packs = hoyo::installed_voice_ids(manifest, edition, install_path);
-        }
+        info.installed_packs = installed_pack_ids(manifest, edition_id, install_path);
     }
     info
+}
+
+fn installed_pack_ids(manifest: &GachaManifest, edition_id: &str, root: &Path) -> Vec<String> {
+    let Some(edition) = manifest.edition(edition_id) else {
+        return Vec::new();
+    };
+    match manifest.strategy_for(edition) {
+        InstallStrategy::HoyoSophon => hoyo::installed_voice_ids(manifest, edition, root),
+        InstallStrategy::KuroResourceIndex => kuro::KuroConfig::load(manifest, edition_id)
+            .map(|c| c.installed_packs(root).map(String::from).collect())
+            .unwrap_or_default(),
+        _ => Vec::new(),
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PackKind {
+    Voice,
+    Texture,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PackOption {
+    pub id: String,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PackPicker {
+    pub kind: PackKind,
+    pub single: bool,
+    pub defaults: Vec<String>,
+    pub packs: Vec<PackOption>,
+}
+
+pub fn pack_picker(manifest: &GachaManifest, edition_id: &str) -> Option<PackPicker> {
+    let edition = manifest.edition(edition_id)?;
+    let picker = match manifest.strategy_for(edition) {
+        InstallStrategy::HoyoSophon => PackPicker {
+            kind: PackKind::Voice,
+            single: false,
+            defaults: manifest
+                .voice_locales
+                .first()
+                .map(|v| v.id.clone())
+                .into_iter()
+                .collect(),
+            packs: manifest
+                .voice_locales
+                .iter()
+                .map(|v| PackOption {
+                    id: v.id.clone(),
+                    label: v.label.clone(),
+                })
+                .collect(),
+        },
+        InstallStrategy::KuroResourceIndex => {
+            let config = kuro::KuroConfig::load(manifest, edition_id).ok()?;
+            PackPicker {
+                kind: PackKind::Texture,
+                single: true,
+                defaults: config.default_pack.clone().into_iter().collect(),
+                packs: config
+                    .packs
+                    .into_iter()
+                    .map(|(id, def)| PackOption {
+                        id,
+                        label: def.label,
+                    })
+                    .collect(),
+            }
+        }
+        _ => return None,
+    };
+    (!picker.packs.is_empty()).then_some(picker)
+}
+
+pub fn apply_pack_effects(
+    manifest: &GachaManifest,
+    edition_id: &str,
+    picked: &[String],
+    launch: &mut LaunchConfig,
+) -> Result<()> {
+    let Some(edition) = manifest.edition(edition_id) else {
+        return Ok(());
+    };
+    if manifest.strategy_for(edition) != InstallStrategy::KuroResourceIndex {
+        return Ok(());
+    }
+    let config = kuro::KuroConfig::load(manifest, edition_id)?;
+    if let Some(id) = config
+        .install_packs(picked, &manifest.display_name)?
+        .first()
+    {
+        config.pack(id)?.effect.apply(launch);
+    }
+    Ok(())
 }
 
 pub fn resolve_poster(manifest: &GachaManifest) -> String {

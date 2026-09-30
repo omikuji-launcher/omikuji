@@ -67,7 +67,8 @@ DialogCard {
     property var runnerOptions: []
     property int runnerIndex: 0
 
-    property var voiceChecks: []
+    property var packPicker: null
+    property var packPicks: []
 
     property real installFreeBytes: -1
     property real tempFreeBytes: -1
@@ -90,8 +91,9 @@ DialogCard {
         root.manifest ? (root.manifest.install_folder_name || "") : ""
     readonly property var editions:
         root.manifest && root.manifest.editions ? root.manifest.editions : []
-    readonly property var voiceLocales:
-        root.manifest && root.manifest.voice_locales ? root.manifest.voice_locales : []
+    readonly property var pickerPacks: packPicker ? packPicker.packs : []
+    readonly property bool singlePack: packPicker !== null && packPicker.single
+    readonly property string packsContext: editionId + "|" + existingInstall + "|" + installedPacks.join(",")
     readonly property var selectedEdition:
         editions.length ? editions[Math.max(0, Math.min(editionIndex, editions.length - 1))] : null
     readonly property string editionId: selectedEdition ? (selectedEdition.id || "") : ""
@@ -117,20 +119,26 @@ DialogCard {
         return tempPath.trim() !== "" ? tempPath.trim() : installPath.trim()
     }
 
-    function voicesSelected() {
-        return voiceLocales
-            .filter((voice, i) => voiceChecks[i] && !installedPacks.includes(voice.id))
-            .map(voice => voice.id)
+    function packsToDownload() {
+        return packPicks.filter(id => !installedPacks.includes(id))
     }
 
-    function defaultVoiceChecks() {
-        return voiceLocales.map((voice, i) => !existingInstall && i === 0)
+    function defaultPacks() {
+        if (!packPicker) return []
+        if (!existingInstall) return packPicker.defaults
+        if (!singlePack) return []
+        const onDisk = packPicker.defaults.filter(id => installedPacks.includes(id))
+        return onDisk.length > 0 ? onDisk : installedPacks.slice(0, 1)
     }
 
-    function toggleVoice(index) {
-        let copy = voiceChecks.slice()
-        copy[index] = !copy[index]
-        voiceChecks = copy
+    function loadPackPicker() {
+        try { packPicker = JSON.parse(gameModel.gacha_pack_picker(manifestId, editionId) || "null") }
+        catch (e) { packPicker = null }
+        packPicks = defaultPacks()
+    }
+
+    function togglePack(id) {
+        packPicks = packPicks.includes(id) ? packPicks.filter(p => p !== id) : packPicks.concat([id])
     }
 
     function hasEnoughSpace() {
@@ -157,8 +165,9 @@ DialogCard {
         if (root.shown) sizeFetchDebounce.restart()
         refreshExisting()
     }
-    onVoiceChecksChanged: if (root.shown) sizeFetchDebounce.restart()
-    onExistingInstallChanged: voiceChecks = defaultVoiceChecks()
+    onEditionIdChanged: if (root.manifest) loadPackPicker()
+    onPackPicksChanged: if (root.shown) sizeFetchDebounce.restart()
+    onPacksContextChanged: packPicks = defaultPacks()
 
     Timer {
         id: sizeFetchDebounce
@@ -194,7 +203,8 @@ DialogCard {
         tempPath = ""
         runnerOptions = []
         runnerIndex = 0
-        voiceChecks = []
+        packPicker = null
+        packPicks = []
         installFreeBytes = -1
         tempFreeBytes = -1
         downloadBytes = -1
@@ -230,7 +240,7 @@ DialogCard {
         resetState()
         manifest = m
 
-        voiceChecks = defaultVoiceChecks()
+        loadPackPicker()
 
         installPath = defaultInstallPath()
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
@@ -318,15 +328,15 @@ DialogCard {
         if (importing && !downloadModel.gacha_supports_import(manifestId, editionId)) {
             let gid = gameModel.gacha_import_after_install(
                 manifestId, editionId, importDir, runner, prefixPath,
-                optionsCsv()
+                optionsCsv(), packPicks.join(",")
             )
-            if (gid) voicesSelected().forEach(pack => gameModel.add_gacha_pack(gid, pack))
+            if (gid) packsToDownload().forEach(pack => gameModel.add_gacha_pack(gid, pack))
             imported(gid || "")
             close()
             return
         }
         let id = downloadModel.enqueue_gacha(
-            manifestId, editionId, voicesSelected().join(","),
+            manifestId, editionId, packsToDownload().join(","),
             importing ? importDir : effectiveInstallPath,
             runner, prefixPath, tempPath, importing, optionsCsv()
         )
@@ -397,7 +407,7 @@ DialogCard {
         sizeError = ""
         let id = "gacha-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8)
         _sizeRequestId = id
-        gameModel.fetch_gacha_install_size(id, manifestId, editionId, voicesSelected().join(","))
+        gameModel.fetch_gacha_install_size(id, manifestId, editionId, packsToDownload().join(","))
     }
 
     function _adoptDetectedEdition(dir) {
@@ -490,34 +500,42 @@ DialogCard {
 
         DialogSection {
             Layout.fillWidth: true
-            label: qsTr("Voice Packs")
-            visible: root.voiceLocales.length > 0
+            label: root.packPicker && root.packPicker.kind === "texture" ? qsTr("Texture Pack") : qsTr("Voice Packs")
+            visible: root.pickerPacks.length > 0
+
+            SegmentedControl {
+                width: parent.width
+                visible: root.singlePack
+                options: root.pickerPacks
+                currentIndex: Math.max(0, root.pickerPacks.findIndex(p => root.packPicks.includes(p.id)))
+                onSelected: (index) => root.packPicks = [root.pickerPacks[index].id]
+            }
 
             GridLayout {
                 width: parent.width
+                visible: !root.singlePack
                 columns: 2
                 columnSpacing: Theme.space.md
                 rowSpacing: Theme.space.sm
 
                 Repeater {
-                    model: root.voiceLocales
+                    model: root.pickerPacks
 
                     CheckRow {
-                        id: localeRow
+                        id: packRow
                         required property var modelData
-                        required property int index
                         readonly property bool onDisk: root.installedPacks.includes(modelData.id)
 
                         Layout.fillWidth: true
                         minHeight: 0
                         enabled: !onDisk
                         opacity: onDisk ? 0.55 : 1
-                        checked: onDisk || root.voiceChecks[index] === true
-                        onToggled: root.toggleVoice(index)
+                        checked: onDisk || root.packPicks.includes(modelData.id)
+                        onToggled: root.togglePack(modelData.id)
 
                         Text {
                             Layout.fillWidth: true
-                            text: localeRow.modelData.label
+                            text: packRow.modelData.label
                             color: Theme.text
                             font.pixelSize: Theme.type.subtitle.size
                             elide: Text.ElideRight

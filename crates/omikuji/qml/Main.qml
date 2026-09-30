@@ -1037,6 +1037,13 @@ property real cardZoom: appSettings.cardZoom
         onConfirmed: (id) => { if (id && gameModel) gameModel.refetch_media(id) }
     }
 
+    ConfirmDialog {
+        id: settingsConfirm
+        anchors.fill: parent
+        destructive: true
+        onConfirmed: (onConfirm) => { if (onConfirm) onConfirm() }
+    }
+
     ImagePreviewDialog {
         id: imagePreviewDialog
         anchors.fill: parent
@@ -1505,6 +1512,12 @@ property real cardZoom: appSettings.cardZoom
                 onRefetchMediaRequested: (gid) => refetchMediaConfirm.show(gid)
                 onPreviewImageRequested: (src, caption) => imagePreviewDialog.show(src, caption)
                 onPickMediaRequested: (gid, kind) => mediaPickerDialog.show(gid, kind)
+                onConfirmRequested: (title, message, confirmText, onConfirm) => {
+                    settingsConfirm.title = title
+                    settingsConfirm.message = message
+                    settingsConfirm.confirmText = confirmText
+                    settingsConfirm.show(onConfirm)
+                }
             }
         }
     }

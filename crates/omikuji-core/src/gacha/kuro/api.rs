@@ -1,4 +1,7 @@
+use std::iter;
+
 use anyhow::{Result, anyhow};
+use indexmap::IndexMap;
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 
@@ -7,8 +10,16 @@ use crate::gacha::manifest::GachaManifest;
 use crate::gacha::strategies::normalize_version;
 use crate::http;
 
+const LEGACY_PACK: &str = "common";
+
 #[derive(Debug, Clone)]
-pub struct ResourceInfo {
+pub struct KuroIndex {
+    pub packs: IndexMap<String, Pack>,
+    pub bundles: IndexMap<String, Vec<String>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Pack {
     pub version: String,
     pub cdn_url: String,
     pub index_file_url: String,
@@ -18,16 +29,43 @@ pub struct ResourceInfo {
     pub patch_configs: Vec<PatchConfig>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct PatchConfig {
     pub version: String,
+    #[serde(rename = "indexFile")]
     pub index_file_rel: String,
+    #[serde(rename = "baseUrl")]
     pub base_url_rel: String,
+    #[serde(rename = "size", default)]
     pub download_size: u64,
-    pub un_compress_size: u64,
 }
 
-impl ResourceInfo {
+impl KuroIndex {
+    pub fn base_id(&self) -> Result<&str> {
+        let mut shared = self
+            .packs
+            .keys()
+            .filter(|id| self.bundles.values().all(|b| b.contains(id)));
+        match (shared.next(), shared.next()) {
+            (Some(id), None) => Ok(id),
+            _ => Err(anyhow!(
+                "index.json has no single pack shared by every bundle"
+            )),
+        }
+    }
+
+    pub fn base(&self) -> Result<&Pack> {
+        self.pack(self.base_id()?)
+    }
+
+    pub fn pack(&self, id: &str) -> Result<&Pack> {
+        self.packs
+            .get(id)
+            .ok_or_else(|| anyhow!("index.json has no pack {id}"))
+    }
+}
+
+impl Pack {
     pub fn matching_patch(&self, from_version: &str) -> Option<&PatchConfig> {
         let target = normalize_version(from_version);
         self.patch_configs
@@ -36,132 +74,51 @@ impl ResourceInfo {
     }
 }
 
-pub async fn fetch_resource_info(
-    manifest: &GachaManifest,
-    edition_id: &str,
-) -> Result<ResourceInfo> {
-    let url = super::index_url_from_manifest(manifest, edition_id)?;
-
-    let resp = http::client()
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| anyhow!("fetch {}: {}", url, e))?;
-    if !resp.status().is_success() {
-        anyhow::bail!("fetch {}: http {}", url, resp.status());
-    }
-    let data: RawIndex = resp
-        .json()
-        .await
-        .map_err(|e| anyhow!("parse index.json: {}", e))?;
-
-    let mut cdns: Vec<&RawCdnEntry> = data.default.cdn_list.iter().collect();
-    cdns.sort_by_key(|c| c.priority);
-    let cdn_url = cdns
-        .first()
-        .map(|c| c.url.clone())
-        .ok_or_else(|| anyhow!("cdnList empty in index.json"))?;
-
-    let (version, index_file_rel, base_url_rel, dl_bytes, inst_bytes, patch_configs) = match data
-        .default
-        .config
-        .as_ref()
-        .and_then(|c| c.version.as_ref())
-    {
-        Some(_) => {
-            let cfg = data.default.config.clone().unwrap();
-            (
-                cfg.version.unwrap_or_default(),
-                cfg.index_file
-                    .ok_or_else(|| anyhow!("nested config missing indexFile"))?,
-                cfg.base_url
-                    .ok_or_else(|| anyhow!("nested config missing baseUrl"))?,
-                cfg.size,
-                cfg.un_compress_size,
-                cfg.patch_config
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|p| PatchConfig {
-                        version: p.version,
-                        index_file_rel: p.index_file,
-                        base_url_rel: p.base_url,
-                        download_size: p.size,
-                        un_compress_size: p.un_compress_size,
-                    })
-                    .collect(),
-            )
-        }
-        None => {
-            let def = &data.default;
-            let v = def
-                .version
-                .clone()
-                .ok_or_else(|| anyhow!("index.json has no version (neither nested nor flat)"))?;
-            let resources = def
-                .resources
-                .clone()
-                .ok_or_else(|| anyhow!("flat shape missing `resources`"))?;
-            let base = def
-                .resources_base_path
-                .clone()
-                .ok_or_else(|| anyhow!("flat shape missing `resourcesBasePath`"))?;
-            // resourcesBasePath omits the trailing slash the downloader needs
-            let base_with_slash = if base.ends_with('/') {
-                base
-            } else {
-                format!("{}/", base)
-            };
-            (v, resources, base_with_slash, 0u64, 0u64, Vec::new())
-        }
-    };
-
-    let index_file_url = format!("{}{}", cdn_url, index_file_rel);
-    let base_url = format!("{}{}", cdn_url, base_url_rel);
-
-    Ok(ResourceInfo {
-        version,
-        cdn_url,
-        index_file_url,
-        base_url,
-        download_bytes: dl_bytes,
-        install_bytes: inst_bytes,
-        patch_configs,
-    })
+pub async fn fetch_index(index_url: &str) -> Result<KuroIndex> {
+    fetch_json::<RawIndex>(index_url).await?.resolve()
 }
 
 #[derive(Deserialize)]
-struct RawIndex {
-    default: RawDefault,
+#[serde(untagged)]
+enum RawIndex {
+    Packs {
+        #[serde(rename = "cdnList")]
+        cdn_list: Vec<RawCdnEntry>,
+        #[serde(rename = "resourcePacks")]
+        resource_packs: IndexMap<String, RawPack>,
+        #[serde(default)]
+        bundles: IndexMap<String, RawBundle>,
+    },
+    Legacy {
+        default: RawDefault,
+    },
 }
 
 #[derive(Deserialize)]
 struct RawDefault {
     #[serde(rename = "cdnList")]
     cdn_list: Vec<RawCdnEntry>,
-    #[serde(default)]
-    config: Option<RawConfig>,
-    #[serde(default)]
-    version: Option<String>,
-    #[serde(default)]
-    resources: Option<String>,
-    #[serde(default, rename = "resourcesBasePath")]
-    resources_base_path: Option<String>,
+    config: RawPack,
 }
 
-#[derive(Clone, Deserialize)]
-struct RawConfig {
-    #[serde(default)]
-    version: Option<String>,
-    #[serde(default, rename = "indexFile")]
-    index_file: Option<String>,
-    #[serde(default, rename = "baseUrl")]
-    base_url: Option<String>,
+#[derive(Deserialize)]
+struct RawBundle {
+    #[serde(rename = "resourcePacks")]
+    resource_packs: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawPack {
+    version: String,
+    index_file: String,
+    base_url: String,
     #[serde(default)]
     size: u64,
-    #[serde(rename = "unCompressSize", default)]
+    #[serde(default)]
     un_compress_size: u64,
-    #[serde(rename = "patchConfig", default)]
-    patch_config: Option<Vec<RawPatchConfig>>,
+    #[serde(default)]
+    patch_config: Vec<PatchConfig>,
 }
 
 #[derive(Deserialize)]
@@ -171,17 +128,54 @@ struct RawCdnEntry {
     priority: i64,
 }
 
-#[derive(Clone, Deserialize)]
-struct RawPatchConfig {
-    version: String,
-    #[serde(rename = "indexFile")]
-    index_file: String,
-    #[serde(rename = "baseUrl")]
-    base_url: String,
-    #[serde(default)]
-    size: u64,
-    #[serde(rename = "unCompressSize", default)]
-    un_compress_size: u64,
+impl RawIndex {
+    fn resolve(self) -> Result<KuroIndex> {
+        let (cdn_list, packs, bundles) = match self {
+            Self::Packs {
+                cdn_list,
+                resource_packs,
+                bundles,
+            } => (
+                cdn_list,
+                resource_packs,
+                bundles
+                    .into_iter()
+                    .map(|(id, b)| (id, b.resource_packs))
+                    .collect(),
+            ),
+            Self::Legacy { default } => (
+                default.cdn_list,
+                IndexMap::from([(LEGACY_PACK.to_string(), default.config)]),
+                IndexMap::new(),
+            ),
+        };
+        let cdn_url = cdn_list
+            .into_iter()
+            .min_by_key(|c| c.priority)
+            .map(|c| c.url)
+            .ok_or_else(|| anyhow!("cdnList empty in index.json"))?;
+        Ok(KuroIndex {
+            packs: packs
+                .into_iter()
+                .map(|(id, raw)| (id, raw.resolve(&cdn_url)))
+                .collect(),
+            bundles,
+        })
+    }
+}
+
+impl RawPack {
+    fn resolve(self, cdn_url: &str) -> Pack {
+        Pack {
+            version: self.version,
+            cdn_url: cdn_url.to_string(),
+            index_file_url: format!("{cdn_url}{}", self.index_file),
+            base_url: format!("{cdn_url}{}", self.base_url),
+            download_bytes: self.size,
+            install_bytes: self.un_compress_size,
+            patch_configs: self.patch_config,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -237,18 +231,15 @@ async fn fetch_json<T: DeserializeOwned>(url: &str) -> Result<T> {
         .get(url)
         .send()
         .await
-        .map_err(|e| anyhow!("fetch indexFile: {}", e))?;
+        .map_err(|e| anyhow!("fetch {url}: {e}"))?;
     if !resp.status().is_success() {
-        anyhow::bail!("fetch indexFile: http {}", resp.status());
+        anyhow::bail!("fetch {url}: http {}", resp.status());
     }
     // parse by hand so errors carry line/column; these bodies hit 50 MB and reqwest's error is opaque
-    let bytes = resp
-        .bytes()
-        .await
-        .map_err(|e| anyhow!("read indexFile body: {}", e))?;
+    let bytes = resp.bytes().await.map_err(|e| anyhow!("read {url}: {e}"))?;
     serde_json::from_slice(&bytes).map_err(|e| {
         let head: String = String::from_utf8_lossy(&bytes[..bytes.len().min(300)]).into_owned();
-        anyhow!("parse indexFile: {} — body head: {}", e, head)
+        anyhow!("parse {url}: {e} - body head: {head}")
     })
 }
 
@@ -258,16 +249,35 @@ pub struct InstallSize {
     pub install_bytes: u64,
 }
 
-pub async fn fetch_install_size(manifest: &GachaManifest, edition_id: &str) -> Result<InstallSize> {
-    let info = fetch_resource_info(manifest, edition_id).await?;
-    if info.download_bytes > 0 {
+pub async fn fetch_install_size(
+    manifest: &GachaManifest,
+    edition_id: &str,
+    picked: &[String],
+) -> Result<InstallSize> {
+    let config = super::KuroConfig::load(manifest, edition_id)?;
+    let index = fetch_index(&config.index_url).await?;
+    let tiers = config.install_packs(picked, &manifest.display_name)?;
+    let mut total = InstallSize {
+        download_bytes: 0,
+        install_bytes: 0,
+    };
+    for id in iter::once(index.base_id()?).chain(tiers) {
+        let size = pack_size(index.pack(id)?).await?;
+        total.download_bytes += size.download_bytes;
+        total.install_bytes += size.install_bytes;
+    }
+    Ok(total)
+}
+
+async fn pack_size(pack: &Pack) -> Result<InstallSize> {
+    if pack.download_bytes > 0 {
         return Ok(InstallSize {
-            download_bytes: info.download_bytes,
-            install_bytes: info.install_bytes.max(info.download_bytes),
+            download_bytes: pack.download_bytes,
+            install_bytes: pack.install_bytes.max(pack.download_bytes),
         });
     }
-    let index = fetch_index_file(&info.index_file_url).await?;
-    let total: u64 = index.resource.iter().map(|r| r.size).sum();
+    let files = fetch_index_file(&pack.index_file_url).await?;
+    let total: u64 = files.resource.iter().map(|r| r.size).sum();
     Ok(InstallSize {
         download_bytes: total,
         install_bytes: total,

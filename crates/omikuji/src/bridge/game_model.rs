@@ -642,7 +642,24 @@ pub mod qobject {
         fn gacha_packs(self: &GameModel, game_id: &QString) -> QString;
 
         #[qinvokable]
-        fn remove_gacha_pack(self: &GameModel, game_id: &QString, pack: &QString) -> QString;
+        fn remove_gacha_pack(
+            self: Pin<&mut GameModel>,
+            game_id: &QString,
+            pack: &QString,
+        ) -> QString;
+
+        #[qinvokable]
+        fn gacha_pack_removal(self: &GameModel, pack: &QString) -> QString;
+
+        #[qinvokable]
+        fn gacha_launch_controls(self: &GameModel) -> QString;
+
+        #[qinvokable]
+        fn select_gacha_launch_choice(
+            self: Pin<&mut GameModel>,
+            control_id: &QString,
+            choice_id: &QString,
+        ) -> QString;
 
         #[qinvokable]
         fn fetch_gacha_install_size(
@@ -650,8 +667,15 @@ pub mod qobject {
             request_id: &QString,
             manifest_id: &QString,
             edition_id: &QString,
-            voices_csv: &QString,
+            packs_csv: &QString,
         );
+
+        #[qinvokable]
+        fn gacha_pack_picker(
+            self: &GameModel,
+            manifest_id: &QString,
+            edition_id: &QString,
+        ) -> QString;
 
         #[qinvokable]
         fn gacha_check_existing_install(
@@ -678,6 +702,7 @@ pub mod qobject {
             runner_version: &QString,
             prefix_path: &QString,
             options_csv: &QString,
+            packs_csv: &QString,
         ) -> QString;
 
         #[qinvokable]

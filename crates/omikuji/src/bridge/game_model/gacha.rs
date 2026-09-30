@@ -1,13 +1,15 @@
 use std::pin::Pin;
 
-use cxx_qt::Threading;
+use cxx_qt::{CxxQtType, Threading};
 use cxx_qt_lib::QString;
 
 use omikuji_core::defaults::Defaults;
+use omikuji_core::gacha::controls;
 use omikuji_core::library::{Game, Library, SourceKind, generate_id};
 use omikuji_core::media::MediaSlot;
-use omikuji_core::{components, gacha, install_sizes, notifications};
+use omikuji_core::{anyhow, components, gacha, install_sizes, notifications};
 
+use super::{Draft, args_to_text};
 use crate::bridge::{csv_ids, expand_path};
 
 impl super::qobject::GameModel {
@@ -89,18 +91,88 @@ impl super::qobject::GameModel {
         QString::from(&serde_json::to_string(&packs).unwrap_or_else(|_| "[]".into()))
     }
 
-    pub fn remove_gacha_pack(&self, game_id: &QString, pack: &QString) -> QString {
+    pub fn gacha_pack_removal(&self, pack: &QString) -> QString {
+        let pack = pack.to_string();
+        let Some(draft) = &self.rust().draft else {
+            return QString::default();
+        };
+        let active = is_active_pack(&draft.game, &pack);
+        let fallback = active
+            .then(|| controls::pack_fallback(&draft.game, &pack))
+            .flatten()
+            .map(|c| c.label);
+        QString::from(&serde_json::json!({ "active": active, "fallback": fallback }).to_string())
+    }
+
+    pub fn remove_gacha_pack(
+        mut self: Pin<&mut Self>,
+        game_id: &QString,
+        pack: &QString,
+    ) -> QString {
         let gid = game_id.to_string();
+        let pack = pack.to_string();
+        let saved_active = self
+            .library
+            .game
+            .iter()
+            .find(|g| g.metadata.id == gid)
+            .is_some_and(|g| is_active_pack(g, &pack));
+        if let Some(draft) = self.as_mut().rust_mut().get_mut().draft.as_mut()
+            && draft.game.metadata.id == gid
+        {
+            if is_active_pack(&draft.game, &pack) {
+                let fallback = controls::pack_fallback(&draft.game, &pack).map(|c| c.id);
+                if let Err(e) = select_on_draft(draft, controls::PACKS_CONTROL, fallback.as_deref())
+                {
+                    return QString::from(&format!("{e:#}"));
+                }
+            }
+            if saved_active {
+                let launch = draft.game.launch.clone();
+                self.as_mut().update_game(&gid, |g| {
+                    g.launch.args = launch.args;
+                    g.launch.env = launch.env;
+                });
+            }
+        }
         let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
             return QString::from("game not found");
         };
-        match gacha::strategies::remove_pack(game, &pack.to_string()) {
+        match gacha::strategies::remove_pack(game, &pack) {
             Ok(()) => QString::default(),
             Err(e) => {
                 tracing::error!("removing {} from {}: {e:?}", pack, game.metadata.name);
                 QString::from(&format!("{e:#}"))
             }
         }
+    }
+
+    pub fn gacha_launch_controls(&self) -> QString {
+        let controls = self
+            .rust()
+            .draft
+            .as_ref()
+            .map(|d| controls::launch_controls(&d.game))
+            .unwrap_or_default();
+        QString::from(&serde_json::to_string(&controls).unwrap_or_else(|_| "[]".into()))
+    }
+
+    pub fn select_gacha_launch_choice(
+        mut self: Pin<&mut Self>,
+        control_id: &QString,
+        choice_id: &QString,
+    ) -> QString {
+        let Some(draft) = self.as_mut().rust_mut().get_mut().draft.as_mut() else {
+            return QString::from("no game is being edited");
+        };
+        let choice = choice_id.to_string();
+        let choice = Some(choice.as_str()).filter(|c| !c.is_empty());
+        if let Err(e) = select_on_draft(draft, &control_id.to_string(), choice) {
+            return QString::from(&format!("{e:#}"));
+        }
+        let id = QString::from(&draft.game.metadata.id);
+        self.as_mut().draft_rebased(&id);
+        QString::default()
     }
 
     pub fn gacha_posters(&self) -> QString {
@@ -118,21 +190,27 @@ impl super::qobject::GameModel {
         request_id: &QString,
         manifest_id: &QString,
         edition_id: &QString,
-        voices_csv: &QString,
+        packs_csv: &QString,
     ) {
         let rid = request_id.to_string();
         let mid = manifest_id.to_string();
         let eid = edition_id.to_string();
-        let voices = csv_ids(voices_csv);
+        let packs = csv_ids(packs_csv);
 
         install_sizes::spawn_fetch(rid, move || async move {
             let manifest =
                 gacha::manifest::find(&mid).ok_or_else(|| format!("unknown manifest: {}", mid))?;
-            gacha::strategies::fetch_install_size(&manifest, &eid, &voices)
+            gacha::strategies::fetch_install_size(&manifest, &eid, &packs)
                 .await
                 .map(|s| (s.download_bytes, s.install_bytes))
                 .map_err(|e| e.to_string())
         });
+    }
+
+    pub fn gacha_pack_picker(&self, manifest_id: &QString, edition_id: &QString) -> QString {
+        let picker = gacha::manifest::find(&manifest_id.to_string())
+            .and_then(|m| gacha::strategies::pack_picker(&m, &edition_id.to_string()));
+        QString::from(&serde_json::to_string(&picker).unwrap_or_else(|_| "null".into()))
     }
 
     pub fn gacha_detect_edition(&self, manifest_id: &QString, install_path: &QString) -> QString {
@@ -185,6 +263,7 @@ impl super::qobject::GameModel {
         runner_version: &QString,
         prefix_path: &QString,
         options_csv: &QString,
+        packs_csv: &QString,
     ) -> QString {
         use omikuji_core::library::{
             GraphicsConfig, LaunchConfig, Metadata, RunnerConfig, RunnerType, SourceConfig,
@@ -256,6 +335,17 @@ impl super::qobject::GameModel {
         };
         let accepted = csv_ids(options_csv);
         let companion = manifest.apply_options(&accepted, &mut game.launch).cloned();
+        if let Err(e) = gacha::strategies::apply_pack_effects(
+            &manifest,
+            &eid,
+            &csv_ids(packs_csv),
+            &mut game.launch,
+        ) {
+            tracing::warn!(
+                "{} registered without its pack's launch args: {e:#}",
+                display_s
+            );
+        }
         game.seed_from_defaults(&Defaults::load());
 
         if let Err(e) = Library::save_game_static(&game) {
@@ -322,4 +412,30 @@ impl super::qobject::GameModel {
         tracing::info!("imported '{}' ({}) as id '{}'", display_s, app_id, game_id);
         QString::from(&game_id)
     }
+}
+
+fn is_active_pack(game: &Game, pack: &str) -> bool {
+    controls::launch_controls(game)
+        .into_iter()
+        .find(|c| c.id == controls::PACKS_CONTROL)
+        .is_some_and(|c| c.selected.as_deref() == Some(pack))
+}
+
+fn select_on_draft(
+    draft: &mut Draft,
+    control_id: &str,
+    choice: Option<&str>,
+) -> anyhow::Result<()> {
+    let control = controls::launch_controls(&draft.game)
+        .into_iter()
+        .find(|c| c.id == control_id)
+        .ok_or_else(|| anyhow::anyhow!("unknown launch control {control_id}"))?;
+    let mut launch = draft.game.launch.clone();
+    control.select(&mut launch, choice)?;
+    draft.edit("launch.args".into(), args_to_text(&launch.args));
+    draft.edit(
+        "launch.env".into(),
+        serde_json::to_string(&launch.env).unwrap_or_default(),
+    );
+    Ok(())
 }

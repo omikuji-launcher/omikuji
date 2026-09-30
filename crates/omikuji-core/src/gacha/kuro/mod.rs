@@ -4,22 +4,92 @@ mod patcher;
 pub mod source;
 pub mod update;
 
-use crate::gacha::manifest::GachaManifest;
-use anyhow::{Result, anyhow};
+use std::path::{Path, PathBuf};
 
-pub fn index_url_from_manifest(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
-    manifest
-        .edition(edition_id)
-        .and_then(|e| e.strategy_config.get("index_url"))
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .ok_or_else(|| {
-            anyhow!(
-                "no strategy_config.index_url in manifest {} for edition {}",
-                manifest.id,
-                edition_id
-            )
-        })
+use anyhow::{Context, Result, anyhow, bail};
+use indexmap::IndexMap;
+use serde::Deserialize;
+
+use crate::gacha::file_sync::sanitize_rel;
+use crate::gacha::manifest::{GachaManifest, LaunchEffect};
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct KuroConfig {
+    pub index_url: String,
+    #[serde(default)]
+    pub default_pack: Option<String>,
+    #[serde(default)]
+    pub packs: IndexMap<String, PackDef>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PackDef {
+    pub label: String,
+    pub folder: String,
+    #[serde(flatten)]
+    pub effect: LaunchEffect,
+}
+
+impl KuroConfig {
+    pub fn load(manifest: &GachaManifest, edition_id: &str) -> Result<Self> {
+        let edition = manifest.require_edition(edition_id)?;
+        let config: Self = serde_json::from_value(edition.strategy_config.clone())
+            .with_context(|| format!("strategy_config of {} {}", manifest.id, edition_id))?;
+        if let Some((id, _)) = config
+            .packs
+            .iter()
+            .find(|(_, def)| sanitize_rel(&def.folder).as_os_str().is_empty())
+        {
+            bail!("pack {id} of {} has no folder", manifest.id);
+        }
+        Ok(config)
+    }
+
+    pub fn pack(&self, id: &str) -> Result<&PackDef> {
+        self.packs
+            .get(id)
+            .ok_or_else(|| anyhow!("unknown pack: {id}"))
+    }
+
+    pub fn install_packs<'a>(&'a self, picked: &'a [String], game: &str) -> Result<Vec<&'a str>> {
+        if !picked.is_empty() || self.packs.is_empty() {
+            return Ok(picked.iter().map(String::as_str).collect());
+        }
+        let id = self.default_pack.as_deref().ok_or_else(|| {
+            anyhow!("no pack selected for {game} and its manifest has no default_pack")
+        })?;
+        let def = self.pack(id).context("default_pack")?;
+        tracing::warn!(
+            "no texture pack selected for {game}, installing default ({})",
+            def.label
+        );
+        Ok(vec![id])
+    }
+
+    pub fn installed_packs<'a>(&'a self, root: &'a Path) -> impl Iterator<Item = &'a str> {
+        self.packs
+            .iter()
+            .filter(|(_, def)| def.is_installed(root))
+            .map(|(id, _)| id.as_str())
+    }
+
+    pub fn remove_pack(&self, root: &Path, id: &str) -> Result<()> {
+        let dir = self.pack(id)?.dir(root);
+        if dir.exists() {
+            fs_err::remove_dir_all(dir)?;
+        }
+        Ok(())
+    }
+}
+
+impl PackDef {
+    fn dir(&self, root: &Path) -> PathBuf {
+        root.join(sanitize_rel(&self.folder))
+    }
+
+    pub fn is_installed(&self, root: &Path) -> bool {
+        self.dir(root).is_dir()
+    }
 }
 
 pub fn parse_app_id(app_id: &str) -> Result<(String, String)> {
@@ -27,12 +97,12 @@ pub fn parse_app_id(app_id: &str) -> Result<(String, String)> {
     let game = parts
         .next()
         .filter(|s| !s.is_empty())
-        .ok_or_else(|| anyhow::anyhow!("invalid kuro app_id: {}", app_id))?
+        .ok_or_else(|| anyhow!("invalid kuro app_id: {}", app_id))?
         .to_string();
     let edition = parts
         .next()
         .filter(|s| !s.is_empty())
-        .ok_or_else(|| anyhow::anyhow!("invalid kuro app_id: {}", app_id))?
+        .ok_or_else(|| anyhow!("invalid kuro app_id: {}", app_id))?
         .to_string();
     Ok((game, edition))
 }

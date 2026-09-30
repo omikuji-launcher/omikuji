@@ -96,10 +96,7 @@ impl GachaManifest {
             .iter()
             .filter(|o| accepted.iter().any(|a| a == &o.id))
         {
-            launch.args.extend(opt.args.iter().cloned());
-            launch
-                .env
-                .extend(opt.env.iter().map(|(k, v)| (k.clone(), v.clone())));
+            opt.effect.apply(launch);
 
             let Some(spec) = &opt.alongside else { continue };
             if companion.is_some() {
@@ -127,12 +124,48 @@ pub struct ManifestOption {
     pub label: String,
     #[serde(default)]
     pub description: String,
+    #[serde(flatten)]
+    pub effect: LaunchEffect,
+    #[serde(default)]
+    pub alongside: Option<ManifestAlongside>,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct LaunchEffect {
     #[serde(default)]
     pub args: Vec<String>,
     #[serde(default)]
     pub env: IndexMap<String, String>,
-    #[serde(default)]
-    pub alongside: Option<ManifestAlongside>,
+}
+
+impl LaunchEffect {
+    pub fn is_empty(&self) -> bool {
+        self.args.is_empty() && self.env.is_empty()
+    }
+
+    pub fn is_applied(&self, launch: &LaunchConfig) -> bool {
+        !self.is_empty()
+            && self.args.iter().all(|a| launch.args.contains(a))
+            && self.env.iter().all(|(k, v)| launch.env.get(k) == Some(v))
+    }
+
+    pub fn apply(&self, launch: &mut LaunchConfig) {
+        for arg in &self.args {
+            if !launch.args.contains(arg) {
+                launch.args.push(arg.clone());
+            }
+        }
+        launch
+            .env
+            .extend(self.env.iter().map(|(k, v)| (k.clone(), v.clone())));
+    }
+
+    pub fn strip(&self, launch: &mut LaunchConfig) {
+        launch.args.retain(|a| !self.args.contains(a));
+        launch
+            .env
+            .retain(|k, v| self.env.get(k).is_none_or(|ours| ours != v));
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

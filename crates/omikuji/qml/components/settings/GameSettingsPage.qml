@@ -34,6 +34,7 @@ Item {
     signal refetchMediaRequested(string gameId)
     signal previewImageRequested(string source, string caption)
     signal pickMediaRequested(string gameId, string kind)
+    signal confirmRequested(string title, string message, string confirmText, var onConfirm)
 
     property var tabs: {
         let base = [
@@ -51,14 +52,15 @@ Item {
         if (root.config["source.kind"] === "gog") {
             base.push({ label: "GOG", kind: "gog", icon: "gog" })
         }
-        if (root.hasGachaPacks) {
+        if (root.hasGachaTab) {
             base.push({ label: qsTr("Gacha"), kind: "gacha", icon: "local_activity" })
         }
         return base
     }
-    readonly property bool hasGachaPacks: root.config["source.kind"] === "gacha"
+    readonly property bool hasGachaTab: root.config["source.kind"] === "gacha"
         && gameModel !== null && gameId !== ""
-        && JSON.parse(gameModel.gacha_packs(gameId) || "[]").length > 0
+        && (JSON.parse(gameModel.gacha_packs(gameId) || "[]").length > 0
+            || JSON.parse(gameModel.gacha_launch_controls() || "[]").length > 0)
     property int currentTabIndex: 0
     readonly property string currentKind:
         tabs[currentTabIndex] ? tabs[currentTabIndex].kind : "info"
@@ -222,6 +224,7 @@ Item {
                 gameModel: root.gameModel
                 downloadModel: root.downloadModel
                 gameId: root.gameId
+                onConfirmRequested: (title, message, confirmText, onConfirm) => root.confirmRequested(title, message, confirmText, onConfirm)
             }
         }
     }

@@ -1,13 +1,14 @@
 use anyhow::{Result, anyhow, bail};
 use futures_util::{StreamExt, TryStreamExt, stream};
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use super::api::{PatchConfig, PatchIndexFile, ResourceFile, ResourceInfo};
+use super::api::{Pack, PatchConfig, PatchIndexFile, ResourceFile};
 use super::krpdiff::Krpdiff;
 use super::source::sync_file;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
+use crate::fs_util;
 use crate::gacha::file_sync::{
     Skip, SyncProgress, download_one, expected_md5, file_md5, is_stale, sanitize_rel,
 };
@@ -15,21 +16,42 @@ use crate::gacha::file_sync::{
 // interrupt keeps staging so a resume reuses the pulled diffs
 pub(super) async fn run_patch_update(
     entry: &DownloadEntry,
-    info: &ResourceInfo,
+    pack_id: &str,
+    pack: &Pack,
     patch: &PatchConfig,
     pidx: &PatchIndexFile,
-) -> Result<bool> {
-    let result = patch_into_staging(entry, info, patch, pidx).await;
+) -> Result<()> {
+    let staging = staging_root(&entry.install_path).join(pack_id);
+    let result = patch_into_staging(entry, &staging, pack, patch, pidx).await;
     if result.is_err() {
-        discard_staging(&entry.install_path);
+        let _ = fs_err::remove_dir_all(&staging);
     }
     result
 }
 
 const STAGING_DIR: &str = ".omikuji-patch";
 
+fn staging_root(install_root: &Path) -> PathBuf {
+    install_root.join(STAGING_DIR)
+}
+
+fn done_marker(install_root: &Path, pack_id: &str) -> PathBuf {
+    staging_root(install_root).join(format!("{pack_id}.done"))
+}
+
 pub(super) fn discard_staging(install_root: &Path) {
-    let _ = fs_err::remove_dir_all(install_root.join(STAGING_DIR));
+    let _ = fs_err::remove_dir_all(staging_root(install_root));
+}
+
+pub(super) fn is_pack_done(install_root: &Path, pack_id: &str, stamp: &str) -> bool {
+    fs_err::read_to_string(done_marker(install_root, pack_id)).is_ok_and(|s| s == stamp)
+}
+
+pub(super) fn mark_pack_done(install_root: &Path, pack_id: &str, stamp: &str) -> Result<()> {
+    Ok(fs_util::write_atomic(
+        &done_marker(install_root, pack_id),
+        stamp,
+    )?)
 }
 
 #[derive(Debug)]
@@ -55,10 +77,11 @@ fn patch_workers() -> usize {
 
 async fn patch_into_staging(
     entry: &DownloadEntry,
-    info: &ResourceInfo,
+    staging: &Path,
+    pack: &Pack,
     patch: &PatchConfig,
     pidx: &PatchIndexFile,
-) -> Result<bool> {
+) -> Result<()> {
     if pidx.resource.is_empty() {
         bail!("patch indexFile returned zero resources");
     }
@@ -74,7 +97,6 @@ async fn patch_into_staging(
     }
 
     let install_root = entry.install_path.clone();
-    let staging = install_root.join(STAGING_DIR);
     let dl_root = staging.join("dl");
     let out_root = staging.join("out");
     fs_err::create_dir_all(&dl_root)?;
@@ -84,8 +106,8 @@ async fn patch_into_staging(
     let progress = SyncProgress::new(total);
 
     let id = entry.id.clone();
-    let cdn = info.cdn_url.clone();
-    let patch_base = format!("{}{}", info.cdn_url, patch.base_url_rel);
+    let cdn = pack.cdn_url.clone();
+    let patch_base = format!("{}{}", pack.cdn_url, patch.base_url_rel);
     let resources = pidx.resource.clone();
     let dl_for_workers = dl_root.clone();
     let progress_for_workers = progress.clone();
@@ -119,7 +141,7 @@ async fn patch_into_staging(
     while let Some(res) = stream.next().await {
         res?;
         if check_control(&entry.id) != ControlSignal::None {
-            return Ok(false);
+            return Ok(());
         }
     }
 
@@ -213,7 +235,7 @@ async fn patch_into_staging(
     }
     drop(groups);
     if interrupted {
-        return Ok(false);
+        return Ok(());
     }
 
     let candidates: Vec<ResourceFile> = pidx
@@ -243,18 +265,18 @@ async fn patch_into_staging(
         .flatten()
         .collect();
     if check_control(&entry.id) != ControlSignal::None {
-        return Ok(false);
+        return Ok(());
     }
     if !fallback.is_empty() {
         tracing::warn!("kuro patch: {} files need a full download", fallback.len());
         set_status(&entry.id, DownloadStatus::Downloading);
         for f in &fallback {
             if check_control(&entry.id) != ControlSignal::None {
-                return Ok(false);
+                return Ok(());
             }
             download_one(
                 &entry.id,
-                &sync_file(f, &info.base_url),
+                &sync_file(f, &pack.base_url),
                 &out_root,
                 &progress,
                 Skip::SameSize,
@@ -284,8 +306,8 @@ async fn patch_into_staging(
             let _ = fs_err::remove_file(&p);
         }
     }
-    let _ = fs_err::remove_dir_all(&staging);
-    Ok(true)
+    let _ = fs_err::remove_dir_all(staging);
+    Ok(())
 }
 
 fn apply_group(

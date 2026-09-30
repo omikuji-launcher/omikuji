@@ -261,6 +261,7 @@ impl qobject::DownloadModel {
                     runner_version,
                     dlcs,
                     options,
+                    packs,
                 } => {
                     if let Some(idx) = self.entries.iter().position(|e| e.id == id) {
                         let entry = &mut self.as_mut().rust_mut().get_mut().entries[idx];
@@ -287,6 +288,7 @@ impl qobject::DownloadModel {
                             &serde_json::to_string(&dlcs).unwrap_or_else(|_| "[]".to_string()),
                         ),
                         &QString::from(&options.join(",")),
+                        &QString::from(&packs.join(",")),
                     );
                 }
                 DownloadEvent::Failed(id, err) => {

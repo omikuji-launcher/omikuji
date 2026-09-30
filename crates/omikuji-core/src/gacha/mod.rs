@@ -1,4 +1,5 @@
 pub mod art;
+pub mod controls;
 pub mod file_sync;
 pub mod manifest;
 pub mod remote;

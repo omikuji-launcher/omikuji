@@ -203,6 +203,7 @@ pub enum DownloadEvent {
         runner_version: String,
         dlcs: Vec<String>,
         options: Vec<String>,
+        packs: Vec<String>,
     },
     Failed(String, String),
     Removed(String),
@@ -887,6 +888,7 @@ fn complete(entry: &DownloadEntry) {
         runner_version: entry.runner_version.clone(),
         dlcs: entry.dlcs.clone(),
         options: entry.options.clone(),
+        packs: entry.packs.clone(),
     });
     save_queue(&inner.entries);
     drop(inner);
