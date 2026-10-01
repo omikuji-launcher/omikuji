@@ -1212,12 +1212,7 @@ fn media_changed_notifier(
     move |_| {
         let id_inner = game_id.clone();
         let _ = qt_thread.queue(move |mut obj: Pin<&mut qobject::GameModel>| {
-            let Some(row) = obj
-                .library
-                .game
-                .iter()
-                .position(|g| g.metadata.id == id_inner)
-            else {
+            let Some(row) = obj.library.index_of(&id_inner) else {
                 return;
             };
             let idx = obj
@@ -1390,9 +1385,7 @@ impl qobject::GameModel {
         };
         let id = &draft.game.metadata.id;
         self.library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == *id)
+            .game(id)
             .is_some_and(|base| draft.game != *base || media::has_pending(id))
     }
 
@@ -1417,7 +1410,7 @@ impl qobject::GameModel {
             return;
         };
         let id = draft.game.metadata.id.clone();
-        let Some(base) = rust.library.game.iter().find(|g| g.metadata.id == id) else {
+        let Some(base) = rust.library.game(&id) else {
             return;
         };
         draft.rebase(base);
@@ -1429,11 +1422,7 @@ impl qobject::GameModel {
         game_id: &str,
         change: impl FnOnce(&mut Game),
     ) -> Option<Game> {
-        let row = self
-            .library
-            .game
-            .iter()
-            .position(|g| g.metadata.id == game_id)?;
+        let row = self.library.index_of(game_id)?;
         let game = &mut self.as_mut().rust_mut().get_mut().library.game[row];
         change(game);
         if let Err(e) = Library::save_game_static(game) {
@@ -1623,12 +1612,7 @@ impl qobject::GameModel {
     }
 
     fn notify_media_row(mut self: Pin<&mut Self>, game_id: &str) {
-        let Some(row) = self
-            .library
-            .game
-            .iter()
-            .position(|g| g.metadata.id == game_id)
-        else {
+        let Some(row) = self.library.index_of(game_id) else {
             return;
         };
         self.as_mut().notify_row(row);
@@ -1665,7 +1649,7 @@ impl qobject::GameModel {
             tracing::warn!("commit_edit_game: no draft");
             return false;
         };
-        let Some(idx) = self.library.game.iter().position(|g| g.metadata.id == id) else {
+        let Some(idx) = self.library.index_of(&id) else {
             tracing::warn!("commit_edit_game: game id '{}' not found", id);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return false;
@@ -1730,7 +1714,7 @@ impl qobject::GameModel {
 
     fn installed_dlcs(&self, game_id: &QString) -> QString {
         let gid = game_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             return QString::from("[]");
         };
         let json = match game.source.kind {
@@ -1748,7 +1732,7 @@ impl qobject::GameModel {
     fn uninstall_dlc(mut self: Pin<&mut Self>, game_id: &QString, dlc_id: &QString) -> bool {
         let gid = game_id.to_string();
         let did = dlc_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             return false;
         };
         if game.source.kind != SourceKind::Epic {
@@ -1771,13 +1755,7 @@ impl qobject::GameModel {
 
     fn uninstall_store_game(&self, game_id: &QString) -> bool {
         let id = game_id.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
+        let Some(game) = self.library.game(&id).cloned() else {
             tracing::error!("game '{}' not found", id);
             return false;
         };
@@ -2078,7 +2056,7 @@ impl qobject::GameModel {
     fn save_game(self: Pin<&mut Self>, game_id: &QString) -> bool {
         let id = game_id.to_string();
 
-        let game = match self.library.game.iter().find(|g| g.metadata.id == id) {
+        let game = match self.library.game(&id) {
             Some(g) => g.clone(),
             None => {
                 tracing::warn!("save_game: game with id '{}' not found", id);
@@ -2101,7 +2079,7 @@ impl qobject::GameModel {
 
     fn refetch_media(mut self: Pin<&mut Self>, game_id: &QString) {
         let id = game_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == id) else {
+        let Some(game) = self.library.game(&id) else {
             tracing::warn!("refetch_media: game id '{}' not found", id);
             return;
         };
@@ -2140,7 +2118,7 @@ impl qobject::GameModel {
             tracing::warn!("search_media_candidates: unknown kind '{}'", kind);
             return;
         };
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == id) else {
+        let Some(game) = self.library.game(&id) else {
             tracing::warn!("search_media_candidates: game id '{}' not found", id);
             return;
         };
@@ -2171,7 +2149,7 @@ impl qobject::GameModel {
             tracing::warn!("pick_media_candidate: unknown kind '{}'", kind);
             return;
         };
-        if !self.library.game.iter().any(|g| g.metadata.id == id) {
+        if self.library.game(&id).is_none() {
             tracing::warn!("pick_media_candidate: game id '{}' not found", id);
             return;
         }
@@ -2325,9 +2303,7 @@ impl qobject::GameModel {
     fn index_of_id(&self, game_id: &QString) -> i32 {
         let needle = game_id.to_string();
         self.library
-            .game
-            .iter()
-            .position(|g| g.metadata.id == needle)
+            .index_of(&needle)
             .map(|i| i as i32)
             .unwrap_or(-1)
     }

@@ -43,7 +43,7 @@ impl super::qobject::GameModel {
 
         tracing::info!("importing {} - {}", appid_str, name_str);
 
-        let already_imported = self.library.game.iter().any(|g| g.metadata.id == appid_str);
+        let already_imported = self.library.game(&appid_str).is_some();
 
         if already_imported {
             tracing::info!("already imported: {}", appid_str);

@@ -474,6 +474,14 @@ impl Library {
         crate::library_dir()
     }
 
+    pub fn game(&self, id: &str) -> Option<&Game> {
+        self.game.iter().find(|g| g.id() == id)
+    }
+
+    pub fn index_of(&self, id: &str) -> Option<usize> {
+        self.game.iter().position(|g| g.id() == id)
+    }
+
     pub fn game_ids_by_app_id(kind: SourceKind) -> HashMap<String, String> {
         let mut out = HashMap::new();
         let dir = Self::library_dir();

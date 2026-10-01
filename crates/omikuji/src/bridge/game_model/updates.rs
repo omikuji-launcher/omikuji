@@ -12,13 +12,7 @@ use omikuji_core::{launch, notifications, process, runners, updates};
 impl super::qobject::GameModel {
     pub fn check_game_update(&self, game_id: &QString) -> bool {
         let gid = game_id.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == gid)
-            .cloned()
-        else {
+        let Some(game) = self.library.game(&gid).cloned() else {
             return false;
         };
         if !game.source.kind.has_updates() {
@@ -155,7 +149,7 @@ impl super::qobject::GameModel {
     fn enqueue_for_game(&self, game_id: &QString, kind: DownloadKind) -> QString {
         let gid = game_id.to_string();
 
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             tracing::error!("enqueue_for_game: game '{}' not found", gid);
             return QString::from("");
         };
@@ -169,7 +163,7 @@ impl super::qobject::GameModel {
 
     pub fn game_supports_repair(&self, game_id: &QString) -> bool {
         let gid = game_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             return false;
         };
         if game.source.kind != SourceKind::Gacha {
@@ -187,7 +181,7 @@ impl super::qobject::GameModel {
     pub fn enqueue_game_repair(self: Pin<&mut Self>, game_id: &QString) -> QString {
         let gid = game_id.to_string();
 
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             tracing::error!("enqueue_game_repair: game '{}' not found", gid);
             return QString::from("");
         };
@@ -202,7 +196,7 @@ impl super::qobject::GameModel {
 
     pub fn add_gacha_pack(self: Pin<&mut Self>, game_id: &QString, pack: &QString) -> QString {
         let gid = game_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             tracing::error!("add_gacha_pack: game '{}' not found", gid);
             return QString::from("");
         };

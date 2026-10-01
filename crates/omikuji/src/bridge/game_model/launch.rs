@@ -124,13 +124,7 @@ impl super::qobject::GameModel {
     pub fn run_wine_tool(&self, game_id: &QString, tool: &QString) {
         let id = game_id.to_string();
         let tool_name = tool.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
+        let Some(game) = self.library.game(&id).cloned() else {
             tracing::warn!("game '{}' not found", id);
             return;
         };
@@ -172,13 +166,7 @@ impl super::qobject::GameModel {
             return;
         }
         let id = game_id.to_string();
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
+        let Some(game) = self.library.game(&id).cloned() else {
             tracing::warn!("game '{}' not found", id);
             return;
         };
@@ -220,7 +208,7 @@ impl super::qobject::GameModel {
 
     pub fn expand_game_vars(&self, game_id: &QString, text: &QString) -> QString {
         let id = game_id.to_string();
-        match self.library.game.iter().find(|g| g.metadata.id == id) {
+        match self.library.game(&id) {
             Some(game) => QString::from(&TemplateVars::for_game(game).expand(&text.to_string())),
             None => text.clone(),
         }
@@ -232,13 +220,7 @@ impl super::qobject::GameModel {
         if exe.is_empty() {
             return;
         }
-        let Some(game) = self
-            .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == id)
-            .cloned()
-        else {
+        let Some(game) = self.library.game(&id).cloned() else {
             tracing::warn!("game '{}' not found", id);
             return;
         };

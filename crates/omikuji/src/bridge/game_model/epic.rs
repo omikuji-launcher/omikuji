@@ -83,12 +83,7 @@ impl super::qobject::GameModel {
 
         let app_name_s = app_name.to_string();
 
-        if self
-            .library
-            .game
-            .iter()
-            .any(|g| g.metadata.id == app_name_s)
-        {
+        if self.library.game(&app_name_s).is_some() {
             tracing::info!("already in library: {}", app_name_s);
             return QString::from(&app_name_s);
         }
@@ -159,7 +154,7 @@ impl super::qobject::GameModel {
     }
 
     fn is_epic_game(&self, id: &str) -> bool {
-        match self.library.game.iter().find(|g| g.metadata.id == id) {
+        match self.library.game(id) {
             Some(game) if game.is_epic() => true,
             Some(_) => {
                 tracing::warn!("game '{}' is not epic", id);

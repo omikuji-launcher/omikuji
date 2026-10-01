@@ -17,12 +17,7 @@ impl super::qobject::GameModel {
 
     pub fn drain_launch_requests(mut self: Pin<&mut Self>) {
         for request in process::take_launch_requests() {
-            let index = self
-                .library
-                .game
-                .iter()
-                .position(|g| g.metadata.id == request.game_id)
-                .map(|i| i as i32);
+            let index = self.library.index_of(&request.game_id).map(|i| i as i32);
 
             match index {
                 Some(i) if self.as_mut().launch_game(i) => continue,
@@ -42,9 +37,7 @@ impl super::qobject::GameModel {
         for n in process::take_update_notifications() {
             let display_name = self
                 .library
-                .game
-                .iter()
-                .find(|g| g.metadata.id == n.game_id)
+                .game(&n.game_id)
                 .map(|g| g.metadata.name.clone())
                 .unwrap_or_default();
             self.as_mut().update_required(
@@ -65,9 +58,7 @@ impl super::qobject::GameModel {
         for n in process::take_errors() {
             let display_name = self
                 .library
-                .game
-                .iter()
-                .find(|g| g.metadata.id == n.game_id)
+                .game(&n.game_id)
                 .map(|g| g.metadata.name.clone())
                 .unwrap_or_default();
             self.as_mut().error_required(

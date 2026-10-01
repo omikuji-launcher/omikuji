@@ -79,12 +79,7 @@ impl super::qobject::GameModel {
 
         let app_name_s = app_name.to_string();
 
-        if self
-            .library
-            .game
-            .iter()
-            .any(|g| g.metadata.id == app_name_s)
-        {
+        if self.library.game(&app_name_s).is_some() {
             tracing::info!("already in library: {}", app_name_s);
             return QString::from(&app_name_s);
         }

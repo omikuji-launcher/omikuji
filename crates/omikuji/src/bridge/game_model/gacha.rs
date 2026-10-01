@@ -81,7 +81,7 @@ impl super::qobject::GameModel {
 
     pub fn gacha_packs(&self, game_id: &QString) -> QString {
         let gid = game_id.to_string();
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             return QString::default();
         };
         QString::from(
@@ -115,9 +115,7 @@ impl super::qobject::GameModel {
         let pack = pack.to_string();
         let saved_active = self
             .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == gid)
+            .game(&gid)
             .is_some_and(|g| is_active_pack(g, &pack));
         if let Some(draft) = self.as_mut().rust_mut().get_mut().draft.as_mut()
             && draft.game.metadata.id == gid
@@ -137,7 +135,7 @@ impl super::qobject::GameModel {
                 });
             }
         }
-        let Some(game) = self.library.game.iter().find(|g| g.metadata.id == gid) else {
+        let Some(game) = self.library.game(&gid) else {
             return QString::from("game not found");
         };
         match gacha::strategies::remove_pack(game, &pack) {
@@ -153,9 +151,7 @@ impl super::qobject::GameModel {
         let gid = game_id.to_string();
         let Some((manifest, edition_id)) = self
             .library
-            .game
-            .iter()
-            .find(|g| g.metadata.id == gid)
+            .game(&gid)
             .and_then(|g| gacha::strategies::find_for_app_id(&g.source.app_id))
         else {
             return;
