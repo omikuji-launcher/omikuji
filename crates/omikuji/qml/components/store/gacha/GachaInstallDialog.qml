@@ -674,8 +674,8 @@ DialogCard {
                 label: qsTr("Runner")
                 labelSuffix: root.advisedSelected
                     ? (root.advisedInstalled
-                        ? qsTr("This runner is adviced to play this game, and is installed.")
-                        : qsTr("This runner is adviced to play this game."))
+                        ? qsTr("This runner is advised to play this game, and is installed.")
+                        : qsTr("This runner is advised to play this game."))
                     : ""
                 labelSuffixColor: root.advisedTint
                 enabled: !root.runnerInstalling
