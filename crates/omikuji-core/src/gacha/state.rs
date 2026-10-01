@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+use super::manifest::{LEGACY_MANIFEST_FILE, MANIFEST_FILE};
 use crate::fs_util::move_dir_all;
 
 pub fn game_state_dir(game_slug: &str) -> PathBuf {
@@ -41,7 +42,10 @@ pub fn flatten_publisher_dirs_once() {
             return;
         };
         for publisher in entries.flatten().map(|e| e.path()) {
-            if !publisher.is_dir() || publisher.join("manifest.json").exists() {
+            let is_game = [MANIFEST_FILE, LEGACY_MANIFEST_FILE]
+                .iter()
+                .any(|file| publisher.join(file).exists());
+            if !publisher.is_dir() || is_game {
                 continue;
             }
             let Ok(games) = fs_err::read_dir(&publisher) else {

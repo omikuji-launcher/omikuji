@@ -7,7 +7,7 @@ use crate::http;
 
 const PLATFORM: &str = "Windows";
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct EditionConfig {
     pub api_base: String,
     pub game_appcode: String,
@@ -18,29 +18,7 @@ pub struct EditionConfig {
 
 impl EditionConfig {
     pub fn from_manifest(manifest: &GachaManifest, edition_id: &str) -> Result<Self> {
-        let cfg = manifest
-            .edition(edition_id)
-            .map(|e| &e.strategy_config)
-            .ok_or_else(|| anyhow!("edition {} not in manifest {}", edition_id, manifest.id))?;
-        let s = |k: &str| -> Result<String> {
-            cfg.get(k)
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string())
-                .ok_or_else(|| anyhow!("missing strategy_config.{} in manifest {}", k, manifest.id))
-        };
-        let n = |k: &str| -> Result<u32> {
-            cfg.get(k)
-                .and_then(|v| v.as_u64())
-                .map(|n| n as u32)
-                .ok_or_else(|| anyhow!("missing strategy_config.{} in manifest {}", k, manifest.id))
-        };
-        Ok(Self {
-            api_base: s("api_base")?,
-            game_appcode: s("game_appcode")?,
-            launcher_appcode: s("launcher_appcode")?,
-            channel: n("channel")?,
-            sub_channel: n("sub_channel")?,
-        })
+        manifest.strategy_config(manifest.require_edition(edition_id)?)
     }
 }
 
@@ -136,8 +114,13 @@ pub async fn fetch_latest(cfg: &EditionConfig, installed_version: &str) -> Resul
         .await
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
 
-    serde_json::from_str::<GetLatestData>(&body)
-        .map_err(|e| anyhow!("get_latest bad json: {} — body head: {}", e, head(&body)))
+    serde_json::from_str::<GetLatestData>(&body).map_err(|e| {
+        anyhow!(
+            "get_latest sent invalid json: {} (body starts with: {})",
+            e,
+            head(&body)
+        )
+    })
 }
 
 fn head(s: &str) -> String {
@@ -218,7 +201,7 @@ pub async fn fetch_resources(
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
     serde_json::from_str::<ResourceList>(&body).map_err(|e| {
         anyhow!(
-            "get_latest_resources bad json: {} — body head: {}",
+            "get_latest_resources sent invalid json: {} (body starts with: {})",
             e,
             head(&body)
         )
@@ -272,8 +255,13 @@ pub async fn fetch_resource_patch(resource_path: &str) -> Result<ResourcePatchMa
         .text()
         .await
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
-    serde_json::from_str::<ResourcePatchManifest>(&body)
-        .map_err(|e| anyhow!("patch.json bad json: {} — body head: {}", e, head(&body)))
+    serde_json::from_str::<ResourcePatchManifest>(&body).map_err(|e| {
+        anyhow!(
+            "patch.json is invalid json: {} (body starts with: {})",
+            e,
+            head(&body)
+        )
+    })
 }
 
 #[derive(Debug, Clone, Copy)]

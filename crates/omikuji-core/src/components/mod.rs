@@ -249,7 +249,7 @@ fn url_for(key: SettingsKey) -> Result<String> {
     };
     if value.trim().is_empty() {
         return Err(anyhow!(
-            "component URL is empty in settings.toml — check [components]"
+            "component URL in settings.toml [components] is empty"
         ));
     }
     Ok(value.clone())

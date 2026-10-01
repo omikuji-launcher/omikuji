@@ -126,7 +126,7 @@ impl GogStore {
             tracing::error!("list_games: refresh_user_data failed: {}", e);
         }
         if self.user_id.is_empty() {
-            anyhow::bail!("user id unresolved — try logging in again (userData.json call failed)");
+            anyhow::bail!("couldn't get the GOG user id, try logging in again");
         }
 
         let creds = read_credentials().await?;

@@ -3,12 +3,13 @@ mod auth;
 pub mod source;
 pub mod update;
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{Result, bail};
+use serde::Deserialize;
 
-use crate::gacha::manifest::GachaManifest;
+use crate::gacha::manifest::{GachaManifest, ManifestEdition};
 use crate::gacha::state;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct EditionApi {
     pub api_url: String,
     pub cdn_url: String,
@@ -17,35 +18,18 @@ pub struct EditionApi {
 }
 
 pub fn edition_api(manifest: &GachaManifest, edition_id: &str) -> Result<EditionApi> {
-    let edition = manifest.require_edition(edition_id)?;
-
-    let field = |name: &str| -> Result<String> {
-        cfg_str(&edition.strategy_config, name)
-            .or_else(|| cfg_str(&manifest.strategy_config, name))
-            .ok_or_else(|| {
-                anyhow!(
-                    "no strategy_config.{} in manifest {} for edition {}",
-                    name,
-                    manifest.id,
-                    edition_id
-                )
-            })
-    };
-
-    Ok(EditionApi {
-        api_url: field("api_url")?.trim_end_matches('/').to_string(),
-        cdn_url: field("cdn_url")?.trim_end_matches('/').to_string(),
-        game_tag: field("game_tag")?,
-        salt: field("salt")?,
-    })
+    let mut api: EditionApi = manifest.strategy_config(manifest.require_edition(edition_id)?)?;
+    for url in [&mut api.api_url, &mut api.cdn_url] {
+        url.truncate(url.trim_end_matches('/').len());
+    }
+    Ok(api)
 }
 
-fn cfg_str(value: &serde_json::Value, key: &str) -> Option<String> {
-    value
-        .get(key)
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .filter(|s| !s.is_empty())
+fn game_tag(manifest: &GachaManifest, edition: &ManifestEdition) -> Option<String> {
+    manifest
+        .strategy_config::<EditionApi>(edition)
+        .ok()
+        .map(|api| api.game_tag)
 }
 
 fn disk_game_tag(manifest: &GachaManifest, install_path: &std::path::Path) -> Option<String> {
@@ -65,7 +49,7 @@ pub fn detect_edition(manifest: &GachaManifest, install_path: &std::path::Path) 
     manifest
         .editions
         .iter()
-        .find(|e| cfg_str(&e.strategy_config, "game_tag").as_deref() == Some(tag.as_str()))
+        .find(|e| game_tag(manifest, e).as_deref() == Some(tag.as_str()))
         .map(|e| e.id.clone())
 }
 
@@ -79,7 +63,7 @@ pub fn verify_edition_on_disk(
     };
     let expected = manifest
         .edition(edition_id)
-        .and_then(|e| cfg_str(&e.strategy_config, "game_tag"))
+        .and_then(|e| game_tag(manifest, e))
         .unwrap_or_default();
     if !expected.is_empty() && found != expected {
         bail!(

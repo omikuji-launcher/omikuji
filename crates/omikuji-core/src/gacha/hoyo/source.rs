@@ -601,7 +601,7 @@ pub fn extract_archive_with_password(
     let bin = which::which("7z")
         .or_else(|_| which::which("7za"))
         .map_err(|_| {
-            anyhow!("7z not found — install p7zip-full (apt), 7zip (pacman), or p7zip (dnf)")
+            anyhow!("7z not found. Install p7zip-full (apt), 7zip (pacman) or p7zip (dnf)")
         })?;
 
     let mut cmd = std::process::Command::new(&bin);

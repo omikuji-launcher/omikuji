@@ -1,6 +1,8 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
+use reqwest::Client;
 use serde::Deserialize;
 
+use super::manifest::{GachaManifest, LEGACY_MANIFEST_FILE, MANIFEST_FILE};
 use crate::fs_util::write_atomic;
 use crate::{http, settings};
 
@@ -10,70 +12,62 @@ struct IndexFile {
     gachas: Vec<String>,
 }
 
-const INDEX_SCHEMA_VERSION: u32 = 2;
+const INDEX_SCHEMA_VERSION: u32 = 3;
 
 pub async fn ensure_all_fetched() -> Result<u32> {
     let base = settings::get().assets.fetch_url.trim().to_string();
     if base.is_empty() {
-        return Err(anyhow!(
-            "assets.fetch_url is empty in settings.toml — check [assets]"
-        ));
+        return Err(anyhow!("assets.fetch_url in settings.toml is empty"));
     }
+    let root = format!("{}/gacha", base.trim_end_matches('/'));
 
     super::state::flatten_publisher_dirs_once();
     let client = http::client();
-    let index = fetch_index(client, &base).await?;
+    let index = fetch_index(client, &root).await?;
 
     let mut written: u32 = 0;
     for game in &index.gachas {
-        match fetch_one(client, &base, game).await {
+        match fetch_one(client, &root, game).await {
             Ok(()) => written += 1,
-            Err(e) => tracing::error!("{}: {}", game, e),
+            Err(e) => tracing::error!("{}: {:#}", game, e),
         }
     }
     Ok(written)
 }
 
-async fn fetch_index(client: &reqwest::Client, base: &str) -> Result<IndexFile> {
-    let url = format!("{}/gacha/index.json", base.trim_end_matches('/'));
-    let body = client
-        .get(&url)
+async fn get_text(client: &Client, url: &str) -> Result<String> {
+    Ok(client
+        .get(url)
         .send()
         .await?
         .error_for_status()?
-        .bytes()
-        .await?;
-    let parsed: IndexFile = serde_json::from_slice(&body)
-        .map_err(|e| anyhow!("invalid gacha index from {}: {}", url, e))?;
+        .text()
+        .await?)
+}
+
+async fn fetch_index(client: &Client, root: &str) -> Result<IndexFile> {
+    let url = format!("{root}/index.toml");
+    let parsed: IndexFile = toml::from_str(&get_text(client, &url).await?)
+        .with_context(|| format!("invalid gacha index from {url}"))?;
     if parsed.schema_version != INDEX_SCHEMA_VERSION {
-        return Err(anyhow!(
+        bail!(
             "gacha index schema_version {} not supported (expected {})",
             parsed.schema_version,
             INDEX_SCHEMA_VERSION
-        ));
+        );
     }
     Ok(parsed)
 }
 
-async fn fetch_one(client: &reqwest::Client, base: &str, game: &str) -> Result<()> {
-    let url = format!(
-        "{}/gacha/{}/manifest.json",
-        base.trim_end_matches('/'),
-        game
-    );
-    let body = client
-        .get(&url)
-        .send()
-        .await?
-        .error_for_status()?
-        .bytes()
-        .await?;
+async fn fetch_one(client: &Client, root: &str, game: &str) -> Result<()> {
+    let url = format!("{root}/{game}/{MANIFEST_FILE}");
+    let body = get_text(client, &url).await?;
 
-    // validate before writing; dont drop broken json next to good ones pleaseee
-    let _parsed: super::manifest::GachaManifest = serde_json::from_slice(&body)
-        .map_err(|e| anyhow!("invalid manifest from {}: {}", url, e))?;
+    // validate before writing; dont drop broken manifests next to good ones pleaseee
+    GachaManifest::parse(&body).with_context(|| format!("invalid manifest from {url}"))?;
 
-    let path = crate::gachas_dir().join(game).join("manifest.json");
-    write_atomic(&path, &body)?;
+    let dir = crate::gachas_dir().join(game);
+    write_atomic(&dir.join(MANIFEST_FILE), &body)?;
+    let _ = fs_err::remove_file(dir.join(LEGACY_MANIFEST_FILE));
     Ok(())
 }

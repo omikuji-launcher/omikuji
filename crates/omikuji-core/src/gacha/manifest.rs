@@ -1,12 +1,17 @@
+use anyhow::{Context, Result, anyhow, bail};
 use indexmap::IndexMap;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use toml::{Table, Value};
 
 use super::strategies::InstallStrategy;
 use crate::archive_source;
 use crate::library::{CompanionWhen, LaunchConfig};
 
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
+pub const MANIFEST_FILE: &str = "manifest.toml";
+pub const LEGACY_MANIFEST_FILE: &str = "manifest.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GachaManifest {
@@ -23,6 +28,10 @@ pub struct GachaManifest {
 
     pub app_id_prefix: String,
 
+    #[serde(default)]
+    pub exe_name: String,
+    #[serde(default)]
+    pub data_folder: String,
     pub editions: Vec<ManifestEdition>,
 
     #[serde(default)]
@@ -58,10 +67,34 @@ pub struct GachaManifest {
     pub uses_temp_dir: bool,
 
     #[serde(default)]
-    pub strategy_config: serde_json::Value,
+    pub strategy_config: Table,
 }
 
 impl GachaManifest {
+    pub fn parse(text: &str) -> Result<Self> {
+        let mut manifest: Self = toml::from_str(text)?;
+        if manifest.schema_version != SCHEMA_VERSION {
+            bail!("unsupported schema_version {}", manifest.schema_version);
+        }
+        for edition in &mut manifest.editions {
+            inherit(&mut edition.exe_name, &manifest.exe_name);
+            inherit(&mut edition.data_folder, &manifest.data_folder);
+            edition.uses_temp_dir.get_or_insert(manifest.uses_temp_dir);
+            if edition.exe_name.is_empty() || edition.data_folder.is_empty() {
+                bail!("edition {} has no exe_name or data_folder", edition.id);
+            }
+        }
+        Ok(manifest)
+    }
+
+    pub fn strategy_config<T: DeserializeOwned>(&self, edition: &ManifestEdition) -> Result<T> {
+        let mut merged = self.strategy_config.clone();
+        merged.extend(edition.strategy_config.clone());
+        Value::Table(merged)
+            .try_into()
+            .with_context(|| format!("strategy_config of {} {}", self.id, edition.id))
+    }
+
     pub fn display_name_for(&self, edition: &ManifestEdition) -> String {
         format!("{} ({})", self.display_name, edition.label)
     }
@@ -70,9 +103,9 @@ impl GachaManifest {
         self.editions.iter().find(|e| e.id == id)
     }
 
-    pub fn require_edition(&self, id: &str) -> anyhow::Result<&ManifestEdition> {
+    pub fn require_edition(&self, id: &str) -> Result<&ManifestEdition> {
         self.edition(id)
-            .ok_or_else(|| anyhow::anyhow!("edition '{}' not found in manifest '{}'", id, self.id))
+            .ok_or_else(|| anyhow!("edition '{}' not found in manifest '{}'", id, self.id))
     }
 
     pub fn strategy_for(&self, edition: &ManifestEdition) -> InstallStrategy {
@@ -184,11 +217,11 @@ pub struct ManifestCompanion {
 }
 
 impl ManifestCompanion {
-    pub fn install_dir(&self) -> std::path::PathBuf {
+    pub fn install_dir(&self) -> PathBuf {
         crate::tools_dir().join(&self.name)
     }
 
-    pub fn exe_path(&self) -> std::path::PathBuf {
+    pub fn exe_path(&self) -> PathBuf {
         self.install_dir().join(&self.exe)
     }
 
@@ -199,24 +232,26 @@ impl ManifestCompanion {
         launch.companion_delay = self.delay;
     }
 
-    pub async fn install(&self) -> anyhow::Result<std::path::PathBuf> {
+    pub async fn install(&self) -> Result<PathBuf> {
         let exe = self.exe_path();
         if exe.is_file() {
             return Ok(exe);
         }
         let link = archive_source::RepoLink::parse(&self.repo)
-            .ok_or_else(|| anyhow::anyhow!("unusable repo link: {}", self.repo))?;
+            .ok_or_else(|| anyhow!("unusable repo link: {}", self.repo))?;
         archive_source::install_asset(&link.releases_api_url(), &self.exe, &self.install_dir())
             .await
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ManifestEdition {
     pub id: String,
     pub label: String,
+    #[serde(default)]
     pub exe_name: String,
-    // unity _Data folder name, per-edition for genshin, shared otherwise
+    #[serde(default)]
     pub data_folder: String,
 
     #[serde(default)]
@@ -225,7 +260,13 @@ pub struct ManifestEdition {
     pub uses_temp_dir: Option<bool>,
 
     #[serde(default)]
-    pub strategy_config: serde_json::Value,
+    pub strategy_config: Table,
+}
+
+fn inherit(own: &mut String, fallback: &str) {
+    if own.is_empty() {
+        fallback.clone_into(own);
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -257,23 +298,18 @@ pub fn find(id: &str) -> Option<GachaManifest> {
     load_all().into_iter().find(|m| m.id == id)
 }
 
-fn walk_manifests(root: &std::path::Path) -> Vec<GachaManifest> {
+fn walk_manifests(root: &Path) -> Vec<GachaManifest> {
     let Ok(games) = fs_err::read_dir(root) else {
         return Vec::new();
     };
     let mut out = Vec::new();
-    for manifest_path in games.flatten().map(|e| e.path().join("manifest.json")) {
+    for manifest_path in games.flatten().map(|e| e.path().join(MANIFEST_FILE)) {
         let Ok(data) = fs_err::read_to_string(&manifest_path) else {
             continue;
         };
-        match serde_json::from_str::<GachaManifest>(&data) {
-            Ok(m) if m.schema_version == SCHEMA_VERSION => out.push(m),
-            Ok(m) => tracing::warn!(
-                "skipping {}: unsupported schema_version {}",
-                manifest_path.display(),
-                m.schema_version
-            ),
-            Err(e) => tracing::warn!("skipping {}: {}", manifest_path.display(), e),
+        match GachaManifest::parse(&data) {
+            Ok(m) => out.push(m),
+            Err(e) => tracing::warn!("skipping {}: {:#}", manifest_path.display(), e),
         }
     }
     out
@@ -294,6 +330,8 @@ mod tests {
             publisher: "Test Publisher".into(),
             install_strategy: InstallStrategy::HoyoSophon,
             app_id_prefix: "game".into(),
+            exe_name: String::new(),
+            data_folder: String::new(),
             editions: vec![ManifestEdition {
                 id: "global".into(),
                 label: "Global".into(),
@@ -301,7 +339,7 @@ mod tests {
                 data_folder: "Game_Data".into(),
                 install_strategy: None,
                 uses_temp_dir: None,
-                strategy_config: serde_json::Value::Null,
+                strategy_config: Table::new(),
             }],
             voice_locales: vec![],
             voice_dir: String::new(),
@@ -317,21 +355,20 @@ mod tests {
             args: vec![],
             letter_fallback: "T".into(),
             uses_temp_dir: true,
-            strategy_config: serde_json::Value::Null,
+            strategy_config: Table::new(),
         }
+    }
+
+    fn write_manifest(root: &Path, m: &GachaManifest) {
+        let dir = root.join(&m.game_slug);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join(MANIFEST_FILE), toml::to_string_pretty(m).unwrap()).unwrap();
     }
 
     #[test]
     fn walks_flat_layout() {
         let tmp = tempdir().unwrap();
-        let m = example_manifest();
-        let dir = tmp.path().join(&m.game_slug);
-        fs::create_dir_all(&dir).unwrap();
-        fs::write(
-            dir.join("manifest.json"),
-            serde_json::to_string_pretty(&m).unwrap(),
-        )
-        .unwrap();
+        write_manifest(tmp.path(), &example_manifest());
 
         let found = walk_manifests(tmp.path());
         assert_eq!(found.len(), 1);
@@ -343,13 +380,7 @@ mod tests {
         let tmp = tempdir().unwrap();
         let mut m = example_manifest();
         m.schema_version = 99;
-        let dir = tmp.path().join(&m.game_slug);
-        fs::create_dir_all(&dir).unwrap();
-        fs::write(
-            dir.join("manifest.json"),
-            serde_json::to_string_pretty(&m).unwrap(),
-        )
-        .unwrap();
+        write_manifest(tmp.path(), &m);
 
         assert!(walk_manifests(tmp.path()).is_empty());
     }

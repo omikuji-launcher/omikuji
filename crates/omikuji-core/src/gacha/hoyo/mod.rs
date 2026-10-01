@@ -133,19 +133,14 @@ fn pack_marker(root: &Path, folder: &Path) -> Option<(PathBuf, Vec<String>)> {
         })
 }
 
+#[derive(Deserialize)]
+struct HoyoConfig {
+    biz_id: String,
+}
+
 pub fn biz_id(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
-    manifest
-        .edition(edition_id)
-        .and_then(|e| e.strategy_config.get("biz_id"))
-        .and_then(|v| v.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| {
-            anyhow!(
-                "no biz_id in manifest {} for edition {}",
-                manifest.id,
-                edition_id
-            )
-        })
+    let config: HoyoConfig = manifest.strategy_config(manifest.require_edition(edition_id)?)?;
+    Ok(config.biz_id)
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {

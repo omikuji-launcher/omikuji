@@ -69,7 +69,7 @@ impl DownloadSource for GryphlineSource {
         let packs = api::packs_from(&resp);
         if packs.is_empty() {
             return Err(anyhow!(
-                "get_latest returned no packs for {} — server may require a different channel",
+                "get_latest returned no packs for {} (wrong channel?)",
                 parsed.edition_label
             ));
         }

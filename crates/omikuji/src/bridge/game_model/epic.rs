@@ -255,7 +255,7 @@ impl super::qobject::GameModel {
                 Ok(_) => {
                     notifications::warning(
                         "Cloud Saves",
-                        "No cloud save path found — this game may not support Epic cloud saves. You can enter one manually below.",
+                        "No cloud save path found. Enter one manually below if the game supports Epic cloud saves.",
                     );
                 }
                 Err(e) => {

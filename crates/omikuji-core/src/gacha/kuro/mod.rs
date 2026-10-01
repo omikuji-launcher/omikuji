@@ -34,9 +34,7 @@ pub struct PackDef {
 
 impl KuroConfig {
     pub fn load(manifest: &GachaManifest, edition_id: &str) -> Result<Self> {
-        let edition = manifest.require_edition(edition_id)?;
-        let config: Self = serde_json::from_value(edition.strategy_config.clone())
-            .with_context(|| format!("strategy_config of {} {}", manifest.id, edition_id))?;
+        let config: Self = manifest.strategy_config(manifest.require_edition(edition_id)?)?;
         if let Some((id, _)) = config
             .packs
             .iter()

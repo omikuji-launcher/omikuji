@@ -97,11 +97,7 @@ DialogCard {
     readonly property var selectedEdition:
         editions.length ? editions[Math.max(0, Math.min(editionIndex, editions.length - 1))] : null
     readonly property string editionId: selectedEdition ? (selectedEdition.id || "") : ""
-    readonly property bool usesTempDir: {
-        let own = selectedEdition ? selectedEdition.uses_temp_dir : null
-        if (typeof own === "boolean") return own
-        return root.manifest ? (root.manifest.uses_temp_dir !== false) : true
-    }
+    readonly property bool usesTempDir: selectedEdition ? selectedEdition.uses_temp_dir : true
     readonly property string appIdPrefix:
         root.manifest ? (root.manifest.app_id_prefix || "") : ""
     readonly property string appId: {
