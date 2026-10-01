@@ -53,6 +53,10 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "initWatcher"]
         fn init_watcher(self: Pin<&mut DefaultsBridge>);
+
+        #[qinvokable]
+        #[cxx_name = "envAsShell"]
+        fn env_as_shell(self: &DefaultsBridge) -> QString;
     }
 }
 
@@ -86,6 +90,10 @@ impl qobject::DefaultsBridge {
     fn fields_json(&self) -> cxx_qt_lib::QString {
         let json = serde_json::to_string(FIELDS).unwrap_or_else(|_| "[]".to_string());
         cxx_qt_lib::QString::from(&json)
+    }
+
+    fn env_as_shell(&self) -> cxx_qt_lib::QString {
+        cxx_qt_lib::QString::from(&self.data.format_env_as_shell())
     }
 
     fn update_field(

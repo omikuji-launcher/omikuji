@@ -293,6 +293,10 @@ Item {
             label: qsTr("Environment")
             icon: "tune"
             width: parent.width
+            action: SteamEnvCopyButton {
+                blocked: !root.gameModel
+                envAsShell: () => root.gameModel.draft_env_as_shell()
+            }
 
             KeyValueTable {
                 width: parent.width

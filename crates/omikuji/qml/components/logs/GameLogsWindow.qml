@@ -189,11 +189,7 @@ Window {
                     small: true
                     variant: "text"
                     text: qsTr("Copy all")
-                    onClicked: {
-                        textArea.selectAll()
-                        textArea.copy()
-                        textArea.deselect()
-                    }
+                    onClicked: Clipboard.copy(textArea.text)
                 }
 
                 M3Button {

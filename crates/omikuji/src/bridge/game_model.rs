@@ -169,6 +169,9 @@ pub mod qobject {
         fn draft_dirty(self: &GameModel) -> bool;
 
         #[qinvokable]
+        fn draft_env_as_shell(self: &GameModel) -> QString;
+
+        #[qinvokable]
         fn update_draft_field(self: Pin<&mut GameModel>, key: &QString, value: &QString) -> bool;
 
         #[qinvokable]
@@ -809,7 +812,9 @@ use cxx_qt_lib::{
 use omikuji_core::app_settings::AppSettings;
 use omikuji_core::defaults::Defaults;
 use omikuji_core::gacha::{art, strategies};
-use omikuji_core::launch::{WineVariant, effective_prefix, missing_component, prefix_path_for};
+use omikuji_core::launch::{
+    WineVariant, effective_prefix, format_env_as_shell, missing_component, prefix_path_for,
+};
 use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction, ErrorNotification};
@@ -1389,6 +1394,14 @@ impl qobject::GameModel {
             .iter()
             .find(|g| g.metadata.id == *id)
             .is_some_and(|base| draft.game != *base || media::has_pending(id))
+    }
+
+    fn draft_env_as_shell(&self) -> QString {
+        self.rust()
+            .draft
+            .as_ref()
+            .map(|draft| QString::from(&format_env_as_shell(&draft.game)))
+            .unwrap_or_default()
     }
 
     fn update_draft_field(mut self: Pin<&mut Self>, key: &QString, value: &QString) -> bool {

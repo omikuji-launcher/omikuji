@@ -171,23 +171,8 @@ pub fn build_env(
         }
     }
 
-    if !game.wine.dll_overrides.is_empty() {
-        let custom: Vec<String> = game
-            .wine
-            .dll_overrides
-            .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
-            .collect();
-        for entry in custom {
-            append_dll_override(&mut env, &entry);
-        }
-    }
-
-    if !game.wine.dll_override_sets.is_empty() {
-        let ui = AppSettings::load();
-        apply_kv_sets(&ui.dll_sets, &game.wine.dll_override_sets, |key, value| {
-            append_dll_override(&mut env, &format!("{key}={value}"));
-        });
+    for entry in game_dll_overrides(game) {
+        append_dll_override(&mut env, &entry);
     }
 
     if game.is_epic() {
@@ -263,6 +248,46 @@ pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {
         });
     }
     pairs
+}
+
+fn game_dll_overrides(game: &Game) -> Vec<String> {
+    let mut entries: Vec<String> = game
+        .wine
+        .dll_overrides
+        .iter()
+        .map(|(k, v)| format!("{k}={v}"))
+        .collect();
+    if !game.wine.dll_override_sets.is_empty() {
+        let ui = AppSettings::load();
+        apply_kv_sets(&ui.dll_sets, &game.wine.dll_override_sets, |key, value| {
+            entries.push(format!("{key}={value}"));
+        });
+    }
+    entries
+}
+
+pub fn format_env_as_shell(game: &Game) -> String {
+    let mut words: Vec<String> = game_env_pairs(game)
+        .into_iter()
+        .map(|(k, v)| format!("{k}={}", shell_word(&v)))
+        .collect();
+    let dlls = game_dll_overrides(game);
+    if !dlls.is_empty() {
+        words.push(format!("WINEDLLOVERRIDES={}", shell_word(&dlls.join(";"))));
+    }
+    words.join(" ")
+}
+
+fn shell_word(value: &str) -> String {
+    let plain = !value.is_empty()
+        && value
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || "_-./:,=+@%".contains(c));
+    if plain {
+        value.to_string()
+    } else {
+        format!("'{}'", value.replace('\'', r"'\''"))
+    }
 }
 
 // a depot husk keeps the dir but loses the v* payload proton's ntdll loads from

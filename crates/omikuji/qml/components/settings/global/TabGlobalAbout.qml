@@ -175,11 +175,7 @@ Item {
                 M3Button {
                     text: qsTr("Copy")
                     variant: "tonal"
-                    onClicked: {
-                        sysText.selectAll()
-                        sysText.copy()
-                        sysText.deselect()
-                    }
+                    onClicked: Clipboard.copy(sysText.text)
                 }
             }
         }

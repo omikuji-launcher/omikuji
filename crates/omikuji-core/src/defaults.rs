@@ -1,6 +1,7 @@
 // no runtime cascade; only seeded into a Game at creation or via apply-to-existing
 
 use crate::fs_util::write_atomic;
+use crate::launch;
 use crate::library::{Game, GraphicsConfig, LaunchConfig, SystemConfig, WineConfig};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -284,6 +285,12 @@ impl Defaults {
         for key in keys {
             self.copy_field(key, game, &stock, mode);
         }
+    }
+
+    pub fn format_env_as_shell(&self) -> String {
+        let mut game = Game::new(String::new(), PathBuf::new());
+        game.seed_from_defaults(self);
+        launch::format_env_as_shell(&game)
     }
 
     pub fn load() -> Self {

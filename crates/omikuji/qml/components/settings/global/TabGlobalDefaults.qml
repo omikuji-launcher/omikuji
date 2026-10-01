@@ -404,6 +404,10 @@ Item {
             label: SettingLabels.groupTitle("environment")
             icon: "tune"
             width: parent.width
+            action: SteamEnvCopyButton {
+                blocked: !root.defaults
+                envAsShell: () => root.defaults.envAsShell()
+            }
 
             Row {
                 width: parent.width
