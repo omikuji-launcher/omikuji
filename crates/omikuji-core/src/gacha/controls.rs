@@ -83,7 +83,7 @@ pub fn launch_controls(game: &Game) -> Vec<LaunchControl> {
             manifest
                 .options
                 .iter()
-                .filter(|o| o.alongside.is_none() && !o.effect.is_empty())
+                .filter(|o| o.companion.is_none() && !o.effect.is_empty())
                 .map(option_toggle),
         )
         .map(|c| c.derive_selected(&game.launch))

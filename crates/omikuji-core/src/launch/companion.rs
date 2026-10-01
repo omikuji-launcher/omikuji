@@ -4,7 +4,7 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use super::{EnvPurpose, build_launch_as};
-use crate::library::{AlongsideWhen, Game};
+use crate::library::{CompanionWhen, Game};
 use crate::process::GAME_ID_VAR;
 use crate::store::steam::local::with_steam_wine;
 use crate::template_vars::TemplateVars;
@@ -13,16 +13,16 @@ pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
     let Some(target) = companion_of(game) else {
         return;
     };
-    let delay = game.launch.alongside_delay as u64;
+    let delay = game.launch.companion_delay as u64;
 
-    match game.launch.alongside_when {
-        AlongsideWhen::Before => {
+    match game.launch.companion_when {
+        CompanionWhen::Before => {
             spawn_logged(game, host_env, &target);
             if delay > 0 {
                 tokio::time::sleep(Duration::from_secs(delay)).await;
             }
         }
-        AlongsideWhen::After => {
+        CompanionWhen::After => {
             let game = game.clone();
             let env = host_env.clone();
             std::thread::spawn(move || {
@@ -37,8 +37,8 @@ pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
 
 fn spawn_logged(game: &Game, host_env: &HashMap<String, String>, target: &str) {
     match spawn(game, host_env, target) {
-        Ok(pid) => tracing::info!(pid, "running `{}` alongside the game", target),
-        Err(e) => tracing::error!("failed to run `{}` alongside the game: {}", target, e),
+        Ok(pid) => tracing::info!(pid, "running companion `{}`", target),
+        Err(e) => tracing::error!("failed to run companion `{}`: {}", target, e),
     }
 }
 
@@ -74,9 +74,9 @@ fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Resul
 
 fn host_command(game: &Game, env: &HashMap<String, String>, target: &str) -> Command {
     let mut line = target.to_string();
-    if !game.launch.alongside_args.is_empty() {
+    if !game.launch.companion_args.is_empty() {
         line.push(' ');
-        line.push_str(&game.launch.alongside_args.join(" "));
+        line.push_str(&game.launch.companion_args.join(" "));
     }
     let mut cmd = Command::new("sh");
     cmd.arg("-c").arg(line).envs(env);
@@ -97,7 +97,7 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
     let mut tool = Game::new(name, exe)
         .with_prefix(super::resolve_prefix(source).to_string_lossy())
         .with_runner_version(source.wine.version.clone());
-    tool.launch.args = game.launch.alongside_args.clone();
+    tool.launch.args = game.launch.companion_args.clone();
     tool.source = game.source.clone();
     tool.metadata.slug = game.slug();
 
@@ -105,6 +105,6 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
 }
 
 fn companion_of(game: &Game) -> Option<String> {
-    let target = TemplateVars::for_game(game).expand(&game.launch.alongside);
+    let target = TemplateVars::for_game(game).expand(&game.launch.companion);
     (!target.is_empty()).then_some(target)
 }

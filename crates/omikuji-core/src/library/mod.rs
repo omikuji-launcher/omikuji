@@ -2,13 +2,14 @@ use crate::defaults::Defaults;
 use crate::dll_packs;
 use crate::fs_util::write_atomic;
 use crate::media::slugify;
+use crate::migration;
 use anyhow::{Context, Result};
 use fs_err as fs;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use toml::ser;
+use toml::{Table, Value, ser};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Game {
@@ -303,13 +304,13 @@ impl Default for WineConfig {
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
-pub enum AlongsideWhen {
+pub enum CompanionWhen {
     Before,
     #[default]
     After,
 }
 
-impl AlongsideWhen {
+impl CompanionWhen {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Before => "before",
@@ -318,7 +319,7 @@ impl AlongsideWhen {
     }
 }
 
-impl std::str::FromStr for AlongsideWhen {
+impl std::str::FromStr for CompanionWhen {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -343,13 +344,13 @@ pub struct LaunchConfig {
     #[serde(default)]
     pub post_exit_script: String,
     #[serde(default)]
-    pub alongside: String,
+    pub companion: String,
     #[serde(default)]
-    pub alongside_args: Vec<String>,
+    pub companion_args: Vec<String>,
     #[serde(default)]
-    pub alongside_when: AlongsideWhen,
+    pub companion_when: CompanionWhen,
     #[serde(default)]
-    pub alongside_delay: u32,
+    pub companion_delay: u32,
     #[serde(default)]
     pub env: IndexMap<String, String>,
     #[serde(default)]
@@ -357,12 +358,12 @@ pub struct LaunchConfig {
 }
 
 impl LaunchConfig {
-    pub fn prune_alongside(&mut self) {
-        if self.alongside.trim().is_empty() {
-            self.alongside.clear();
-            self.alongside_args.clear();
-            self.alongside_when = AlongsideWhen::default();
-            self.alongside_delay = 0;
+    pub fn prune_companion(&mut self) {
+        if self.companion.trim().is_empty() {
+            self.companion.clear();
+            self.companion_args.clear();
+            self.companion_when = CompanionWhen::default();
+            self.companion_delay = 0;
         }
     }
 }
@@ -543,8 +544,15 @@ impl Library {
 
     fn load_game(path: &PathBuf) -> Result<Game> {
         let contents = fs::read_to_string(path)?;
-        let game: Game =
+        let mut table: Table =
             toml::from_str(&contents).with_context(|| format!("parsing {}", path.display()))?;
+        let renamed = migration::rename_alongside_keys(&mut table);
+        let game: Game = Value::Table(table)
+            .try_into()
+            .with_context(|| format!("parsing {}", path.display()))?;
+        if renamed {
+            write_atomic(path, Self::game_toml(&game)?)?;
+        }
         Ok(game)
     }
 

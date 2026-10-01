@@ -11,6 +11,14 @@ use anyhow::{Context, Result};
 use fs_err as fs;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
+use toml::{Table, Value};
+
+const ALONGSIDE_KEYS: [(&str, &str); 4] = [
+    ("alongside", "companion"),
+    ("alongside_args", "companion_args"),
+    ("alongside_when", "companion_when"),
+    ("alongside_delay", "companion_delay"),
+];
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default)]
@@ -266,6 +274,20 @@ fn adopt_proton_layers() {
             tracing::warn!("layer migration failed for {}: {}", game.id(), e);
         }
     }
+}
+
+pub fn rename_alongside_keys(game: &mut Table) -> bool {
+    let Some(Value::Table(launch)) = game.get_mut("launch") else {
+        return false;
+    };
+    let mut renamed = false;
+    for (old, new) in ALONGSIDE_KEYS {
+        if let Some(value) = launch.remove(old) {
+            launch.insert(new.to_string(), value);
+            renamed = true;
+        }
+    }
+    renamed
 }
 
 fn rewrite_settings(

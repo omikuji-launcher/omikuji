@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use super::strategies::InstallStrategy;
 use crate::archive_source;
-use crate::library::{AlongsideWhen, LaunchConfig};
+use crate::library::{CompanionWhen, LaunchConfig};
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -89,7 +89,7 @@ impl GachaManifest {
         &self,
         accepted: &[String],
         launch: &mut LaunchConfig,
-    ) -> Option<&ManifestAlongside> {
+    ) -> Option<&ManifestCompanion> {
         let mut companion = None;
         for opt in self
             .options
@@ -98,7 +98,7 @@ impl GachaManifest {
         {
             opt.effect.apply(launch);
 
-            let Some(spec) = &opt.alongside else { continue };
+            let Some(spec) = &opt.companion else { continue };
             if companion.is_some() {
                 tracing::warn!(
                     "manifest '{}': option '{}' brings a second companion, only one is supported",
@@ -127,7 +127,7 @@ pub struct ManifestOption {
     #[serde(flatten)]
     pub effect: LaunchEffect,
     #[serde(default)]
-    pub alongside: Option<ManifestAlongside>,
+    pub companion: Option<ManifestCompanion>,
     #[serde(default = "default_true")]
     pub at_install: bool,
 }
@@ -171,19 +171,19 @@ impl LaunchEffect {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ManifestAlongside {
+pub struct ManifestCompanion {
     pub name: String,
     pub repo: String,
     pub exe: String,
     #[serde(default)]
     pub args: Vec<String>,
     #[serde(default)]
-    pub when: AlongsideWhen,
+    pub when: CompanionWhen,
     #[serde(default)]
     pub delay: u32,
 }
 
-impl ManifestAlongside {
+impl ManifestCompanion {
     pub fn install_dir(&self) -> std::path::PathBuf {
         crate::tools_dir().join(&self.name)
     }
@@ -193,10 +193,10 @@ impl ManifestAlongside {
     }
 
     pub fn apply_to(&self, launch: &mut LaunchConfig) {
-        launch.alongside = self.exe_path().to_string_lossy().into_owned();
-        launch.alongside_args = self.args.clone();
-        launch.alongside_when = self.when;
-        launch.alongside_delay = self.delay;
+        launch.companion = self.exe_path().to_string_lossy().into_owned();
+        launch.companion_args = self.args.clone();
+        launch.companion_when = self.when;
+        launch.companion_delay = self.delay;
     }
 
     pub async fn install(&self) -> anyhow::Result<std::path::PathBuf> {

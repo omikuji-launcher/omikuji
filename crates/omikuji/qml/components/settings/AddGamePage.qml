@@ -62,7 +62,7 @@ Item {
         let strVal = String(value)
         if (gameModel.update_draft_field(key, strVal)) {
             let next = gameModel.get_draft_config()
-            if (key === "launch.args" || key === "launch.alongside_args") next[key] = strVal
+            if (key === "launch.args" || key === "launch.companion_args") next[key] = strVal
             config = next
         }
     }

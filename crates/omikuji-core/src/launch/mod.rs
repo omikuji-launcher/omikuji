@@ -5,9 +5,9 @@ use crate::fs_util::is_executable;
 use crate::library::{Game, RunnerType};
 use crate::template_vars::TemplateVars;
 
-pub mod alongside;
 mod assemble;
 mod command;
+pub mod companion;
 mod env;
 mod prefix;
 mod wine;

@@ -342,36 +342,36 @@ Item {
             }
 
             M3FileField {
-                id: alongsideField
+                id: companionField
 
                 readonly property bool inPrefix: !["flatpak", "native"].includes(root.config["runner.type"] || "")
 
-                label: qsTr("Run Alongside")
+                label: qsTr("Companion")
                 placeholder: inPrefix ? qsTr("an .exe to run in the prefix while the game runs") : qsTr("a command to run while the game runs")
-                text: root.config["launch.alongside"] || ""
+                text: root.config["launch.companion"] || ""
                 width: parent.width
                 gameModel: root.gameModel
-                onTextEdited: (t) => root.updateField("launch.alongside", t)
+                onTextEdited: (t) => root.updateField("launch.companion", t)
             }
 
             M3TextField {
                 label: qsTr("Arguments")
                 placeholder: "-b -a -l -L -s"
-                text: root.config["launch.alongside_args"] || ""
+                text: root.config["launch.companion_args"] || ""
                 width: parent.width
-                visible: alongsideField.text !== ""
+                visible: companionField.text !== ""
                 gameModel: root.gameModel
-                onTextEdited: (t) => root.updateField("launch.alongside_args", t)
+                onTextEdited: (t) => root.updateField("launch.companion_args", t)
             }
 
             SettingsRow {
                 label: qsTr("Start It First")
                 description: qsTr("run it before the game instead of after")
                 width: parent.width
-                visible: alongsideField.text !== ""
+                visible: companionField.text !== ""
                 M3Switch {
-                    checked: (root.config["launch.alongside_when"] || "after") === "before"
-                    onToggled: (val) => root.updateField("launch.alongside_when", val ? "before" : "after")
+                    checked: (root.config["launch.companion_when"] || "after") === "before"
+                    onToggled: (val) => root.updateField("launch.companion_when", val ? "before" : "after")
                 }
             }
 
@@ -379,15 +379,15 @@ Item {
                 label: qsTr("Delay")
                 description: qsTr("seconds to wait between the two, for whichever starts first")
                 width: parent.width
-                visible: alongsideField.text !== ""
+                visible: companionField.text !== ""
                 contentRightMargin: 74
                 M3SpinBox {
                     from: 0
                     to: 600
                     stepSize: 5
-                    value: root.config["launch.alongside_delay"] || 0
+                    value: root.config["launch.companion_delay"] || 0
                     zeroPlaceholder: "—"
-                    onMoved: (val) => root.updateField("launch.alongside_delay", val)
+                    onMoved: (val) => root.updateField("launch.companion_delay", val)
                 }
             }
         }

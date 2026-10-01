@@ -89,7 +89,7 @@ One thing specific to Amazon Games: `nile` can't resume a partially downloaded f
 
 Gacha games are similar to Epic Games / GOG installations. However, some of them come with packs to pick: HoYo games have `Voice Packs` (check as many as you want, the first one is preselected), and Wuthering Waves has `Texture Packs` (`SD`, `HD` or `UHD`, pick one, `HD` is preselected). The install size shown includes the packs you picked. Packs can also be added or removed later from the game's `Gacha` settings tab. Also, if the game supports, you're able to change the version (Global, CN, JP, etc.)
 
-Some gacha may come with additional things like, for example, Genshin Impact has a toggle to install the `Fps Unlocker`. If checked, it will install the latter alongside the game and will apply, in the game's settings, the `Run Alongside` field filled with the path to the unlocker executable. Other toggles only add launch arguments or environment variables, like `DirectX 12` for Zenless Zone Zero, and can be changed later from the game's `Gacha` settings tab. Some toggles, like the HoYo `Timeout fix`, only show up there and not in the install dialog.
+Some gacha may come with additional things like, for example, Genshin Impact has a toggle to install the `Fps Unlocker`. If checked, it will install the latter alongside the game and will apply, in the game's settings, the `Companion` field filled with the path to the unlocker executable. Other toggles only add launch arguments or environment variables, like `DirectX 12` for Zenless Zone Zero, and can be changed later from the game's `Gacha` settings tab. Some toggles, like the HoYo `Timeout fix`, only show up there and not in the install dialog.
 
 Or additionally, some gacha may have a 'suggested' runner, which, if selected, will be installed on the spot and applied to that game (for example, hsr, that needs a specific `Dawn Winery` Proton to run). You still are able to select any other runner from the list and ignore the suggested one.
 
@@ -304,7 +304,7 @@ If a runner already has its own `user_settings.py`, omikuji leaves it alone and 
 
 \- **Post-Exit**: Script to run once the game exits (waits for the game to close before running).
 
-\- **Run Alongside**: Script/Wine `.exe` to run alongside the game. 
+\- **Companion**: Script/Wine `.exe` to run alongside the game. 
 
 When you fill the path field, it'll show you three more options below it: 
 

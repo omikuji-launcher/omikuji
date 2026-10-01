@@ -1148,10 +1148,10 @@ game_fields! {
     "launch.command_prefix" => str, launch.command_prefix,
     "launch.pre_launch_script" => str, launch.pre_launch_script,
     "launch.post_exit_script" => str, launch.post_exit_script,
-    "launch.alongside" => str, launch.alongside,
-    "launch.alongside_args" => args, launch.alongside_args,
-    "launch.alongside_when" => choice, launch.alongside_when,
-    "launch.alongside_delay" => int, launch.alongside_delay,
+    "launch.companion" => str, launch.companion,
+    "launch.companion_args" => args, launch.companion_args,
+    "launch.companion_when" => choice, launch.companion_when,
+    "launch.companion_delay" => int, launch.companion_delay,
     "launch.env" => json, launch.env,
     "launch.env_sets" => json, launch.env_sets,
 
@@ -1560,7 +1560,7 @@ impl qobject::GameModel {
         let game = &mut draft.game;
         game.metadata.name = game.metadata.name.trim().to_string();
         game.metadata.added = rfc3339_now();
-        game.launch.prune_alongside();
+        game.launch.prune_companion();
 
         let game_id = game.metadata.id.clone();
         let game_name = game.metadata.name.clone();
@@ -1658,7 +1658,7 @@ impl qobject::GameModel {
             return false;
         };
         draft.rebase(&self.library.game[idx]);
-        draft.game.launch.prune_alongside();
+        draft.game.launch.prune_companion();
         if let Err(e) = Library::save_game_static(&draft.game) {
             tracing::error!("commit_edit_game: failed to save: {}", e);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);

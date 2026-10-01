@@ -1,6 +1,6 @@
 use crate::app_settings::AppSettings;
 use crate::event_queue::EventQueue;
-use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, alongside};
+use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, companion};
 use crate::library::{Game, Library};
 use crate::store::epic;
 use crate::{discord, dll_packs, game_logs, runners};
@@ -163,7 +163,7 @@ impl ProcessManager {
             }
         }
 
-        alongside::start(&game, &config.env).await;
+        companion::start(&game, &config.env).await;
 
         let mut child = cmd.spawn()?;
         let pid = child.id();

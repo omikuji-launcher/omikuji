@@ -740,8 +740,8 @@ DialogCard {
                     label: modelData.label
                     description: modelData.description !== ""
                         ? modelData.description
-                        : (modelData.alongside
-                            ? modelData.alongside.repo.replace(/^https?:\/\//, "")
+                        : (modelData.companion
+                            ? modelData.companion.repo.replace(/^https?:\/\//, "")
                             : "")
                     checked: root.acceptedOptions[modelData.id] === true
                     onToggled: (val) => {
