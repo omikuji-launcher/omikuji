@@ -13,6 +13,7 @@ Item {
     property string addLabel: "Add variable"
     property var gameModel: null
     property bool expandHint: true
+    property alias actions: actionRow.data
 
     signal changed(string json)
 
@@ -130,50 +131,20 @@ Item {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 40
-            radius: Theme.radius.sm
-            color: addArea.containsMouse ? Theme.stateHover : Theme.alpha(Theme.text, 0)
-            border.width: 1
-            border.color: Theme.surfaceBorder
+        Row {
+            spacing: Theme.space.sm
+            Layout.topMargin: Theme.space.xs
 
-            Behavior on color {
-                ColorAnimation { duration: 100 }
+            M3Button {
+                text: root.addLabel
+                variant: "tonal"
+                icon: "add"
+                onClicked: root._addRow()
             }
 
             Row {
-                anchors.centerIn: parent
-                spacing: 6
-
-                SvgIcon {
-                    name: "add"
-                    size: 16
-                    color: addArea.containsMouse ? Theme.text : Theme.textMuted
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-
-                Text {
-                    text: root.addLabel
-                    color: addArea.containsMouse ? Theme.text : Theme.textMuted
-                    font.pixelSize: Theme.type.label.size
-                    anchors.verticalCenter: parent.verticalCenter
-
-                    Behavior on color {
-                        ColorAnimation { duration: 100 }
-                    }
-                }
-            }
-
-            PressArea {
-                id: addArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onActivated: root._addRow()
+                id: actionRow
+                spacing: Theme.space.sm
             }
         }
     }

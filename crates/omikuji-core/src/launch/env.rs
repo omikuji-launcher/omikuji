@@ -290,7 +290,7 @@ fn shell_word(value: &str) -> String {
     }
 }
 
-// a depot husk keeps the dir but loses the v* payload proton's ntdll loads from
+// proton's ntdll loads <dir>/v2/lib{32,64}
 fn anticheat_runtime(appid: &str) -> Option<String> {
     let dir = steam_local::get_game_install_dir(appid)?;
     let has_payload = fs_err::read_dir(&dir)

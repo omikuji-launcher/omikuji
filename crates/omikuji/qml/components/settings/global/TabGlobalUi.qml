@@ -561,46 +561,11 @@ Item {
                 }
             }
 
-            Item {
-                width: parent.width
-                height: 40
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Theme.radius.sm
-                    color: addHover.containsMouse
-                        ? Theme.alpha(Theme.text, 0.06)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 100 } }
-                }
-
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 6
-                    spacing: 8
-
-                    SvgIcon {
-                        name: "add"
-                        size: 18
-                        color: Theme.accent
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: qsTr("Add category")
-                        color: Theme.accent
-                        font.pixelSize: Theme.type.body.size
-                        font.weight: Font.Medium
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                PressArea {
-                    id: addHover
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onActivated: root.categoryAddRequested()
-                }
+            M3Button {
+                text: qsTr("Add category")
+                variant: "tonal"
+                icon: "add"
+                onClicked: root.categoryAddRequested()
             }
         }
 

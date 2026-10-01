@@ -306,17 +306,16 @@ Item {
                 addLabel: qsTr("Add variable")
                 gameModel: root.gameModel
                 onChanged: (j) => root.updateField("launch.env", j)
-            }
-
-            M3Button {
-                text: {
-                    let n = 0
-                    try { n = JSON.parse(root.config["launch.env_sets"] || "[]").length } catch (e) {}
-                    return n > 0 ? qsTr("Sets · %1 synced").arg(n) : qsTr("Sets")
+                actions: M3Button {
+                    text: {
+                        let n = 0
+                        try { n = JSON.parse(root.config["launch.env_sets"] || "[]").length } catch (e) {}
+                        return n > 0 ? qsTr("Sets · %1 synced").arg(n) : qsTr("Sets")
+                    }
+                    variant: "tonal"
+                    icon: "view_list"
+                    onClicked: root.openEnvSets()
                 }
-                variant: "tonal"
-                icon: "view_list"
-                onClicked: root.openEnvSets()
             }
         }
 
