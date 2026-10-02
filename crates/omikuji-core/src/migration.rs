@@ -270,7 +270,7 @@ fn adopt_proton_layers() {
         let mut changed = adopt_layer(&mut game.wine.dxvk, &mut game.wine.dxvk_version);
         changed |= adopt_layer(&mut game.wine.vkd3d, &mut game.wine.vkd3d_version);
         changed |= adopt_layer(&mut game.wine.dxvk_nvapi, &mut game.wine.dxvk_nvapi_version);
-        if changed && let Err(e) = Library::save_game_static(&game) {
+        if changed && let Err(e) = Library::save_game(&game) {
             tracing::warn!("layer migration failed for {}: {}", game.id(), e);
         }
     }

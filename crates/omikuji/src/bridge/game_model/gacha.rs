@@ -377,7 +377,7 @@ impl super::qobject::GameModel {
         }
         game.seed_from_defaults(&Defaults::load());
 
-        if let Err(e) = Library::save_game_static(&game) {
+        if let Err(e) = Library::save_game(&game) {
             tracing::error!("failed to save: {}", e);
             return QString::default();
         }

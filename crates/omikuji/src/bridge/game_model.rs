@@ -913,6 +913,7 @@ pub struct GameModelRust {
 impl Default for GameModelRust {
     fn default() -> Self {
         let mut library = Library::load().unwrap_or_default();
+        report_load_errors(&library.load_errors, &[]);
         let sort_mode = SortMode::parse(&AppSettings::load().display.card_sort);
         library.game.sort_by(|a, b| sort_mode.cmp(a, b));
         let count = library.game.len() as i32;
@@ -925,6 +926,12 @@ impl Default for GameModelRust {
             sort_mode,
             dirty_order: Default::default(),
         }
+    }
+}
+
+fn report_load_errors(errors: &[String], already_reported: &[String]) {
+    for error in errors.iter().filter(|e| !already_reported.contains(e)) {
+        notifications::error("Couldn't load game", error);
     }
 }
 
@@ -1425,7 +1432,7 @@ impl qobject::GameModel {
         let row = self.library.index_of(game_id)?;
         let game = &mut self.as_mut().rust_mut().get_mut().library.game[row];
         change(game);
-        if let Err(e) = Library::save_game_static(game) {
+        if let Err(e) = Library::save_game(game) {
             tracing::error!("failed to save '{}': {}", game_id, e);
         }
         let updated = game.clone();
@@ -1539,7 +1546,7 @@ impl qobject::GameModel {
         let rust = self.as_mut().rust_mut().get_mut();
         let dirty = std::mem::take(&mut rust.dirty_order);
         for game in rust.library.game.iter().filter(|g| dirty.contains(g.id())) {
-            if let Err(e) = Library::save_game_static(game) {
+            if let Err(e) = Library::save_game(game) {
                 tracing::warn!("save custom order for {}: {}", game.id(), e);
             }
         }
@@ -1567,7 +1574,7 @@ impl qobject::GameModel {
         let game_id = game.metadata.id.clone();
         let game_name = game.metadata.name.clone();
 
-        if let Err(e) = Library::save_game_static(game) {
+        if let Err(e) = Library::save_game(game) {
             tracing::error!("commit_new_game: failed to save: {}", e);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return QString::default();
@@ -1656,7 +1663,7 @@ impl qobject::GameModel {
         };
         draft.rebase(&self.library.game[idx]);
         draft.game.launch.prune_companion();
-        if let Err(e) = Library::save_game_static(&draft.game) {
+        if let Err(e) = Library::save_game(&draft.game) {
             tracing::error!("commit_edit_game: failed to save: {}", e);
             self.as_mut().rust_mut().get_mut().draft = Some(draft);
             return false;
@@ -1861,9 +1868,11 @@ impl qobject::GameModel {
 
         match Library::load() {
             Ok(mut new_lib) => {
+                report_load_errors(&new_lib.load_errors, &self.library.load_errors);
                 let mode = self.sort_mode;
                 new_lib.game.sort_by(|a, b| mode.cmp(a, b));
                 if new_lib.game == self.library.game {
+                    self.as_mut().rust_mut().get_mut().library.load_errors = new_lib.load_errors;
                     return QString::from(&*selected_id);
                 }
                 let new_count = new_lib.game.len() as i32;
@@ -1999,7 +2008,7 @@ impl qobject::GameModel {
     }
 
     fn library_dir(&self) -> QString {
-        let path = Library::library_dir();
+        let path = omikuji_core::library_dir();
         QString::from(&*path.to_string_lossy())
     }
 
@@ -2070,7 +2079,7 @@ impl qobject::GameModel {
             game.metadata.id
         );
 
-        if let Err(e) = Library::save_game_static(&game) {
+        if let Err(e) = Library::save_game(&game) {
             tracing::error!("failed to save game config: {}", e);
             return false;
         }
@@ -2220,7 +2229,7 @@ impl qobject::GameModel {
             .filter(|g| game_ids.contains(&g.metadata.id.as_str()))
         {
             defaults.apply_to(game, keys.iter().copied(), mode);
-            match Library::save_game_static(game) {
+            match Library::save_game(game) {
                 Ok(_) => written += 1,
                 Err(e) => {
                     tracing::error!("apply_defaults save failed for {}: {}", game.metadata.id, e)

@@ -268,7 +268,7 @@ pub fn duplicate_game(game: &Game) -> Result<Game> {
     new_game.metadata.last_played = String::new();
     new_game.metadata.added = rfc3339_now();
 
-    Library::save_game_static(&new_game)?;
+    Library::save_game(&new_game)?;
 
     Ok(new_game)
 }

@@ -301,7 +301,7 @@ impl ProcessManager {
                     game.metadata.playtime += playtime_secs as f64 / 3600.0;
                     game.metadata.last_played =
                         chrono::Local::now().format("%b %-d, %Y").to_string();
-                    if let Err(e) = Library::save_game_static(&game) {
+                    if let Err(e) = Library::save_game(&game) {
                         tracing::error!(pid, "failed to save playtime: {}", e);
                     }
                 }

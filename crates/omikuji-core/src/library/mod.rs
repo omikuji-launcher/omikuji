@@ -1,15 +1,16 @@
-use crate::defaults::Defaults;
+use crate::defaults::{CopyMode, Defaults, FIELDS};
 use crate::dll_packs;
 use crate::fs_util::write_atomic;
 use crate::media::slugify;
 use crate::migration;
-use anyhow::{Context, Result};
+use crate::string_enum::string_enum;
+use anyhow::{Context, Result, anyhow};
 use fs_err as fs;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use toml::{Table, Value, ser};
+use std::path::{Path, PathBuf};
+use toml::{Table, Value, de, ser};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Game {
@@ -75,18 +76,16 @@ pub enum SourceKind {
     Gacha,
 }
 
-impl SourceKind {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Manual => "",
-            Self::Epic => "epic",
-            Self::Steam => "steam",
-            Self::Gog => "gog",
-            Self::Nile => "nile",
-            Self::Gacha => "gacha",
-        }
-    }
+string_enum!(SourceKind {
+    Manual => "",
+    Epic => "epic",
+    Steam => "steam",
+    Gog => "gog",
+    Nile => "nile",
+    Gacha => "gacha",
+});
 
+impl SourceKind {
     // the STORE value umu wants, so protonfixes can match the game
     pub fn umu_store(self) -> Option<&'static str> {
         match self {
@@ -99,34 +98,6 @@ impl SourceKind {
 
     pub fn has_updates(self) -> bool {
         matches!(self, Self::Gacha | Self::Epic | Self::Gog | Self::Nile)
-    }
-}
-
-impl std::str::FromStr for SourceKind {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "epic" => Ok(Self::Epic),
-            "steam" => Ok(Self::Steam),
-            "gog" => Ok(Self::Gog),
-            "nile" => Ok(Self::Nile),
-            "gacha" => Ok(Self::Gacha),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Serialize for SourceKind {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        s.serialize_str(self.as_str())
-    }
-}
-
-// a typo in the toml reads as manual instead of failing the whole game load
-impl<'de> Deserialize<'de> for SourceKind {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        Ok(String::deserialize(d)?.parse().unwrap_or_default())
     }
 }
 
@@ -164,48 +135,20 @@ pub enum RunnerType {
     Native,
 }
 
-impl RunnerType {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Wine => "wine",
-            Self::Steam => "steam",
-            Self::Flatpak => "flatpak",
-            Self::Native => "native",
-        }
-    }
+string_enum!(RunnerType {
+    Wine => "wine",
+    Steam => "steam",
+    Flatpak => "flatpak",
+    Native => "native",
+});
 
+impl RunnerType {
     pub fn is_steam(self) -> bool {
         self == Self::Steam
     }
 
     pub fn on_host(self) -> bool {
         matches!(self, Self::Native | Self::Flatpak)
-    }
-}
-
-impl std::str::FromStr for RunnerType {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "steam" => Ok(Self::Steam),
-            "flatpak" => Ok(Self::Flatpak),
-            "native" => Ok(Self::Native),
-            _ => Err(()),
-        }
-    }
-}
-
-impl Serialize for RunnerType {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        s.serialize_str(self.as_str())
-    }
-}
-
-// a typo in the toml falls back to wine instead of failing the whole game load
-impl<'de> Deserialize<'de> for RunnerType {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        Ok(String::deserialize(d)?.parse().unwrap_or_default())
     }
 }
 
@@ -293,7 +236,7 @@ impl Default for WineConfig {
             battleye: false,
             easyanticheat: false,
             dpi_scaling: false,
-            dpi: 96,
+            dpi: default_dpi(),
             dll_overrides: IndexMap::new(),
             dll_override_sets: Vec::new(),
             audio_driver: String::new(),
@@ -302,34 +245,17 @@ impl Default for WineConfig {
     }
 }
 
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CompanionWhen {
     Before,
     #[default]
     After,
 }
 
-impl CompanionWhen {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Before => "before",
-            Self::After => "after",
-        }
-    }
-}
-
-impl std::str::FromStr for CompanionWhen {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "before" => Ok(Self::Before),
-            "after" => Ok(Self::After),
-            _ => Err(()),
-        }
-    }
-}
+string_enum!(CompanionWhen {
+    Before => "before",
+    After => "after",
+});
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 pub struct LaunchConfig {
@@ -422,8 +348,22 @@ pub struct SystemConfig {
     pub discord_rpc: bool,
 }
 
-pub fn default_color() -> String {
+fn default_color() -> String {
     "#1a1a2e".to_string()
+}
+
+fn toml_error_summary(err: &de::Error, contents: &str) -> String {
+    let message = err.message();
+    let Some(span) = err.span() else {
+        return err.to_string().trim_end().replace("\nin ", " in ");
+    };
+    let before = &contents[..span.start];
+    let line_start = before.rfind('\n').map_or(0, |i| i + 1);
+    let line = contents[line_start..].lines().next().unwrap_or_default();
+    match line.split_once('=') {
+        Some((key, _)) => format!("{message} in `{}`", key.trim()),
+        None => format!("line {}: {message}", before.matches('\n').count() + 1),
+    }
 }
 
 fn rfc3339_of(t: std::time::SystemTime) -> String {
@@ -467,13 +407,10 @@ impl Metadata {
 #[derive(Debug, Default)]
 pub struct Library {
     pub game: Vec<Game>,
+    pub load_errors: Vec<String>,
 }
 
 impl Library {
-    pub fn library_dir() -> PathBuf {
-        crate::library_dir()
-    }
-
     pub fn game(&self, id: &str) -> Option<&Game> {
         self.game.iter().find(|g| g.id() == id)
     }
@@ -482,51 +419,39 @@ impl Library {
         self.game.iter().position(|g| g.id() == id)
     }
 
-    pub fn game_ids_by_app_id(kind: SourceKind) -> HashMap<String, String> {
-        let mut out = HashMap::new();
-        let dir = Self::library_dir();
-        let Ok(entries) = fs_err::read_dir(&dir) else {
-            return out;
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().and_then(|e| e.to_str()) != Some("toml") {
-                continue;
-            }
-            let Ok(content) = fs_err::read_to_string(&path) else {
-                continue;
-            };
-            let Ok(game) = toml::from_str::<Game>(&content) else {
-                continue;
-            };
-            if game.source.kind == kind && !game.source.app_id.is_empty() {
-                out.insert(game.source.app_id, game.metadata.id);
+    fn game_files() -> Result<Vec<PathBuf>> {
+        let dir = crate::library_dir();
+        if !dir.exists() {
+            return Ok(Vec::new());
+        }
+
+        let mut files = Vec::new();
+        for entry in fs::read_dir(&dir)? {
+            let path = entry?.path();
+            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            if path.extension().and_then(|s| s.to_str()) == Some("toml") && !name.starts_with('.') {
+                files.push(path);
             }
         }
-        out
+        Ok(files)
+    }
+
+    pub fn game_ids_by_app_id(kind: SourceKind) -> HashMap<String, String> {
+        Self::game_files()
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|path| fs::read_to_string(path).ok())
+            .filter_map(|content| toml::from_str::<Game>(&content).ok())
+            .filter(|game| game.source.kind == kind && !game.source.app_id.is_empty())
+            .map(|game| (game.source.app_id, game.metadata.id))
+            .collect()
     }
 
     pub fn load() -> Result<Self> {
-        let dir = Self::library_dir();
-        if !dir.exists() {
-            return Ok(Self::default());
-        }
-
         let mut games = Vec::new();
+        let mut load_errors = Vec::new();
 
-        for entry in fs::read_dir(&dir)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            if path.extension().and_then(|s| s.to_str()) != Some("toml") {
-                continue;
-            }
-
-            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if name.starts_with('.') || name.ends_with('~') {
-                continue;
-            }
-
+        for path in Self::game_files()? {
             match Self::load_game(&path) {
                 Ok(mut game) => {
                     if game.metadata.added.is_empty() {
@@ -541,22 +466,34 @@ impl Library {
                     }
                     games.push(game)
                 }
-                Err(e) => tracing::warn!("failed to load game: {e:#}"),
+                Err(e) => {
+                    tracing::warn!("failed to load game: {e:#}");
+                    let name = path.file_name().unwrap_or_default().to_string_lossy();
+                    load_errors.push(format!("{name}: {}", e.root_cause()));
+                }
             }
         }
 
         games.sort_by(|a, b| a.added_key().cmp(&b.added_key()));
 
-        Ok(Self { game: games })
+        Ok(Self {
+            game: games,
+            load_errors,
+        })
     }
 
-    fn load_game(path: &PathBuf) -> Result<Game> {
+    fn load_game(path: &Path) -> Result<Game> {
         let contents = fs::read_to_string(path)?;
-        let mut table: Table =
-            toml::from_str(&contents).with_context(|| format!("parsing {}", path.display()))?;
+        let mut table: Table = toml::from_str(&contents)
+            .map_err(|e| anyhow!(toml_error_summary(&e, &contents)))
+            .with_context(|| format!("parsing {}", path.display()))?;
         let renamed = migration::rename_alongside_keys(&mut table);
         let game: Game = Value::Table(table)
             .try_into()
+            .map_err(|e| {
+                let e = toml::from_str::<Metadata>(&contents).err().unwrap_or(e);
+                anyhow!(toml_error_summary(&e, &contents))
+            })
             .with_context(|| format!("parsing {}", path.display()))?;
         if renamed {
             write_atomic(path, Self::game_toml(&game)?)?;
@@ -565,25 +502,9 @@ impl Library {
     }
 
     pub fn load_game_by_id(id: &str) -> Result<Option<Game>> {
-        let dir = Self::library_dir();
-        if !dir.exists() {
-            return Ok(None);
-        }
-
-        let suffix = format!("_{}.toml", id);
-        for entry in fs::read_dir(&dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if name.ends_with(&suffix) {
-                return Self::load_game(&path).map(Some);
-            }
-        }
-        Ok(None)
-    }
-
-    pub fn save_game(&self, game: &Game) -> Result<()> {
-        Self::save_game_static(game)
+        Self::find_game_file_by_id(id)?
+            .map(|path| Self::load_game(&path))
+            .transpose()
     }
 
     fn game_toml(game: &Game) -> Result<String, ser::Error> {
@@ -594,15 +515,14 @@ impl Library {
         ))
     }
 
-    pub fn save_game_static(game: &Game) -> Result<()> {
-        let dir = Self::library_dir();
+    pub fn save_game(game: &Game) -> Result<()> {
+        let dir = crate::library_dir();
         fs::create_dir_all(&dir)?;
 
-        // reuse exsiting filename if found by id, so renames dont create new files and
-        // leave the old one orphaned. steam games use "steam_{appid}.toml" format
-        let path = match Self::find_game_file_by_id(&game.metadata.id) {
-            Ok(Some(existing_path)) => existing_path,
-            _ => {
+        // renames keep the old filename
+        let path = match Self::find_game_file_by_id(&game.metadata.id)? {
+            Some(existing_path) => existing_path,
+            None => {
                 let filename = if game.runner.runner_type.is_steam() {
                     format!("steam_{}.toml", game.metadata.id)
                 } else {
@@ -619,21 +539,12 @@ impl Library {
     }
 
     fn find_game_file_by_id(id: &str) -> Result<Option<PathBuf>> {
-        let dir = Self::library_dir();
-        if !dir.exists() {
-            return Ok(None);
-        }
-
-        let suffix = format!("_{}.toml", id);
-        for entry in fs::read_dir(&dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            let name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
-            if name.ends_with(&suffix) {
-                return Ok(Some(path));
-            }
-        }
-        Ok(None)
+        let suffix = format!("_{id}.toml");
+        Ok(Self::game_files()?.into_iter().find(|path| {
+            path.file_name()
+                .and_then(|s| s.to_str())
+                .is_some_and(|name| name.ends_with(&suffix))
+        }))
     }
 
     pub fn remove_game_file(id: &str) -> Result<()> {
@@ -655,10 +566,15 @@ pub fn generate_id() -> String {
             .unwrap()
             .as_nanos(),
     );
-    let hash = hasher.finish();
+    let mut hash = hasher.finish();
     let chars: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+    let base = chars.len() as u64;
     (0..6)
-        .map(|i| chars[((hash >> (i * 6)) & 0x1F) as usize % chars.len()] as char)
+        .map(|_| {
+            let c = chars[(hash % base) as usize];
+            hash /= base;
+            c as char
+        })
         .collect()
 }
 
@@ -692,12 +608,6 @@ impl Game {
 
     pub fn id(&self) -> &str {
         &self.metadata.id
-    }
-    pub fn name(&self) -> &str {
-        &self.metadata.name
-    }
-    pub fn exe(&self) -> &PathBuf {
-        &self.metadata.exe
     }
 
     pub fn slug(&self) -> String {
@@ -746,7 +656,6 @@ impl Game {
 
     // skips fields the caller already set so per-source picks (steam:appid etc) survive
     pub fn seed_from_defaults(&mut self, d: &Defaults) {
-        use crate::defaults::{CopyMode, FIELDS};
         d.apply_to(self, FIELDS.iter().map(|f| f.key), CopyMode::Seed);
     }
 }

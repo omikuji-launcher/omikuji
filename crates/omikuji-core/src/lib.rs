@@ -31,6 +31,7 @@ pub mod runners;
 pub mod scripts;
 pub mod settings;
 pub mod store;
+mod string_enum;
 pub mod system_info;
 pub mod template_vars;
 pub mod updates;
