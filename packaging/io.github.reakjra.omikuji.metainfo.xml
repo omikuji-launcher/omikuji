@@ -22,6 +22,17 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.3" date="2026-10-02">
+      <description>
+        <ul>
+          <li>'copy in steam's format' button for env and dll tables</li>
+          <li>'add' button for env, dll and category settings</li>
+          <li>Renamed 'Alongside' executable to 'Companion'</li>
+          <li>Changed Gachas manifest format from json to toml</li>
+          <li> One progress item for WuWa downloads (common + pack)</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.2" date="2026-09-30">
       <description>
         <ul>

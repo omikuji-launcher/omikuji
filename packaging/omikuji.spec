@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.2
+Version:        0.20.3
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,13 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Fri Oct 02 2026 reakjra <reakjra@proton.me> - 0.20.3-1
+- 'copy in steam's format' button for env and dll tables
+- 'add' button for env, dll and category settings
+- Renamed 'Alongside' executable to 'Companion'
+- Changed Gachas manifest format from json to toml
+-  One progress item for WuWa downloads (common + pack)
+
 * Wed Sep 30 2026 reakjra <reakjra@proton.me> - 0.20.2-1
 - Gacha settings tab (HoYo Games and WuWa): packs + launch toggles
 - wuwa texture packs + new index

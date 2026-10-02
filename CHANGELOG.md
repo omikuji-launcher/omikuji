@@ -13,6 +13,19 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.3
+Added:
+- 'copy in steam's format' button for env and dll tables
+- 'add' button for env, dll and category settings
+
+Changed:
+- Renamed 'Alongside' executable to 'Companion'
+- Changed Gachas manifest format from json to toml
+
+Fixed:
+- One progress item for WuWa downloads (common + pack)
+
+
 ## 0.20.2
 Added:
 - Gacha settings tab (HoYo games and WuWa): packs + launch toggles
