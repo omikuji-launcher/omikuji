@@ -9,7 +9,7 @@ Item {
 
     property int dismissMs: 4500
     property int maxVisible: 5
-    readonly property int toastWidth: 340
+    readonly property int toastWidth: 380
     readonly property int toastSpacing: 10
 
     property int nextId: 0
@@ -143,44 +143,48 @@ Item {
             }
 
             width: root.toastWidth
-            height: toastCol.implicitHeight + 24
+            height: toastCol.y + toastCol.implicitHeight + 14
             radius: Theme.radius.lg
 
             SvgIcon {
+                id: levelIcon
                 anchors.left: parent.left
                 anchors.leftMargin: 14
-                anchors.top: parent.top
-                anchors.topMargin: 12
+                anchors.verticalCenter: closeBtn.verticalCenter
                 name: toast.levelIcon
-                size: 20
+                size: 24
                 color: toast.levelColor
+            }
+
+            Text {
+                anchors.left: levelIcon.right
+                anchors.leftMargin: 10
+                anchors.right: closeBtn.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: closeBtn.verticalCenter
+                text: toast.title
+                color: Theme.text
+                font.pixelSize: Theme.type.subtitle.size
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
             }
 
             Column {
                 id: toastCol
                 anchors.left: parent.left
-                anchors.leftMargin: 44
-                anchors.right: closeBtn.left
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 3
-
-                Text {
-                    width: parent.width
-                    text: toast.title
-                    color: Theme.text
-                    font.pixelSize: Theme.type.label.size
-                    font.weight: Font.DemiBold
-                    elide: Text.ElideRight
-                    visible: text.length > 0
-                }
+                anchors.right: parent.right
+                anchors.leftMargin: 14
+                anchors.rightMargin: 14
+                anchors.top: closeBtn.bottom
+                anchors.topMargin: 6
+                spacing: 6
 
                 Text {
                     width: parent.width
                     text: Format.backticksToRichText(toast.message, Theme.accent, Theme.mono)
                     textFormat: Text.RichText
-                    color: Theme.textMuted
-                    font.pixelSize: Theme.type.caption.size
+                    color: Theme.text
+                    font.pixelSize: Theme.type.body.size
                     wrapMode: Text.WordWrap
                     visible: text.length > 0
                 }
