@@ -1,4 +1,5 @@
 # omikuji-proton-monkey-patch
+# ^ marker to identify the file. dont delete thanks :)
 import os
 import sys
 
@@ -8,6 +9,7 @@ _SYSTEM_DIRS = ("system32", "syswow64")
 
 
 def _log(line):
+    # from log() so this logs directly in the logs
     try:
         main = sys.modules.get("__main__")
         emit = getattr(main, "log", None)
@@ -19,6 +21,7 @@ def _log(line):
         pass
 
 
+# proton turns g_session.dlloverrides into WINEDLLOVERRIDES after this import so the pinned keys get held here
 class _PinnedOverrides(dict):
     def __init__(self, base, pinned):
         super().__init__(base)
@@ -39,6 +42,7 @@ class _PinnedOverrides(dict):
         except KeyError:
             pass
 
+    # dict.update never calls __setitem__ so pins would slip through it
     def update(self, *args, **kwargs):
         for key, value in dict(*args, **kwargs).items():
             self[key] = value
@@ -94,19 +98,23 @@ def _install_skips(main):
         _log("this proton has no try_copy, translation layer versions will not apply")
         return
 
+    # match by filename since every fork keeps its dlls in a different folder
     def try_copy(src, dst, *args, **kwargs):
         if os.path.basename(str(src)).lower() in skipped and _into_system_dir(dst):
             return
         return original(src, dst, *args, **kwargs)
 
+    # since it calls try_copy by bare name swapping the global catches every copy
     main.try_copy = try_copy
     _log("leaving %s to omikuji" % ", ".join(sorted(skipped)))
 
 
+# separated so no domino effect for living failures (this is a bloodborne reference have a great day)
 for _install in (_install_pins, _install_skips):
     try:
         _install(sys.modules.get("__main__"))
     except Exception as exc:
         _log("%s failed, proton keeps its own settings (%r)" % (_install.__name__, exc))
 
+# proton reads this dict and yells about a broken file if its missing
 user_settings = {}
