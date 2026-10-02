@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
+import "../lib/Format.js" as Format
 
-// built on ListView so add/remove gives smooth stack shifts, not instant pops
 Item {
     id: root
 
@@ -177,7 +177,8 @@ Item {
 
                 Text {
                     width: parent.width
-                    text: toast.message
+                    text: Format.backticksToRichText(toast.message, Theme.accent, Theme.mono)
+                    textFormat: Text.RichText
                     color: Theme.textMuted
                     font.pixelSize: Theme.type.caption.size
                     wrapMode: Text.WordWrap

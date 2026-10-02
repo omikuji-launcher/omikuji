@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 import QtQuick.Layouts
+import "../lib/Format.js" as Format
 
 DialogCard {
     id: root
@@ -35,23 +36,6 @@ DialogCard {
         open()
     }
     function hide() { close() }
-
-    function renderMessage(raw) {
-        if (!raw) return ""
-        let accent = Theme.accent
-        let hex = Qt.colorEqual(accent, "transparent")
-            ? "#888"
-            : "#" + Math.round(accent.r * 255).toString(16).padStart(2, "0")
-                  + Math.round(accent.g * 255).toString(16).padStart(2, "0")
-                  + Math.round(accent.b * 255).toString(16).padStart(2, "0")
-        let escaped = String(raw)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-        return escaped.replace(/`([^`]+)`/g, function(_m, p1) {
-            return '<span style="color:' + hex + '; font-family:' + Theme.mono + '">' + p1 + '</span>'
-        })
-    }
 
     onCloseRequested: { root.dismissed(); root.close() }
 
@@ -106,7 +90,7 @@ DialogCard {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: Theme.space.md
-                text: root.renderMessage(root.message)
+                text: Format.backticksToRichText(root.message, Theme.accent, Theme.mono)
                 textFormat: Text.RichText
                 color: Theme.text
                 font.pixelSize: Theme.type.label.size

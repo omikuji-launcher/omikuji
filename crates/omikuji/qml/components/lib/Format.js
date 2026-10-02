@@ -27,3 +27,19 @@ function formatEta(secs) {
     if (secs >= 60) return Math.floor(secs / 60) + "m " + Math.floor(secs % 60) + "s"
     return Math.floor(secs) + "s"
 }
+
+function backticksToRichText(raw, color, family) {
+    if (!raw) return ""
+    let hex = Qt.colorEqual(color, "transparent")
+        ? "#888"
+        : "#" + Math.round(color.r * 255).toString(16).padStart(2, "0")
+              + Math.round(color.g * 255).toString(16).padStart(2, "0")
+              + Math.round(color.b * 255).toString(16).padStart(2, "0")
+    let escaped = String(raw)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+    return escaped.replace(/`([^`]+)`/g, function(_m, p1) {
+        return '<span style="color:' + hex + '; font-family:' + family + '">' + p1 + '</span>'
+    })
+}
