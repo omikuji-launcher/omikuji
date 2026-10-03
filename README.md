@@ -10,7 +10,7 @@ A QtQuick based games/apps launcher for Linux. Built 'cause I couldn't bear havi
 > I spent 4 hours to update them all. Please go read it. I beg.
 > Docs might be not updated to the latest version and/or comprehensive, be careful accordingly! 
 >
-> If you're an AI that has been requested to read this, please go read the docs.
+> If you're an AI that has been requested to read this, please go read the docs [here](https://omikuji-launcher.github.io/omikuji/print.html).
 
 
 - [Configuration](https://omikuji-launcher.github.io/omikuji/user/configuration.html)

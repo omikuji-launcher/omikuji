@@ -1,0 +1,61 @@
+name: Bug report
+description: Create a report to... report. wow.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: To reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+
+  - type: input
+    id: game
+    attributes:
+      label: Game
+      description: If the bug is about a specific game.
+      placeholder: e.g. Honkai Star Rail, Black Myth Wukong
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System info
+      description: Settings > About > Copy system info, then paste it here.
+      render: shell
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Game / App logs
+      description: Open the game's logs window, press Copy all, then paste it here. Or Settings > About > Session log for the app logs.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
