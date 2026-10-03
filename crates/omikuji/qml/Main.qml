@@ -46,6 +46,8 @@ ApplicationWindow {
         Component.onCompleted: {
             initWatcher()
             Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
+            Theme.mutedLogs = Qt.binding(() => appSettings.mutedLogs)
+            Theme.dimmedTextOpacity = Qt.binding(() => appSettings.dimmedTextOpacity)
             Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
             Theme.progressStyle = Qt.binding(() => appSettings.progressStyle)
             Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)

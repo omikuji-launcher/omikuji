@@ -345,6 +345,16 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Muted text for output logs")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.mutedLogs : false
+                    onToggled: (val) => appSettings.applyMutedLogs(val)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Highlight logs")
                 description: qsTr("Color error, fixme and warning lines in log output")
                 labelWidth: root.rowLabelWidth

@@ -135,6 +135,22 @@ Item {
                     }
                 }
             }
+
+            SettingsRow {
+                label: qsTr("Dimmed text opacity")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                contentRightMargin: 74
+
+                M3SpinBox {
+                    from: 20
+                    to: 100
+                    stepSize: 5
+                    suffix: "%"
+                    value: root.appSettings ? Math.round(root.appSettings.dimmedTextOpacity * 100) : 55
+                    onMoved: (val) => root.appSettings.applyDimmedTextOpacity(val / 100)
+                }
+            }
         }
 
         SettingsSection {

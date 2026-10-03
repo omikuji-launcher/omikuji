@@ -39,7 +39,7 @@ Rectangle {
             activeFocusOnTab: false
             wrapMode: TextArea.Wrap
             selectByMouse: true
-            color: Theme.textMuted
+            color: Theme.logText
             font.family: Theme.logs
             font.pixelSize: Theme.type.caption.size
             background: Rectangle { color: "transparent" }

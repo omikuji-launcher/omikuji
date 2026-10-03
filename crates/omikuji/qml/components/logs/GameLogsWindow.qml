@@ -254,7 +254,7 @@ Window {
                 readOnly: true
                 wrapMode: TextArea.Wrap
                 selectByMouse: true
-                color: Theme.text
+                color: Theme.logText
                 font.family: Theme.logs
                 font.pixelSize: Theme.type.body.size
                 leftPadding: 14

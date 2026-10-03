@@ -36,9 +36,10 @@ QtObject {
     property color surfaceBorder: Qt.rgba(text.r, text.g, text.b, 0.08)
 
     property color text: _resolve("text", active.windowText, "#c5c6c6")
-    property color textMuted: Qt.rgba(text.r, text.g, text.b, 0.55)
-    property color textSubtle: Qt.rgba(text.r, text.g, text.b, 0.35)
-    property color textFaint: Qt.rgba(text.r, text.g, text.b, 0.2)
+    property real dimmedTextOpacity: 0.55
+    property color textMuted: Qt.rgba(text.r, text.g, text.b, dimmedTextOpacity)
+    property color textSubtle: Qt.rgba(text.r, text.g, text.b, dimmedTextOpacity * 0.35 / 0.55)
+    property color textFaint: Qt.rgba(text.r, text.g, text.b, dimmedTextOpacity * 0.2 / 0.55)
 
     property color navBg: bg
     property color navSeparator: Qt.rgba(text.r, text.g, text.b, 0.06)
@@ -59,6 +60,8 @@ QtObject {
     property real uiScale: 1.0
     property color icon: Qt.rgba(text.r, text.g, text.b, mutedIcons ? 0.55 : 0.92)
     property color iconHover: Qt.rgba(text.r, text.g, text.b, mutedIcons ? 0.9 : 1.0)
+    property bool mutedLogs: false
+    property color logText: mutedLogs ? textMuted : text
 
     property color separator: Qt.rgba(text.r, text.g, text.b, 0.06)
     property color dot: Qt.rgba(text.r, text.g, text.b, 0.15)

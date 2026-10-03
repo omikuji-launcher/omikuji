@@ -295,6 +295,7 @@ pub struct DisplaySettings {
     // this sucks not gonna lie the scaling is so ass it blurs everything
     pub scale: f64,
     pub muted_icons: bool,
+    pub dimmed_text_opacity: f64,
     pub filled_icons: bool,
     pub progress_style: String,
     pub show_hidden: bool,
@@ -308,6 +309,7 @@ pub struct DisplaySettings {
     pub floating_bar_height: i32,
     pub floating_bar_opaque: bool,
     pub highlight_logs: bool,
+    pub muted_logs: bool,
     pub log_rules: Vec<LogRule>,
 }
 
@@ -316,6 +318,7 @@ impl Default for DisplaySettings {
         Self {
             scale: 1.0,
             muted_icons: false,
+            dimmed_text_opacity: 0.55,
             filled_icons: false,
             progress_style: "rope".into(),
             show_hidden: false,
@@ -329,6 +332,7 @@ impl Default for DisplaySettings {
             floating_bar_height: 56,
             floating_bar_opaque: false,
             highlight_logs: true,
+            muted_logs: false,
             log_rules: Vec::new(),
         }
     }
