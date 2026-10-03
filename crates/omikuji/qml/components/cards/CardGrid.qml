@@ -21,7 +21,7 @@ Item {
     property int cardSpacing: 16
     property int cardBaseWidth: 180
     property int cardBaseHeight: 240
-    property string cardFlow: "center"
+    property string cardFlow
 
     // library uses this to clear selection, stores ignore it
     signal backgroundClicked()
@@ -203,9 +203,9 @@ Item {
             // a Flow never reflows children hidden while it was, the spare pixel forces it on show
             width: colsToUse * cardW + (colsToUse - 1) * root.cardSpacing + (root.visible ? 0 : 1)
             x: {
-                if (root.cardFlow === "left") return sidePad
+                if (root.cardFlow === "center") return Math.max(sidePad, (parent.width - width) / 2)
                 if (root.cardFlow === "right") return Math.max(sidePad, parent.width - width - sidePad)
-                return Math.max(sidePad, (parent.width - width) / 2)
+                return sidePad
             }
 
             onPositioningComplete: root._laidOutVisible = root.visible

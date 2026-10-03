@@ -194,10 +194,10 @@ Item {
                         { label: qsTr("Right"),  value: "right" }
                     ]
                     currentIndex: {
-                        let v = appSettings ? appSettings.cardFlow : "center"
-                        if (v === "left") return 0
+                        let v = appSettings ? appSettings.cardFlow : ""
+                        if (v === "center") return 1
                         if (v === "right") return 2
-                        return 1
+                        return 0
                     }
                     onSelected: (value) => appSettings.applyCardFlow(value)
                 }

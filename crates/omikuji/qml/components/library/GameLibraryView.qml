@@ -20,7 +20,7 @@ FadePanel {
 
     property real cardZoom: 1.0
     property int cardSpacing: 16
-    property string cardFlow: "center"
+    property string cardFlow
     property string cardStyle: "normal"
     property bool cardElevation: false
     property int cardBaseWidth: 180

@@ -324,7 +324,7 @@ impl Default for DisplaySettings {
             show_hidden: false,
             dim_hidden: false,
             show_steam_prefixes: false,
-            card_flow: "center".into(),
+            card_flow: "left".into(),
             card_sort: "default".into(),
             card_style: "vignette".into(),
             card_play_button: false,

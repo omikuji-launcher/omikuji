@@ -12,7 +12,7 @@ Item {
     property int cardSpacing: 16
     property bool cardElevation: false
     property string searchText: ""
-    property string cardFlow: "center"
+    property string cardFlow
 
     signal backClicked()
     signal gameImported()

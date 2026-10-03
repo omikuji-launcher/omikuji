@@ -13,7 +13,7 @@ Item {
     property bool cardElevation: false
     property string searchText: ""
     property var activeDownloads: ({})
-    property string cardFlow: "center"
+    property string cardFlow
 
     signal backClicked()
     signal installRequested(string manifestId)

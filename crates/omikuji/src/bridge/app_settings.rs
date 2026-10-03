@@ -4,7 +4,9 @@
 // keeps only the parts with actual decisions: persist window, custom applies, json accessors, watcher
 
 use cxx_qt::Threading;
-use omikuji_core::app_settings::{AppSettings, CategoryEntry, KvSet, LogRule, app_settings_path};
+use omikuji_core::app_settings::{
+    AppSettings, CategoryEntry, DisplaySettings, KvSet, LogRule, app_settings_path,
+};
 use omikuji_core::fs_watcher::FileWatcher;
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
@@ -40,7 +42,7 @@ impl qobject::AppSettingsBridge {
         let final_v = if allowed {
             value.clone()
         } else {
-            cxx_qt_lib::QString::from("center")
+            cxx_qt_lib::QString::from(&DisplaySettings::default().card_flow)
         };
         self.as_mut().set_card_flow(final_v);
         self.persist();
