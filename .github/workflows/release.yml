@@ -61,6 +61,20 @@ jobs:
           sed "s|@EXEC_PATH@|/usr/bin/omikuji|" packaging/io.github.reakjra.omikuji.desktop.in \
             | install -Dm644 /dev/stdin /usr/share/applications/io.github.reakjra.omikuji.desktop
 
+      - name: Make tarball
+        run: |
+          stage="omikuji-${VERSION#v}-x86_64"
+          mkdir -p "$stage" packaging/dist
+          cp -a --parents \
+            /usr/bin/omikuji \
+            /usr/share/applications/io.github.reakjra.omikuji.desktop \
+            /usr/share/icons/hicolor/512x512/apps/io.github.reakjra.omikuji.png \
+            "$stage"/
+          install -Dm644 packaging/io.github.reakjra.omikuji.metainfo.xml \
+            "$stage/usr/share/metainfo/io.github.reakjra.omikuji.metainfo.xml"
+          install -Dm644 LICENSE "$stage/usr/share/licenses/omikuji/LICENSE"
+          tar -C "$stage" -caf "packaging/dist/$stage.tar.zst" usr
+
       - name: Make AppImage
         working-directory: packaging
         run: ./make-appimage.sh
@@ -84,7 +98,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: AppImage
-          path: "packaging/dist/*.AppImage"
+          path: |
+            packaging/dist/*.AppImage
+            packaging/dist/*.tar.zst
           archive: false
 
       - name: Upload tarball artifact
