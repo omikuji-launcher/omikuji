@@ -1,9 +1,91 @@
-use anyhow::{Result, anyhow};
+use anyhow::Result;
+use chrono::{DateTime, Local};
 use futures_util::StreamExt;
+use reqwest::header::HeaderMap;
+use reqwest::{Response, StatusCode, Url, blocking};
+use std::fmt;
 use std::sync::LazyLock;
 use std::time::Duration;
 
 pub const USER_AGENT: &str = concat!("omikuji/", env!("CARGO_PKG_VERSION"));
+
+#[derive(Debug)]
+pub enum HttpError {
+    RateLimited {
+        host: String,
+        resets_at: Option<DateTime<Local>>,
+    },
+    Status {
+        host: String,
+        status: StatusCode,
+    },
+}
+
+impl fmt::Display for HttpError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::RateLimited {
+                host,
+                resets_at: Some(at),
+            } => write!(
+                f,
+                "{host} rate limit reached, try again after {}",
+                at.format("%H:%M")
+            ),
+            Self::RateLimited {
+                host,
+                resets_at: None,
+            } => write!(f, "{host} rate limit reached, try again later"),
+            Self::Status { host, status } => write!(f, "{host} answered {status}"),
+        }
+    }
+}
+
+impl std::error::Error for HttpError {}
+
+pub trait ResponseExt: Sized {
+    fn check(self) -> Result<Self, HttpError>;
+}
+
+impl ResponseExt for Response {
+    fn check(self) -> Result<Self, HttpError> {
+        classify(self.url(), self.status(), self.headers()).map_or(Ok(self), Err)
+    }
+}
+
+impl ResponseExt for blocking::Response {
+    fn check(self) -> Result<Self, HttpError> {
+        classify(self.url(), self.status(), self.headers()).map_or(Ok(self), Err)
+    }
+}
+
+fn classify(url: &Url, status: StatusCode, headers: &HeaderMap) -> Option<HttpError> {
+    if !status.is_client_error() && !status.is_server_error() {
+        return None;
+    }
+    let host = url.host_str().unwrap_or_default().to_string();
+    tracing::warn!("{host}{}: {status}", url.path());
+    let exhausted = header(headers, "x-ratelimit-remaining") == Some("0");
+    if status == StatusCode::TOO_MANY_REQUESTS || (status == StatusCode::FORBIDDEN && exhausted) {
+        return Some(HttpError::RateLimited {
+            host,
+            resets_at: rate_limit_reset(headers),
+        });
+    }
+    Some(HttpError::Status { host, status })
+}
+
+fn rate_limit_reset(headers: &HeaderMap) -> Option<DateTime<Local>> {
+    if let Some(epoch) = header(headers, "x-ratelimit-reset").and_then(|v| v.parse::<i64>().ok()) {
+        return DateTime::from_timestamp(epoch, 0).map(|t| t.with_timezone(&Local));
+    }
+    let secs = header(headers, "retry-after")?.parse::<i64>().ok()?;
+    Some(Local::now() + chrono::Duration::seconds(secs))
+}
+
+fn header<'a>(headers: &'a HeaderMap, name: &str) -> Option<&'a str> {
+    headers.get(name).and_then(|v| v.to_str().ok())
+}
 
 // one client so the connection pool is actually reused; per-call clients redo TLS every time
 static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
@@ -51,12 +133,7 @@ pub async fn download_with_progress(
     size_hint: u64,
     mut on_percent: impl FnMut(f64),
 ) -> Result<Vec<u8>> {
-    let resp = client()
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()
-        .map_err(|e| anyhow!("download {}: {}", url, e))?;
+    let resp = client().get(url).send().await?.check()?;
 
     let total = resp.content_length().unwrap_or(size_hint);
     let mut buf: Vec<u8> = if total > 0 {

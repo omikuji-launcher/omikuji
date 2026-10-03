@@ -4,7 +4,7 @@ use prost::Message;
 use super::api::{SophonDiff, SophonManifestEntry};
 use super::protos::SophonManifest as SophonManifestProto;
 use super::protos::SophonPatchProto;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 pub async fn fetch_patch_manifest(diff: &SophonDiff) -> Result<SophonPatchProto> {
     let url = diff.manifest_download.url_for(&diff.manifest.id);
@@ -15,8 +15,7 @@ pub async fn fetch_patch_manifest(diff: &SophonDiff) -> Result<SophonPatchProto>
         .send()
         .await
         .map_err(|e| anyhow!("fetch manifest {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("fetch manifest {} http error: {}", url, e))?
+        .check()?
         .bytes()
         .await
         .map_err(|e| anyhow!("fetch manifest {} read failed: {}", url, e))?;
@@ -40,8 +39,7 @@ pub async fn fetch_build_manifest(entry: &SophonManifestEntry) -> Result<SophonM
         .send()
         .await
         .map_err(|e| anyhow!("fetch manifest {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("fetch manifest {} http error: {}", url, e))?
+        .check()?
         .bytes()
         .await
         .map_err(|e| anyhow!("fetch manifest {} read failed: {}", url, e))?;

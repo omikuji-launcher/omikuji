@@ -1,3 +1,4 @@
+use crate::http::ResponseExt;
 use anyhow::{Context, Result};
 use reqwest::blocking;
 use serde::Deserialize;
@@ -19,15 +20,9 @@ impl SteamApi {
             API_BASE, self.api_key, steamid
         );
 
-        let resp = blocking::get(&url).with_context(|| "requesting steam api".to_string())?;
-
-        if !resp.status().is_success() {
-            anyhow::bail!(
-                "steam api returned {}: {}",
-                resp.status(),
-                resp.text().unwrap_or_default()
-            );
-        }
+        let resp = blocking::get(&url)
+            .with_context(|| "requesting steam api".to_string())?
+            .check()?;
 
         let data: ApiResponse = resp.json().with_context(|| "parsing steam api response")?;
 

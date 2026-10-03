@@ -4,7 +4,7 @@ use reqwest::blocking;
 
 use super::manifest::GachaManifest;
 use crate::fs_util::write_atomic;
-use crate::http::USER_AGENT;
+use crate::http::{ResponseExt, USER_AGENT};
 use crate::media::{MediaSlot, MediaType, media_path_in};
 use crate::settings;
 
@@ -63,10 +63,7 @@ pub fn fetch_into_library_cache(
 }
 
 fn download_to(client: &blocking::Client, url: &str, dest: &Path) -> anyhow::Result<()> {
-    let resp = client.get(url).send()?;
-    if !resp.status().is_success() {
-        anyhow::bail!("http {} on {}", resp.status(), url);
-    }
+    let resp = client.get(url).send()?.check()?;
     write_atomic(dest, &resp.bytes()?)?;
     Ok(())
 }

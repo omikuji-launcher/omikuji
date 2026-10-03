@@ -1,4 +1,5 @@
 use super::Script;
+use crate::http::{ResponseExt, USER_AGENT};
 use crate::settings;
 use anyhow::{Context, Result, bail};
 use reqwest::blocking;
@@ -29,11 +30,14 @@ pub fn fetch_base() -> String {
         .to_string()
 }
 
-fn client() -> Result<blocking::Client> {
-    blocking::Client::builder()
-        .user_agent("omikuji")
-        .build()
-        .map_err(Into::into)
+fn get(url: &str) -> Result<blocking::Response> {
+    let resp = blocking::Client::builder()
+        .user_agent(USER_AGENT)
+        .build()?
+        .get(url)
+        .send()
+        .with_context(|| format!("requesting {url}"))?;
+    Ok(resp.check()?)
 }
 
 pub fn fetch_index() -> Result<Vec<RemoteScript>> {
@@ -42,11 +46,7 @@ pub fn fetch_index() -> Result<Vec<RemoteScript>> {
         return Ok(Vec::new());
     }
     let url = format!("{base}/index.json");
-    let list = client()?
-        .get(&url)
-        .send()
-        .with_context(|| format!("requesting {url}"))?
-        .error_for_status()?
+    let list = get(&url)?
         .json::<Vec<RemoteScript>>()
         .context("invalid index.json")?;
     Ok(list)
@@ -79,12 +79,7 @@ pub fn install_remote(entry: &RemoteScript) -> Result<PathBuf> {
     }
 
     let url = format!("{base}/{}", entry.toml);
-    let text = client()?
-        .get(&url)
-        .send()
-        .with_context(|| format!("requesting {url}"))?
-        .error_for_status()?
-        .text()?;
+    let text = get(&url)?.text()?;
     Script::parse(&text)?;
 
     let dir = crate::scripts_dir().join(&entry.author).join(&entry.slug);
@@ -100,11 +95,7 @@ pub fn install_remote(entry: &RemoteScript) -> Result<PathBuf> {
             .unwrap_or_default()
             .to_string();
         if plain_name(&icon_name) {
-            let fetched = client()?
-                .get(format!("{base}/{}", entry.icon))
-                .send()
-                .and_then(|r| r.error_for_status())
-                .and_then(|r| r.bytes());
+            let fetched = get(&format!("{base}/{}", entry.icon)).and_then(|r| Ok(r.bytes()?));
             match fetched {
                 Ok(bytes) => {
                     let _ = fs_err::write(dir.join(icon_name), &bytes);

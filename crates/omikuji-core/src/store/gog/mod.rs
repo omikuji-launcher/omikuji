@@ -3,8 +3,9 @@ pub mod source;
 pub mod updates;
 
 use crate::components::{self, SettingsKey};
+use crate::fs_util;
+use crate::http::{self, ResponseExt};
 use crate::store::{self, StoreGame};
-use crate::{fs_util, http};
 use anyhow::{Result, anyhow};
 use futures_util::{StreamExt, future, stream};
 use serde::{Deserialize, Serialize};
@@ -772,9 +773,7 @@ struct ProductMeta {
 async fn fetch_game_metadata(client: &reqwest::Client, external_id: &str) -> Result<ProductMeta> {
     let url = format!("https://api.gog.com/v2/games/{}?locale=en-US", external_id);
     let resp = client.get(url).send().await?;
-    if !resp.status().is_success() {
-        anyhow::bail!("api.gog.com v2 returned {}", resp.status());
-    }
+    let resp = resp.check()?;
     let v: serde_json::Value = resp.json().await?;
     let title = v
         .pointer("/_embedded/product/title")

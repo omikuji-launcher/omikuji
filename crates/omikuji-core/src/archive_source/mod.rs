@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use crate::archive::{self, ArchiveKind};
 use crate::components_config::{ArchiveSource, SourceCategory};
 use crate::event_queue::EventQueue;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReleaseInfo {
@@ -199,8 +199,7 @@ async fn fetch_release_page(
         .header("Accept", "application/vnd.github+json")
         .send()
         .await?
-        .error_for_status()
-        .map_err(|e| anyhow!("release list ({}): {}", api_url, e))?;
+        .check()?;
     Ok(resp.json().await?)
 }
 
@@ -279,8 +278,7 @@ pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> 
         .get(url)
         .send()
         .await?
-        .error_for_status()
-        .map_err(|e| anyhow!("download {}: {}", url, e))?
+        .check()?
         .bytes()
         .await?;
 

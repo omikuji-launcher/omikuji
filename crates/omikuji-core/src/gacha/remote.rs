@@ -4,7 +4,8 @@ use serde::Deserialize;
 
 use super::manifest::{GachaManifest, LEGACY_MANIFEST_FILE, MANIFEST_FILE};
 use crate::fs_util::write_atomic;
-use crate::{http, settings};
+use crate::http::{self, ResponseExt};
+use crate::settings;
 
 #[derive(Debug, Deserialize)]
 struct IndexFile {
@@ -36,13 +37,7 @@ pub async fn ensure_all_fetched() -> Result<u32> {
 }
 
 async fn get_text(client: &Client, url: &str) -> Result<String> {
-    Ok(client
-        .get(url)
-        .send()
-        .await?
-        .error_for_status()?
-        .text()
-        .await?)
+    Ok(client.get(url).send().await?.check()?.text().await?)
 }
 
 async fn fetch_index(client: &Client, root: &str) -> Result<IndexFile> {

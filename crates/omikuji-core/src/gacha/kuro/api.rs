@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 use crate::gacha::file_sync::deserialize_size;
 use crate::gacha::manifest::GachaManifest;
 use crate::gacha::strategies::normalize_version;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 const LEGACY_PACK: &str = "common";
 
@@ -233,9 +233,7 @@ async fn fetch_json<T: DeserializeOwned>(url: &str) -> Result<T> {
         .send()
         .await
         .map_err(|e| anyhow!("fetch {url}: {e}"))?;
-    if !resp.status().is_success() {
-        anyhow::bail!("fetch {url}: http {}", resp.status());
-    }
+    let resp = resp.check()?;
     // parse by hand so errors carry line/column; these bodies hit 50 MB and reqwest's error is opaque
     let bytes = resp.bytes().await.map_err(|e| anyhow!("read {url}: {e}"))?;
     serde_json::from_slice(&bytes).map_err(|e| {

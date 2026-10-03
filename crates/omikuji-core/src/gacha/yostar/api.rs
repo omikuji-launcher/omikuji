@@ -5,7 +5,7 @@ use super::{EditionApi, auth};
 use crate::gacha::file_sync::{SyncFile, deserialize_size};
 use crate::gacha::manifest::GachaManifest;
 use crate::gacha::strategies::InstallSize;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 #[derive(Debug, Clone)]
 pub struct GameConfig {
@@ -88,9 +88,7 @@ pub async fn fetch_file_index(api: &EditionApi, config: &GameConfig) -> Result<F
         .send()
         .await
         .map_err(|e| anyhow!("GET {}: {}", located.url, e))?;
-    if !resp.status().is_success() {
-        anyhow::bail!("GET {}: http {}", located.url, resp.status());
-    }
+    let resp = resp.check()?;
     let raw: RawIndex = resp
         .json()
         .await

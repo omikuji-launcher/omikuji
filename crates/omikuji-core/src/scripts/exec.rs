@@ -1,5 +1,6 @@
 use super::{InputKind, Script, Step, StepAction, interpolate};
 use crate::archive::ArchiveKind;
+use crate::http::{ResponseExt, USER_AGENT};
 use crate::library::{Game, RunnerType, generate_id};
 use crate::template_vars::TemplateVars;
 use crate::wine_tools::{self, WineTool};
@@ -308,12 +309,12 @@ fn first_path(raw: &str) -> &str {
 
 fn resolve_url(source: &str, pattern: &str) -> Result<String> {
     let body = blocking::Client::builder()
-        .user_agent("omikuji")
+        .user_agent(USER_AGENT)
         .build()?
         .get(source)
         .send()
         .with_context(|| format!("requesting {source}"))?
-        .error_for_status()?
+        .check()?
         .text()?;
 
     let re = Regex::new(pattern)?;
@@ -333,14 +334,14 @@ fn download_to<F: FnMut(&str)>(
         fs_err::create_dir_all(parent)?;
     }
     let client = blocking::Client::builder()
-        .user_agent("omikuji")
+        .user_agent(USER_AGENT)
         .timeout(None::<std::time::Duration>)
         .build()?;
     let mut resp = client
         .get(url)
         .send()
         .with_context(|| format!("requesting {url}"))?
-        .error_for_status()?;
+        .check()?;
     let total = resp.content_length().unwrap_or(0);
 
     let mut file = fs_err::File::create(dest)?;

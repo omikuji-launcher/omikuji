@@ -7,7 +7,8 @@ use crate::archive::ArchiveKind;
 use crate::event_queue::EventQueue;
 use crate::fs_util::{find_file_named, walk, write_executable_atomic};
 use crate::gacha::strategies::InstallStrategy;
-use crate::{http, settings};
+use crate::http::{self, ResponseExt};
+use crate::settings;
 use anyhow::{Result, anyhow};
 use fs_err as fs;
 use std::io::Cursor;
@@ -189,7 +190,7 @@ async fn fetch_latest_release(api_url: &str) -> Result<GhRelease> {
         .header("Accept", "application/vnd.github+json")
         .send()
         .await?
-        .error_for_status()?;
+        .check()?;
     Ok(resp.json().await?)
 }
 
@@ -266,9 +267,7 @@ async fn install_one_inner(spec: &ComponentSpec) -> Result<String> {
 
     let (url, display_name, tag): (String, String, String) = match &spec.source {
         Source::GithubRelease { asset_matcher } => {
-            let release = fetch_latest_release(&settings_url)
-                .await
-                .map_err(|e| anyhow!("release api ({}): {}", settings_url, e))?;
+            let release = fetch_latest_release(&settings_url).await?;
 
             tracing::debug!(
                 "{} latest release {} has assets:\n  - {}",

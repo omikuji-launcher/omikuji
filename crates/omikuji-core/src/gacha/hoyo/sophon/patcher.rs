@@ -18,7 +18,7 @@ use super::protos::{SophonPatchAssetChunk, SophonPatchAssetProperty, SophonPatch
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::throttle;
 use crate::external::hpatchz;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 const HOLD_LAST_FILE_SUFFIX: &str = "globalgamemanagers";
 const DEFAULT_RETRIES: u32 = 4;
@@ -340,8 +340,7 @@ async fn try_download_once(task: &FileTask, out: &Path) -> Result<()> {
         .send()
         .await
         .map_err(|e| anyhow!("GET {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("GET {} http error: {}", url, e))?;
+        .check()?;
 
     if let Some(len) = resp.content_length()
         && len != task.patch_length

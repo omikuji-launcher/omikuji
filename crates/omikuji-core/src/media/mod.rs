@@ -1,5 +1,5 @@
 use crate::fs_util::write_atomic;
-use crate::http;
+use crate::http::{self, ResponseExt};
 use crate::template_vars::TemplateVars;
 use anyhow::{Context, Result};
 use fs_err as fs;
@@ -297,9 +297,7 @@ fn sgdb_get<T: DeserializeOwned>(url: reqwest::Url) -> Result<T> {
         .send()
         .with_context(|| format!("requesting {}", url))?;
 
-    if !resp.status().is_success() {
-        anyhow::bail!("sgdb returned {} for {}", resp.status(), url);
-    }
+    let resp = resp.check()?;
 
     resp.json::<T>()
         .with_context(|| format!("parsing sgdb response from {}", url))
@@ -395,9 +393,7 @@ fn sgdb_icon_assets(game_id: u64) -> Result<Vec<SgdbAsset>> {
 fn download_blocking(url: &str, dest: &PathBuf) -> Result<usize> {
     let resp = blocking::get(url).with_context(|| format!("downloading {}", url))?;
 
-    if !resp.status().is_success() {
-        anyhow::bail!("image download failed: {} for {}", resp.status(), url);
-    }
+    let resp = resp.check()?;
 
     let bytes = resp.bytes()?;
     if bytes.is_empty() {

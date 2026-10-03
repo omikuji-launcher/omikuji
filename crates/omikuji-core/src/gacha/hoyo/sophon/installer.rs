@@ -15,6 +15,7 @@ use super::patcher::{CancelFn, ProgressFn, ProgressReport, Stage};
 use super::protos::{FileChunk, ManifestFile};
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::throttle;
+use crate::http::ResponseExt;
 
 const CHUNKS_PER_FILE: usize = 4;
 
@@ -222,9 +223,7 @@ async fn install_one_file(
                     .send()
                     .await
                     .map_err(|e| anyhow!("GET {} failed: {}", url, e))?;
-                if !resp.status().is_success() {
-                    anyhow::bail!("GET {} http {}", url, resp.status());
-                }
+                let resp = resp.check()?;
                 let mut raw: Vec<u8> = Vec::new();
                 let mut body = resp.bytes_stream();
                 while let Some(part) = body.next().await {

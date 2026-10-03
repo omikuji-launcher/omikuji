@@ -3,7 +3,7 @@ use serde::de::Error as DeError;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::gacha::manifest::GachaManifest;
-use crate::http;
+use crate::http::{self, ResponseExt};
 
 const PLATFORM: &str = "Windows";
 
@@ -108,8 +108,7 @@ pub async fn fetch_latest(cfg: &EditionConfig, installed_version: &str) -> Resul
         .send()
         .await
         .map_err(|e| anyhow!("GET {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("GET {} http error: {}", url, e))?
+        .check()?
         .text()
         .await
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
@@ -194,8 +193,7 @@ pub async fn fetch_resources(
         .send()
         .await
         .map_err(|e| anyhow!("GET {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("GET {} http error: {}", url, e))?
+        .check()?
         .text()
         .await
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
@@ -250,8 +248,7 @@ pub async fn fetch_resource_patch(resource_path: &str) -> Result<ResourcePatchMa
         .send()
         .await
         .map_err(|e| anyhow!("GET {} failed: {}", url, e))?
-        .error_for_status()
-        .map_err(|e| anyhow!("GET {} http error: {}", url, e))?
+        .check()?
         .text()
         .await
         .map_err(|e| anyhow!("GET {} read failed: {}", url, e))?;
