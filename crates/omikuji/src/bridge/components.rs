@@ -48,10 +48,6 @@ pub mod qobject {
         fn status_json(self: &ComponentsBridge) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "installAll"]
-        fn install_all(self: Pin<&mut ComponentsBridge>);
-
-        #[qinvokable]
         #[cxx_name = "installComponent"]
         fn install_component(self: Pin<&mut ComponentsBridge>, name: QString);
 
@@ -234,10 +230,6 @@ impl qobject::ComponentsBridge {
                 }
             });
         });
-    }
-
-    fn install_all(self: Pin<&mut Self>) {
-        self.spawn_install(core_components::check_all());
     }
 
     fn component_ready(&self, name: QString) -> bool {

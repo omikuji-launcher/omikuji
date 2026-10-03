@@ -917,7 +917,6 @@ property real cardZoom: appSettings.cardZoom
             DownloadsPage {
                 anchors.fill: parent
                 downloadModel: downloadModel
-                componentsBridge: componentsBridge
                 pageVisible: root.currentView === "downloads"
                 onCancelRequested: (id, displayName) => {
                     cancelDownloadConfirm.message =

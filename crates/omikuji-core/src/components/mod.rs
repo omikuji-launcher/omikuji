@@ -53,13 +53,6 @@ pub fn path_for(key: SettingsKey) -> Option<PathBuf> {
     status_for(spec).into_path()
 }
 
-pub fn check_all() -> Vec<&'static ComponentSpec> {
-    specs::all()
-        .iter()
-        .filter(|s| matches!(status_for(s), ComponentStatus::Missing))
-        .collect()
-}
-
 pub fn epic_tools() -> Vec<&'static ComponentSpec> {
     specs::all()
         .iter()
