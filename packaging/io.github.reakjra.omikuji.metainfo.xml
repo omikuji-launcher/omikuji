@@ -22,6 +22,20 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.4" date="2026-10-03">
+      <description>
+        <ul>
+          <li>'Muted text for output logs' toggle and 'Dimmed text opacity' spinbox settings</li>
+          <li>'Card background' color token </li>
+          <li>Added info headers to game logs</li>
+          <li>prettier api errors :3</li>
+          <li>Bigger toasts (+ backtick formatting)</li>
+          <li>slug-id for game logs files (previously just id)</li>
+          <li> Logs window 'Follow' checkbox not stopping auto-scroll</li>
+          <li>removed old runtime components stuff from downloads page</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.3" date="2026-10-02">
       <description>
         <ul>
