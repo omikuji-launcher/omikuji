@@ -206,8 +206,12 @@ pub fn list_runner_options() -> Vec<(String, String, String)> {
 
 pub async fn latest_update(source: &ArchiveSource) -> Result<Option<archive_source::ReleaseInfo>> {
     let release = latest_release(source).await?;
-    let installed = archive_source::installed_source_tag(&latest_dir(source)).map(|(_, tag)| tag);
+    let installed = latest_installed_tag(source);
     Ok((installed.as_deref() != Some(release.tag.as_str())).then_some(release))
+}
+
+pub fn latest_installed_tag(source: &ArchiveSource) -> Option<String> {
+    archive_source::installed_source_tag(&latest_dir(source)).map(|(_, tag)| tag)
 }
 
 pub struct AdvisedRunner {

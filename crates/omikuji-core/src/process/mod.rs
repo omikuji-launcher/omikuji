@@ -5,20 +5,23 @@ use crate::library::{Game, Library};
 use crate::store::epic;
 use crate::{discord, dll_packs, game_logs, runners};
 use anyhow::Result;
-use fs_err::{self as fs, OpenOptions};
+use fs_err::OpenOptions;
 use nix::fcntl::{Flock, FlockArg};
 use nix::unistd::setsid;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::io::{BufRead, BufReader, Read, Write};
 use std::os::fd::OwnedFd;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+
+mod log;
+mod procfs;
+
+use procfs::{marker_pids, running_marked_ids, session_has_live_process, session_pids};
 
 pub const GAME_ID_VAR: &str = "OMIKUJI_GAME_ID";
 
@@ -72,51 +75,6 @@ fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
     }
 }
 
-// yes pump as in the sexual joke ghaha yeah mature of me
-fn pump_lines(pipe: impl Read + Send + 'static, tx: Sender<String>) {
-    thread::spawn(move || {
-        for line in BufReader::new(pipe).lines().map_while(|l| l.ok()) {
-            let _ = tx.send(line);
-        }
-    });
-}
-
-fn log_header(game: &Game, config: &ResolvedLaunch) -> Vec<String> {
-    let section = |title: &str| format!("=== {} ===", title.to_uppercase());
-    let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-
-    let mut lines = vec![
-        section(&format!("omikuji {} - {now}", env!("CARGO_PKG_VERSION"))),
-        String::new(),
-        section("environment"),
-    ];
-    lines.extend(
-        launch::env_overrides(&config.env)
-            .into_iter()
-            .map(|(k, v)| format!("{k}={v}")),
-    );
-
-    lines.extend([
-        String::new(),
-        section("game"),
-        format!("name: {}", game.metadata.name),
-        format!("library_id: {}", config.game_id),
-    ]);
-    if !game.metadata.exe.as_os_str().is_empty() {
-        lines.push(format!("exe: {}", game.metadata.exe.display()));
-    }
-    if !game.launch.args.is_empty() {
-        lines.push(format!("args: {}", game.launch.args.join(" ")));
-    }
-    lines.extend([
-        format!("working_dir: {}", config.working_dir.display()),
-        format!("command: {}", config.command.join(" ")),
-        String::new(),
-        section("output"),
-    ]);
-    lines
-}
-
 #[derive(Debug, Clone)]
 pub enum ProcessState {
     Running {
@@ -166,23 +124,8 @@ impl ProcessManager {
             None
         };
 
-        let (log_tx, log_rx) = mpsc::channel::<String>();
-        {
-            let game_id = config.game_id.clone();
-            thread::spawn(move || {
-                let mut file = log_path
-                    .as_ref()
-                    .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok());
-                while let Ok(line) = log_rx.recv() {
-                    if let Some(ref mut f) = file {
-                        let _ = writeln!(f, "{}", line);
-                    }
-                    game_logs::append_line(&game_id, line);
-                }
-            });
-        }
-
-        for line in log_header(&game, config) {
+        let log_tx = log::spawn_writer(config.game_id.clone(), log_path);
+        for line in log::header(&game, config) {
             let _ = log_tx.send(line);
         }
 
@@ -219,10 +162,10 @@ impl ProcessManager {
         let stdout_pipe = child.stdout.take();
         let stderr_pipe = child.stderr.take();
         if let Some(stdout) = stdout_pipe {
-            pump_lines(stdout, log_tx.clone());
+            log::pump_lines(stdout, log_tx.clone());
         }
         if let Some(stderr) = stderr_pipe {
-            pump_lines(stderr, log_tx);
+            log::pump_lines(stderr, log_tx);
         }
 
         let proc_id = next_id();
@@ -366,14 +309,10 @@ impl Default for ProcessManager {
 static MANAGER: LazyLock<ProcessManager> = LazyLock::new(ProcessManager::new);
 static LAUNCHING: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);
 static EXIT_WAITERS: LazyLock<Mutex<ExitWaiters>> = LazyLock::new(Default::default);
-static MARKED_IDS: LazyLock<Mutex<(Option<Instant>, HashSet<String>)>> =
-    LazyLock::new(Default::default);
-
 type ExitWaiters = HashMap<String, Vec<(u64, tokio::sync::oneshot::Sender<()>)>>;
 
 static EXITED_GAMES: EventQueue<String> = EventQueue::new(10);
 static LAUNCH_REQUESTS: EventQueue<LaunchRequest> = EventQueue::new(10);
-const MARKED_IDS_TTL: Duration = Duration::from_millis(400);
 static WAITER_ID: AtomicU64 = AtomicU64::new(1);
 
 pub fn mark_launching(game_id: &str) {
@@ -677,113 +616,4 @@ pub fn stop_game(game_id: &str) -> bool {
     }
 
     true
-}
-
-// comm can contain spaces and parens so we parse from the last ')' as the reliable field delimiter
-#[cfg(target_os = "linux")]
-fn proc_pids() -> impl Iterator<Item = u32> {
-    let my_pid = std::process::id();
-    fs::read_dir("/proc")
-        .into_iter()
-        .flatten()
-        .flatten()
-        .filter_map(|entry| entry.file_name().to_str()?.parse::<u32>().ok())
-        .filter(move |pid| *pid != my_pid)
-}
-
-#[cfg(target_os = "linux")]
-fn session_pids(sid: u32) -> Vec<u32> {
-    proc_pids()
-        .filter(|pid| session_of(*pid) == Some(sid))
-        .collect()
-}
-
-#[cfg(target_os = "linux")]
-fn marked_processes() -> Vec<(u32, String)> {
-    let key = format!("{GAME_ID_VAR}=");
-    proc_pids()
-        .filter_map(|pid| {
-            let environ = fs::read(format!("/proc/{pid}/environ")).ok()?;
-            let id = environ
-                .split(|b| *b == 0)
-                .find_map(|var| var.strip_prefix(key.as_bytes()))?;
-            Some((pid, String::from_utf8_lossy(id).into_owned()))
-        })
-        .collect()
-}
-
-fn marker_pids(game_id: &str) -> Vec<u32> {
-    marked_processes()
-        .into_iter()
-        .filter(|(_, id)| id == game_id)
-        .map(|(pid, _)| pid)
-        .collect()
-}
-
-// i mean the launcher isnt even meant at all outside linux but well, do it now and forget it forever
-#[cfg(not(target_os = "linux"))]
-fn session_pids(_sid: u32) -> Vec<u32> {
-    Vec::new()
-}
-
-#[cfg(not(target_os = "linux"))]
-fn marker_pids(_game_id: &str) -> Vec<u32> {
-    Vec::new()
-}
-
-#[cfg(not(target_os = "linux"))]
-fn marked_processes() -> Vec<(u32, String)> {
-    Vec::new()
-}
-
-fn session_of(pid: u32) -> Option<u32> {
-    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
-    let rparen = stat.rfind(')')?;
-    stat[rparen + 1..].split_whitespace().nth(3)?.parse().ok()
-}
-
-fn runs_exe(pid: u32, exe_name: &str) -> bool {
-    let Ok(comm) = fs::read_to_string(format!("/proc/{pid}/comm")) else {
-        return false;
-    };
-    let comm = comm.trim().to_lowercase();
-    !comm.is_empty() && exe_name.to_lowercase().starts_with(&comm)
-}
-
-fn running_marked_ids() -> HashSet<String> {
-    let Ok(mut cache) = MARKED_IDS.lock() else {
-        return HashSet::new();
-    };
-    if let Some(taken_at) = cache.0
-        && taken_at.elapsed() < MARKED_IDS_TTL
-    {
-        return cache.1.clone();
-    }
-    let mut by_game: HashMap<String, Vec<u32>> = HashMap::new();
-    for (pid, game_id) in marked_processes() {
-        by_game.entry(game_id).or_default().push(pid);
-    }
-
-    let ids: HashSet<String> = by_game
-        .into_iter()
-        .filter(|(game_id, pids)| {
-            Library::load_game_by_id(game_id)
-                .ok()
-                .flatten()
-                .and_then(|g| {
-                    g.metadata
-                        .exe
-                        .file_name()
-                        .map(|n| n.to_string_lossy().into_owned())
-                })
-                .is_some_and(|exe| pids.iter().any(|pid| runs_exe(*pid, &exe)))
-        })
-        .map(|(game_id, _)| game_id)
-        .collect();
-    *cache = (Some(Instant::now()), ids.clone());
-    ids
-}
-
-fn session_has_live_process(sid: u32) -> bool {
-    !session_pids(sid).is_empty()
 }
