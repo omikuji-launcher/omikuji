@@ -19,10 +19,6 @@ pub fn source_root(source: &ArchiveSource) -> PathBuf {
     crate::layers_dir().join(&source.name)
 }
 
-pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<archive_source::ReleaseInfo>> {
-    archive_source::fetch_versions(source).await
-}
-
 pub async fn install_version(
     source: &ArchiveSource,
     release: &archive_source::ReleaseInfo,
