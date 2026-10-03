@@ -3,10 +3,12 @@ use futures_util::StreamExt;
 use std::sync::LazyLock;
 use std::time::Duration;
 
+pub const USER_AGENT: &str = concat!("omikuji/", env!("CARGO_PKG_VERSION"));
+
 // one client so the connection pool is actually reused; per-call clients redo TLS every time
 static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
     reqwest::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
+        .user_agent(USER_AGENT)
         .build()
         .unwrap_or_default()
 });

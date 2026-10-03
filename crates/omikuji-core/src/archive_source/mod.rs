@@ -185,10 +185,17 @@ fn default_asset(assets: &[AssetInfo]) -> Option<AssetInfo> {
         .cloned()
 }
 
-async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
+const RELEASE_PAGE_SIZE: usize = 15;
+const RELEASE_SCAN_LIMIT: usize = 100;
+
+async fn fetch_release_page(
+    api_url: &str,
+    per_page: usize,
+    page: usize,
+) -> Result<Vec<serde_json::Value>> {
     let resp = http::client()
         .get(api_url)
-        .query(&[("per_page", "100")])
+        .query(&[("per_page", per_page), ("page", page)])
         .header("Accept", "application/vnd.github+json")
         .send()
         .await?
@@ -197,47 +204,62 @@ async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
     Ok(resp.json().await?)
 }
 
-pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> {
-    let releases = fetch_releases(&source.api_url).await?;
+async fn fetch_releases(api_url: &str) -> Result<Vec<serde_json::Value>> {
+    fetch_release_page(api_url, RELEASE_SCAN_LIMIT, 1).await
+}
 
-    let mut out = Vec::new();
-    for r in releases {
-        let tag = r
-            .get("tag_name")
+fn release_info(release: &serde_json::Value, source: &ArchiveSource) -> Option<ReleaseInfo> {
+    let field = |key: &str| {
+        release
+            .get(key)
             .and_then(|v| v.as_str())
             .unwrap_or_default()
-            .to_string();
-        let published = r
-            .get("published_at")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
-
-        let empty_assets = vec![];
-        let assets = r
+            .to_string()
+    };
+    let tag = field("tag_name");
+    let assets = installable_assets(
+        release
             .get("assets")
             .and_then(|v| v.as_array())
-            .unwrap_or(&empty_assets);
-
-        let assets = installable_assets(assets);
-        let Some(default) = pick_asset(&assets, &source.asset_priority) else {
-            continue;
-        };
-
-        if tag.is_empty() {
-            continue;
-        }
-
-        out.push(ReleaseInfo {
-            tag,
-            published_at: published,
-            asset_name: default.name,
-            asset_url: default.url,
-            asset_size: default.size,
-            assets,
-        });
+            .map_or(&[][..], Vec::as_slice),
+    );
+    let default = pick_asset(&assets, &source.asset_priority)?;
+    if tag.is_empty() {
+        return None;
     }
-    Ok(out)
+    Some(ReleaseInfo {
+        tag,
+        published_at: field("published_at"),
+        asset_name: default.name,
+        asset_url: default.url,
+        asset_size: default.size,
+        assets,
+    })
+}
+
+pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<ReleaseInfo>> {
+    let releases = fetch_releases(&source.api_url).await?;
+    Ok(releases
+        .iter()
+        .filter_map(|r| release_info(r, source))
+        .collect())
+}
+
+pub async fn find_release(
+    source: &ArchiveSource,
+    accept: impl Fn(&ReleaseInfo) -> bool,
+) -> Result<Option<ReleaseInfo>> {
+    for page in 1..=RELEASE_SCAN_LIMIT.div_ceil(RELEASE_PAGE_SIZE) {
+        let releases = fetch_release_page(&source.api_url, RELEASE_PAGE_SIZE, page).await?;
+        let found = releases
+            .iter()
+            .filter_map(|r| release_info(r, source))
+            .find(|r| accept(r));
+        if found.is_some() || releases.len() < RELEASE_PAGE_SIZE {
+            return Ok(found);
+        }
+    }
+    Ok(None)
 }
 
 pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> Result<PathBuf> {

@@ -26,10 +26,6 @@ pub fn source_root(source: &ArchiveSource) -> PathBuf {
     runners_dir().join(&source.name)
 }
 
-pub async fn fetch_versions(source: &ArchiveSource) -> Result<Vec<archive_source::ReleaseInfo>> {
-    archive_source::fetch_versions(source).await
-}
-
 pub async fn install_version(
     source: &ArchiveSource,
     release: &archive_source::ReleaseInfo,
@@ -63,21 +59,22 @@ pub fn latest_source(version: &str) -> Option<ArchiveSource> {
 }
 
 async fn latest_release(source: &ArchiveSource) -> Result<archive_source::ReleaseInfo> {
-    let mut versions = fetch_versions(source).await?.into_iter();
-    if !source.require_asset_match || source.asset_priority.is_empty() {
-        return versions
-            .next()
-            .ok_or_else(|| anyhow!("{} has no installable release", source.name));
-    }
-    versions
-        .find(|r| archive_source::matches_priority(&r.asset_name, &source.asset_priority))
-        .ok_or_else(|| {
+    let filtered = source.require_asset_match && !source.asset_priority.is_empty();
+    let release = archive_source::find_release(source, |r| {
+        !filtered || archive_source::matches_priority(&r.asset_name, &source.asset_priority)
+    })
+    .await?;
+    release.ok_or_else(|| {
+        if filtered {
             anyhow!(
                 "no {} release has a build matching {}",
                 source.name,
                 source.asset_priority.join(" ")
             )
-        })
+        } else {
+            anyhow!("{} has no installable release", source.name)
+        }
+    })
 }
 
 static UPDATING_LATEST: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Default::default);

@@ -4,6 +4,7 @@ use reqwest::blocking;
 
 use super::manifest::GachaManifest;
 use crate::fs_util::write_atomic;
+use crate::http::USER_AGENT;
 use crate::media::{MediaSlot, MediaType, media_path_in};
 use crate::settings;
 
@@ -37,7 +38,7 @@ pub fn fetch_into_library_cache(
     mut on_asset: impl FnMut(&MediaType),
 ) {
     let client = match blocking::Client::builder()
-        .user_agent(concat!("omikuji/", env!("CARGO_PKG_VERSION")))
+        .user_agent(USER_AGENT)
         .timeout(std::time::Duration::from_secs(30))
         .build()
     {
