@@ -10,14 +10,6 @@ Item {
     property string sourceKind: ""
     property int    installedCount: 0
 
-    readonly property var kindLabels: ({
-        proton: "Proton",
-        wine: "Wine",
-        dxvk: "DXVK",
-        vkd3d: "VKD3D",
-        dxvk_nvapi: "DXVK-NVAPI"
-    })
-
     property bool   showPrefixInstall: false
     property var    installedVersions: []
     property string prefixInstallVersion: ""
@@ -52,41 +44,18 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
 
-                Row {
-                    spacing: 8
-                    Text {
-                        text: root.sourceName
-                        color: Theme.text
-                        font.pixelSize: Theme.type.body.size
-                        font.weight: Font.DemiBold
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Row {
-                        spacing: Theme.space.xs
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Rectangle {
-                            width: 4
-                            height: 4
-                            radius: width / 2
-                            color: Theme.accent
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        Text {
-                            text: root.kindLabels[root.sourceKind] || root.sourceKind
-                            color: Theme.textMuted
-                            font.pixelSize: Theme.type.label.size
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
+                Text {
+                    text: root.sourceName
+                    color: Theme.text
+                    font.pixelSize: Theme.type.body.size
+                    font.weight: Font.DemiBold
                 }
 
                 Text {
                     text: root.installedCount === 0
                         ? qsTr("No versions installed")
                         : qsTr("%n version(s) installed", "", root.installedCount)
-                    color: root.installedCount > 0 ? Theme.success : Theme.textSubtle
+                    color: root.installedCount > 0 ? Theme.textMuted : Theme.textSubtle
                     font.pixelSize: Theme.type.caption.size
                 }
             }
