@@ -187,9 +187,20 @@ function sectionStep(sections, focusItem, forward) {
     return null
 }
 
+const _activateListeners = []
+
+function onActivate(listener) {
+    _activateListeners.push(listener)
+    return () => {
+        const i = _activateListeners.indexOf(listener)
+        if (i >= 0) _activateListeners.splice(i, 1)
+    }
+}
+
 function _activate(scope, focusItem) {
     const owner = navigableOwner(focusItem, scope)
     if (!owner || typeof owner.navActivate !== "function") return false
+    for (const listener of _activateListeners) listener(owner)
     owner.navActivate()
     return true
 }

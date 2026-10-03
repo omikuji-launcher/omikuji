@@ -15,6 +15,20 @@ Item {
     property rect ownerRect: Qt.rect(0, 0, 0, 0)
     property real ownerRadius: 0
     property color ringColor: Theme.focusAccent
+    property real squeeze: 0
+    readonly property real inset: gap - squeeze
+    property var _offActivate: null
+
+    Component.onCompleted: _offActivate = Nav.onActivate(owner => {
+        if (owner === halo.owner) clench.restart()
+    })
+    Component.onDestruction: if (_offActivate) _offActivate()
+
+    SequentialAnimation {
+        id: clench
+        NumberAnimation { target: halo; property: "squeeze"; to: halo.gap; duration: Theme.dur.xfast; easing.type: Theme.ease.standard }
+        NumberAnimation { target: halo; property: "squeeze"; to: 0; duration: Theme.dur.fast; easing.type: Theme.ease.standard }
+    }
 
     function _sync() {
         if (!owner) return
@@ -27,6 +41,8 @@ Item {
     anchors.fill: parent
     z: 1000000
     onOwnerChanged: {
+        clench.stop()
+        squeeze = 0
         if (!owner) return
         ownerRadius = owner.navRingRadius
         ringColor = owner.danger === true ? Theme.error : Theme.focusAccent
@@ -39,11 +55,11 @@ Item {
     }
 
     Squircle {
-        x: halo.ownerRect.x - halo.gap
-        y: halo.ownerRect.y - halo.gap
-        width: halo.ownerRect.width + halo.gap * 2
-        height: halo.ownerRect.height + halo.gap * 2
-        radius: halo.ownerRadius * Theme.uiScale + halo.gap
+        x: halo.ownerRect.x - halo.inset
+        y: halo.ownerRect.y - halo.inset
+        width: halo.ownerRect.width + halo.inset * 2
+        height: halo.ownerRect.height + halo.inset * 2
+        radius: halo.ownerRadius * Theme.uiScale + halo.inset
         fillColor: "transparent"
         borderColor: halo.ringColor
         borderWidth: 2 * Theme.uiScale

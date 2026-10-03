@@ -13,6 +13,23 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.4
+Added:
+- 'Muted text for output logs' toggle and 'Dimmed text opacity' spinbox settings
+- 'Card background' color token 
+
+Changed:
+- Added info headers to game logs
+- prettier api errors :3
+- Bigger toasts (+ backtick formatting)
+- slug-id for game logs files (previously just id)
+
+Fixed:
+- Logs window 'Follow' checkbox not stopping auto-scroll
+
+Removed:
+- Old runtime components stuff from the Downloads page
+
 ## 0.20.3
 Added:
 - 'copy in steam's format' button for env and dll tables
