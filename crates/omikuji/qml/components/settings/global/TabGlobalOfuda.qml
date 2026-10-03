@@ -91,10 +91,10 @@ Item {
 
         height: Theme.space.lg * 2 + topBlock + Theme.space.sm + pathText.height
 
-        Squircle {
+        ChevronPress {
+            id: press
             anchors.fill: parent
-            radius: Theme.radius.md
-            fillColor: Theme.cardBg
+            onActivated: root.openRequested(row.prefix)
         }
 
         IconTile {
@@ -102,8 +102,8 @@ Item {
             anchors.left: parent.left
             anchors.leftMargin: Theme.space.lg
             anchors.verticalCenter: stats.verticalCenter
-            width: 34
-            height: 34
+            width: 32
+            height: 32
             icon: row.prefix.kind === "steam" ? "steam" : "ofuda"
         }
 
@@ -116,15 +116,15 @@ Item {
             anchors.verticalCenter: stats.verticalCenter
             text: row.prefix.name || ""
             color: Theme.text
-            font.pixelSize: Theme.type.headline.size
+            font.pixelSize: Theme.type.title.size
             font.weight: Font.DemiBold
             elide: Text.ElideRight
         }
 
         Row {
             id: stats
-            anchors.right: manageBtn.left
-            anchors.rightMargin: Theme.space.xl
+            anchors.right: parent.right
+            anchors.rightMargin: press.trailingWidth
             anchors.top: parent.top
             anchors.topMargin: Theme.space.lg
             spacing: Theme.space.xl
@@ -142,22 +142,12 @@ Item {
             }
         }
 
-        M3Button {
-            id: manageBtn
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.space.md
-            anchors.verticalCenter: stats.verticalCenter
-            text: qsTr("Manage")
-            variant: "tonal"
-            onClicked: root.openRequested(row.prefix)
-        }
-
         Text {
             id: pathText
             anchors.left: iconBox.right
             anchors.leftMargin: Theme.space.lg
             anchors.right: parent.right
-            anchors.rightMargin: Theme.space.lg
+            anchors.rightMargin: press.trailingWidth
             anchors.top: parent.top
             anchors.topMargin: Theme.space.lg + row.topBlock + Theme.space.sm
             text: row.prefix.path || ""
@@ -178,7 +168,7 @@ Item {
             width: parent.width
             action: M3Button {
                 text: qsTr("New prefix")
-                variant: "tonal"
+                variant: "text"
                 onClicked: root.createRequested()
             }
 
@@ -193,18 +183,21 @@ Item {
 
             Column {
                 width: parent.width
-                spacing: 6
 
-                Repeater {
-                    model: root.prefixes
+                CardGroup {
+                    visible: root.prefixes.length > 0
 
-                    delegate: PrefixRow {
-                        required property var modelData
-                        prefix: modelData
-                        detail: modelData.gameCount === 0
-                            ? qsTr("Orphan")
-                            : String(modelData.gameCount)
-                        sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
+                    Repeater {
+                        model: root.prefixes
+
+                        delegate: PrefixRow {
+                            required property var modelData
+                            prefix: modelData
+                            detail: modelData.gameCount === 0
+                                ? qsTr("Orphan")
+                                : String(modelData.gameCount)
+                            sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
+                        }
                     }
                 }
 
@@ -239,15 +232,18 @@ Item {
             Column {
                 visible: root.showSteam
                 width: parent.width
-                spacing: 6
 
-                Repeater {
-                    model: root.steamPrefixes
+                CardGroup {
+                    visible: root.steamPrefixes.length > 0
 
-                    delegate: PrefixRow {
-                        required property var modelData
-                        prefix: modelData
-                        sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
+                    Repeater {
+                        model: root.steamPrefixes
+
+                        delegate: PrefixRow {
+                            required property var modelData
+                            prefix: modelData
+                            sizeBytes: root.sizes[modelData.path] !== undefined ? root.sizes[modelData.path] : -1
+                        }
                     }
                 }
 

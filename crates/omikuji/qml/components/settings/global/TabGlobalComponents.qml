@@ -132,32 +132,35 @@ Item {
             width: parent.width
             action: M3Button {
                 text: qsTr("Add source")
-                variant: "tonal"
+                variant: "text"
                 onClicked: root.addSourceRequested("layers")
             }
 
             Column {
                 width: parent.width
-                spacing: 6
 
-                Repeater {
-                    model: root.dllPacks
+                CardGroup {
+                    visible: root.dllPacks.length > 0
 
-                    delegate: ArchiveSourceRow {
-                        id: dllRow
-                        required property int index
-                        required property var modelData
-                        width: parent.width
-                        sourceName: modelData.name
-                        sourceKind: modelData.kind
-                        installedCount: root.installedCounts["dll_packs/" + modelData.name] || 0
-                        showPrefixInstall: true
-                        installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
-                        prefixInstallVersion: modelData.prefix_install_version || ""
-                        onManageClicked: root.manageRequested("layers", sourceName, sourceKind)
-                        onPrefixInstallVersionSelected: (tag) => {
-                            root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
-                            root.loadSources()
+                    Repeater {
+                        model: root.dllPacks
+
+                        delegate: ArchiveSourceRow {
+                            id: dllRow
+                            required property int index
+                            required property var modelData
+                            width: parent.width
+                            sourceName: modelData.name
+                            sourceKind: modelData.kind
+                            installedCount: root.installedCounts["dll_packs/" + modelData.name] || 0
+                            showPrefixInstall: true
+                            installedVersions: root.installedVersions["dll_packs/" + modelData.name] || []
+                            prefixInstallVersion: modelData.prefix_install_version || ""
+                            onManageClicked: root.manageRequested("layers", sourceName, sourceKind)
+                            onPrefixInstallVersionSelected: (tag) => {
+                                root.archiveManager.setDllPackPrefixInstallVersion(sourceName, tag)
+                                root.loadSources()
+                            }
                         }
                     }
                 }
@@ -177,35 +180,44 @@ Item {
             label: qsTr("Runners")
             width: parent.width
             action: Row {
-                spacing: Theme.space.sm
+                spacing: Theme.space.xs
                 M3Button {
                     text: qsTr("Manage found runners")
-                    variant: "tonal"
+                    variant: "text"
                     onClicked: root.manageFoundRunnersRequested()
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "|"
+                    color: Theme.textFaint
+                    font.pixelSize: Theme.type.label.size
                 }
                 M3Button {
                     text: qsTr("Add source")
-                    variant: "tonal"
+                    variant: "text"
                     onClicked: root.addSourceRequested("runners")
                 }
             }
 
             Column {
                 width: parent.width
-                spacing: 6
 
-                Repeater {
-                    model: root.runners
+                CardGroup {
+                    visible: root.runners.length > 0
 
-                    delegate: ArchiveSourceRow {
-                        id: runnerRow
-                        required property int index
-                        required property var modelData
-                        width: parent.width
-                        sourceName: modelData.name
-                        sourceKind: modelData.kind
-                        installedCount: root.installedCounts["runners/" + modelData.name] || 0
-                        onManageClicked: root.manageRequested("runners", sourceName, sourceKind)
+                    Repeater {
+                        model: root.runners
+
+                        delegate: ArchiveSourceRow {
+                            id: runnerRow
+                            required property int index
+                            required property var modelData
+                            width: parent.width
+                            sourceName: modelData.name
+                            sourceKind: modelData.kind
+                            installedCount: root.installedCounts["runners/" + modelData.name] || 0
+                            onManageClicked: root.manageRequested("runners", sourceName, sourceKind)
+                        }
                     }
                 }
 
@@ -226,7 +238,7 @@ Item {
             action: M3Button {
                 readonly property bool busy: root.componentsBridge && root.componentsBridge.checking
                 text: busy ? qsTr("Checking...") : qsTr("Check for updates")
-                variant: "tonal"
+                variant: "text"
                 enabled: !busy && root.componentsBridge
                 onClicked: root.componentsBridge.checkUpdates()
             }
@@ -240,10 +252,7 @@ Item {
                 bottomPadding: 8
             }
 
-            Column {
-                width: parent.width
-                spacing: 6
-
+            CardGroup {
                 Repeater {
                     model: ["umu-run", "hpatchz", "legendary", "gogdl", "nile", "egl-dummy"]
 
@@ -260,20 +269,16 @@ Item {
                             || status.status === "downloading"
                             || status.status === "extracting"
                             || status.status === "resolving"
+                        readonly property bool busyState: busy || (root.componentsBridge && root.componentsBridge.inProgress)
+                        readonly property bool reinstallable: status.status === "completed" && !hasUpdate
 
                         width: parent.width
                         height: 56
 
-                        Squircle {
-                            anchors.fill: parent
-                            radius: Theme.radius.md
-                            fillColor: Theme.cardBg
-                        }
-
                         Row {
                             anchors.left: parent.left
                             anchors.leftMargin: 16
-                            anchors.right: actionBtn.left
+                            anchors.right: actions.left
                             anchors.rightMargin: 16
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 14
@@ -342,41 +347,52 @@ Item {
                             }
                         }
 
-                        IconButton {
-                            id: removeBtn
+                        function install() {
+                            root.componentsBridge.installComponent(runtimeRow.modelData)
+                            root.refreshRuntime()
+                        }
+
+                        Row {
+                            id: actions
                             anchors.right: parent.right
                             anchors.rightMargin: 12
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: !runtimeRow.isSystem
-                                && (runtimeRow.status.status === "completed" || runtimeRow.busy)
-                            blocked: runtimeRow.busy
-                            icon: "close"
-                            danger: true
-                            onClicked: {
-                                root.componentsBridge.removeComponent(runtimeRow.modelData)
-                                root.refreshRuntime()
+                            spacing: Theme.space.xs
+
+                            IconButton {
+                                visible: runtimeRow.reinstallable
+                                blocked: runtimeRow.busyState
+                                icon: "sync"
+                                tonal: true
+                                squircle: true
+                                tooltip: qsTr("Reinstall")
+                                onClicked: runtimeRow.install()
                             }
-                        }
 
-                        M3Button {
-                            id: actionBtn
-                            anchors.right: removeBtn.visible ? removeBtn.left : parent.right
-                            anchors.rightMargin: removeBtn.visible ? Theme.space.xs : 12
-                            anchors.verticalCenter: parent.verticalCenter
+                            M3Button {
+                                visible: !runtimeRow.reinstallable
+                                small: true
+                                text: runtimeRow.busyState ? qsTr("Working…")
+                                    : runtimeRow.hasUpdate ? qsTr("Update")
+                                    : runtimeRow.status.status === "failed" ? qsTr("Retry")
+                                    : qsTr("Install")
+                                variant: runtimeRow.busyState || runtimeRow.isExternal ? "tonal" : "filled"
+                                danger: runtimeRow.status.status === "failed" && !runtimeRow.busyState
+                                enabled: !runtimeRow.busyState
+                                onClicked: runtimeRow.install()
+                            }
 
-                            readonly property bool busyState: runtimeRow.busy || (root.componentsBridge && root.componentsBridge.inProgress)
-
-                            text: busyState ? qsTr("Working…")
-                                : runtimeRow.hasUpdate ? qsTr("Update")
-                                : runtimeRow.status.status === "completed" ? qsTr("Reinstall")
-                                : runtimeRow.status.status === "failed" ? qsTr("Retry")
-                                : qsTr("Install")
-                            variant: (busyState || runtimeRow.isExternal ||(runtimeRow.status.status === "completed" && !runtimeRow.hasUpdate)) ? "tonal" : "filled"
-                            danger: runtimeRow.status.status === "failed" && !busyState
-                            enabled: !busyState
-                            onClicked: {
-                                root.componentsBridge.installComponent(runtimeRow.modelData)
-                                root.refreshRuntime()
+                            IconButton {
+                                visible: !runtimeRow.isSystem
+                                    && (runtimeRow.status.status === "completed" || runtimeRow.busy)
+                                blocked: runtimeRow.busy
+                                icon: "close"
+                                danger: true
+                                tooltip: qsTr("Remove")
+                                onClicked: {
+                                    root.componentsBridge.removeComponent(runtimeRow.modelData)
+                                    root.refreshRuntime()
+                                }
                             }
                         }
                     }

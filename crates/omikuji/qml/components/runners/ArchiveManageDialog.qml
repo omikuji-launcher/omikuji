@@ -377,15 +377,7 @@ DialogCard {
                     anchors.topMargin: 3
                     anchors.bottomMargin: 3
                     radius: Theme.radius.sm
-                    color: Theme.alpha(Theme.accent, latestMouse.containsMouse ? 0.12 : 0.07)
-                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
-                }
-
-                MouseArea {
-                    id: latestMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton
+                    color: Theme.alpha(Theme.accent, 0.07)
                 }
 
                 Column {
@@ -474,26 +466,6 @@ DialogCard {
                 width: ListView.view.width
                 height: 64
 
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.space.sm
-                    anchors.rightMargin: Theme.space.sm
-                    anchors.topMargin: 3
-                    anchors.bottomMargin: 3
-                    radius: Theme.radius.sm
-                    color: rowMouse.containsMouse
-                        ? Theme.alpha(Theme.text, 0.05)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
-                }
-
-                MouseArea {
-                    id: rowMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.NoButton
-                }
-
                 Column {
                     anchors.left: parent.left
                     anchors.leftMargin: 24
@@ -547,17 +519,11 @@ DialogCard {
                     M3Dropdown {
                         visible: versionRow.assets.length > 1
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(versionRow.width - 380, assetMetrics.width + 56)
+                        width: Math.min(versionRow.width - 380, fitWidth)
                         fieldHeight: 30
                         options: versionRow.assetLabels.map((l, i) => ({ label: l, value: i }))
                         currentIndex: versionRow.assetIndex
                         onSelected: (v) => versionRow.assetIndex = v
-
-                        TextMetrics {
-                            id: assetMetrics
-                            font.pixelSize: Theme.type.body.size
-                            text: versionRow.assetLabels[versionRow.assetIndex] || ""
-                        }
                     }
 
                     InstallActions {

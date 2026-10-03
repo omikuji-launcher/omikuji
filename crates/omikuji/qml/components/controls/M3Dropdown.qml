@@ -18,6 +18,10 @@ Item {
     property string labelSuffix: ""
     property color labelSuffixColor: Theme.textMuted
     property real fieldHeight: 44
+    readonly property bool _compact: fieldHeight < 40
+    readonly property real _chevronGap: _compact ? 2 : 6
+    readonly property real _chevronMargin: _compact ? 6 : 10
+    readonly property real fitWidth: valueText.implicitWidth + 12 + _chevronGap + chevronIcon.width + _chevronMargin
 
     signal selected(var value)
 
@@ -121,10 +125,11 @@ Item {
         focused: popup.visible || InputMode.keyFocus(root)
 
         Text {
+            id: valueText
             anchors.left: parent.left
             anchors.leftMargin: 12
             anchors.right: chevronIcon.left
-            anchors.rightMargin: 6
+            anchors.rightMargin: root._chevronGap
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
             text: {
@@ -142,7 +147,7 @@ Item {
         SvgIcon {
             id: chevronIcon
             anchors.right: parent.right
-            anchors.rightMargin: 10
+            anchors.rightMargin: root._chevronMargin
             anchors.verticalCenter: parent.verticalCenter
             name: "chevron_left"
             size: 20

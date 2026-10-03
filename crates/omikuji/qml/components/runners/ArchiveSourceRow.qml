@@ -19,12 +19,6 @@ Item {
 
     height: showPrefixInstall ? 56 + versionRows.height : 56
 
-    Squircle {
-        anchors.fill: parent
-        radius: Theme.radius.md
-        fillColor: Theme.cardBg
-    }
-
     Item {
         id: topRow
         anchors.top: parent.top
@@ -32,11 +26,17 @@ Item {
         anchors.right: parent.right
         height: 56
 
+        ChevronPress {
+            id: press
+            anchors.fill: parent
+            onActivated: root.manageClicked()
+        }
+
         Row {
             anchors.left: parent.left
             anchors.leftMargin: 16
-            anchors.right: manageBtn.left
-            anchors.rightMargin: 16
+            anchors.right: parent.right
+            anchors.rightMargin: press.trailingWidth
             anchors.verticalCenter: parent.verticalCenter
             spacing: 12
 
@@ -59,16 +59,6 @@ Item {
                     font.pixelSize: Theme.type.caption.size
                 }
             }
-        }
-
-        M3Button {
-            id: manageBtn
-            anchors.right: parent.right
-            anchors.rightMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Manage")
-            variant: "tonal"
-            onClicked: root.manageClicked()
         }
     }
 
@@ -94,21 +84,15 @@ Item {
 
         M3Dropdown {
             anchors.right: parent.right
-            anchors.rightMargin: 12
+            anchors.rightMargin: Theme.space.lg
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(240, valueMetrics.width + 56)
+            width: Math.min(240, fitWidth)
             fieldHeight: 32
             options: [{ label: qsTr("Disabled"), value: "" }].concat(
                 versionRow.versions.map(tag => ({ label: tag, value: tag })))
             currentIndex: Math.max(0, RG.indexOfValue(options, versionRow.value))
             onSelected: (tag) => {
                 if (tag !== versionRow.value) versionRow.picked(tag)
-            }
-
-            TextMetrics {
-                id: valueMetrics
-                font.pixelSize: Theme.type.body.size
-                text: versionRow.value === "" ? qsTr("Disabled") : versionRow.value
             }
         }
     }

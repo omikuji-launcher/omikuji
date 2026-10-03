@@ -14,6 +14,7 @@ Popup {
     readonly property int padBottom: 4
     readonly property real maxLineWidth: 560
     readonly property real gap: 8
+    readonly property bool _ownerShown: parent ? parent.visible : false
 
     padding: 0
     margins: 4
@@ -43,6 +44,12 @@ Popup {
             showTimer.stop()
             if (visible) hideTimer.restart()
         }
+    }
+    on_OwnerShownChanged: {
+        if (_ownerShown) return
+        showTimer.stop()
+        hideTimer.stop()
+        Qt.callLater(() => { if (!root._ownerShown) root.visible = false })
     }
 
     Text {
@@ -94,7 +101,10 @@ Popup {
             }
         }
     }
-    exit: Transition {
+    exit: _ownerShown ? fadeOut : null
+
+    Transition {
+        id: fadeOut
         ParallelAnimation {
             NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 120 }
             NumberAnimation { property: "scale"; from: 1.0; to: 0.92; duration: 120 }

@@ -12,6 +12,7 @@ Item {
     property bool danger: false
     property bool tonal: false
     property bool squircle: false
+    property string tooltip: ""
     // blocked: looks disabled and swallows clicks but still hovers, Item.enabled would kill hover events
     property bool blocked: false
 
@@ -94,5 +95,10 @@ Item {
             if (btn.blocked) return
             btn.clicked()
         }
+    }
+
+    Tooltip {
+        text: btn.tooltip
+        tipVisible: btn.tooltip !== "" && btn.lit
     }
 }
