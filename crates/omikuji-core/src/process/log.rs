@@ -52,18 +52,21 @@ pub(super) fn header(game: &Game, config: &ResolvedLaunch) -> Vec<String> {
 
     lines.extend([
         String::new(),
-        section("game"),
+        section(&format!("game ({})", game.runner.runner_type.as_str())),
         format!("name: {}", game.metadata.name),
         format!("library_id: {}", config.game_id),
-        format!("runner: {}", runner_label(game)),
     ]);
-    if !game.metadata.exe.as_os_str().is_empty() {
-        lines.push(format!("exe: {}", game.metadata.exe.display()));
+    if let Some(runner) = wine_runner_label(game) {
+        lines.push(format!("runner: {runner}"));
     }
-    if !game.launch.args.is_empty() {
-        lines.push(format!("args: {}", game.launch.args.join(" ")));
+    if game.launches_exe() {
+        lines.push(format!(
+            "exe: {}",
+            or_none(&game.metadata.exe.to_string_lossy())
+        ));
     }
     lines.extend([
+        format!("args: {}", or_none(&game.launch.args.join(" "))),
         format!("working_dir: {}", config.working_dir.display()),
         format!("command: {}", config.command.join(" ")),
         String::new(),
@@ -72,14 +75,15 @@ pub(super) fn header(game: &Game, config: &ResolvedLaunch) -> Vec<String> {
     lines
 }
 
-fn runner_label(game: &Game) -> String {
-    let kind = game.runner.runner_type.as_str();
+fn or_none(value: &str) -> &str {
+    if value.is_empty() { "(none)" } else { value }
+}
+
+fn wine_runner_label(game: &Game) -> Option<String> {
     if !game.uses_wine_prefix() {
-        return kind.to_string();
+        return None;
     }
     let version = &game.wine.version;
-    match runners::latest_source(version).and_then(|s| runners::latest_installed_tag(&s)) {
-        Some(tag) => format!("{kind} - {version} ({tag})"),
-        None => format!("{kind} - {version}"),
-    }
+    let tag = runners::latest_source(version).and_then(|s| runners::latest_installed_tag(&s));
+    Some(tag.map_or_else(|| version.clone(), |tag| format!("{version} ({tag})")))
 }

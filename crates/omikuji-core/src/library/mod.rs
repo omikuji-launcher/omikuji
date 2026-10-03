@@ -658,6 +658,14 @@ impl Game {
         self.runner.runner_type == RunnerType::Wine
     }
 
+    pub fn launches_exe(&self) -> bool {
+        match self.runner.runner_type {
+            RunnerType::Native => true,
+            RunnerType::Wine => !self.is_epic(),
+            RunnerType::Steam | RunnerType::Flatpak => false,
+        }
+    }
+
     // skips fields the caller already set so per-source picks (steam:appid etc) survive
     pub fn seed_from_defaults(&mut self, d: &Defaults) {
         d.apply_to(self, FIELDS.iter().map(|f| f.key), CopyMode::Seed);
