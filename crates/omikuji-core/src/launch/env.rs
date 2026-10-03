@@ -278,6 +278,17 @@ pub fn format_env_as_shell(game: &Game) -> String {
     words.join(" ")
 }
 
+pub fn env_overrides(env: &HashMap<String, String>) -> Vec<(&str, &str)> {
+    let host: HashMap<String, String> = std::env::vars().collect();
+    let mut overrides: Vec<(&str, &str)> = env
+        .iter()
+        .filter(|(k, v)| host.get(*k) != Some(*v))
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
+    overrides.sort_unstable();
+    overrides
+}
+
 fn shell_word(value: &str) -> String {
     let plain = !value.is_empty()
         && value

@@ -81,6 +81,42 @@ fn pump_lines(pipe: impl Read + Send + 'static, tx: Sender<String>) {
     });
 }
 
+fn log_header(game: &Game, config: &ResolvedLaunch) -> Vec<String> {
+    let section = |title: &str| format!("=== {} ===", title.to_uppercase());
+    let now = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
+
+    let mut lines = vec![
+        section(&format!("omikuji {} - {now}", env!("CARGO_PKG_VERSION"))),
+        String::new(),
+        section("environment"),
+    ];
+    lines.extend(
+        launch::env_overrides(&config.env)
+            .into_iter()
+            .map(|(k, v)| format!("{k}={v}")),
+    );
+
+    lines.extend([
+        String::new(),
+        section("game"),
+        format!("name: {}", game.metadata.name),
+        format!("library_id: {}", config.game_id),
+    ]);
+    if !game.metadata.exe.as_os_str().is_empty() {
+        lines.push(format!("exe: {}", game.metadata.exe.display()));
+    }
+    if !game.launch.args.is_empty() {
+        lines.push(format!("args: {}", game.launch.args.join(" ")));
+    }
+    lines.extend([
+        format!("working_dir: {}", config.working_dir.display()),
+        format!("command: {}", config.command.join(" ")),
+        String::new(),
+        section("output"),
+    ]);
+    lines
+}
+
 #[derive(Debug, Clone)]
 pub enum ProcessState {
     Running {
@@ -120,26 +156,34 @@ impl ProcessManager {
 
         prepare_runtime(&game, &config.env);
 
-        // drop stale in-memory log from the previous session before streaming new lines
+        // cleanup for older sessions
         game_logs::reset_log(&config.game_id);
 
-        // save_game_logs is opt-in; we still run the reader so the log viewer works
         let log_path = if AppSettings::load().behavior.save_game_logs {
             fs_err::tokio::create_dir_all(&self.logs_dir).await.ok();
-            Some(crate::stamped_log_path(&config.game_id))
+            Some(crate::stamped_log_path(&game.slug_with_id()))
         } else {
             None
         };
 
-        let header = format!(
-            "=== omikuji log {} ===\ncommand: {:?}\nworking_dir: {}\nenv count: {}\n---",
-            chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-            config.command,
-            config.working_dir.display(),
-            config.env.len()
-        );
-        for line in header.lines() {
-            game_logs::append_line(&config.game_id, line.to_string());
+        let (log_tx, log_rx) = mpsc::channel::<String>();
+        {
+            let game_id = config.game_id.clone();
+            thread::spawn(move || {
+                let mut file = log_path
+                    .as_ref()
+                    .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok());
+                while let Ok(line) = log_rx.recv() {
+                    if let Some(ref mut f) = file {
+                        let _ = writeln!(f, "{}", line);
+                    }
+                    game_logs::append_line(&game_id, line);
+                }
+            });
+        }
+
+        for line in log_header(&game, config) {
+            let _ = log_tx.send(line);
         }
 
         let mut cmd = config.to_command()?;
@@ -174,21 +218,6 @@ impl ProcessManager {
 
         let stdout_pipe = child.stdout.take();
         let stderr_pipe = child.stderr.take();
-        let (log_tx, log_rx) = mpsc::channel::<String>();
-        {
-            let game_id = config.game_id.clone();
-            thread::spawn(move || {
-                let mut file = log_path
-                    .as_ref()
-                    .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok());
-                while let Ok(line) = log_rx.recv() {
-                    if let Some(ref mut f) = file {
-                        let _ = writeln!(f, "{}", line);
-                    }
-                    game_logs::append_line(&game_id, line);
-                }
-            });
-        }
         if let Some(stdout) = stdout_pipe {
             pump_lines(stdout, log_tx.clone());
         }

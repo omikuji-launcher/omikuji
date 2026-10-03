@@ -42,7 +42,7 @@ Window {
         target: logWindow.gameModel
         function onGameLogAppended(id) {
             if (id !== logWindow.gameId) return
-            let wasAtBottom = scroll.contentItem ? scroll.contentItem.atYEnd : true
+            let keptY = scroll.contentItem.contentY
             let fresh = logWindow.gameModel.game_log(logWindow.gameId)
             if (fresh.startsWith(logWindow.rawLog)) {
                 if (fresh.length > logWindow.rawLog.length)
@@ -51,9 +51,28 @@ Window {
                 textArea.text = fresh
             }
             logWindow.rawLog = fresh
-            if (wasAtBottom || logWindow.autoScroll) {
+            if (logWindow.autoScroll)
                 timerScroll.start()
-            }
+            else
+                scroll.contentItem.contentY = keptY
+        }
+    }
+
+    function syncFollowToScroll() {
+        autoScroll = scroll.contentItem.atYEnd
+    }
+
+    onAutoScrollChanged: if (autoScroll) timerScroll.start()
+
+    Connections {
+        target: scroll.contentItem
+        function onMovementEnded() { logWindow.syncFollowToScroll() }
+    }
+
+    Connections {
+        target: scroll.ScrollBar.vertical
+        function onPressedChanged() {
+            if (!scroll.ScrollBar.vertical.pressed) logWindow.syncFollowToScroll()
         }
     }
 

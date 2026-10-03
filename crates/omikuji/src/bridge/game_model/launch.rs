@@ -280,7 +280,8 @@ impl super::qobject::GameModel {
             tracing::error!("{e}");
             return QString::from("");
         }
-        let file = omikuji_core::stamped_log_path(&id);
+        let stem = self.library.game(&id).map_or(id, Game::slug_with_id);
+        let file = omikuji_core::stamped_log_path(&stem);
         match fs_err::write(&file, body) {
             Ok(_) => QString::from(file.to_string_lossy().as_ref()),
             Err(e) => {

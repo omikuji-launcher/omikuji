@@ -614,6 +614,10 @@ impl Game {
         self.metadata.slug()
     }
 
+    pub fn slug_with_id(&self) -> String {
+        format!("{}_{}", self.slug(), self.id())
+    }
+
     pub fn added_key(&self) -> (&str, &str) {
         (&self.metadata.added, &self.metadata.id)
     }
