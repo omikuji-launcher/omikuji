@@ -49,13 +49,13 @@ Item {
                 : 0
             fillMode: Image.PreserveAspectFit
             smooth: false
+            opacity: root.tint.a
             layer.enabled: visible
             layer.effect: MultiEffect {
                 contrast: -1
                 brightness: 0.5
                 colorization: 1
                 colorizationColor: Qt.rgba(root.tint.r, root.tint.g, root.tint.b, 1)
-                opacity: root.tint.a
             }
         }
 

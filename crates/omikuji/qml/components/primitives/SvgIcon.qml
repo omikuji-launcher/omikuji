@@ -28,6 +28,7 @@ Item {
             return "qrc:/qt/qml/omikuji/qml/icons/" + icon.name + (fill ? "_fill" : "") + ".svg"
         }
         sourceSize: Qt.size(icon._res, icon._res)
+        opacity: icon.color.a
         layer.enabled: true
         layer.smooth: true
         layer.textureSize: Qt.size(icon._res, icon._res)
@@ -36,7 +37,6 @@ Item {
             brightness: 0.5
             colorization: 1
             colorizationColor: Qt.rgba(icon.color.r, icon.color.g, icon.color.b, 1)
-            opacity: icon.color.a
         }
         onStatusChanged: if (status === Image.Error && Theme.filledIcons && !icon._fillMissing) Qt.callLater(function() { icon._fillMissing = true })
     }
