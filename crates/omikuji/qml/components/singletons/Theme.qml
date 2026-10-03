@@ -44,7 +44,8 @@ QtObject {
     property color navBg: bg
     property color navSeparator: Qt.rgba(text.r, text.g, text.b, 0.06)
 
-    property color cardBg: Qt.lighter(surface, 1.08)
+    readonly property color _cardBgDerived: Qt.lighter(surface, 1.08)
+    property color cardBg: _resolve("cardBg", _cardBgDerived, _cardBgDerived)
     property color cardBorder: "transparent"
     property color cardBorderHover: Qt.rgba(text.r, text.g, text.b, 0.12)
 

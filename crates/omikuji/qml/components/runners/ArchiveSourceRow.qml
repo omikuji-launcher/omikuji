@@ -83,16 +83,6 @@ Item {
         width: parent.width
         height: 44
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: 14
-            anchors.right: parent.right
-            anchors.rightMargin: 14
-            anchors.top: parent.top
-            height: 1
-            color: Theme.separator
-        }
-
         Text {
             anchors.left: parent.left
             anchors.leftMargin: 16

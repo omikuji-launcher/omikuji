@@ -17,6 +17,7 @@ Item {
     readonly property var tokens: [
         { key: "bg",         label: qsTr("Window background") },
         { key: "surface",    label: qsTr("Content surface") },
+        { key: "cardBg",     label: qsTr("Card background") },
         { key: "accent",     label: qsTr("Accent") },
         { key: "accentText", label: qsTr("Accent text") },
         { key: "secondary",  label: qsTr("Secondary") },
