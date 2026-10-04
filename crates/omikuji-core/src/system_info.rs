@@ -1,3 +1,4 @@
+use crate::components;
 use ash::vk;
 use std::ffi::c_char;
 use std::fmt::Write as _;
@@ -62,6 +63,12 @@ pub fn report(app_version: &str, qt_version: &str) -> String {
         "Flatpak".into(),
         if flatpak() { "yes" } else { "no" }.into(),
     ));
+    for spec in components::specs::all() {
+        fields.push((
+            spec.name.into(),
+            components::status_for(spec).version_label(),
+        ));
+    }
 
     let pad = fields.iter().map(|(k, _)| k.len()).max().unwrap_or(0) + 1 + 5;
     let mut out = String::new();

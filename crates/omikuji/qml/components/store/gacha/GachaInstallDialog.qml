@@ -251,8 +251,6 @@ DialogCard {
 
     function hide() { close() }
 
-    onVisibleChanged: if (!visible) { manifestId = ""; resetState() }
-
     onCloseRequested: { root.cancelled(); root.close() }
 
     function loadRunners() {

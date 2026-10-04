@@ -208,8 +208,6 @@ DialogCard {
 
     function hide() { close() }
 
-    onVisibleChanged: if (!visible) { gameIndex = -1; resetState() }
-
     onCloseRequested: { root.cancelled(); root.close() }
 
     function loadRunners() {

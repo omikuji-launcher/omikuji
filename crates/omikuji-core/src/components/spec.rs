@@ -54,4 +54,13 @@ impl ComponentStatus {
             Self::Missing => None,
         }
     }
+
+    pub fn version_label(&self) -> String {
+        match self {
+            Self::Installed { version, .. } => version.clone(),
+            Self::Custom { .. } => "custom".into(),
+            Self::System { .. } => "system".into(),
+            Self::Missing => "not installed".into(),
+        }
+    }
 }
