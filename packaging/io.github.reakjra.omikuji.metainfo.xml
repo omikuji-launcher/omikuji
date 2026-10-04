@@ -22,6 +22,30 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.5" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Custom color picker dialog (theme and log highlight colors)</li>
+          <li>'Install folder' default (Defaults tab) for installation dialogs</li>
+          <li>Automatic desktop/menu/steam shortcuts creation on game entry creation toggles</li>
+          <li>Arch dropdown for prefix creation dialog</li>
+          <li>'Log files kept per game' spinbox (Settings -> App)</li>
+          <li>Logs submenu for cards' context menu (Show window and Open folder)</li>
+          <li>Runtime versions in system info (Settings -> About)</li>
+          <li>Optional SGDB API key in settings.toml</li>
+          <li>Desktop path in settings.toml</li>
+          <li>Copyable paths in dialogs</li>
+          <li>Restyled Ofuda's prefix management dialog</li>
+          <li>Skull svg for cards' stop button</li>
+          <li>Shortcuts tracked by the game's id (previously by slug-id)</li>
+          <li>NTSync enabled by default (previously disabled)</li>
+          <li>Library cards flow default to left</li>
+          <li>Removing or unintalling a game removes its shortcuts, icons, cached art and logs</li>
+          <li>English plural strings</li>
+          <li>Ofuda's prefix creation runner dropdown getting stuck on selection</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.4" date="2026-10-03">
       <description>
         <ul>

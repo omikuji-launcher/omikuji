@@ -13,6 +13,32 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.5
+Added:
+- Custom color picker dialog (theme and log highlight colors)
+- 'Install folder' default (Defaults tab) for installation dialogs
+- Automatic desktop/menu/steam shortcuts creation on game entry creation toggles
+- Arch dropdown for prefix creation dialog
+- 'Log files kept per game' spinbox (Settings -> App)
+- Logs submenu for cards' context menu (Show window and Open folder)
+- Runtime versions in system info (Settings -> About)
+- Optional SGDB API key in settings.toml
+- Desktop path in settings.toml
+- Copyable paths in dialogs
+
+Changed:
+- Restyled Ofuda's prefix management dialog
+- Skull svg for cards' stop button
+- Shortcuts tracked by the game's id (previously by slug-id)
+- NTSync enabled by default (previously disabled)
+- Library cards flow default to left
+- Removing or unintalling a game removes its shortcuts, icons, cached art and logs
+
+Fixed:
+- English plural strings
+- Ofuda's prefix creation runner dropdown getting stuck on selection
+
+
 ## 0.20.4
 Added:
 - 'Muted text for output logs' toggle and 'Dimmed text opacity' spinbox settings
