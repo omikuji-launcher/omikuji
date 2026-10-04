@@ -555,6 +555,12 @@ impl Library {
     }
 }
 
+// names built as slug_id (old shortcut targets, log folders) carry the id after the last underscore
+// also used for the logs files
+pub fn id_from_slug_id(name: &str) -> &str {
+    name.rsplit_once('_').map_or(name, |(_, id)| id)
+}
+
 // 6 char alphanumeric id
 pub fn generate_id() -> String {
     use std::collections::hash_map::RandomState;

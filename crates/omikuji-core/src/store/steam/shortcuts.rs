@@ -194,7 +194,7 @@ fn matches_game(entry: &Entry, game: &Game) -> bool {
     };
     options
         .split_whitespace()
-        .any(|t| desktop::launch_target_id(t) == game.metadata.id)
+        .any(|t| crate::library::id_from_slug_id(t) == game.metadata.id)
 }
 
 pub fn shortcut_exists(game: &Game) -> bool {

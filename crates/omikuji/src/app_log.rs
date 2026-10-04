@@ -15,10 +15,11 @@ use tracing_subscriber::fmt::{
 };
 use tracing_subscriber::prelude::*;
 
+use omikuji_core::log_files;
+
 use crate::log_fmt::ShortTarget;
 
 const STEM: &str = "omikuji";
-const KEEP_SESSIONS: usize = 3;
 const MAX_BYTES: u64 = 64 * 1024 * 1024;
 
 // these already reach stderr through qt's own handler and the default panic hook
@@ -105,14 +106,13 @@ pub fn init() {
 }
 
 pub fn start_session() {
-    let dir = omikuji_core::logs_dir();
-    if let Err(e) = fs_err::create_dir_all(&dir) {
-        tracing::warn!("{e}");
-        return;
-    }
-    prune_sessions(&dir);
-
-    let path = omikuji_core::stamped_log_path(STEM);
+    let path = match log_files::next_log_path(&log_files::app_logs_dir(), STEM) {
+        Ok(path) => path,
+        Err(e) => {
+            tracing::warn!("{e}");
+            return;
+        }
+    };
     let file = match File::create(&path) {
         Ok(file) => file,
         Err(e) => {
@@ -136,36 +136,6 @@ pub fn start_session() {
         env!("CARGO_PKG_VERSION"),
         path.display()
     );
-}
-
-fn prune_sessions(dir: &Path) {
-    let Ok(entries) = fs_err::read_dir(dir) else {
-        return;
-    };
-    let mut sessions: Vec<_> = entries
-        .flatten()
-        .map(|entry| entry.path())
-        .filter(|path| is_session_log(path))
-        .collect();
-    sessions.sort();
-    let excess = (sessions.len() + 1).saturating_sub(KEEP_SESSIONS);
-    for path in sessions.into_iter().take(excess) {
-        if let Err(e) = fs_err::remove_file(&path) {
-            tracing::warn!("{e}");
-        }
-    }
-}
-
-fn is_session_log(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|name| name.to_str())
-        .and_then(|name| name.strip_prefix(STEM))
-        .and_then(|rest| rest.strip_prefix('_'))
-        .and_then(|rest| rest.strip_suffix(".log"))
-        .is_some_and(|stamp| {
-            stamp.len() == "YYYYmmdd_HHMMSS".len()
-                && stamp.chars().all(|c| c.is_ascii_digit() || c == '_')
-        })
 }
 
 fn install_panic_hook() {

@@ -1,4 +1,5 @@
 use omikuji_core::desktop;
+use omikuji_core::log_files;
 use omikuji_core::store::steam::shortcuts as steam;
 
 use super::ok_bool;
@@ -8,6 +9,17 @@ impl super::qobject::GameModel {
         self.game_at(index)
             .and_then(desktop::get_game_browse_dir)
             .is_some_and(|dir| ok_bool("browse_files", desktop::browse_files(&dir)))
+    }
+
+    pub fn has_logs_folder(&self, index: i32) -> bool {
+        self.game_at(index)
+            .is_some_and(|game| log_files::existing_game_logs_dir(game.id()).is_some())
+    }
+
+    pub fn open_logs_folder(&self, index: i32) -> bool {
+        self.game_at(index)
+            .and_then(|game| log_files::existing_game_logs_dir(game.id()))
+            .is_some_and(|dir| ok_bool("open_logs_folder", desktop::browse_files(&dir)))
     }
 
     pub fn create_desktop_shortcut(&self, index: i32) -> bool {

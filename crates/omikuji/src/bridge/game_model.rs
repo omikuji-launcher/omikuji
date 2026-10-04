@@ -449,6 +449,12 @@ pub mod qobject {
         fn browse_files(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
+        fn has_logs_folder(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
+        fn open_logs_folder(self: &GameModel, index: i32) -> bool;
+
+        #[qinvokable]
         fn create_desktop_shortcut(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]

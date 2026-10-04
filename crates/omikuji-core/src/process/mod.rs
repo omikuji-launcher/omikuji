@@ -3,7 +3,7 @@ use crate::event_queue::EventQueue;
 use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, companion};
 use crate::library::{Game, Library};
 use crate::store::epic;
-use crate::{discord, dll_packs, game_logs, runners};
+use crate::{discord, dll_packs, game_logs, log_files, runners};
 use anyhow::Result;
 use fs_err::OpenOptions;
 use nix::fcntl::{Flock, FlockArg};
@@ -97,14 +97,12 @@ pub struct GameSession {
 
 pub struct ProcessManager {
     sessions: Arc<Mutex<HashMap<ProcessId, GameSession>>>,
-    logs_dir: PathBuf,
 }
 
 impl ProcessManager {
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
-            logs_dir: crate::logs_dir(),
         }
     }
 
@@ -118,8 +116,9 @@ impl ProcessManager {
         game_logs::reset_log(&config.game_id);
 
         let log_path = if AppSettings::load().behavior.save_game_logs {
-            fs_err::tokio::create_dir_all(&self.logs_dir).await.ok();
-            Some(crate::stamped_log_path(&game.slug_with_id()))
+            log_files::next_log_path(&log_files::game_logs_dir(&game), &game.slug())
+                .inspect_err(|e| tracing::warn!("game log: {e}"))
+                .ok()
         } else {
             None
         };

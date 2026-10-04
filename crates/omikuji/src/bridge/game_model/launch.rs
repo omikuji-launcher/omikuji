@@ -8,7 +8,7 @@ use omikuji_core::library::Game;
 use omikuji_core::process::{self, ErrorAction};
 use omikuji_core::template_vars::TemplateVars;
 use omikuji_core::wine_tools::{self, WineTool};
-use omikuji_core::{anyhow, game_logs, launch, notifications, runners, updates};
+use omikuji_core::{anyhow, game_logs, launch, log_files, notifications, runners, updates};
 
 use crate::inhibit;
 
@@ -275,13 +275,16 @@ impl super::qobject::GameModel {
         if body.is_empty() {
             return QString::from("");
         }
-        let dir = omikuji_core::logs_dir();
-        if let Err(e) = fs_err::create_dir_all(&dir) {
-            tracing::error!("{e}");
+        let Some(game) = self.library.game(&id) else {
             return QString::from("");
-        }
-        let stem = self.library.game(&id).map_or(id, Game::slug_with_id);
-        let file = omikuji_core::stamped_log_path(&stem);
+        };
+        let file = match log_files::next_log_path(&log_files::game_logs_dir(game), &game.slug()) {
+            Ok(file) => file,
+            Err(e) => {
+                tracing::error!("{e}");
+                return QString::from("");
+            }
+        };
         match fs_err::write(&file, body) {
             Ok(_) => QString::from(file.to_string_lossy().as_ref()),
             Err(e) => {

@@ -145,7 +145,7 @@ enum Resolved<'a> {
 
 fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
     let lower = input.to_lowercase();
-    let id = desktop::launch_target_id(&lower);
+    let id = omikuji_core::library::id_from_slug_id(&lower);
 
     if let Some(g) = lib
         .game

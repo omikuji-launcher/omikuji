@@ -76,9 +76,15 @@ Item {
                 shortcuts.push({ text: hasSteamShortcut ? qsTr("Remove Steam shortcut") : qsTr("Create Steam shortcut"), action: "steam_shortcut" })
             }
 
+            let hasLogs = ctrl.gameModel.has_logs_folder(index)
+            let logs = [
+                { text: qsTr("Show window"), action: "logs" },
+                { text: qsTr("Open folder"), action: "logs_folder", disabled: !hasLogs, tooltip: hasLogs ? "" : qsTr("No logs on disk for this game yet") }
+            ]
+
             let built = [
                 ctrl.playItem(ctrl.actions ? ctrl.actions.playStateAt(index) : PlayState.Play),
-                { text: qsTr("Show logs"), action: "logs" },
+                { text: qsTr("Logs"), submenu: logs },
                 { text: qsTr("Configure"), action: "configure" },
                 { text: qsTr("Categories"), action: "categories" },
                 { text: qsTr("Browse files"), action: "browse" },
@@ -133,6 +139,9 @@ Item {
                     if (g && g.gameId) ctrl.logsRequested(g.gameId, g.name || g.gameId)
                     break
                 }
+                case "logs_folder":
+                    ctrl.gameModel.open_logs_folder(idx)
+                    break
                 case "move":
                     ctrl.moveRequested(idx)
                     break

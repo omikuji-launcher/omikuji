@@ -213,6 +213,7 @@ impl Default for NavSettings {
 pub struct BehaviorSettings {
     pub minimize_on_launch: bool,
     pub save_game_logs: bool,
+    pub logs_kept: i32,
     pub auto_check_epic_updates_on_launch: bool,
     pub auto_check_gog_updates_on_launch: bool,
     pub auto_check_updates_on_boot: bool,
@@ -231,7 +232,8 @@ impl Default for BehaviorSettings {
     fn default() -> Self {
         Self {
             minimize_on_launch: false,
-            save_game_logs: false,
+            save_game_logs: true,
+            logs_kept: 3,
             auto_check_epic_updates_on_launch: false,
             auto_check_gog_updates_on_launch: false,
             auto_check_updates_on_boot: false,

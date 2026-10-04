@@ -22,6 +22,7 @@ pub mod http;
 pub mod install_sizes;
 pub mod launch;
 pub mod library;
+pub mod log_files;
 pub mod media;
 pub mod migration;
 pub mod notifications;
@@ -83,16 +84,8 @@ pub fn cache_dir() -> PathBuf {
     settings::expand(&settings::get().paths.cache_dir)
 }
 
-// logs live under cache so periodic cleanup reclaims space without touching load-bearing state
 pub fn logs_dir() -> PathBuf {
     cache_dir().join("logs")
-}
-
-pub fn stamped_log_path(stem: &str) -> PathBuf {
-    logs_dir().join(format!(
-        "{stem}_{}.log",
-        chrono::Local::now().format("%Y%m%d_%H%M%S")
-    ))
 }
 
 pub fn runtime_dir() -> PathBuf {

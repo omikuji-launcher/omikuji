@@ -1,5 +1,6 @@
 use crate::fs_util::write_executable_atomic;
-use crate::library::{Game, Library, generate_id, rfc3339_now};
+use crate::library::{Game, Library, generate_id, id_from_slug_id, rfc3339_now};
+use crate::log_files;
 use crate::media::{self, MediaType, media_path};
 use crate::settings;
 use crate::store::steam;
@@ -153,11 +154,6 @@ pub fn launch_target(game: &Game) -> String {
     game.metadata.id.clone()
 }
 
-// older shortcuts launched with slug_id so the id is whatever follows the last underscore so they keep working
-pub fn launch_target_id(arg: &str) -> &str {
-    arg.rsplit_once('_').map_or(arg, |(_, id)| id)
-}
-
 fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
     dir.join(desktop_filename(&game_slug(game), &game.metadata.id))
 }
@@ -167,7 +163,7 @@ fn exec_launches(entry: &str, id: &str) -> bool {
         .lines()
         .filter_map(|line| line.strip_prefix("Exec="))
         .flat_map(str::split_whitespace)
-        .any(|arg| launch_target_id(arg) == id)
+        .any(|arg| id_from_slug_id(arg) == id)
 }
 
 fn shortcuts_in(game: &Game, dir: &Path) -> Vec<PathBuf> {
@@ -243,6 +239,11 @@ pub fn delete_game(game: &Game) -> Result<()> {
     let id = &game.metadata.id;
     Library::remove_game_file(id)?;
     media::remove_cached_media(id);
+    if let Some(logs) = log_files::existing_game_logs_dir(id)
+        && let Err(e) = fs::remove_dir_all(&logs)
+    {
+        tracing::warn!("delete_game: logs for {id}: {e}");
+    }
     let shortcuts = [
         ("desktop", remove_desktop_shortcut(game)),
         ("menu", remove_menu_shortcut(game)),

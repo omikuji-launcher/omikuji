@@ -301,12 +301,25 @@ Item {
 
             SettingsRow {
                 label: qsTr("Save game logs to disk")
-                description: qsTr("Off: logs live in memory only until the game exits. On: also written to cache/logs/.")
+                description: qsTr("Off: logs live in memory only until the game exits. On: also written to cache/logs/games/.")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
-                    checked: appSettings ? appSettings.saveGameLogs : false
+                    checked: appSettings ? appSettings.saveGameLogs : true
                     onToggled: (val) => appSettings.applySaveGameLogs(val)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Log files kept per game (also applies to app logs)")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                contentRightMargin: 74
+                M3SpinBox {
+                    from: 1
+                    to: 10
+                    value: appSettings ? appSettings.logsKept : 3
+                    onMoved: (val) => appSettings.applyLogsKept(val)
                 }
             }
         }

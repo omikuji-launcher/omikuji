@@ -207,6 +207,7 @@ fn main() {
         .prop_at("nav_collapsed", kushi::Kind::Bool, "nav.collapsed")
         .prop_at("minimize_on_launch", kushi::Kind::Bool, "behavior.minimize_on_launch")
         .prop_at("save_game_logs", kushi::Kind::Bool, "behavior.save_game_logs")
+        .prop_at("logs_kept", kushi::Kind::I32, "behavior.logs_kept")
         .prop_at("double_click_launches", kushi::Kind::Bool, "behavior.double_click_launches")
         .prop_at("auto_check_epic_updates_on_launch", kushi::Kind::Bool, "behavior.auto_check_epic_updates_on_launch")
         .prop_at("auto_check_gog_updates_on_launch", kushi::Kind::Bool, "behavior.auto_check_gog_updates_on_launch")

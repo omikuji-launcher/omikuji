@@ -350,6 +350,11 @@ Popup {
                             onPositionChanged: (mouse) => root._shiftDown = (mouse.modifiers & Qt.ShiftModifier) !== 0
                             onClicked: (mouse) => root._activate(itemLoader.index, (mouse.modifiers & Qt.ShiftModifier) !== 0)
                         }
+
+                        Tooltip {
+                            text: itemLoader.modelData.tooltip || ""
+                            tipVisible: text !== "" && hoverArea.containsMouse
+                        }
                     }
                 }
 
