@@ -63,7 +63,7 @@ DialogCard {
         let runners = root.gameModel ? RG.groupRunners(JSON.parse(root.gameModel.list_runners())) : []
         let defaultCfg = defaults ? defaults.getConfig() : ({})
         let defaultPrefix = defaultCfg["wine.prefix"] || ""
-        let ri = RG.preferredIndex(runners, defaultCfg["wine.version"] || "", [])
+        let ri = RG.selectedIndex(runners, defaultCfg["wine.version"])
         let firstRunner = ri >= 0 ? runners[ri].value : ""
 
         // che schifo

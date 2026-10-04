@@ -229,7 +229,7 @@ DialogCard {
         runnerOptions = opts
 
         let def = defaults ? (defaults.getConfig()["wine.version"] || "") : ""
-        runnerIndex = RG.preferredIndex(opts, def, ["GE-Proton", "Proton-GE", "wine-ge"])
+        runnerIndex = RG.selectedIndex(opts, def)
     }
 
     body: ColumnLayout {

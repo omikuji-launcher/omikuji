@@ -284,7 +284,7 @@ DialogCard {
 
         runnerOptions = opts
         let def = defaults ? (defaults.getConfig()["wine.version"] || "") : ""
-        runnerIndex = RG.preferredIndex(opts, def, [])
+        runnerIndex = RG.selectedIndex(opts, def)
     }
 
     function loadAdvised() {

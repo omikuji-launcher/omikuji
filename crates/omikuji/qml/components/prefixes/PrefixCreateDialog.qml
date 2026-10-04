@@ -25,10 +25,12 @@ DialogCard {
 
     function show() {
         nameValue = ""
+        runnerValue = ""
         root.errorText = ""
         outputText = ""
         open()
     }
+
 
     onCloseRequested: if (!busy) close()
 
@@ -66,11 +68,9 @@ DialogCard {
                 width: parent.width
                 options: RG.groupRunners(JSON.parse(root.gameModel ? root.gameModel.list_runners() : "[]"))
                 currentIndex: {
-                    let def = root.defaults ? (root.defaults.getConfig()["wine.version"] || "") : ""
-                    let i = RG.preferredIndex(options, def, ["GE-Proton", "Proton-GE", "wine-ge"])
-                    if (i >= 0) return i
-                    let f = RG.firstNonHeader(options)
-                    return f >= 0 ? f : 0
+                    const chosen = RG.indexOfValue(options, root.runnerValue)
+                    if (chosen >= 0) return chosen
+                    return RG.selectedIndex(options, root.defaults ? root.defaults.getConfig()["wine.version"] : "")
                 }
                 onSelected: (v) => root.runnerValue = v
                 Component.onCompleted: root.runnerValue = currentValue

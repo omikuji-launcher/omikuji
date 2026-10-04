@@ -123,22 +123,3 @@ function runnerBucket(runnerType) {
 function runnerIcon(runnerType) {
     return ({ steam: "steam", flatpak: "flatpak", native: "code_xml", wine: "wine" })[runnerBucket(runnerType)]
 }
-
-function pickPreferred(options, substrings) {
-    if (!substrings || substrings.length === 0) return firstNonHeader(options)
-    for (var s = 0; s < substrings.length; s++) {
-        var needle = String(substrings[s] || "").toLowerCase()
-        if (needle === "") continue
-        for (var i = 0; i < options.length; i++) {
-            if (options[i].header) continue
-            if (options[i].value.toLowerCase().indexOf(needle) !== -1) return i
-        }
-    }
-    return firstNonHeader(options)
-}
-
-function preferredIndex(options, defaultValue, fallbackSubstrings) {
-    var idx = indexOfValue(options, defaultValue || "")
-    if (idx >= 0) return idx
-    return pickPreferred(options, fallbackSubstrings)
-}
