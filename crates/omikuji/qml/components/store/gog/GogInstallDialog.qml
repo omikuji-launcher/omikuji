@@ -193,7 +193,7 @@ DialogCard {
             let slash = gogGameDir.lastIndexOf("/")
             installPath = slash > 0 ? gogGameDir.substring(0, slash) : gogGameDir
         } else {
-            installPath = defaultInstallPath(gameData ? gameData.title : "")
+            installPath = defaults ? defaults.installDir() : ""
         }
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
@@ -209,13 +209,6 @@ DialogCard {
     onVisibleChanged: if (!visible) { gameIndex = -1; resetState() }
 
     onCloseRequested: { root.cancelled(); root.close() }
-
-    function defaultInstallPath(title) {
-        if (!gameModel) return ""
-        let home = gameModel.home_dir()
-        if (!home) return ""
-        return home + "/Games"
-    }
 
     function loadRunners() {
         if (!gameModel) return

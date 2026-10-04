@@ -39,7 +39,6 @@ pub struct GachaManifest {
     #[serde(default)]
     pub voice_dir: String,
 
-    pub default_library_template: String,
     pub install_folder_name: String,
 
     #[serde(default)]
@@ -343,7 +342,6 @@ mod tests {
             }],
             voice_locales: vec![],
             voice_dir: String::new(),
-            default_library_template: "{home}/Games".into(),
             install_folder_name: "Test Game".into(),
             category: "Test".into(),
             launch_patch: String::new(),

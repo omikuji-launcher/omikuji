@@ -238,7 +238,7 @@ DialogCard {
 
         loadPackPicker()
 
-        installPath = defaultInstallPath()
+        installPath = defaults ? defaults.installDir() : ""
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
         loadAdvised()
@@ -254,13 +254,6 @@ DialogCard {
     onVisibleChanged: if (!visible) { manifestId = ""; resetState() }
 
     onCloseRequested: { root.cancelled(); root.close() }
-
-    function defaultInstallPath() {
-        if (!gameModel || !manifest) return ""
-        let home = gameModel.home_dir() || ""
-        let tpl = manifest.default_library_template || "{home}/Games"
-        return tpl.replace("{home}", home)
-    }
 
     function loadRunners() {
         if (!gameModel) return
@@ -548,7 +541,7 @@ DialogCard {
             M3FileField {
                 Layout.fillWidth: true
                 label: qsTr("Installation path")
-                placeholder: root.defaultInstallPath()
+                placeholder: root.defaults ? root.defaults.installDir() : ""
                 selectFolder: true
                 gameModel: root.gameModel
                 text: root.installPath

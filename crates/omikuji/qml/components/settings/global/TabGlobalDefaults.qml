@@ -149,6 +149,32 @@ Item {
         }
 
         SettingsSection {
+            label: SettingLabels.groupTitle("install")
+            icon: "download"
+            width: parent.width
+
+            Row {
+                width: parent.width
+                spacing: root.badgeGap
+                M3FileField {
+                    id: installDirField
+                    label: SettingLabels.label("install_dir")
+                    placeholder: root.defaults && root.cfg ? root.defaults.installDir() : ""
+                    text: root.cfg["install_dir"] || ""
+                    selectFolder: true
+                    width: parent.width - root.badgeSlot
+                    gameModel: root.gameModel
+                    onTextEdited: (t) => root.update("install_dir", t)
+                    onAccepted: (p) => root.update("install_dir", p)
+                }
+                ResetBadge {
+                    y: installDirField.boxCenterY - height / 2
+                    fieldKey: "install_dir"
+                }
+            }
+        }
+
+        SettingsSection {
             label: SettingLabels.groupTitle("wine")
             icon: "wine"
             width: parent.width

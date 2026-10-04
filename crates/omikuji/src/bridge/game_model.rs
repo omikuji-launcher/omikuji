@@ -554,9 +554,6 @@ pub mod qobject {
         fn launch_desktop_mode(self: &GameModel);
 
         #[qinvokable]
-        fn home_dir(self: &GameModel) -> QString;
-
-        #[qinvokable]
         fn register_game_json(self: Pin<&mut GameModel>, game_json: &QString) -> QString;
 
         #[qinvokable]
@@ -2363,10 +2360,5 @@ impl qobject::GameModel {
     fn disk_free_space(&self, path: &QString) -> QString {
         let bytes = desktop::disk_free_space(&expand_path(path));
         QString::from(&bytes.to_string())
-    }
-
-    fn home_dir(&self) -> QString {
-        let path = dirs::home_dir().unwrap_or_default();
-        QString::from(&*path.to_string_lossy())
     }
 }

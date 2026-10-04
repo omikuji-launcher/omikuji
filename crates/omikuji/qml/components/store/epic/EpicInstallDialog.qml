@@ -195,7 +195,7 @@ DialogCard {
             let slash = legendaryGameDir.lastIndexOf("/")
             installPath = slash > 0 ? legendaryGameDir.substring(0, slash) : legendaryGameDir
         } else {
-            installPath = defaultInstallPath(gameData ? gameData.title : "")
+            installPath = defaults ? defaults.installDir() : ""
         }
         if (defaults) prefixPath = defaults.getConfig()["wine.prefix"] || ""
         loadRunners()
@@ -211,13 +211,6 @@ DialogCard {
     onVisibleChanged: if (!visible) { gameIndex = -1; resetState() }
 
     onCloseRequested: { root.cancelled(); root.close() }
-
-    function defaultInstallPath(title) {
-        if (!gameModel) return ""
-        let home = gameModel.home_dir()
-        if (!home) return ""
-        return home + "/Games"
-    }
 
     function loadRunners() {
         if (!gameModel) return

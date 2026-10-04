@@ -5,6 +5,7 @@ import QtQuick
 QtObject {
     function label(key) {
         switch (key) {
+        case "install_dir":                        return qsTr("Install folder")
         case "wine.version":                       return qsTr("Version")
         case "wine.prefix":                        return qsTr("Prefix")
         case "wine.prefix_arch":                   return qsTr("Architecture")
@@ -53,6 +54,7 @@ QtObject {
 
     function groupTitle(group) {
         switch (group) {
+        case "install":            return qsTr("Install")
         case "wine":               return "Wine"
         case "sync":               return qsTr("Sync")
         case "translation_layers": return qsTr("Translation Layers")

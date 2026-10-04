@@ -10,6 +10,9 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Defaults {
+    // since im a lazy ass this is purely for the default install dir for the install dialogs so it just seeds without trying to copy in a game's config
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub install_dir: Option<String>,
     pub wine: WineDefaults,
     pub launch: LaunchDefaults,
     pub graphics: GraphicsDefaults,
@@ -285,6 +288,13 @@ impl Defaults {
         for key in keys {
             self.copy_field(key, game, &stock, mode);
         }
+    }
+
+    pub fn install_dir(&self) -> PathBuf {
+        self.install_dir
+            .as_deref()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join("Games"))
     }
 
     pub fn format_env_as_shell(&self) -> String {

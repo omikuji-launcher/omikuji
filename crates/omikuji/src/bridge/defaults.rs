@@ -57,6 +57,10 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "envAsShell"]
         fn env_as_shell(self: &DefaultsBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "installDir"]
+        fn install_dir(self: &DefaultsBridge) -> QString;
     }
 }
 
@@ -76,13 +80,29 @@ impl Default for DefaultsRust {
     }
 }
 
+const INSTALL_DIR_KEY: &str = "install_dir";
+
 impl qobject::DefaultsBridge {
     fn get_config(&self) -> cxx_qt_lib::QMap<cxx_qt_lib::QMapPair_QString_QVariant> {
-        build_defaults_map(&self.data)
+        let mut m = build_defaults_map(&self.data);
+        m.insert(
+            cxx_qt_lib::QString::from(INSTALL_DIR_KEY),
+            cxx_qt_lib::QVariant::from(&cxx_qt_lib::QString::from(
+                self.data.install_dir.as_deref().unwrap_or_default(),
+            )),
+        );
+        m
+    }
+
+    fn install_dir(&self) -> cxx_qt_lib::QString {
+        cxx_qt_lib::QString::from(&*self.data.install_dir().to_string_lossy())
     }
 
     fn set_keys_json(&self) -> cxx_qt_lib::QString {
-        let keys = collect_set_keys(&self.data);
+        let mut keys = collect_set_keys(&self.data);
+        if self.data.install_dir.is_some() {
+            keys.push(INSTALL_DIR_KEY.into());
+        }
         let json = serde_json::to_string(&keys).unwrap_or_else(|_| "[]".to_string());
         cxx_qt_lib::QString::from(&json)
     }
@@ -104,7 +124,12 @@ impl qobject::DefaultsBridge {
         let k = key.to_string();
         let v = value.to_string();
         let d = &mut self.as_mut().rust_mut().get_mut().data;
-        let ok = apply_to_defaults(d, &k, &v);
+        let ok = if k == INSTALL_DIR_KEY {
+            d.install_dir = (!v.is_empty()).then_some(v);
+            true
+        } else {
+            apply_to_defaults(d, &k, &v)
+        };
         if ok {
             self.as_mut().persist();
             self.as_mut().changed();
@@ -115,7 +140,12 @@ impl qobject::DefaultsBridge {
     fn reset_field(mut self: Pin<&mut Self>, key: &cxx_qt_lib::QString) -> bool {
         let k = key.to_string();
         let d = &mut self.as_mut().rust_mut().get_mut().data;
-        let ok = clear_in_defaults(d, &k);
+        let ok = if k == INSTALL_DIR_KEY {
+            d.install_dir = None;
+            true
+        } else {
+            clear_in_defaults(d, &k)
+        };
         if ok {
             self.as_mut().persist();
             self.as_mut().changed();

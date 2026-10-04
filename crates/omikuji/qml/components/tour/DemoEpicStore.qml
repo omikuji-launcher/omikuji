@@ -44,7 +44,6 @@ Item {
         signal install_size_result(string requestId, string payload)
         signal game_details_result(string requestId, string payload)
 
-        function home_dir() { return root.gameModel ? root.gameModel.home_dir() : "" }
         function list_runners() { return root.gameModel ? root.gameModel.list_runners() : "[]" }
         function disk_free_space(path) { return root.gameModel ? root.gameModel.disk_free_space(path) : "-1" }
         function expandVars(text) { return root.gameModel ? root.gameModel.expandVars(text) : text }
