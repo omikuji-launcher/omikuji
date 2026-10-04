@@ -30,13 +30,9 @@ DialogCard {
         width: parent.width
         spacing: Theme.space.sm
 
-        Text {
+        PathText {
             width: parent.width
             text: root.detail
-            color: Theme.accent
-            font.pixelSize: Theme.type.caption.size
-            font.family: Theme.mono
-            wrapMode: Text.WrapAnywhere
             visible: text.length > 0
         }
         Text {

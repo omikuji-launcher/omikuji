@@ -63,7 +63,7 @@ DialogCard {
                 radius: Theme.radius.sm
                 fillColor: Theme.alpha(Theme.text, 0.06)
 
-                Text {
+                PathText {
                     id: pathText
                     anchors.left: parent.left
                     anchors.right: parent.right
@@ -71,10 +71,6 @@ DialogCard {
                     anchors.leftMargin: Theme.space.md
                     anchors.rightMargin: Theme.space.md
                     text: root.prefix.path || ""
-                    color: Theme.accent
-                    font.pixelSize: Theme.type.caption.size
-                    font.family: Theme.mono
-                    wrapMode: Text.WrapAnywhere
                 }
             }
 

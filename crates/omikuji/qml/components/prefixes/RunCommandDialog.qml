@@ -74,13 +74,9 @@ DialogCard {
                     font.weight: Font.Medium
                     elide: Text.ElideRight
                 }
-                Text {
+                PathText {
                     width: parent.width
                     text: root.contextText
-                    color: Theme.accent
-                    font.pixelSize: Theme.type.caption.size
-                    font.family: Theme.mono
-                    wrapMode: Text.WrapAnywhere
                 }
             }
         }
