@@ -1225,6 +1225,7 @@ fn media_changed_notifier(
             let roles = cxx_qt_lib::QList::<i32>::default();
             obj.as_mut().data_changed(&idx, &idx, &roles);
             obj.as_mut().media_changed(&QString::from(&id_inner));
+            obj.refresh_shortcuts(row as i32);
         });
     }
 }
@@ -1438,7 +1439,22 @@ impl qobject::GameModel {
         Some(updated)
     }
 
-    pub(crate) fn insert_game_sorted(mut self: Pin<&mut Self>, game: Game) -> i32 {
+    pub(crate) fn add_game(mut self: Pin<&mut Self>, game: Game) -> i32 {
+        let row = self.as_mut().insert_game_sorted(game);
+        let behavior = AppSettings::load().behavior;
+        if behavior.desktop_shortcut_on_add {
+            self.create_desktop_shortcut(row);
+        }
+        if behavior.menu_shortcut_on_add {
+            self.create_menu_shortcut(row);
+        }
+        if behavior.steam_shortcut_on_add && self.steam_shortcut_available(row) {
+            self.create_steam_shortcut(row);
+        }
+        row
+    }
+
+    fn insert_game_sorted(mut self: Pin<&mut Self>, game: Game) -> i32 {
         let mode = self.sort_mode;
         let row = self
             .library
@@ -1577,7 +1593,7 @@ impl qobject::GameModel {
             return QString::default();
         }
 
-        self.as_mut().insert_game_sorted(draft.game);
+        self.as_mut().add_game(draft.game);
 
         let new_id = QString::from(&*game_id);
         let qt_thread = self.as_mut().qt_thread();
@@ -1678,12 +1694,12 @@ impl qobject::GameModel {
             return;
         }
 
-        let game_id = self.library.game[idx].metadata.id.clone();
+        let game = self.library.game[idx].clone();
 
-        if let Err(e) = Library::remove_game_file(&game_id) {
+        if let Err(e) = desktop::delete_game(&game) {
             tracing::error!("failed to remove game file: {}", e);
             process::notify_error(ErrorNotification {
-                game_id,
+                game_id: game.metadata.id,
                 title: "Remove failed".to_string(),
                 message: format!("Couldn't delete the game's library file: {}", e),
                 action: ErrorAction::None,
@@ -1695,9 +1711,6 @@ impl qobject::GameModel {
             .begin_remove_rows(&QModelIndex::default(), index, index);
 
         self.as_mut().rust_mut().get_mut().library.game.remove(idx);
-
-        media::remove_cached_media(&game_id);
-        desktop::remove_steam_icon(&game_id);
 
         let count = self.library.game.len() as i32;
         self.as_mut().set_count(count);
@@ -2327,7 +2340,7 @@ impl qobject::GameModel {
             Ok(new_game) => {
                 let new_name = new_game.metadata.name.clone();
                 let new_id = new_game.metadata.id.clone();
-                self.as_mut().insert_game_sorted(new_game);
+                self.as_mut().add_game(new_game);
 
                 tracing::info!(
                     "duplicated game '{}' -> '{}' (id: {})",

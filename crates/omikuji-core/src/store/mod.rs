@@ -6,8 +6,9 @@ pub mod nile;
 pub mod registry;
 pub mod steam;
 
+use crate::desktop;
 use crate::downloads;
-use crate::library::{Game, Library, SourceKind};
+use crate::library::{Game, SourceKind};
 use anyhow::Result;
 
 pub use game::StoreGame;
@@ -29,7 +30,7 @@ pub fn uninstall(game: &Game) -> Result<()> {
         SourceKind::Nile => nile::uninstall(app_id)?,
         kind => anyhow::bail!("{} games have no store uninstall", kind.as_str()),
     }
-    if let Err(e) = Library::remove_game_file(&game.metadata.id) {
+    if let Err(e) = desktop::delete_game(game) {
         tracing::error!("failed to remove game file: {}", e);
     }
     Ok(())

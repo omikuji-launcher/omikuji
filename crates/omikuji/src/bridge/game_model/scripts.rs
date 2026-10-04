@@ -37,7 +37,7 @@ impl super::qobject::GameModel {
             );
         });
 
-        self.as_mut().insert_game_sorted(game);
+        self.as_mut().add_game(game);
         QString::from(&id)
     }
 }

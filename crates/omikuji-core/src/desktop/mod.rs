@@ -1,6 +1,7 @@
-use crate::fs_util::set_executable;
+use crate::fs_util::write_executable_atomic;
 use crate::library::{Game, Library, generate_id, rfc3339_now};
-use crate::media::{MediaType, media_path};
+use crate::media::{self, MediaType, media_path};
+use crate::settings;
 use crate::store::steam;
 use anyhow::{Context, Result};
 use fs_err as fs;
@@ -8,59 +9,8 @@ use nix::sys::statvfs::statvfs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-pub fn desktop_dir() -> Option<PathBuf> {
-    if let Ok(desktop) = std::env::var("XDG_DESKTOP_DIR") {
-        let path = PathBuf::from(&desktop);
-        if path.exists() {
-            return Some(path);
-        }
-    }
-
-    let user_dirs = dirs::config_dir()
-        .unwrap_or_else(|| PathBuf::from("~/.config"))
-        .join("user-dirs.dirs");
-
-    if let Ok(content) = fs_err::read_to_string(&user_dirs) {
-        for line in content.lines() {
-            if line.starts_with("XDG_DESKTOP_DIR=") {
-                let path_str = line
-                    .trim_start_matches("XDG_DESKTOP_DIR=")
-                    .trim()
-                    .trim_matches('"')
-                    .trim_matches('\'');
-
-                let expanded = if path_str.starts_with("$HOME/") {
-                    dirs::home_dir()
-                        .map(|h| h.join(&path_str[6..]))
-                        .unwrap_or_else(|| PathBuf::from(path_str))
-                } else if path_str.starts_with('~') {
-                    dirs::home_dir()
-                        .map(|h| h.join(&path_str[2..]))
-                        .unwrap_or_else(|| PathBuf::from(path_str))
-                } else {
-                    PathBuf::from(path_str)
-                };
-
-                if expanded.exists() {
-                    return Some(expanded);
-                }
-            }
-        }
-    }
-
-    if let Some(home) = dirs::home_dir() {
-        let desktop = home.join("Desktop");
-        if desktop.exists() {
-            return Some(desktop);
-        }
-        // some locales use ~/desktop (lowercase)
-        let desktop_lc = home.join("desktop");
-        if desktop_lc.exists() {
-            return Some(desktop_lc);
-        }
-    }
-
-    dirs::desktop_dir()
+pub fn desktop_dir() -> PathBuf {
+    settings::expand(&settings::get().paths.desktop_dir)
 }
 
 pub fn applications_dir() -> PathBuf {
@@ -207,12 +157,15 @@ fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
     dir.join(desktop_filename(&game_slug(game), &game.metadata.id))
 }
 
-fn write_shortcut(game: &Game, path: &Path) -> Result<()> {
-    fs::write(path, generate_desktop_content(game))?;
-    Ok(set_executable(path)?)
+fn write_shortcut(game: &Game, dir: &Path) -> Result<PathBuf> {
+    fs::create_dir_all(dir)?;
+    let path = shortcut_path(game, dir);
+    write_executable_atomic(&path, generate_desktop_content(game))?;
+    Ok(path)
 }
 
-fn remove_shortcut(path: &Path) -> Result<()> {
+fn remove_shortcut(game: &Game, dir: &Path) -> Result<()> {
+    let path = shortcut_path(game, dir);
     if path.exists() {
         fs::remove_file(path)?;
     }
@@ -220,38 +173,23 @@ fn remove_shortcut(path: &Path) -> Result<()> {
 }
 
 pub fn create_desktop_shortcut(game: &Game) -> Result<PathBuf> {
-    let desktop = desktop_dir()
-        .or_else(|| dirs::home_dir().map(|h| h.join("Desktop")))
-        .context("could not find or create desktop directory")?;
-    fs::create_dir_all(&desktop)?;
-
-    let path = shortcut_path(game, &desktop);
-    write_shortcut(game, &path)?;
-    Ok(path)
+    write_shortcut(game, &desktop_dir())
 }
 
 pub fn create_menu_shortcut(game: &Game) -> Result<PathBuf> {
-    let apps_dir = applications_dir();
-    fs::create_dir_all(&apps_dir)?;
-
-    let path = shortcut_path(game, &apps_dir);
-    write_shortcut(game, &path)?;
-    Ok(path)
+    write_shortcut(game, &applications_dir())
 }
 
 pub fn remove_desktop_shortcut(game: &Game) -> Result<()> {
-    match desktop_dir() {
-        Some(desktop) => remove_shortcut(&shortcut_path(game, &desktop)),
-        None => Ok(()),
-    }
+    remove_shortcut(game, &desktop_dir())
 }
 
 pub fn remove_menu_shortcut(game: &Game) -> Result<()> {
-    remove_shortcut(&shortcut_path(game, &applications_dir()))
+    remove_shortcut(game, &applications_dir())
 }
 
 pub fn desktop_shortcut_exists(game: &Game) -> bool {
-    desktop_dir().is_some_and(|desktop| shortcut_path(game, &desktop).exists())
+    shortcut_path(game, &desktop_dir()).exists()
 }
 
 pub fn menu_shortcut_exists(game: &Game) -> bool {
@@ -271,6 +209,23 @@ pub fn duplicate_game(game: &Game) -> Result<Game> {
     Library::save_game(&new_game)?;
 
     Ok(new_game)
+}
+
+pub fn delete_game(game: &Game) -> Result<()> {
+    let id = &game.metadata.id;
+    Library::remove_game_file(id)?;
+    media::remove_cached_media(id);
+    let shortcuts = [
+        ("desktop", remove_desktop_shortcut(game)),
+        ("menu", remove_menu_shortcut(game)),
+        ("steam", steam::shortcuts::remove_shortcut(game)),
+    ];
+    for (kind, result) in shortcuts {
+        if let Err(e) = result {
+            tracing::warn!("delete_game: {kind} shortcut for {id}: {e}");
+        }
+    }
+    Ok(())
 }
 
 pub fn disk_free_space(path: &str) -> u64 {

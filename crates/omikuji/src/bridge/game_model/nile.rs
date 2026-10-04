@@ -150,7 +150,7 @@ impl super::qobject::GameModel {
             );
         });
 
-        self.as_mut().insert_game_sorted(game);
+        self.as_mut().add_game(game);
 
         tracing::info!("imported '{}' as id '{}'", title, app_name_s);
         QString::from(&app_name_s)

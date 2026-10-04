@@ -222,6 +222,9 @@ pub struct BehaviorSettings {
     pub discord_show_launcher: bool,
     pub notify_on_download_complete: bool,
     pub ignore_steam_runners: bool,
+    pub desktop_shortcut_on_add: bool,
+    pub menu_shortcut_on_add: bool,
+    pub steam_shortcut_on_add: bool,
 }
 
 impl Default for BehaviorSettings {
@@ -238,6 +241,9 @@ impl Default for BehaviorSettings {
             discord_show_launcher: true,
             notify_on_download_complete: true,
             ignore_steam_runners: false,
+            desktop_shortcut_on_add: false,
+            menu_shortcut_on_add: false,
+            steam_shortcut_on_add: false,
         }
     }
 }

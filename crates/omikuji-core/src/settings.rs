@@ -63,6 +63,7 @@ pub struct PathsSettings {
     pub cache_dir: String,
     pub runtime_dir: String,
     pub scripts_dir: String,
+    pub desktop_dir: String,
 }
 
 impl Default for PathsSettings {
@@ -83,6 +84,9 @@ impl Default for PathsSettings {
             cache_dir: s("cache"),
             runtime_dir: s("runtime"),
             scripts_dir: s("scripts"),
+            desktop_dir: dirs::desktop_dir()
+                .map(|p| p.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "~/Desktop".into()),
         }
     }
 }

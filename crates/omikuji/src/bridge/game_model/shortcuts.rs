@@ -78,4 +78,19 @@ impl super::qobject::GameModel {
         self.game_at(index)
             .is_some_and(|game| !game.runner.runner_type.is_steam() && steam::available())
     }
+
+    pub fn refresh_shortcuts(&self, index: i32) {
+        let Some(game) = self.game_at(index) else {
+            return;
+        };
+        if desktop::desktop_shortcut_exists(game) {
+            ok_bool("refresh_desktop_shortcut", desktop::create_desktop_shortcut(game));
+        }
+        if desktop::menu_shortcut_exists(game) {
+            ok_bool("refresh_menu_shortcut", desktop::create_menu_shortcut(game));
+        }
+        if steam::shortcut_exists(game) {
+            ok_bool("refresh_steam_shortcut", steam::create_shortcut(game));
+        }
+    }
 }

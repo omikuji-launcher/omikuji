@@ -69,6 +69,42 @@ Item {
         }
 
         SettingsSection {
+            label: qsTr("Shortcuts for new games")
+            width: parent.width
+
+            SettingsRow {
+                label: qsTr("Desktop")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.desktopShortcutOnAdd : false
+                    onToggled: (val) => appSettings.applyDesktopShortcutOnAdd(val)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("App menu")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.menuShortcutOnAdd : false
+                    onToggled: (val) => appSettings.applyMenuShortcutOnAdd(val)
+                }
+            }
+
+            SettingsRow {
+                label: qsTr("Steam")
+                description: qsTr("Shows up after Steam restarts")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.steamShortcutOnAdd : false
+                    onToggled: (val) => appSettings.applySteamShortcutOnAdd(val)
+                }
+            }
+        }
+
+        SettingsSection {
             label: qsTr("Runners")
             width: parent.width
 

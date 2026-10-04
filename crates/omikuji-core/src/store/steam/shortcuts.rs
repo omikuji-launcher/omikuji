@@ -258,7 +258,9 @@ pub fn create_shortcut(game: &Game) -> Result<PathBuf> {
 pub fn remove_shortcut(game: &Game) -> Result<()> {
     desktop::remove_steam_icon(&game.metadata.id);
 
-    let config = user_config_dir().context("no steam user data found")?;
+    let Some(config) = user_config_dir() else {
+        return Ok(());
+    };
     remove_artwork(&config, shortcut_appid(game));
 
     let path = config.join("shortcuts.vdf");

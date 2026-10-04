@@ -94,7 +94,7 @@ impl super::qobject::GameModel {
             }
         });
 
-        self.as_mut().insert_game_sorted(game);
+        self.as_mut().add_game(game);
 
         tracing::info!("imported '{}' (steam appid: {})", name_str, appid_str);
         true
