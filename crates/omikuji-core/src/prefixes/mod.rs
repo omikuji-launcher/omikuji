@@ -226,6 +226,7 @@ impl PrefixPreset {
 pub fn create_prefix<F: FnMut(&str)>(
     name: &str,
     runner: &str,
+    arch: &str,
     preset: &str,
     on_line: F,
 ) -> anyhow::Result<()> {
@@ -238,7 +239,8 @@ pub fn create_prefix<F: FnMut(&str)>(
 
     let game = Game::new("Ofuda".to_string(), PathBuf::new())
         .with_prefix(dir.to_string_lossy())
-        .with_runner_version(runner);
+        .with_runner_version(runner)
+        .with_prefix_arch(arch);
 
     wine_tools::run_streamed(&game, PrefixPreset::from_id(preset).tool(), on_line)?;
     dll_packs::install_prefix_defaults(&dir)

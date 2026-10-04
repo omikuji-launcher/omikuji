@@ -230,15 +230,10 @@ Item {
             Row {
                 width: parent.width
                 spacing: root.badgeGap
-                M3Dropdown {
+                ArchDropdown {
                     id: archDd
-                    label: SettingLabels.label("wine.prefix_arch")
                     width: parent.width - root.badgeSlot
-                    options: [
-                        { label: qsTr("64-bit (win64)"), value: "win64" },
-                        { label: qsTr("32-bit (win32)"), value: "win32" }
-                    ]
-                    currentIndex: root.cfg["wine.prefix_arch"] === "win32" ? 1 : 0
+                    arch: root.cfg["wine.prefix_arch"] || "win64"
                     onSelected: (val) => root.update("wine.prefix_arch", val)
                 }
                 ResetBadge {

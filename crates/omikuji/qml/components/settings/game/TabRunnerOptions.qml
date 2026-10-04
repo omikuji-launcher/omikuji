@@ -173,14 +173,9 @@ Item {
                     onTextEdited: (t) => root.updateField("wine.prefix", t)
                 }
 
-                M3Dropdown {
-                    label: qsTr("Architecture")
+                ArchDropdown {
                     width: parent.width
-                    options: [
-                        { label: qsTr("64-bit (win64)"), value: "win64" },
-                        { label: qsTr("32-bit (win32)"), value: "win32" }
-                    ]
-                    currentIndex: root.config["wine.prefix_arch"] === "win32" ? 1 : 0
+                    arch: root.config["wine.prefix_arch"] || "win64"
                     onSelected: (val) => root.updateField("wine.prefix_arch", val)
                 }
             }

@@ -86,6 +86,7 @@ pub mod qobject {
             self: Pin<&mut OfudaBridge>,
             name: &QString,
             runner: &QString,
+            arch: &QString,
             preset: &QString,
         );
 
@@ -195,7 +196,13 @@ impl qobject::OfudaBridge {
         ok
     }
 
-    fn create_prefix(mut self: Pin<&mut Self>, name: &QString, runner: &QString, preset: &QString) {
+    fn create_prefix(
+        mut self: Pin<&mut Self>,
+        name: &QString,
+        runner: &QString,
+        arch: &QString,
+        preset: &QString,
+    ) {
         if self.creating {
             return;
         }
@@ -203,10 +210,11 @@ impl qobject::OfudaBridge {
         let qt = self.as_mut().qt_thread();
         let name = name.to_string();
         let runner = runner.to_string();
+        let arch = arch.to_string();
         let preset = preset.to_string();
         std::thread::spawn(move || {
             let line_qt = qt.clone();
-            let res = core_prefixes::create_prefix(&name, &runner, &preset, |line| {
+            let res = core_prefixes::create_prefix(&name, &runner, &arch, &preset, |line| {
                 let l = line.to_string();
                 let _ = line_qt.queue(move |mut obj: Pin<&mut qobject::OfudaBridge>| {
                     obj.as_mut().create_output(QString::from(&l));

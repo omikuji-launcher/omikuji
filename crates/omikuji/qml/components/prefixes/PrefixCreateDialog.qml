@@ -16,6 +16,7 @@ DialogCard {
     property string nameValue: ""
     property var defaults: null
     property string runnerValue: ""
+    property string archValue: "win64"
     property string setValue: "base"
     property string outputText: ""
 
@@ -26,6 +27,7 @@ DialogCard {
     function show() {
         nameValue = ""
         runnerValue = ""
+        archValue = (defaults ? defaults.getConfig()["wine.prefix_arch"] : "") || "win64"
         root.errorText = ""
         outputText = ""
         open()
@@ -76,6 +78,12 @@ DialogCard {
                 Component.onCompleted: root.runnerValue = currentValue
             }
 
+            ArchDropdown {
+                width: parent.width
+                arch: root.archValue
+                onSelected: (v) => root.archValue = v
+            }
+
             M3Dropdown {
                 label: qsTr("Set")
                 width: parent.width
@@ -124,7 +132,7 @@ DialogCard {
             text: root.busy ? qsTr("Working…") : qsTr("Create")
             variant: "filled"
             enabled: !root.busy && root.nameValue.trim() !== "" && !!root.runnerValue
-            onClicked: root.ofudaBridge.createPrefix(root.nameValue.trim(), root.runnerValue, root.setValue)
+            onClicked: root.ofudaBridge.createPrefix(root.nameValue.trim(), root.runnerValue, root.archValue, root.setValue)
         }
     }
 }

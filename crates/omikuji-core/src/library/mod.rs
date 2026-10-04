@@ -606,6 +606,11 @@ impl Game {
         self
     }
 
+    pub fn with_prefix_arch(mut self, arch: impl Into<String>) -> Self {
+        self.wine.prefix_arch = arch.into();
+        self
+    }
+
     pub fn id(&self) -> &str {
         &self.metadata.id
     }
