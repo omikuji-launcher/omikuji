@@ -79,7 +79,7 @@ Item {
             anchors.fill: parent
             variant: "filled"
             danger: true
-            icon: root.iconOnly ? "stop" : ""
+            icon: root.iconOnly ? "skull" : ""
             text: root.iconOnly ? "" : qsTr("Stop")
             onClicked: {
                 if (root.actions) root.actions.stop(root.gameId)

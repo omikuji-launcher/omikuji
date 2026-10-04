@@ -13,6 +13,7 @@ Item {
     property bool cache: true
     property int iconSize: 18
     property real radius: Theme.radius.sm
+    property color tint: Theme.secondary
 
     readonly property bool hasImage: img.status === Image.Ready
 
@@ -23,7 +24,7 @@ Item {
         anchors.fill: parent
         visible: !root.hasImage
         radius: root.radius
-        fillColor: Theme.alpha(Theme.secondary, 0.15)
+        fillColor: Theme.alpha(root.tint, 0.15)
     }
 
     SvgIcon {
@@ -31,14 +32,14 @@ Item {
         visible: !root.hasImage && root.icon !== ""
         name: root.icon
         size: root.iconSize
-        color: Theme.secondary
+        color: root.tint
     }
 
     Text {
         anchors.centerIn: parent
         visible: !root.hasImage && root.icon === ""
         text: root.badge !== "" ? root.badge : root.monogram.charAt(0).toUpperCase()
-        color: Theme.secondary
+        color: root.tint
         font.pixelSize: Theme.type.title.size
         font.weight: Font.DemiBold
     }

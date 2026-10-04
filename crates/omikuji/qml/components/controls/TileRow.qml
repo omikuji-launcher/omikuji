@@ -14,6 +14,8 @@ Rectangle {
     property real tileSize: 36
     property string title: ""
     property string subtitle: ""
+    property bool danger: false
+    readonly property color tint: danger ? Theme.error : Theme.secondary
     property alias titleAccessories: accessoryRow.data
     default property alias trailing: trailingRow.data
 
@@ -29,6 +31,7 @@ Rectangle {
         id: tile
         width: root.tileSize
         height: root.tileSize
+        tint: root.tint
         anchors.left: parent.left
         anchors.leftMargin: Theme.space.sm
         anchors.verticalCenter: parent.verticalCenter
@@ -49,7 +52,7 @@ Rectangle {
             Text {
                 width: Math.min(implicitWidth, textCol.width - accessoryRow.width - Theme.space.xs)
                 text: root.title
-                color: Theme.text
+                color: root.danger ? Theme.error : Theme.text
                 font.pixelSize: Theme.type.body.size
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
