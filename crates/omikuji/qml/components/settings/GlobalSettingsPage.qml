@@ -27,6 +27,7 @@ Item {
     signal manageSetsRequested(string kind)
     signal manageFontSizesRequested()
     signal manageRadiiRequested()
+    signal colorPickRequested(color initial, var onPicked)
 
     signal prefixOpenRequested(var prefix)
     signal prefixCreateRequested()
@@ -142,6 +143,7 @@ Item {
                 appSettings: root.appSettings
                 onManageFontSizesRequested: root.manageFontSizesRequested()
                 onManageRadiiRequested: root.manageRadiiRequested()
+                onColorPickRequested: (initial, onPicked) => root.colorPickRequested(initial, onPicked)
             }
         }
 

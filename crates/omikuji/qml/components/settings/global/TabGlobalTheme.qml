@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import omikuji 1.0
-import QtQuick.Dialogs
 
 Item {
     id: root
@@ -11,6 +10,7 @@ Item {
 
     signal manageFontSizesRequested()
     signal manageRadiiRequested()
+    signal colorPickRequested(color initial, var onPicked)
 
     readonly property int rowLabelWidth: 200
 
@@ -29,6 +29,8 @@ Item {
 
     property var overrides: ({})
     property var fonts: []
+    readonly property var fontOptions: [{ label: qsTr("Default"), value: "" }]
+        .concat(fonts.map(f => ({ label: f, value: f })))
 
     implicitHeight: content.height
 
@@ -47,22 +49,16 @@ Item {
         return _hasOverride(token) ? overrides[token] : Theme[token]
     }
 
+    function _fontIndex(family) {
+        return fonts.indexOf(family) + 1
+    }
+
     onAppSettingsChanged: _refresh()
     Component.onCompleted: _refresh()
 
     Connections {
         target: root.appSettings
         function onThemeChanged() { root._refresh() }
-    }
-
-    ColorDialog {
-        id: pickerDialog
-        property string targetToken: ""
-        onAccepted: {
-            if (root.appSettings && targetToken !== "") {
-                root.appSettings.setColorOverride(targetToken, selectedColor.toString())
-            }
-        }
     }
 
     Column {
@@ -113,23 +109,17 @@ Item {
                             font.pixelSize: Theme.type.label.size
                         }
 
-                        Rectangle {
+                        ColorSwatch {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 28
-                            height: 28
-                            radius: 11
-                            color: root._effective(tokenRow.modelData.key)
-                            border.width: 1
-                            border.color: Theme.surfaceBorder
+                            fillColor: root._effective(tokenRow.modelData.key)
 
                             PressArea {
                                 anchors.fill: parent
                                 ringRadius: parent.radius
                                 enabled: root.appSettings && !root.appSettings.followSystemColors
                                 onActivated: {
-                                    pickerDialog.targetToken = tokenRow.modelData.key
-                                    pickerDialog.selectedColor = root._effective(tokenRow.modelData.key)
-                                    pickerDialog.open()
+                                    const key = tokenRow.modelData.key
+                                    root.colorPickRequested(root._effective(key), (c) => root.appSettings.setColorOverride(key, c))
                                 }
                             }
                         }
@@ -176,22 +166,8 @@ Item {
 
                 M3Dropdown {
                     width: 260
-                    options: {
-                        let arr = [{ label: qsTr("Default"), value: "" }]
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            arr.push({ label: root.fonts[i], value: root.fonts[i] })
-                        }
-                        return arr
-                    }
-                    currentIndex: {
-                        if (!root.appSettings) return 0
-                        let v = root.appSettings.fontFamily
-                        if (!v) return 0
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            if (root.fonts[i] === v) return i + 1
-                        }
-                        return 0
-                    }
+                    options: root.fontOptions
+                    currentIndex: root._fontIndex(root.appSettings ? root.appSettings.fontFamily : "")
                     onSelected: (value) => root.appSettings.applyFontFamily(value)
                 }
             }
@@ -203,22 +179,8 @@ Item {
 
                 M3Dropdown {
                     width: 260
-                    options: {
-                        let arr = [{ label: qsTr("Default"), value: "" }]
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            arr.push({ label: root.fonts[i], value: root.fonts[i] })
-                        }
-                        return arr
-                    }
-                    currentIndex: {
-                        if (!root.appSettings) return 0
-                        let v = root.appSettings.fontFamilyMono
-                        if (!v) return 0
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            if (root.fonts[i] === v) return i + 1
-                        }
-                        return 0
-                    }
+                    options: root.fontOptions
+                    currentIndex: root._fontIndex(root.appSettings ? root.appSettings.fontFamilyMono : "")
                     onSelected: (value) => root.appSettings.applyFontFamilyMono(value)
                 }
             }
@@ -230,22 +192,8 @@ Item {
 
                 M3Dropdown {
                     width: 260
-                    options: {
-                        let arr = [{ label: qsTr("Default"), value: "" }]
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            arr.push({ label: root.fonts[i], value: root.fonts[i] })
-                        }
-                        return arr
-                    }
-                    currentIndex: {
-                        if (!root.appSettings) return 0
-                        let v = root.appSettings.fontFamilyLogs
-                        if (!v) return 0
-                        for (let i = 0; i < root.fonts.length; i++) {
-                            if (root.fonts[i] === v) return i + 1
-                        }
-                        return 0
-                    }
+                    options: root.fontOptions
+                    currentIndex: root._fontIndex(root.appSettings ? root.appSettings.fontFamilyLogs : "")
                     onSelected: (value) => root.appSettings.applyFontFamilyLogs(value)
                 }
             }

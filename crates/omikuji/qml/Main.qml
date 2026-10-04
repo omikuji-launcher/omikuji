@@ -1100,15 +1100,18 @@ property real cardZoom: appSettings.cardZoom
 
     TemplateVarsDialog {
         id: templateVarsDialog
-        anchors.fill: parent
         appSettings: root.appSettingsRef
         gameModel: root.gameModelRef
     }
 
     LogRulesDialog {
         id: logRulesDialog
-        anchors.fill: parent
-        appSettings: appSettings
+        appSettings: root.appSettingsRef
+        onColorPickRequested: (initial, onPicked) => colorPickerDialog.pick(initial, onPicked)
+    }
+
+    ColorPickerDialog {
+        id: colorPickerDialog
     }
 
     CategoriesController {
@@ -1585,6 +1588,7 @@ property real cardZoom: appSettings.cardZoom
                 }
                 onManageFontSizesRequested: fontSizesDialog.open()
                 onManageRadiiRequested: radiiDialog.open()
+                onColorPickRequested: (initial, onPicked) => colorPickerDialog.pick(initial, onPicked)
                 onManageLogRulesRequested: logRulesDialog.show()
                 onCategoryAddRequested: categoriesController.showAdd()
                 onCategoryEditRequested: (idx, entry) => categoriesController.showEdit(idx, entry)

@@ -10,6 +10,8 @@ DialogCard {
 
     property var appSettings: null
 
+    signal colorPickRequested(color initial, var onPicked)
+
     title: qsTr("Log highlight colors")
     maxWidth: 620
 
@@ -80,14 +82,20 @@ DialogCard {
                     onTextEdited: (t) => rulesModel.setProperty(ruleRow.index, "colorValue", t)
                 }
 
-                Rectangle {
+                ColorSwatch {
                     Layout.alignment: Qt.AlignVCenter
-                    width: 22
-                    height: 22
-                    radius: Theme.radius.xs
-                    color: root.swatchColor(ruleRow.colorValue)
-                    border.width: 1
-                    border.color: Theme.outline
+                    fillColor: root.swatchColor(ruleRow.colorValue)
+
+                    PressArea {
+                        anchors.fill: parent
+                        ringRadius: parent.radius
+                        onActivated: {
+                            const shown = root.swatchColor(ruleRow.colorValue)
+                            const index = ruleRow.index
+                            root.colorPickRequested(shown === "transparent" ? Theme.accent : shown,
+                                (c) => rulesModel.setProperty(index, "colorValue", c))
+                        }
+                    }
                 }
 
                 IconButton {
