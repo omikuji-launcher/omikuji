@@ -1,5 +1,6 @@
 use crate::fs_util::write_atomic;
 use crate::http::{self, ResponseExt};
+use crate::settings;
 use crate::template_vars::TemplateVars;
 use anyhow::{Context, Result};
 use fs_err as fs;
@@ -77,7 +78,16 @@ const ICON_DIMENSION: &str = "512";
 const ICON_QUERY: [(&str, &str); 1] = [("dimensions", ICON_DIMENSION)];
 const GRID_QUERY: [(&str, &str); 1] = [("dimensions", "600x900")];
 const ICO_MIME: &str = "image/vnd.microsoft.icon";
-const SGDB_API_KEY: &str = "b0e57477a2e9665d6e1789d72cf0f334";
+const BUILTIN_SGDB_API_KEY: &str = "b0e57477a2e9665d6e1789d72cf0f334";
+
+fn sgdb_api_key() -> String {
+    let custom = settings::get().media.sgdb_api_key.trim().to_string();
+    if custom.is_empty() {
+        BUILTIN_SGDB_API_KEY.into()
+    } else {
+        custom
+    }
+}
 
 #[derive(Debug, Deserialize)]
 struct SgdbResponse<T> {
@@ -293,7 +303,7 @@ fn sgdb_get<T: DeserializeOwned>(url: reqwest::Url) -> Result<T> {
 
     let resp = client
         .get(url.clone())
-        .bearer_auth(SGDB_API_KEY)
+        .bearer_auth(sgdb_api_key())
         .send()
         .with_context(|| format!("requesting {}", url))?;
 

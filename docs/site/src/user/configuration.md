@@ -25,9 +25,12 @@ prefixes_dir = "/home/reakjra/.local/share/omikuji/prefixes"
 cache_dir = "/home/reakjra/.local/share/omikuji/cache"
 runtime_dir = "/home/reakjra/.local/share/omikuji/runtime"
 scripts_dir = "/home/reakjra/.local/share/omikuji/scripts"
+desktop_dir = "/home/reakjra/Desktop"
 ```
 
 A leading `~` is expanded to `$HOME` on read (crazy right?).
+
+`desktop_dir` is where desktop shortcuts go. It starts as your XDG desktop folder, if somehow you manage to not have any set, `~/Desktop` is used as a fallback.
 
 ### `[assets]`
 
@@ -72,6 +75,15 @@ install_dirs = [""]
 Optional Steam Web API key ([get one here](https://steamcommunity.com/dev/apikey)). Without it, Steam library listing still works (read locally from ACF files), only remote playtime sync is off.
 
 `install_dirs` points omikuji at Steam installations outside the checked locations (`~/.steam`, `~/.local/share/Steam`, the Flatpak and Snap paths, `/usr/share/steam`), for example `install_dirs = ["/mnt/games/Steam"]`. Entries are read before the built-in locations and in the order given, so they also decide which install is used when more than one exists, and they cover library listing, Proton detection and compatibility tool links. Library folders on other drives are read from `libraryfolders.vdf` and do not need listing here.
+
+### `[media]`
+
+```toml
+[media]
+sgdb_api_key = ""
+```
+
+Optional [SteamGridDB](https://www.steamgriddb.com/profile/preferences/api) API key used to fetch covers, banners and icons. If empty it uses the built-in key.
 
 
 ## `app.toml`

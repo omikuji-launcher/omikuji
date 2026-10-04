@@ -22,6 +22,13 @@ pub struct Settings {
     pub scripts: ScriptsSettings,
     pub components: ComponentsSettings,
     pub steam: SteamSettings,
+    pub media: MediaSettings,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default)]
+pub struct MediaSettings {
+    pub sgdb_api_key: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
