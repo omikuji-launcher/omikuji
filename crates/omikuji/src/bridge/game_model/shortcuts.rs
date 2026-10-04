@@ -96,7 +96,10 @@ impl super::qobject::GameModel {
             return;
         };
         if desktop::desktop_shortcut_exists(game) {
-            ok_bool("refresh_desktop_shortcut", desktop::create_desktop_shortcut(game));
+            ok_bool(
+                "refresh_desktop_shortcut",
+                desktop::create_desktop_shortcut(game),
+            );
         }
         if desktop::menu_shortcut_exists(game) {
             ok_bool("refresh_menu_shortcut", desktop::create_menu_shortcut(game));

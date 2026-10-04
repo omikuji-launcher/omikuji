@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use omikuji_core::app_settings::AppSettings;
-use omikuji_core::library::{Game, Library};
+use omikuji_core::library::{Game, Library, id_from_slug_id};
 use omikuji_core::process::{ErrorAction, ErrorNotification};
 use omikuji_core::{desktop, launch, process, updates};
 
@@ -145,7 +145,7 @@ enum Resolved<'a> {
 
 fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
     let lower = input.to_lowercase();
-    let id = omikuji_core::library::id_from_slug_id(&lower);
+    let id = id_from_slug_id(&lower);
 
     if let Some(g) = lib
         .game

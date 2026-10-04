@@ -1,5 +1,6 @@
 use crate::app_settings::AppSettings;
 use crate::library::{Game, id_from_slug_id};
+use std::cmp::Reverse;
 use std::path::{Path, PathBuf};
 
 pub fn app_logs_dir() -> PathBuf {
@@ -48,7 +49,7 @@ fn prune(dir: &Path, keep: usize) {
         .filter(|entry| entry.path().extension().is_some_and(|ext| ext == "log"))
         .filter_map(|entry| Some((entry.metadata().ok()?.modified().ok()?, entry.path())))
         .collect();
-    logs.sort_by(|a, b| b.0.cmp(&a.0));
+    logs.sort_by_key(|(modified, _)| Reverse(*modified));
     for (_, path) in logs.into_iter().skip(keep) {
         if let Err(e) = fs_err::remove_file(&path) {
             tracing::warn!("{e}");

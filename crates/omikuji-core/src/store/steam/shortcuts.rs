@@ -1,6 +1,6 @@
 use crate::desktop;
 use crate::fs_util::write_atomic;
-use crate::library::Game;
+use crate::library::{Game, id_from_slug_id};
 use crate::media::{MediaType, media_path};
 use anyhow::{Context, Result};
 use fs_err as fs;
@@ -194,7 +194,7 @@ fn matches_game(entry: &Entry, game: &Game) -> bool {
     };
     options
         .split_whitespace()
-        .any(|t| crate::library::id_from_slug_id(t) == game.metadata.id)
+        .any(|t| id_from_slug_id(t) == game.metadata.id)
 }
 
 pub fn shortcut_exists(game: &Game) -> bool {
