@@ -13,11 +13,17 @@ Item {
     property bool chevrons: true
     property real chevronOffset: 0
 
-    readonly property real _above: root.flickable ? root.flickable.contentY - root.flickable.originY : 0
-    readonly property real _below: root.flickable ? root.flickable.contentHeight - root.flickable.height - root._above : 0
+    readonly property bool _laidOut: root.flickable !== null && root.flickable.height > 0
+    readonly property real _above: root._laidOut ? root.flickable.contentY - root.flickable.originY : 0
+    readonly property real _below: root._laidOut ? root.flickable.contentHeight - root.flickable.height - root._above : 0
 
     function _ramp(distance) {
         return distance <= 2 ? 0 : Math.min(1, distance / 12)
+    }
+
+    DelayedFlag {
+        id: settled
+        source: root._laidOut
     }
 
     Rectangle {
@@ -32,7 +38,7 @@ Item {
             GradientStop { position: 0.45; color: Theme.alpha(root.surfaceColor, 0.6) }
             GradientStop { position: 1.0; color: Theme.alpha(root.surfaceColor, 0) }
         }
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
     }
 
     Rectangle {
@@ -47,7 +53,7 @@ Item {
             GradientStop { position: 0.55; color: Theme.alpha(root.surfaceColor, 0.6) }
             GradientStop { position: 1.0; color: root.surfaceColor }
         }
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
     }
 
     SvgIcon {
@@ -61,7 +67,7 @@ Item {
         rotation: 90
         color: Theme.textMuted
         opacity: root._ramp(root._above)
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
     }
 
     SvgIcon {
@@ -75,6 +81,6 @@ Item {
         rotation: -90
         color: Theme.textMuted
         opacity: root._ramp(root._below)
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
     }
 }

@@ -238,6 +238,11 @@ Item {
             onTriggered: popup.syncPosition()
         }
 
+        DelayedFlag {
+            id: popupSettled
+            source: popup.visible && popup.width > 0
+        }
+
         WheelSink {
             anchors.fill: parent
         }
@@ -309,7 +314,7 @@ Item {
                             height: optionText.implicitHeight
                             clip: true
 
-                            readonly property real overflow: Math.max(0, optionText.implicitWidth - width)
+                            readonly property real overflow: width > 0 ? Math.max(0, optionText.implicitWidth - width) : 0
                             property real pan: 0
                             property bool manualPan: false
                             readonly property color bg: optionRow.lit
@@ -366,7 +371,7 @@ Item {
                                     GradientStop { position: 0.0; color: labelClip.bg }
                                     GradientStop { position: 1.0; color: Theme.alpha(labelClip.bg, 0) }
                                 }
-                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: 120 } }
                             }
 
                             Rectangle {
@@ -380,7 +385,7 @@ Item {
                                     GradientStop { position: 0.0; color: Theme.alpha(labelClip.bg, 0) }
                                     GradientStop { position: 1.0; color: labelClip.bg }
                                 }
-                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: 120 } }
                             }
                         }
 
