@@ -13,6 +13,8 @@
 namespace {
 QTranslator* s_translator = nullptr;
 const QString k_i18n_dir = QStringLiteral(":/qt/qml/omikuji/i18n");
+// the source language only ships for its plural forms, the picker already lists it by hand
+const QString k_source_lang = QStringLiteral("en");
 }
 
 extern "C" void omikuji_install_translator(const char* lang) {
@@ -47,7 +49,7 @@ extern "C" const char* omikuji_available_languages_json() {
     for (const QString& file : files) {
         QString code = QFileInfo(file).completeBaseName();
         code.remove(0, static_cast<int>(QStringLiteral("omikuji_").size()));
-        if (code.isEmpty()) continue;
+        if (code.isEmpty() || code == k_source_lang) continue;
         const QString name = QLocale(code).nativeLanguageName();
         QJsonObject obj;
         obj[QStringLiteral("code")] = code;
