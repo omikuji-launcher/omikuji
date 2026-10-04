@@ -192,8 +192,9 @@ fn matches_game(entry: &Entry, game: &Game) -> bool {
     let Some(Value::Str(options)) = get(entry, "LaunchOptions") else {
         return false;
     };
-    let suffix = format!("_{}", game.metadata.id);
-    options.split_whitespace().any(|t| t.ends_with(&suffix))
+    options
+        .split_whitespace()
+        .any(|t| desktop::launch_target_id(t) == game.metadata.id)
 }
 
 pub fn shortcut_exists(game: &Game) -> bool {
@@ -274,8 +275,7 @@ pub fn remove_shortcut(game: &Game) -> Result<()> {
 }
 
 fn shortcut_appid(game: &Game) -> u32 {
-    let (exe, _) = launch_spec(game);
-    crc32fast::hash(format!("\"{}\"{}", exe, game.metadata.name).as_bytes()) | 0x8000_0000
+    crc32fast::hash(game.metadata.id.as_bytes()) | 0x8000_0000
 }
 
 fn artwork_paths(grid: &Path, appid: u32) -> [PathBuf; 4] {

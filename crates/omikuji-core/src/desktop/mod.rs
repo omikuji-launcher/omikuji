@@ -150,23 +150,51 @@ pub fn game_slug(game: &Game) -> String {
 }
 
 pub fn launch_target(game: &Game) -> String {
-    format!("{}_{}", game_slug(game), game.metadata.id)
+    game.metadata.id.clone()
+}
+
+// older shortcuts launched with slug_id so the id is whatever follows the last underscore so they keep working
+pub fn launch_target_id(arg: &str) -> &str {
+    arg.rsplit_once('_').map_or(arg, |(_, id)| id)
 }
 
 fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {
     dir.join(desktop_filename(&game_slug(game), &game.metadata.id))
 }
 
+fn exec_launches(entry: &str, id: &str) -> bool {
+    entry
+        .lines()
+        .filter_map(|line| line.strip_prefix("Exec="))
+        .flat_map(str::split_whitespace)
+        .any(|arg| launch_target_id(arg) == id)
+}
+
+fn shortcuts_in(game: &Game, dir: &Path) -> Vec<PathBuf> {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    entries
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|ext| ext == "desktop"))
+        .filter(|p| {
+            fs::read_to_string(p).is_ok_and(|entry| exec_launches(&entry, &game.metadata.id))
+        })
+        .collect()
+}
+
 fn write_shortcut(game: &Game, dir: &Path) -> Result<PathBuf> {
     fs::create_dir_all(dir)?;
-    let path = shortcut_path(game, dir);
+    let path = shortcuts_in(game, dir)
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| shortcut_path(game, dir));
     write_executable_atomic(&path, generate_desktop_content(game))?;
     Ok(path)
 }
 
 fn remove_shortcut(game: &Game, dir: &Path) -> Result<()> {
-    let path = shortcut_path(game, dir);
-    if path.exists() {
+    for path in shortcuts_in(game, dir) {
         fs::remove_file(path)?;
     }
     Ok(())
@@ -189,11 +217,11 @@ pub fn remove_menu_shortcut(game: &Game) -> Result<()> {
 }
 
 pub fn desktop_shortcut_exists(game: &Game) -> bool {
-    shortcut_path(game, &desktop_dir()).exists()
+    !shortcuts_in(game, &desktop_dir()).is_empty()
 }
 
 pub fn menu_shortcut_exists(game: &Game) -> bool {
-    shortcut_path(game, &applications_dir()).exists()
+    !shortcuts_in(game, &applications_dir()).is_empty()
 }
 
 pub fn duplicate_game(game: &Game) -> Result<Game> {

@@ -117,7 +117,7 @@ fn run_game(input: &str, notify_gui: bool) -> i32 {
             None => {
                 report.error(
                     "Couldn't launch",
-                    format!("Several games match `{input}`. Launch it by its full slug_id."),
+                    format!("Several games match `{input}`. Launch it by its id."),
                     ErrorAction::None,
                 );
                 return 2;
@@ -145,19 +145,12 @@ enum Resolved<'a> {
 
 fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
     let lower = input.to_lowercase();
+    let id = desktop::launch_target_id(&lower);
 
     if let Some(g) = lib
         .game
         .iter()
-        .find(|g| desktop::launch_target(g).eq_ignore_ascii_case(&lower))
-    {
-        return Resolved::Found(g);
-    }
-
-    if let Some(g) = lib
-        .game
-        .iter()
-        .find(|g| g.metadata.id.eq_ignore_ascii_case(&lower))
+        .find(|g| g.metadata.id.eq_ignore_ascii_case(id))
     {
         return Resolved::Found(g);
     }
@@ -177,7 +170,7 @@ fn resolve_target<'a>(lib: &'a Library, input: &str) -> Resolved<'a> {
 
 fn pick_from_matches(matches: &[&Game]) -> Option<usize> {
     if !io::stdin().is_terminal() {
-        eprintln!("multiple games match - re-run with slug_id for precision:");
+        eprintln!("multiple games match - re-run with the id for precision:");
         print_matches(matches);
         return None;
     }
