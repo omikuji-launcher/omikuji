@@ -1,6 +1,7 @@
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, BufWriter, Read, Write};
+use std::iter;
 use std::path::PathBuf;
-use std::sync::mpsc::{self, Sender};
+use std::sync::mpsc::{self, SyncSender};
 use std::thread;
 
 use fs_err::OpenOptions;
@@ -10,24 +11,33 @@ use crate::launch::{self, ResolvedLaunch};
 use crate::library::Game;
 use crate::runners;
 
-pub(super) fn spawn_writer(game_id: String, log_path: Option<PathBuf>) -> Sender<String> {
-    let (tx, rx) = mpsc::channel::<String>();
+const BACKLOG_LINES: usize = 4096;
+
+pub(super) fn spawn_writer(game_id: String, log_path: Option<PathBuf>) -> SyncSender<String> {
+    let (tx, rx) = mpsc::sync_channel::<String>(BACKLOG_LINES);
     thread::spawn(move || {
         let mut file = log_path
             .as_ref()
-            .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok());
-        while let Ok(line) = rx.recv() {
-            if let Some(ref mut f) = file {
-                let _ = writeln!(f, "{}", line);
+            .and_then(|p| OpenOptions::new().create(true).append(true).open(p).ok())
+            .map(BufWriter::new);
+        while let Ok(first) = rx.recv() {
+            let batch: Vec<String> = iter::once(first)
+                .chain(rx.try_iter().take(BACKLOG_LINES))
+                .collect();
+            if let Some(f) = file.as_mut() {
+                for line in &batch {
+                    let _ = writeln!(f, "{line}");
+                }
+                let _ = f.flush();
             }
-            game_logs::append_line(&game_id, line);
+            game_logs::append_lines(&game_id, batch);
         }
     });
     tx
 }
 
 // yes pump as in the sexual joke ghaha yeah mature of me
-pub(super) fn pump_lines(pipe: impl Read + Send + 'static, tx: Sender<String>) {
+pub(super) fn pump_lines(pipe: impl Read + Send + 'static, tx: SyncSender<String>) {
     thread::spawn(move || {
         for line in BufReader::new(pipe).lines().map_while(|l| l.ok()) {
             let _ = tx.send(line);

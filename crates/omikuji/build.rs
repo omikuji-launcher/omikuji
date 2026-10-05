@@ -344,6 +344,7 @@ fn main() {
             "src/bridge/defaults.rs",
             "src/bridge/gamepad.rs",
             "src/bridge/input_mode.rs",
+            "src/bridge/text_edits.rs",
             "src/bridge/tray.rs",
         ],
         &out_dir,
@@ -385,7 +386,7 @@ fn main() {
     let builder = builder.qt_module("Widgets");
     println!("cargo:rustc-link-lib=Qt6Widgets");
 
-    // QQuickTextDocument in log_highlighter needs Qt6Quick linked explicitly, ci shenanigans smh
+    // QQuickTextDocument in text_edits needs Qt6Quick linked explicitly, ci shenanigans smh
     let builder = builder.qt_module("Quick");
     println!("cargo:rustc-link-lib=Qt6Quick");
 
@@ -395,7 +396,7 @@ fn main() {
     let builder = builder.qt_module("DBus");
     println!("cargo:rustc-link-lib=Qt6DBus");
 
-    const CPP_SOURCES: [&str; 9] = [
+    const CPP_SOURCES: [&str; 10] = [
         "src/app_icon.cpp",
         "src/app_font.cpp",
         "src/tray_native.cpp",
@@ -405,6 +406,7 @@ fn main() {
         "src/inhibit.cpp",
         "src/input.cpp",
         "src/qt_log.cpp",
+        "src/quick_item.cpp",
     ];
     let qt_private_includes = qt_private_include_dirs();
     let builder = unsafe {

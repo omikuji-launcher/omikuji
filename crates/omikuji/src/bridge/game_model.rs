@@ -398,7 +398,7 @@ pub mod qobject {
         fn drain_game_log_events(self: Pin<&mut GameModel>);
 
         #[qinvokable]
-        fn game_log(self: &GameModel, game_id: &QString) -> QString;
+        fn game_log_since(self: &GameModel, game_id: &QString, seq: u64) -> QString;
 
         #[qinvokable]
         fn clear_game_log(self: &GameModel, game_id: &QString);

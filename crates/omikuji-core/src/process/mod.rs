@@ -113,7 +113,7 @@ impl ProcessManager {
         prepare_runtime(&game, &config.env);
 
         // cleanup for older sessions
-        game_logs::reset_log(&config.game_id);
+        game_logs::clear_log(&config.game_id);
 
         let log_path = if AppSettings::load().behavior.save_game_logs {
             log_files::next_log_path(&log_files::game_logs_dir(&game), &game.slug())

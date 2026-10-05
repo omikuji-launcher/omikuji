@@ -30,4 +30,6 @@ pub mod nile_model;
 pub mod ofuda;
 pub mod scripts;
 pub mod store_model;
+#[allow(clippy::absolute_paths)]
+pub mod text_edits;
 pub mod tray;

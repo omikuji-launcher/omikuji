@@ -5,21 +5,14 @@ pub mod qobject {
         type QSyntaxHighlighter;
 
         include!(<QtGui/QTextDocument>);
-        type QTextDocument;
+        type QTextDocument = super::QTextDocument;
+        include!(<QtQuick/QQuickTextDocument>);
+        type QQuickTextDocument = super::QQuickTextDocument;
 
         include!("cxx-qt-lib/qstring.h");
         type QString = cxx_qt_lib::QString;
         include!("cxx-qt-lib/qcolor.h");
         type QColor = cxx_qt_lib::QColor;
-    }
-
-    unsafe extern "C++Qt" {
-        include!(<QtQuick/QQuickTextDocument>);
-        #[qobject]
-        type QQuickTextDocument;
-
-        #[cxx_name = "textDocument"]
-        fn text_document(self: &QQuickTextDocument) -> *mut QTextDocument;
     }
 
     extern "RustQt" {
@@ -69,6 +62,8 @@ use cxx_qt::CxxQtType;
 use cxx_qt_lib::QColor;
 use omikuji_core::app_settings::LogRule;
 use regex::Regex;
+
+use super::text_edits::qobject::{QQuickTextDocument, QTextDocument};
 
 #[derive(Default)]
 pub struct LogHighlighterRust {

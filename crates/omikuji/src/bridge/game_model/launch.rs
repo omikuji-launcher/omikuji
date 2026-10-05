@@ -261,8 +261,9 @@ impl super::qobject::GameModel {
         }
     }
 
-    pub fn game_log(&self, game_id: &QString) -> QString {
-        QString::from(&game_logs::get_log(&game_id.to_string()))
+    pub fn game_log_since(&self, game_id: &QString, seq: u64) -> QString {
+        let delta = game_logs::since(&game_id.to_string(), seq);
+        QString::from(&serde_json::to_string(&delta).unwrap_or_default())
     }
 
     pub fn clear_game_log(&self, game_id: &QString) {

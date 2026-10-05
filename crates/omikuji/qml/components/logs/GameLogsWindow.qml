@@ -18,7 +18,11 @@ Window {
     property bool autoScroll: true
     property bool justSaved: false
     property bool searchExpanded: false
-    property string rawLog: ""
+    property real firstSeq: 0
+    property real nextSeq: 0
+    property var lineLengths: []
+    property real nextSyncAt: 0
+    readonly property int syncBackoff: 4
 
     signal windowClosed()
 
@@ -29,32 +33,52 @@ Window {
     title: qsTr("omikuji · %1 logs").arg(gameName || gameId)
     color: Theme.bg
 
-    function refresh() {
+    function sync() {
         if (!gameModel) return
-        logWindow.rawLog = gameModel.game_log(gameId)
-        textArea.text = rawLog
-        if (autoScroll && (!searchExpanded || searchInput.text.length === 0)) {
-            textArea.cursorPosition = textArea.length
+        let delta = JSON.parse(gameModel.game_log_since(gameId, nextSeq))
+        let dropped = Math.min(delta.first_seq - firstSeq, lineLengths.length)
+        if (dropped > 0)
+            textArea.remove(0, lineLengths.splice(0, dropped).reduce((sum, len) => sum + len, 0))
+        if (delta.text.length > 0) {
+            textArea.insert(textArea.length, delta.text)
+            for (const line of delta.text.split("\n").slice(0, -1))
+                lineLengths.push(line.length + 1)
         }
+        firstSeq = delta.first_seq
+        nextSeq = delta.next_seq
+    }
+
+    function requestSync() {
+        let wait = nextSyncAt - Date.now()
+        if (wait <= 0) {
+            syncLive()
+        } else if (!syncDelay.running) {
+            syncDelay.interval = wait
+            syncDelay.start()
+        }
+    }
+
+    function syncLive() {
+        let keptY = scroll.contentItem.contentY
+        let started = Date.now()
+        sync()
+        let finished = Date.now()
+        nextSyncAt = finished + (finished - started) * syncBackoff
+        if (autoScroll)
+            timerScroll.start()
+        else
+            scroll.contentItem.contentY = keptY
+    }
+
+    Timer {
+        id: syncDelay
+        onTriggered: logWindow.syncLive()
     }
 
     Connections {
         target: logWindow.gameModel
         function onGameLogAppended(id) {
-            if (id !== logWindow.gameId) return
-            let keptY = scroll.contentItem.contentY
-            let fresh = logWindow.gameModel.game_log(logWindow.gameId)
-            if (fresh.startsWith(logWindow.rawLog)) {
-                if (fresh.length > logWindow.rawLog.length)
-                    textArea.insert(textArea.length, fresh.substring(logWindow.rawLog.length))
-            } else {
-                textArea.text = fresh
-            }
-            logWindow.rawLog = fresh
-            if (logWindow.autoScroll)
-                timerScroll.start()
-            else
-                scroll.contentItem.contentY = keptY
+            if (id === logWindow.gameId) logWindow.requestSync()
         }
     }
 
@@ -84,8 +108,13 @@ Window {
 
     Component.onCompleted: {
         highlighter.attach(textArea.textDocument)
+        // so basically this is needed cuz a readOnly textarea still keeps undo history
+        // also qt only turns on visible-lines-only rendering in setText but we only ever insert
+        TextEdits.setUndoRedoEnabled(textArea.textDocument, false)
+        TextEdits.setObservesViewport(textArea, true)
         visible = true
-        refresh()
+        sync()
+        timerScroll.start()
         raise()
         requestActivate()
     }
@@ -197,7 +226,7 @@ Window {
                     onClicked: {
                         if (logWindow.gameModel) {
                             logWindow.gameModel.clear_game_log(logWindow.gameId)
-                            logWindow.refresh()
+                            logWindow.sync()
                         }
                     }
                 }
@@ -322,7 +351,7 @@ Window {
             currentMatchIndex = -1
             if (searchInput.text.length === 0) return
 
-            let content = logWindow.rawLog.toLowerCase()
+            let content = textArea.text.toLowerCase()
             let query = searchInput.text.toLowerCase()
             let pos = content.indexOf(query)
             while (pos !== -1) {
