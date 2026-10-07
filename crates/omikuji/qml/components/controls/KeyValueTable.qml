@@ -35,31 +35,26 @@ Item {
         }
     }
 
-    function _modelEquals(obj) {
-        let filtered = []
-        for (let i = 0; i < listModel.count; ++i) {
-            let row = listModel.get(i)
-            let k = (row.k || "").trim()
-            if (k === "") continue
-            filtered.push([k, String(row.v || "")])
-        }
-        let objKeys = Object.keys(obj)
-        if (filtered.length !== objKeys.length) return false
-        for (let pair of filtered) {
-            if (!(pair[0] in obj) || String(obj[pair[0]]) !== pair[1]) return false
-        }
-        return true
-    }
-
-    function _emit() {
+    function _rowsObject() {
         let obj = {}
         for (let i = 0; i < listModel.count; ++i) {
             let row = listModel.get(i)
             let k = (row.k || "").trim()
-            if (k === "") continue
+            if (k === "" || k in obj) continue
             obj[k] = String(row.v || "")
         }
-        root.changed(JSON.stringify(obj))
+        return obj
+    }
+
+    function _modelEquals(obj) {
+        let rows = _rowsObject()
+        let keys = Object.keys(rows)
+        if (keys.length !== Object.keys(obj).length) return false
+        return keys.every(k => k in obj && String(obj[k]) === rows[k])
+    }
+
+    function _emit() {
+        root.changed(JSON.stringify(_rowsObject()))
     }
 
     function _addRow() {
