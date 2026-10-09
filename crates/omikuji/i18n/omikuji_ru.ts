@@ -6,27 +6,27 @@
     <message>
         <location filename="../qml/components/library/AddDialog.qml" line="15"/>
         <source>Add game</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить игру</translation>
     </message>
     <message>
         <location filename="../qml/components/library/AddDialog.qml" line="16"/>
         <source>Add a library entry for a game you have on disk</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавьте в библиотеку игру, которая есть у вас на диске</translation>
     </message>
     <message>
         <location filename="../qml/components/library/AddDialog.qml" line="22"/>
         <source>Install script</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить скрипт</translation>
     </message>
     <message>
         <location filename="../qml/components/library/AddDialog.qml" line="23"/>
         <source>Use scripts to download and set up entries for you</source>
-        <translation type="unfinished"></translation>
+        <translation>Используйте скрипты для загрузки и настройки для вас</translation>
     </message>
     <message>
         <location filename="../qml/components/library/AddDialog.qml" line="29"/>
         <source>Add to library</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить в библиотеку</translation>
     </message>
 </context>
 <context>
@@ -34,32 +34,32 @@
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="23"/>
         <source>New Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Новая игра</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="25"/>
         <source>Create &amp; Play</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать и играть</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="26"/>
         <source>Create</source>
-        <translation type="unfinished"></translation>
+        <translation>Создать</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="36"/>
         <source>Game Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Информация об игре</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="37"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="42"/>
         <source>System</source>
-        <translation type="unfinished"></translation>
+        <translation>Система</translation>
     </message>
 </context>
 <context>
@@ -67,12 +67,12 @@
     <message>
         <location filename="../qml/components/controls/ArchDropdown.qml" line="9"/>
         <source>64-bit (win64)</source>
-        <translation type="unfinished"></translation>
+        <translation>64-битная (win64)</translation>
     </message>
     <message>
         <location filename="../qml/components/controls/ArchDropdown.qml" line="10"/>
         <source>32-bit (win32)</source>
-        <translation type="unfinished"></translation>
+        <translation>32-битная (win32)</translation>
     </message>
 </context>
 <context>
@@ -80,56 +80,56 @@
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="128"/>
         <source>Remove source</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить источник</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="144"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Закрыть</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="161"/>
         <source>Couldn&apos;t parse versions response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Невозможно распознать версии.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="316"/>
         <source>Fetching versions…</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск версий…</translation>
     </message>
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="317"/>
         <source>%n version(s) available</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n версия доступна</numerusform>
+            <numerusform>%n версии доступно</numerusform>
+            <numerusform>%n версий доступно</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="318"/>
         <source>No versions loaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Ни одна из версий ещё не загружена</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="355"/>
         <source>Loading versions</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузка версий</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="361"/>
         <source>Installed runners are still listed under Found runners.</source>
-        <translation type="unfinished"></translation>
+        <translation>Установленные раннеры всё ещё перечислены как &quot;Найденные раннеры&quot;.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="362"/>
         <source>No versions available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет доступных версий.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="403"/>
         <source>Always updates itself to the newest release</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматическое обновление до свежей версии</translation>
     </message>
 </context>
 <context>
@@ -137,72 +137,72 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="30"/>
         <source>Other</source>
-        <translation type="unfinished"></translation>
+        <translation>Другие</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="35"/>
         <source>Edit %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Редактировать %1</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="36"/>
         <source>Add runner source</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить источник раннера</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="36"/>
         <source>Add translation layer source</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить источник слоя трансляции</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="90"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Название</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="101"/>
         <source>The name identifies installed versions on disk, so it can&apos;t be changed here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Это название идентифицирует версии, установленные на диске, поэтому изменить его здесь нельзя.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="108"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>Описание</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="109"/>
         <source>optional</source>
-        <translation type="unfinished"></translation>
+        <translation>Дополнительно</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="116"/>
         <source>Kind</source>
-        <translation type="unfinished"></translation>
+        <translation>Вид</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="124"/>
         <source>Releases URL</source>
-        <translation type="unfinished"></translation>
+        <translation>Ссылка релиза</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="143"/>
         <source>Repo links are converted to their releases API automatically.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ссылки на репозитории автоматически преобразуются в ссылки на API релизов.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="151"/>
         <source>Latest build priority</source>
-        <translation type="unfinished"></translation>
+        <translation>Приоритет для последней сборки</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="161"/>
         <source>Space separated. When a release has several builds, the first one that matches is used, so entries further right have lower priority. If none match, the normal pick is used.</source>
-        <translation type="unfinished"></translation>
+        <translation>Разделяются пробелами. Если для релиза доступно несколько сборок, используется первая подходящая; таким образом, записи, расположенные правее, имеют более низкий приоритет. Если ни одна сборка не подходит, используется стандартный вариант выбора.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="170"/>
         <source>Skip releases with no match</source>
-        <translation type="unfinished"></translation>
+        <translation>Пропуск релизов без соответствия</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="171"/>
@@ -212,17 +212,17 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="181"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="186"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="186"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить</translation>
     </message>
 </context>
 <context>
@@ -230,26 +230,26 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="56"/>
         <source>No versions installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Нет установленных версий</translation>
     </message>
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="57"/>
         <source>%n version(s) installed</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n версия установлена</numerusform>
+            <numerusform>%n версии установлена</numerusform>
+            <numerusform>%n версий установлена</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="108"/>
         <source>Install into new prefixes</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить в новые префиксы</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="91"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Отключить</translation>
     </message>
 </context>
 <context>
@@ -257,27 +257,27 @@
     <message>
         <location filename="../qml/components/singletons/CardStyles.qml" line="8"/>
         <source>Normal</source>
-        <translation type="unfinished"></translation>
+        <translation>Обычный</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CardStyles.qml" line="9"/>
         <source>Fit</source>
-        <translation type="unfinished"></translation>
+        <translation>Подогнать под размер</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CardStyles.qml" line="10"/>
         <source>Frameless</source>
-        <translation type="unfinished"></translation>
+        <translation>Безрамочное</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CardStyles.qml" line="11"/>
         <source>Vignette</source>
-        <translation type="unfinished"></translation>
+        <translation>Виньетка</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CardStyles.qml" line="12"/>
         <source>Poster</source>
-        <translation type="unfinished"></translation>
+        <translation>Постер</translation>
     </message>
 </context>
 <context>
@@ -285,22 +285,22 @@
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="21"/>
         <source>Delete &quot;%1&quot; from your categories?</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить &quot;%1&quot;из ваших категорий?</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="78"/>
         <source>Delete category</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить категорию</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="79"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="80"/>
         <source>Keep</source>
-        <translation type="unfinished"></translation>
+        <translation>Хранить</translation>
     </message>
 </context>
 <context>
@@ -308,27 +308,27 @@
     <message>
         <location filename="../qml/components/categories/CategoryContextMenu.qml" line="53"/>
         <source>New category</source>
-        <translation type="unfinished"></translation>
+        <translation>Новая категория</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryContextMenu.qml" line="54"/>
         <source>Move</source>
-        <translation type="unfinished"></translation>
+        <translation>Переместить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryContextMenu.qml" line="56"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryContextMenu.qml" line="57"/>
         <source>Hide</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryContextMenu.qml" line="58"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
 </context>
 <context>
@@ -336,83 +336,83 @@
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="23"/>
         <source>All games</source>
-        <translation type="unfinished"></translation>
+        <translation>Все игры</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="24"/>
         <source>Favourites</source>
-        <translation type="unfinished"></translation>
+        <translation>Избранные</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="25"/>
         <source>Hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрытые</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="26"/>
         <source>Recent</source>
-        <translation type="unfinished"></translation>
+        <translation>Последние</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="27"/>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="171"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="28"/>
         <source>Tag</source>
-        <translation type="unfinished"></translation>
+        <translation>Тэг</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="52"/>
         <source>Add category</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить категорию</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="52"/>
         <source>Edit category</source>
-        <translation type="unfinished"></translation>
+        <translation>Изменить категорию</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="102"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Название</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="112"/>
         <source>Icon</source>
-        <translation type="unfinished"></translation>
+        <translation>Иконка</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="139"/>
         <source>Change</source>
-        <translation type="unfinished"></translation>
+        <translation>Сменить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="151"/>
         <source>Kind</source>
-        <translation type="unfinished"></translation>
+        <translation>Вид</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="161"/>
         <source>Tag value</source>
-        <translation type="unfinished"></translation>
+        <translation>Значение тега</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="162"/>
         <source>e.g. anime, speedrun</source>
-        <translation type="unfinished"></translation>
+        <translation>Например, аниме, спидран</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="182"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoryEditDialog.qml" line="188"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
 </context>
 <context>
@@ -420,63 +420,63 @@
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="9"/>
         <source>All Games</source>
-        <translation type="unfinished"></translation>
+        <translation>Все игры</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="10"/>
         <source>Favourites</source>
-        <translation type="unfinished"></translation>
+        <translation>Избранные</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="11"/>
         <source>Hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрытые</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="12"/>
         <source>Recent</source>
-        <translation type="unfinished"></translation>
+        <translation>Последние</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="14"/>
         <source>Wine</source>
         <comment>runner name, a proper noun; leave untranslated</comment>
-        <translation type="unfinished"></translation>
+        <translation>Wine</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="15"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Нативная</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="23"/>
         <source>all games</source>
-        <translation type="unfinished"></translation>
+        <translation>все игры</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="24"/>
         <source>favourites</source>
-        <translation type="unfinished"></translation>
+        <translation>избранные</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="25"/>
         <source>hidden games</source>
-        <translation type="unfinished"></translation>
+        <translation>скрытые игры</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="26"/>
         <source>recent (top 10)</source>
-        <translation type="unfinished"></translation>
+        <translation>Последние (топ-10)</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="27"/>
         <source>runner: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>раннер: %1</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/CategoryLabels.qml" line="28"/>
         <source>tag: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>тэг: %1</translation>
     </message>
 </context>
 <context>
@@ -484,17 +484,17 @@
     <message>
         <location filename="../qml/components/app/ChangelogDialog.qml" line="76"/>
         <source>Omikuji</source>
-        <translation type="unfinished"></translation>
+        <translation>Omikuji</translation>
     </message>
     <message>
         <location filename="../qml/components/app/ChangelogDialog.qml" line="135"/>
         <source>Open repository</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть репозиторий</translation>
     </message>
     <message>
         <location filename="../qml/components/app/ChangelogDialog.qml" line="143"/>
         <source>Got it</source>
-        <translation type="unfinished"></translation>
+        <translation>Понятно</translation>
     </message>
 </context>
 <context>
@@ -502,7 +502,7 @@
     <message>
         <location filename="../qml/components/controls/CheckAllHeader.qml" line="35"/>
         <source>Check all</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить всё</translation>
     </message>
 </context>
 <context>
@@ -510,17 +510,17 @@
     <message>
         <location filename="../qml/components/dialogs/ColorPickerDialog.qml" line="19"/>
         <source>Pick a color</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбрать цвет</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ColorPickerDialog.qml" line="220"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ColorPickerDialog.qml" line="226"/>
         <source>Apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить</translation>
     </message>
 </context>
 <context>
@@ -538,32 +538,32 @@
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="30"/>
         <source>%1 is required</source>
-        <translation type="unfinished"></translation>
+        <translation>Требуется %1</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="71"/>
         <source>Install failed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Установка прервана.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="91"/>
         <source>Installing %1... %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Установка %1... %2</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="109"/>
         <source>Not now</source>
-        <translation type="unfinished"></translation>
+        <translation>Не сейчас</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="116"/>
         <source>Retry</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторить</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ComponentRequiredDialog.qml" line="116"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
 </context>
 <context>
@@ -571,12 +571,12 @@
     <message>
         <location filename="../qml/components/dialogs/ConfirmDialog.qml" line="11"/>
         <source>Confirm</source>
-        <translation type="unfinished"></translation>
+        <translation>Подтвердить</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ConfirmDialog.qml" line="12"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
 </context>
 <context>
@@ -587,22 +587,22 @@
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="69"/>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="188"/>
         <source>Library</source>
-        <translation type="unfinished"></translation>
+        <translation>Библиотека</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="290"/>
         <source>%1 hrs</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 часов</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="301"/>
         <source>Last played %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Последняя сыгранная %1</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleCardRow.qml" line="301"/>
         <source>Never played</source>
-        <translation type="unfinished"></translation>
+        <translation>Ранее не запускалось</translation>
     </message>
 </context>
 <context>
@@ -610,17 +610,17 @@
     <message>
         <location filename="../qml/components/consolemode/ConsoleHintBar.qml" line="23"/>
         <source>Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Запустить</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleHintBar.qml" line="24"/>
         <source>Back</source>
-        <translation type="unfinished"></translation>
+        <translation>Назад</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleHintBar.qml" line="25"/>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleHintBar.qml" line="26"/>
@@ -633,17 +633,17 @@
     <message>
         <location filename="../qml/components/consolemode/ConsoleOsk.qml" line="176"/>
         <source>Backspace</source>
-        <translation type="unfinished"></translation>
+        <translation>Бэкспейс</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleOsk.qml" line="214"/>
         <source>Space</source>
-        <translation type="unfinished"></translation>
+        <translation>Пробел</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleOsk.qml" line="252"/>
         <source>Enter</source>
-        <translation type="unfinished"></translation>
+        <translation>Энтер</translation>
     </message>
 </context>
 <context>
@@ -651,12 +651,12 @@
     <message>
         <location filename="../qml/components/consolemode/ConsolePlayButton.qml" line="33"/>
         <source>Stop</source>
-        <translation type="unfinished"></translation>
+        <translation>Стоп</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsolePlayButton.qml" line="33"/>
         <source>Play</source>
-        <translation type="unfinished"></translation>
+        <translation>Играть</translation>
     </message>
 </context>
 <context>
@@ -664,7 +664,7 @@
     <message>
         <location filename="../qml/components/consolemode/ConsoleSettingsDialog.qml" line="22"/>
         <source>Wave</source>
-        <translation type="unfinished"></translation>
+        <translation>Волна</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleSettingsDialog.qml" line="23"/>
@@ -689,17 +689,17 @@
     <message>
         <location filename="../qml/components/consolemode/ConsoleSettingsDialog.qml" line="27"/>
         <source>Hero</source>
-        <translation type="unfinished"></translation>
+        <translation>Герой</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleSettingsDialog.qml" line="112"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../qml/components/consolemode/ConsoleSettingsDialog.qml" line="148"/>
         <source>Background</source>
-        <translation type="unfinished"></translation>
+        <translation>Фоновое изображение</translation>
     </message>
 </context>
 <context>
@@ -707,7 +707,7 @@
     <message>
         <location filename="../qml/components/consolemode/ConsoleTopBar.qml" line="111"/>
         <source>Search</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск</translation>
     </message>
 </context>
 <context>
@@ -715,56 +715,56 @@
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="26"/>
         <source>Apply defaults to existing games</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить стандартные к существующим играм</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="161"/>
         <source>Replace env / DLL tables</source>
-        <translation type="unfinished"></translation>
+        <translation>Заменить переменные среды / DLL таблиц</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="163"/>
         <source>wipes the game&apos;s keys, then writes the global ones</source>
-        <translation type="unfinished"></translation>
+        <translation>удаляет переменные к играм, а затем записывает глобальные</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="81"/>
         <source>Each ticked setting overwrites every ticked game with the value it holds in the Defaults tab, even if you never changed it.</source>
-        <translation type="unfinished"></translation>
+        <translation>Каждая отмеченная настройка перезаписывает соответствующий параметр во всех отмеченных играх значением, заданным на вкладке «По умолчанию», — даже если вы никогда его не меняли.</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="96"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="164"/>
         <source>merges global keys into the game (global wins on conflict)</source>
-        <translation type="unfinished"></translation>
+        <translation>Совместить глобальные переменные среды в играх (глобальные будут приоритетнее при конфликтах)</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="176"/>
         <source>Games</source>
-        <translation type="unfinished"></translation>
+        <translation>Игры</translation>
     </message>
     <message numerus="yes">
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="188"/>
         <source>Affects %n game(s)</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>Влияет на %n игру</numerusform>
+            <numerusform>Влияет на %n игры</numerusform>
+            <numerusform>Влияет на %n игр</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="197"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/DefaultsApplyDialog.qml" line="203"/>
         <source>Apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить</translation>
     </message>
 </context>
 <context>
@@ -772,7 +772,7 @@
     <message>
         <location filename="../qml/components/popups/DisplayOptionsPopup.qml" line="74"/>
         <source>Card size</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер карточки</translation>
     </message>
     <message>
         <location filename="../qml/components/popups/DisplayOptionsPopup.qml" line="85"/>
@@ -874,7 +874,7 @@
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="243"/>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="427"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="286"/>
@@ -884,47 +884,47 @@
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="296"/>
         <source>Installation path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь установки</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="316"/>
         <source>Calculating size…</source>
-        <translation type="unfinished"></translation>
+        <translation>Вычисляется размер…</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="318"/>
         <source>Size unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер недоступен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="320"/>
         <source>%1 install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить %1</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="322"/>
         <source>%1 download</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="327"/>
         <source>%1 free</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 бесплатно</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="349"/>
         <source>Prefix path (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к префиксу (дополнительно)</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="350"/>
         <source>auto — created per game</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически — создаётся каждой игрой</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="360"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="375"/>
@@ -944,7 +944,7 @@
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="412"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="422"/>
@@ -996,7 +996,7 @@
     <message>
         <location filename="../qml/components/dialogs/ErrorDialog.qml" line="106"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/dialogs/ErrorDialog.qml" line="18"/>
@@ -1152,12 +1152,12 @@
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="84"/>
         <source>Stores</source>
-        <translation type="unfinished"></translation>
+        <translation>Магазины</translation>
     </message>
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="85"/>
         <source>Stores behave a little differently, but nothing too special.</source>
-        <translation type="unfinished"></translation>
+        <translation>Магазины ведут себя немного иначе, но ничего особенного.</translation>
     </message>
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="86"/>
@@ -1223,7 +1223,7 @@
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="118"/>
         <source>Installation path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь установки</translation>
     </message>
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="119"/>
@@ -1253,7 +1253,7 @@
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="136"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/tour/EssentialsTour.qml" line="137"/>
@@ -1391,7 +1391,7 @@
     <message>
         <location filename="../qml/components/settings/global/FontSizesDialog.qml" line="11"/>
         <source>Font sizes</source>
-        <translation type="unfinished"></translation>
+        <translation>Кегль шрифта</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/FontSizesDialog.qml" line="17"/>
@@ -1483,7 +1483,7 @@
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="467"/>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="755"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="477"/>
@@ -1493,28 +1493,28 @@
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="541"/>
         <source>Installation path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь установки</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="556"/>
         <source>Calculating size…</source>
-        <translation type="unfinished"></translation>
+        <translation>Вычисляется размер…</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="558"/>
         <source>Size unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер недоступен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="560"/>
         <source>%1 install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить %1</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="564"/>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="631"/>
         <source>%1 free</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 бесплатно</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="568"/>
@@ -1559,17 +1559,17 @@
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="654"/>
         <source>Prefix path (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к префиксу (дополнительно)</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="655"/>
         <source>auto — created per game</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически — создаётся каждой игрой</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="665"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="668"/>
@@ -1599,7 +1599,7 @@
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="748"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="754"/>
@@ -1690,12 +1690,12 @@
     <message>
         <location filename="../qml/components/categories/GameCategoriesDialog.qml" line="140"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/GameCategoriesDialog.qml" line="146"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
 </context>
 <context>
@@ -1823,7 +1823,7 @@
     <message>
         <location filename="../qml/components/library/GameContextMenu.qml" line="112"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <location filename="../qml/components/library/GameContextMenu.qml" line="114"/>
@@ -1974,7 +1974,7 @@
     <message>
         <location filename="../qml/components/logs/GameLogsWindow.qml" line="249"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <location filename="../qml/components/logs/GameLogsWindow.qml" line="405"/>
@@ -1992,17 +1992,17 @@
     <message>
         <location filename="../qml/components/settings/GameSettingsPage.qml" line="28"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/GameSettingsPage.qml" line="41"/>
         <source>Game Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Информация об игре</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/GameSettingsPage.qml" line="42"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/GameSettingsPage.qml" line="47"/>
@@ -2079,27 +2079,27 @@
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="290"/>
         <source>Installation path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь установки</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="308"/>
         <source>Calculating size…</source>
-        <translation type="unfinished"></translation>
+        <translation>Вычисляется размер…</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="310"/>
         <source>Size unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер недоступен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="312"/>
         <source>Size unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер неизвестен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="314"/>
         <source>%1 install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить %1</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="316"/>
@@ -2114,37 +2114,37 @@
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="340"/>
         <source>Prefix path (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к префиксу (дополнительно)</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="341"/>
         <source>auto — created per game</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически — создаётся каждой игрой</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="351"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="365"/>
         <source>DLC</source>
-        <translation type="unfinished"></translation>
+        <translation>DLC</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="391"/>
         <source>Hide details</source>
-        <translation type="unfinished"></translation>
+        <translation>Скрыть детали</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="391"/>
         <source>Show details</source>
-        <translation type="unfinished"></translation>
+        <translation>Показать детали</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="399"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="406"/>
@@ -2258,12 +2258,12 @@
     <message>
         <location filename="../qml/components/controls/InstallActions.qml" line="21"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/controls/InstallActions.qml" line="33"/>
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Установлено</translation>
     </message>
     <message>
         <location filename="../qml/components/controls/InstallActions.qml" line="52"/>
@@ -2276,17 +2276,17 @@
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="10"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="11"/>
         <source>Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="12"/>
         <source>Pre-download</source>
-        <translation type="unfinished"></translation>
+        <translation>Предзагрузка</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/KindChip.qml" line="13"/>
@@ -2334,17 +2334,17 @@
     <message>
         <location filename="../qml/components/logs/LogRulesDialog.qml" line="122"/>
         <source>Add rule</source>
-        <translation type="unfinished"></translation>
+        <translation>Добавить правило</translation>
     </message>
     <message>
         <location filename="../qml/components/logs/LogRulesDialog.qml" line="131"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/logs/LogRulesDialog.qml" line="137"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Сохранить</translation>
     </message>
 </context>
 <context>
@@ -2352,12 +2352,12 @@
     <message>
         <location filename="../qml/components/controls/M3FileField.qml" line="141"/>
         <source>Select Folder</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбрать папку</translation>
     </message>
     <message>
         <location filename="../qml/components/controls/M3FileField.qml" line="141"/>
         <source>Select File</source>
-        <translation type="unfinished"></translation>
+        <translation>Выбрать файл</translation>
     </message>
 </context>
 <context>
@@ -2481,7 +2481,7 @@
         <location filename="../qml/Main.qml" line="1037"/>
         <location filename="../qml/Main.qml" line="1410"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/Main.qml" line="1051"/>
@@ -2824,27 +2824,27 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/navigation/NavTabs.qml" line="394"/>
         <source>Library</source>
-        <translation type="unfinished"></translation>
+        <translation>Библиотека</translation>
     </message>
     <message>
         <location filename="../qml/components/navigation/NavTabs.qml" line="482"/>
         <source>Stores</source>
-        <translation type="unfinished"></translation>
+        <translation>Магазины</translation>
     </message>
     <message>
         <location filename="../qml/components/navigation/NavTabs.qml" line="530"/>
         <source>Downloads (%1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачано (%1)</translation>
     </message>
     <message>
         <location filename="../qml/components/navigation/NavTabs.qml" line="530"/>
         <source>Downloads</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузки</translation>
     </message>
     <message>
         <location filename="../qml/components/navigation/NavTabs.qml" line="541"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки</translation>
     </message>
 </context>
 <context>
@@ -2858,7 +2858,7 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="198"/>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="332"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="238"/>
@@ -2868,27 +2868,27 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="247"/>
         <source>Installation path</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь установки</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="265"/>
         <source>Calculating size…</source>
-        <translation type="unfinished"></translation>
+        <translation>Вычисляется размер…</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="267"/>
         <source>Size unavailable</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер недоступен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="269"/>
         <source>Size unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер неизвестен</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="271"/>
         <source>%1 install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить %1</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="275"/>
@@ -2898,22 +2898,22 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="294"/>
         <source>Prefix path (optional)</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь к префиксу (дополнительно)</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="295"/>
         <source>auto — created per game</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматически — создаётся каждой игрой</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="305"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="321"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="328"/>
@@ -3091,7 +3091,7 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/prefixes/PrefixCreateDialog.qml" line="69"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/prefixes/PrefixCreateDialog.qml" line="88"/>
@@ -3121,7 +3121,7 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/prefixes/PrefixCreateDialog.qml" line="126"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/prefixes/PrefixCreateDialog.qml" line="132"/>
@@ -3303,37 +3303,37 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="11"/>
         <source>Corner radius</source>
-        <translation type="unfinished"></translation>
+        <translation>Радиус углов</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="17"/>
         <source>Extra small</source>
-        <translation type="unfinished"></translation>
+        <translation>Самый маленький</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="18"/>
         <source>Small</source>
-        <translation type="unfinished"></translation>
+        <translation>Маленький</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="19"/>
         <source>Medium</source>
-        <translation type="unfinished"></translation>
+        <translation>Средний</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="20"/>
         <source>Large</source>
-        <translation type="unfinished"></translation>
+        <translation>Большой</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="21"/>
         <source>Extra large</source>
-        <translation type="unfinished"></translation>
+        <translation>Огромный</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="22"/>
         <source>Huge</source>
-        <translation type="unfinished"></translation>
+        <translation>Гигантский</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="23"/>
@@ -3343,12 +3343,12 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="84"/>
         <source>Reset all</source>
-        <translation type="unfinished"></translation>
+        <translation>Сбросить всё</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/RadiiDialog.qml" line="90"/>
         <source>Done</source>
-        <translation type="unfinished"></translation>
+        <translation>Выполнено</translation>
     </message>
 </context>
 <context>
@@ -3390,7 +3390,7 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
     <message>
         <location filename="../qml/RunExe.qml" line="98"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/RunExe.qml" line="111"/>
@@ -3543,7 +3543,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/scripts/ScriptRunDialog.qml" line="427"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
 </context>
 <context>
@@ -3576,7 +3576,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/presets/SetsDialog.qml" line="225"/>
         <source>Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Синхронизация</translation>
     </message>
     <message>
         <location filename="../qml/components/presets/SetsDialog.qml" line="246"/>
@@ -3639,42 +3639,42 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="10"/>
         <source>Prefix</source>
-        <translation type="unfinished"></translation>
+        <translation>Префикс</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="11"/>
         <source>Architecture</source>
-        <translation type="unfinished"></translation>
+        <translation>Архитектура</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="12"/>
         <source>Esync</source>
-        <translation type="unfinished"></translation>
+        <translation>Esync</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="13"/>
         <source>Fsync</source>
-        <translation type="unfinished"></translation>
+        <translation>Fsync</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="14"/>
         <source>NTSync</source>
-        <translation type="unfinished"></translation>
+        <translation>NTSync</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="16"/>
         <source>DXVK version</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия DXVK</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="18"/>
         <source>VKD3D version</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия VKD3D</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="20"/>
         <source>DXVK-NVAPI version</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия DXVK-NVAPI</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="24"/>
@@ -3694,7 +3694,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="27"/>
         <source>Graphics Driver</source>
-        <translation type="unfinished"></translation>
+        <translation>Графический драйвер</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="28"/>
@@ -3805,22 +3805,22 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="57"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="59"/>
         <source>Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Синхронизация</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="60"/>
         <source>Translation Layers</source>
-        <translation type="unfinished"></translation>
+        <translation>Слои трансляции</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="61"/>
         <source>Compatibility</source>
-        <translation type="unfinished"></translation>
+        <translation>Совместимость</translation>
     </message>
     <message>
         <location filename="../qml/components/singletons/SettingLabels.qml" line="62"/>
@@ -3929,17 +3929,17 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/store/steam/SteamMoveDialog.qml" line="151"/>
         <source>Apply</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить</translation>
     </message>
     <message>
         <location filename="../qml/components/store/steam/SteamMoveDialog.qml" line="152"/>
         <source>Moving…</source>
-        <translation type="unfinished"></translation>
+        <translation>Перемещение…</translation>
     </message>
     <message>
         <location filename="../qml/components/store/steam/SteamMoveDialog.qml" line="152"/>
         <source>Move</source>
-        <translation type="unfinished"></translation>
+        <translation>Переместить</translation>
     </message>
 </context>
 <context>
@@ -3947,27 +3947,27 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/store/StoreGameDetails.qml" line="24"/>
         <source>About</source>
-        <translation type="unfinished"></translation>
+        <translation>Об игре</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreGameDetails.qml" line="24"/>
         <source>System requirements</source>
-        <translation type="unfinished"></translation>
+        <translation>Системные требования</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreGameDetails.qml" line="32"/>
         <source>Look it up on ProtonDB</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверить в ProtonDB</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreGameDetails.qml" line="77"/>
         <source>Minimum</source>
-        <translation type="unfinished"></translation>
+        <translation>Минимальные</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreGameDetails.qml" line="101"/>
         <source>Recommended</source>
-        <translation type="unfinished"></translation>
+        <translation>Рекомендуемые</translation>
     </message>
 </context>
 <context>
@@ -3975,22 +3975,22 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/store/StoreLibraryBase.qml" line="98"/>
         <source>Logged in as: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Записано как %1</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLibraryBase.qml" line="106"/>
         <source>Games found</source>
-        <translation type="unfinished"></translation>
+        <translation>Игр найдено</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLibraryBase.qml" line="206"/>
         <source>Loading library</source>
-        <translation type="unfinished"></translation>
+        <translation>Загрузка библиотеки</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLibraryBase.qml" line="220"/>
         <source>No games in this store</source>
-        <translation type="unfinished"></translation>
+        <translation>Ни одной игры не найдено в этом магазине</translation>
     </message>
 </context>
 <context>
@@ -3998,32 +3998,32 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="56"/>
         <source>Open Login Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Открыть страницу авторизации</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="74"/>
         <source>Paste authorization code here...</source>
-        <translation type="unfinished"></translation>
+        <translation>Вставьте код авторизации сюда...</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="82"/>
         <source>Login</source>
-        <translation type="unfinished"></translation>
+        <translation>Войти</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="99"/>
         <source>Installing %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Установка %1...</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="100"/>
         <source>No %1 found. Install it to log in.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ни %1... найдено. Установить это, чтобы войти.</translation>
     </message>
     <message>
         <location filename="../qml/components/store/StoreLoginOverlay.qml" line="110"/>
         <source>Install %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить %1</translation>
     </message>
 </context>
 <context>
@@ -4031,7 +4031,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="48"/>
         <source>in-game overlay for friends, invites and achievements</source>
-        <translation type="unfinished"></translation>
+        <translation>Внутриигровой оверлей для общения с друзьями, приглашений и достижений</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="49"/>
@@ -4041,27 +4041,27 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="62"/>
         <source>Cloud Saves</source>
-        <translation type="unfinished"></translation>
+        <translation>Облачные сохранения</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="67"/>
         <source>Auto-sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматическая синхронизация</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="68"/>
         <source>download before launch, upload after exit</source>
-        <translation type="unfinished"></translation>
+        <translation>Скачать перед запуском, отгрузить перед выходом</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="86"/>
         <source>No save path detected yet - a toast will appear when discovery finishes, or enter one manually below.</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь для сохранения пока не обнаружен. По завершении поиска появится уведомление, либо вы можете ввести путь вручную ниже.</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="87"/>
         <source>Save path: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Путь сохранений: %1</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="95"/>
@@ -4076,7 +4076,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabEpic.qml" line="105"/>
         <source>DLC</source>
-        <translation type="unfinished"></translation>
+        <translation>DLC</translation>
     </message>
 </context>
 <context>
@@ -4084,17 +4084,17 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="68"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation>Отсутствует</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="70"/>
         <source>not installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Не установлено</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="88"/>
         <source>Remove %1?</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить %1?</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="90"/>
@@ -4109,32 +4109,32 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="92"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="134"/>
         <source>Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Запустить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="184"/>
         <source>Installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Установлено</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="194"/>
         <source>Available</source>
-        <translation type="unfinished"></translation>
+        <translation>Доступно</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="198"/>
         <source>Already downloading. Check the Downloads tab</source>
-        <translation type="unfinished"></translation>
+        <translation>Уже скачивается. Проверьте на вкладке &quot;Загрузки&quot;</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGacha.qml" line="205"/>
         <source>Install selected</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить выбранные</translation>
     </message>
 </context>
 <context>
@@ -4142,22 +4142,22 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="28"/>
         <source>Metadata</source>
-        <translation type="unfinished"></translation>
+        <translation>Метаданные</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="34"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Название</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="43"/>
         <source>Sort Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Сортировать по названию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="44"/>
         <source>optional, for custom sort order</source>
-        <translation type="unfinished"></translation>
+        <translation>Дополнительно, для своего варианта сортировки</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="51"/>
@@ -4172,17 +4172,17 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="60"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Раннер</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="85"/>
         <source>It seems you&apos;re using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.</source>
-        <translation type="unfinished"></translation>
+        <translation>Зайка, похоже ты используешь Flatpak-сборку. Убедись, что для Omikuji настроены необходимые дополнительные разрешения для запуска нативных или Flatpak-приложений.</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="90"/>
         <source>Images</source>
-        <translation type="unfinished"></translation>
+        <translation>Изображения</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabGameInfo.qml" line="96"/>
@@ -4338,7 +4338,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="96"/>
         <source>Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalApp.qml" line="97"/>
@@ -4645,27 +4645,27 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="376"/>
         <source>Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="391"/>
         <source>Remove</source>
-        <translation type="unfinished"></translation>
+        <translation>Удалить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="368"/>
         <source>Reinstall</source>
-        <translation type="unfinished"></translation>
+        <translation>Переустановить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="377"/>
         <source>Retry</source>
-        <translation type="unfinished"></translation>
+        <translation>Повторить</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalComponents.qml" line="378"/>
         <source>Install</source>
-        <translation type="unfinished"></translation>
+        <translation>Установить</translation>
     </message>
 </context>
 <context>
@@ -4673,17 +4673,17 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="146"/>
         <source>Apply to existing games</source>
-        <translation type="unfinished"></translation>
+        <translation>Применить к существующим играм</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="193"/>
         <source>System default</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки по умолчанию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="194"/>
         <source>No runners installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ни одного раннера не установлено</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="196"/>
@@ -4710,7 +4710,7 @@ Search for community scripts, or use a local file.</source>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="356"/>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="468"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>По умолчанию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalDefaults.qml" line="389"/>
@@ -4793,22 +4793,22 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="139"/>
         <source>Games</source>
-        <translation type="unfinished"></translation>
+        <translation>Игры</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="170"/>
         <source>New prefix</source>
-        <translation type="unfinished"></translation>
+        <translation>Новый префикс</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="176"/>
         <source>Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.</source>
-        <translation type="unfinished"></translation>
+        <translation>Omikuji распознает префиксы Wine. Каждая игра использует один такой префикс; «брошенным» считается префикс, который больше не используется ни одной игрой.</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="197"/>
         <source>Orphan</source>
-        <translation type="unfinished"></translation>
+        <translation>«Брошенные»</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="206"/>
@@ -4818,7 +4818,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="216"/>
         <source>Steam</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalOfuda.qml" line="224"/>
@@ -4972,12 +4972,12 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="32"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>По умолчанию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="176"/>
         <source>Mono font</source>
-        <translation type="unfinished"></translation>
+        <translation>Моноширинный шрифт</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="177"/>
@@ -4987,7 +4987,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="189"/>
         <source>Logs font</source>
-        <translation type="unfinished"></translation>
+        <translation>Шрифт журнала</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="190"/>
@@ -4997,7 +4997,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="202"/>
         <source>Font sizes</source>
-        <translation type="unfinished"></translation>
+        <translation>Кегль шрифта</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="203"/>
@@ -5018,7 +5018,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="219"/>
         <source>Corner radius</source>
-        <translation type="unfinished"></translation>
+        <translation>Радиус углов</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalTheme.qml" line="220"/>
@@ -5058,7 +5058,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="144"/>
         <source>Card size</source>
-        <translation type="unfinished"></translation>
+        <translation>Размер карточки</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/global/TabGlobalUi.qml" line="159"/>
@@ -5358,7 +5358,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="152"/>
         <source>No runners installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ни одного раннера не установлено</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="167"/>
@@ -5373,32 +5373,32 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="184"/>
         <source>Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Синхронизация</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="194"/>
         <source>Esync</source>
-        <translation type="unfinished"></translation>
+        <translation>Esync</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="200"/>
         <source>Fsync</source>
-        <translation type="unfinished"></translation>
+        <translation>Fsync</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="206"/>
         <source>NTSync</source>
-        <translation type="unfinished"></translation>
+        <translation>NTSync</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="213"/>
         <source>NTSync is only applied when the selected Wine version is Proton.</source>
-        <translation type="unfinished"></translation>
+        <translation>NTSync применяется только если выбранной версией Wine назначен Proton.</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="225"/>
         <source>Translation Layers</source>
-        <translation type="unfinished"></translation>
+        <translation>Слои трансляции</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="227"/>
@@ -5418,43 +5418,43 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="302"/>
         <source>Compatibility</source>
-        <translation type="unfinished"></translation>
+        <translation>Совместимость</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="332"/>
         <source>Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Отображение</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="337"/>
         <source>DPI Scaling</source>
-        <translation type="unfinished"></translation>
+        <translation>Масштабирование DPI</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="343"/>
         <source>DPI</source>
-        <translation type="unfinished"></translation>
+        <translation>DPI</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="359"/>
         <source>Drivers</source>
-        <translation type="unfinished"></translation>
+        <translation>Драйверы</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="364"/>
         <source>Audio Driver</source>
-        <translation type="unfinished"></translation>
+        <translation>Драйвер звука</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="367"/>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="384"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>По умолчанию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="381"/>
         <source>Graphics Driver</source>
-        <translation type="unfinished"></translation>
+        <translation>Графический драйвер</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabRunnerOptions.qml" line="399"/>
@@ -5533,7 +5533,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/settings/game/TabSystem.qml" line="70"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>По умолчанию</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabSystem.qml" line="82"/>
@@ -5996,22 +5996,22 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="145"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Завершить</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="150"/>
         <source>Run anyway</source>
-        <translation type="unfinished"></translation>
+        <translation>Запустить в любом случае</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="155"/>
         <source>Update</source>
-        <translation type="unfinished"></translation>
+        <translation>Обновить</translation>
     </message>
     <message>
         <location filename="../qml/components/downloads/UpdateAvailableDialog.qml" line="155"/>
         <source>Reinstall</source>
-        <translation type="unfinished"></translation>
+        <translation>Переустановить</translation>
     </message>
 </context>
 <context>
@@ -6019,7 +6019,7 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/app/WelcomeDialog.qml" line="37"/>
         <source>Welcome to omikuji~</source>
-        <translation type="unfinished"></translation>
+        <translation>Добро пожаловать в Omikuji</translation>
     </message>
     <message>
         <location filename="../qml/components/app/WelcomeDialog.qml" line="89"/>
