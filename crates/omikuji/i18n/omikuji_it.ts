@@ -34,32 +34,32 @@
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="23"/>
         <source>New Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuovo Gioco</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="25"/>
         <source>Create &amp; Play</source>
-        <translation type="unfinished"></translation>
+        <translation>Crea e Gioca</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="26"/>
         <source>Create</source>
-        <translation type="unfinished"></translation>
+        <translation>Crea</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="36"/>
         <source>Game Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Info Gioco</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="37"/>
         <source>Runner</source>
-        <translation type="unfinished"></translation>
+        <translation>Runner</translation>
     </message>
     <message>
         <location filename="../qml/components/settings/AddGamePage.qml" line="42"/>
         <source>System</source>
-        <translation type="unfinished"></translation>
+        <translation>Sistema</translation>
     </message>
 </context>
 <context>
@@ -80,35 +80,35 @@
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="128"/>
         <source>Remove source</source>
-        <translation type="unfinished"></translation>
+        <translation>Rimuovi fonte</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="144"/>
         <source>Close</source>
-        <translation type="unfinished"></translation>
+        <translation>Chiudi</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="161"/>
         <source>Couldn&apos;t parse versions response.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossibile interpretare la risposta delle versioni</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="316"/>
         <source>Fetching versions…</source>
-        <translation type="unfinished"></translation>
+        <translation>Recuper versioni…</translation>
     </message>
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="317"/>
         <source>%n version(s) available</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n versione disponibile</numerusform>
+            <numerusform>%n versioni disponibili</numerusform>
         </translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="318"/>
         <source>No versions loaded yet</source>
-        <translation type="unfinished"></translation>
+        <translation>Nessuno versione caricata</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="355"/>
@@ -118,17 +118,17 @@
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="361"/>
         <source>Installed runners are still listed under Found runners.</source>
-        <translation type="unfinished"></translation>
+        <translation>I Runner installati sono ancora listati sotto Runner Trovati.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="362"/>
         <source>No versions available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nessuna versione disponibile.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveManageDialog.qml" line="403"/>
         <source>Always updates itself to the newest release</source>
-        <translation type="unfinished"></translation>
+        <translation>Si aggiorna sempre da solo alla nuova versione</translation>
     </message>
 </context>
 <context>
@@ -136,52 +136,52 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="30"/>
         <source>Other</source>
-        <translation type="unfinished"></translation>
+        <translation>Altro</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="35"/>
         <source>Edit %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Modifica %1</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="36"/>
         <source>Add runner source</source>
-        <translation type="unfinished"></translation>
+        <translation>Aggiungi fonte Runner</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="36"/>
         <source>Add translation layer source</source>
-        <translation type="unfinished"></translation>
+        <translation>Aggiungi fonte livello di compatibilità</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="90"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nome</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="101"/>
         <source>The name identifies installed versions on disk, so it can&apos;t be changed here.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il nome identifica la versione installata sul disco, quindi non può essere cambiato qui.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="108"/>
         <source>Description</source>
-        <translation type="unfinished"></translation>
+        <translation>Descrizione</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="109"/>
         <source>optional</source>
-        <translation type="unfinished"></translation>
+        <translation>opzionale</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="116"/>
         <source>Kind</source>
-        <translation type="unfinished"></translation>
+        <translation>Tipo</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="124"/>
         <source>Releases URL</source>
-        <translation type="unfinished"></translation>
+        <translation>URL di rilascio</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="143"/>
@@ -191,37 +191,37 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="151"/>
         <source>Latest build priority</source>
-        <translation type="unfinished"></translation>
+        <translation>Priorità ultima build</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="161"/>
         <source>Space separated. When a release has several builds, the first one that matches is used, so entries further right have lower priority. If none match, the normal pick is used.</source>
-        <translation type="unfinished"></translation>
+        <translation>Separato con uno spazio. Quando una versione di rilascio ha più build, la prima che combacia verrà usata. Gli inserimenti alla destra hanno meno priorità. Se niente combacia, verrà usata la scelta normale.</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="170"/>
         <source>Skip releases with no match</source>
-        <translation type="unfinished"></translation>
+        <translation>Salta le versioni con nessun risultato combaciato</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="171"/>
         <source>-Latest picks the newest matching release instead</source>
-        <translation type="unfinished"></translation>
+        <translation>-Latest, invece, prende l&apos;ultima version di rilascio</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="181"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancella</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="186"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Salva</translation>
     </message>
     <message>
         <location filename="../qml/components/runners/ArchiveSourceDialog.qml" line="186"/>
         <source>Add</source>
-        <translation type="unfinished"></translation>
+        <translation>Aggiungi</translation>
     </message>
 </context>
 <context>
@@ -229,14 +229,14 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="56"/>
         <source>No versions installed</source>
-        <translation type="unfinished"></translation>
+        <translation>Nessuna versione installata</translation>
     </message>
     <message numerus="yes">
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="57"/>
         <source>%n version(s) installed</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
+        <translation>
+            <numerusform>%n versione installata</numerusform>
+            <numerusform>%n versioni installate</numerusform>
         </translation>
     </message>
     <message>
@@ -247,7 +247,7 @@
     <message>
         <location filename="../qml/components/runners/ArchiveSourceRow.qml" line="91"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>Disabilitato</translation>
     </message>
 </context>
 <context>
@@ -283,12 +283,12 @@
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="21"/>
         <source>Delete &quot;%1&quot; from your categories?</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminare &quot;%1&quot; dalle tue categorie?</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="78"/>
         <source>Delete category</source>
-        <translation type="unfinished"></translation>
+        <translation>Elimina categoria</translation>
     </message>
     <message>
         <location filename="../qml/components/categories/CategoriesController.qml" line="79"/>
