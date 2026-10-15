@@ -14,7 +14,7 @@ Item {
     }
     property rect ownerRect: Qt.rect(0, 0, 0, 0)
     property real ownerRadius: 0
-    property color ringColor: Theme.focusAccent
+    property color ringColor: Theme.accent
     property real squeeze: 0
     readonly property real inset: gap - squeeze
     property var _offActivate: null
@@ -45,7 +45,7 @@ Item {
         squeeze = 0
         if (!owner) return
         ownerRadius = owner.navRingRadius
-        ringColor = owner.danger === true ? Theme.error : Theme.focusAccent
+        ringColor = owner.danger === true ? Theme.error : Theme.accent
         _sync()
     }
 

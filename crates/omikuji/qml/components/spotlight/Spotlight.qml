@@ -129,7 +129,7 @@ Item {
 
         ShapePath {
             fillColor: "transparent"
-            strokeColor: Theme.focusAccent
+            strokeColor: Theme.accent
             strokeWidth: 2
             joinStyle: ShapePath.RoundJoin
             PathMultiline { paths: root._holePaths }

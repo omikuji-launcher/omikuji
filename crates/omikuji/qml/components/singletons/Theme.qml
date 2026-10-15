@@ -23,12 +23,18 @@ QtObject {
         return v ? v : fallback
     }
 
-    property color accent: _resolve("accent", active.highlight, "#bdc2ff")
+    function readable(c) {
+        return Qt.hsla(Math.max(0, c.hslHue), c.hslSaturation,
+            bg.hslLightness > 0.5 ? Math.min(c.hslLightness, 0.38) : Math.max(c.hslLightness, 0.72), 1)
+    }
+
+    readonly property color _accentResolved: _resolve("accent", active.highlight, "#bdc2ff")
+    readonly property color _secondaryResolved: _resolve("secondary", accent, accent)
+
+    property color accent: readable(_accentResolved)
     property color accentText: _resolve("accentText", active.highlightedText, "#1d2678")
     property color accentOn: accent.hslLightness > 0.5 ? "#000000" : "#ffffff"
-    property color secondary: _resolve("secondary", accent, accent)
-    property color focusAccent: Qt.hsla(Math.max(0, accent.hslHue), accent.hslSaturation,
-        bg.hslLightness > 0.5 ? Math.min(accent.hslLightness, 0.38) : Math.max(accent.hslLightness, 0.72), 1)
+    property color secondary: readable(_secondaryResolved)
 
     property color bg: _resolve("bg", active.base, "#111111")
     property color bgAlt: Qt.darker(bg, 1.1)
