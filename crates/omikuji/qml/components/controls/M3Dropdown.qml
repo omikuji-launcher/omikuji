@@ -223,7 +223,7 @@ Item {
             var top = win ? button.mapToItem(win.contentItem, 0, 0).y : 0
             var below = win ? win.height - top - button.height - 16 : wanted
             var above = top - 16
-            var up = below < Math.min(wanted, 4 * root._optionHeight + 16) && above > below
+            var up = below < Math.min(wanted, 2 * root._optionHeight) && above > below
             popup.fitHeight = Math.round(Math.max(0, Math.min(wanted, up ? above : below)))
             var pos = button.mapToItem(popup.parent, 0, up ? -4 - popup.fitHeight : button.height + 4)
             popup.x = Math.round(pos.x)
