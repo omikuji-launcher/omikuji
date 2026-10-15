@@ -10,6 +10,7 @@ use crate::library::Game;
 const RESERVED: &[&str] = &[
     "game_exe",
     "game_dir",
+    "game_args",
     "game_prefix",
     "game_id",
     "game_name",
@@ -94,6 +95,7 @@ impl TemplateVars {
                 vars.push(("game_dir".to_string(), dir.to_string_lossy().into_owned()));
             }
         }
+        vars.push(("game_args".to_string(), game.launch.args.join(" ")));
         vars.push(("game_id".to_string(), game.metadata.id.clone()));
         vars.push(("game_name".to_string(), game.metadata.name.clone()));
         vars.push(("game_slug".to_string(), game_slug(game)));

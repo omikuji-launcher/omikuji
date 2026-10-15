@@ -126,7 +126,7 @@ impl GachaManifest {
         for opt in self
             .options
             .iter()
-            .filter(|o| accepted.iter().any(|a| a == &o.id))
+            .filter(|o| o.required || accepted.iter().any(|a| a == &o.id))
         {
             opt.effect.apply(launch);
 
@@ -162,6 +162,8 @@ pub struct ManifestOption {
     pub companion: Option<ManifestCompanion>,
     #[serde(default = "default_true")]
     pub at_install: bool,
+    #[serde(default)]
+    pub required: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

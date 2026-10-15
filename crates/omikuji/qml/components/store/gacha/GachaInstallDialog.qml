@@ -46,7 +46,7 @@ DialogCard {
     property var manifest: null
 
     readonly property var optionRows:
-        root.manifest && root.manifest.options ? root.manifest.options.filter(o => o.at_install !== false) : []
+        root.manifest && root.manifest.options ? root.manifest.options.filter(o => o.at_install !== false && !o.required) : []
     property var acceptedOptions: ({})
 
     function optionsCsv() {

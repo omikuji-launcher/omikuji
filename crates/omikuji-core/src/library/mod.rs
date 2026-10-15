@@ -146,10 +146,6 @@ impl RunnerType {
     pub fn is_steam(self) -> bool {
         self == Self::Steam
     }
-
-    pub fn on_host(self) -> bool {
-        matches!(self, Self::Native | Self::Flatpak)
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -250,11 +246,13 @@ pub enum CompanionWhen {
     Before,
     #[default]
     After,
+    Wrap,
 }
 
 string_enum!(CompanionWhen {
     Before => "before",
     After => "after",
+    Wrap => "wrap",
 });
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
@@ -283,6 +281,9 @@ pub struct LaunchConfig {
     pub env_sets: Vec<String>,
 }
 
+const WINDOWS_EXTENSIONS: [&str; 5] = ["exe", "bat", "cmd", "msi", "com"];
+const GAME_ARGS_ARG: &str = "${game_args}";
+
 impl LaunchConfig {
     pub fn prune_companion(&mut self) {
         if self.companion.trim().is_empty() {
@@ -292,6 +293,40 @@ impl LaunchConfig {
             self.companion_delay = 0;
         }
     }
+
+    pub fn companion_needs_wine(&self) -> bool {
+        Path::new(&self.companion)
+            .extension()
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| WINDOWS_EXTENSIONS.iter().any(|w| e.eq_ignore_ascii_case(w)))
+    }
+
+    pub fn spliced_companion_args(&self) -> Vec<String> {
+        self.companion_args
+            .iter()
+            .flat_map(|a| match a.as_str() {
+                GAME_ARGS_ARG => self.args.clone(),
+                _ => vec![a.clone()],
+            })
+            .collect()
+    }
+
+    pub fn wrap_command(&self) -> Option<WrapCommand> {
+        if self.companion_when != CompanionWhen::Wrap || self.companion.is_empty() {
+            return None;
+        }
+        let command = [vec![self.companion.clone()], self.spliced_companion_args()].concat();
+        Some(if self.companion_needs_wine() {
+            WrapCommand::Wine(command)
+        } else {
+            WrapCommand::Host(command)
+        })
+    }
+}
+
+pub enum WrapCommand {
+    Wine(Vec<String>),
+    Host(Vec<String>),
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]

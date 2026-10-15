@@ -3,6 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import omikuji 1.0
 
+import "../../lib/RunnerGrouping.js" as RG
+
 Item {
     id: root
 
@@ -347,10 +349,8 @@ Item {
             M3FileField {
                 id: companionField
 
-                readonly property bool inPrefix: !["flatpak", "native"].includes(root.config["runner.type"] || "")
-
                 label: qsTr("Companion")
-                placeholder: inPrefix ? qsTr("an .exe to run in the prefix while the game runs") : qsTr("a command to run while the game runs")
+                placeholder: qsTr("an .exe or a script to run with the game")
                 text: root.config["launch.companion"] || ""
                 width: parent.width
                 gameModel: root.gameModel
@@ -367,22 +367,24 @@ Item {
                 onTextEdited: (t) => root.updateField("launch.companion_args", t)
             }
 
-            SettingsRow {
-                label: qsTr("Start It First")
-                description: qsTr("run it before the game instead of after")
+            M3Dropdown {
+                id: companionWhenField
+                label: qsTr("When")
                 width: parent.width
                 visible: companionField.text !== ""
-                M3Switch {
-                    checked: (root.config["launch.companion_when"] || "after") === "before"
-                    onToggled: (val) => root.updateField("launch.companion_when", val ? "before" : "after")
-                }
+                options: [
+                    { label: qsTr("After the game"), value: "after" },
+                    { label: qsTr("Before the game"), value: "before" }
+                ].concat(root.config["runner.type"] === "steam" ? [] : [{ label: qsTr("Instead of the game"), value: "wrap" }])
+                currentIndex: Math.max(0, RG.indexOfValue(companionWhenField.options, root.config["launch.companion_when"] || "after"))
+                onSelected: (val) => root.updateField("launch.companion_when", val)
             }
 
             SettingsRow {
                 label: qsTr("Delay")
                 description: qsTr("seconds to wait between the two, for whichever starts first")
                 width: parent.width
-                visible: companionField.text !== ""
+                visible: companionField.text !== "" && companionWhenField.currentValue !== "wrap"
                 contentRightMargin: 74
                 M3SpinBox {
                     from: 0

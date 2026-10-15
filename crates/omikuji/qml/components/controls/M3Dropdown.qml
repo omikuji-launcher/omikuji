@@ -18,6 +18,7 @@ Item {
     property string labelSuffix: ""
     property color labelSuffixColor: Theme.textMuted
     property real fieldHeight: 44
+    readonly property real _optionHeight: 40
     readonly property bool _compact: fieldHeight < 40
     readonly property real _chevronGap: _compact ? 2 : 6
     readonly property real _chevronMargin: _compact ? 6 : 10
@@ -203,18 +204,11 @@ Item {
         x: 0
         y: 0
         width: 0
-        // clamp against the window not the popup parent, so a small dialog card doestn shrink the dropdown to nothing
-        height: {
-            if (!visible) return 0
-            var wanted = col.height + 16
-            var win = root.Window
-            if (!win || !parent) return Math.round(wanted)
-            var topInWin = parent.mapToItem(win.contentItem, x, y).y
-            var maxAvail = win.height - topInWin - 12
-            return Math.round(Math.min(wanted, Math.max(80, maxAvail)))
-        }
+        height: visible ? fitHeight : 0
         z: 50
         radius: Theme.radius.sm
+
+        property real fitHeight: 0
 
         function open() {
             if (!popup.parent) return
@@ -224,7 +218,14 @@ Item {
         function close() { visible = false }
         function syncPosition() {
             if (!popup.parent) return
-            var pos = button.mapToItem(popup.parent, 0, button.height + 4)
+            var wanted = col.height + 16
+            var win = root.Window
+            var top = win ? button.mapToItem(win.contentItem, 0, 0).y : 0
+            var below = win ? win.height - top - button.height - 16 : wanted
+            var above = top - 16
+            var up = below < Math.min(wanted, 4 * root._optionHeight + 16) && above > below
+            popup.fitHeight = Math.round(Math.max(0, Math.min(wanted, up ? above : below)))
+            var pos = button.mapToItem(popup.parent, 0, up ? -4 - popup.fitHeight : button.height + 4)
             popup.x = Math.round(pos.x)
             popup.y = Math.round(pos.y)
             popup.width = Math.round(button.width)
@@ -283,7 +284,7 @@ Item {
                             : !optionRow.selectable ? Theme.textSubtle
                             : (index === root.currentIndex ? Theme.accent : Theme.text)
                         width: col.width
-                        height: isHeader ? (index === 0 ? 22 : 28) : 40
+                        height: isHeader ? (index === 0 ? 22 : 28) : root._optionHeight
                         radius: Theme.radius.xs
                         readonly property bool lit: selectable && index === root._highlightIndex
                         color: lit

@@ -42,6 +42,7 @@ DialogCard {
                 anchors.rightMargin: Theme.space.md
                 text: "${game_exe}         " + qsTr("game executable") + "\n"
                 + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
+                + "${game_args}        " + qsTr("the game's launch arguments") + "\n"
                 + "${game_prefix}      " + qsTr("the game's resolved prefix") + "\n"
                 + "${game_id}          " + qsTr("internal game id") + "\n"
                 + "${game_name}        " + qsTr("game name") + "\n"

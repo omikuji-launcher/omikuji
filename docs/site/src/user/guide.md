@@ -304,15 +304,21 @@ If a runner already has its own `user_settings.py`, omikuji leaves it alone and 
 
 \- **Post-Exit**: Script to run once the game exits (waits for the game to close before running).
 
-\- **Companion**: Script/Wine `.exe` to run alongside the game. 
+\- **Companion**: Script, binary or Wine `.exe` to run with the game. Windows files (`.exe`, `.bat`, `.cmd`, `.msi`, `.com`) run inside the game's prefix with the game's runner, if the game isn't a Wine type, the companion will just make a default prefix for itself.
 
 When you fill the path field, it'll show you three more options below it: 
 
-`Arguments`: arguments to pass to the script/binary.
+`Arguments`: arguments to pass to the companion. Arguments are passed as they are, so shell variables like `$HOME` are not expanded here (they still work inside the script itself ofc). You can also use template literals.
 
-`Start it First`: starts the script/binary before launching the game.
+`When`: when to run the companion.
 
-`Delay`: delay in seconds for the wait between the two (game and script/binary). For example, if `start it first` is disabled and you set `delay` to `10`, the game will launch first and then wait 10 seconds before running the script/binary.
+\- `After the game`: launches the game, then the companion.
+
+\- `Before the game`: launches the companion, then the game.
+
+\- `Instead of the game`: omikuji launches only the companion with its own arguments and starting the game is up to the companion. Nothing is implictly passed to it so anything it needs goes in `Arguments`, for example `--game ${game_exe} --dir ${game_dir}`. The game's own launch arguments are not passed either, add `${game_args}` to include them. For Wine games a Windows companion runs as `wine <companion> <arguments>` with the game's runner, prefix and environment variables. A script or a Linux binary runs directly with the game's environment variables. Not available for Steam games, since Steam starts them on its own and it's whatever Steam wants to be as usual.
+
+`Delay`: delay in seconds for the wait between the two (game and companion). For example, if `When` is `After the game` and you set `delay` to `10`, the game will launch first and then wait 10 seconds before running the companion.
  
 ### Epic
 

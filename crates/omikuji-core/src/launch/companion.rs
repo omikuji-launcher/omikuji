@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
@@ -9,15 +10,20 @@ use crate::process::GAME_ID_VAR;
 use crate::store::steam::local::with_steam_wine;
 use crate::template_vars::TemplateVars;
 
+struct Invocation {
+    target: String,
+    args: Vec<String>,
+}
+
 pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
-    let Some(target) = companion_of(game) else {
+    let Some(companion) = resolve(game) else {
         return;
     };
     let delay = game.launch.companion_delay as u64;
 
     match game.launch.companion_when {
         CompanionWhen::Before => {
-            spawn_logged(game, host_env, &target);
+            spawn_logged(game, host_env, &companion);
             if delay > 0 {
                 tokio::time::sleep(Duration::from_secs(delay)).await;
             }
@@ -29,24 +35,25 @@ pub async fn start(game: &Game, host_env: &HashMap<String, String>) {
                 if delay > 0 {
                     std::thread::sleep(Duration::from_secs(delay));
                 }
-                spawn_logged(&game, &env, &target);
+                spawn_logged(&game, &env, &companion);
             });
         }
+        CompanionWhen::Wrap => {}
     }
 }
 
-fn spawn_logged(game: &Game, host_env: &HashMap<String, String>, target: &str) {
-    match spawn(game, host_env, target) {
-        Ok(pid) => tracing::info!(pid, "running companion `{}`", target),
-        Err(e) => tracing::error!("failed to run companion `{}`: {}", target, e),
+fn spawn_logged(game: &Game, host_env: &HashMap<String, String>, companion: &Invocation) {
+    match spawn(game, host_env, companion) {
+        Ok(pid) => tracing::info!(pid, "running companion `{}`", companion.target),
+        Err(e) => tracing::error!("failed to run companion `{}`: {}", companion.target, e),
     }
 }
 
-fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Result<u32> {
-    let mut cmd = if game.runner.runner_type.on_host() {
-        host_command(game, host_env, target)
+fn spawn(game: &Game, host_env: &HashMap<String, String>, companion: &Invocation) -> Result<u32> {
+    let mut cmd = if game.launch.companion_needs_wine() {
+        prefix_command(game, companion)?
     } else {
-        prefix_command(game, target)?
+        host_command(host_env, companion)
     };
     cmd.env(GAME_ID_VAR, &game.metadata.id);
     cmd.stdin(Stdio::null());
@@ -72,22 +79,22 @@ fn spawn(game: &Game, host_env: &HashMap<String, String>, target: &str) -> Resul
     Ok(pid)
 }
 
-fn host_command(game: &Game, env: &HashMap<String, String>, target: &str) -> Command {
-    let mut line = target.to_string();
-    if !game.launch.companion_args.is_empty() {
-        line.push(' ');
-        line.push_str(&game.launch.companion_args.join(" "));
-    }
+// host stands for anything that isnt wine. i have no clue how to name itb etter and its confusing to me too
+fn host_command(env: &HashMap<String, String>, companion: &Invocation) -> Command {
     let mut cmd = Command::new("sh");
-    cmd.arg("-c").arg(line).envs(env);
+    cmd.arg("-c")
+        .arg(format!("{} \"$@\"", companion.target))
+        .arg("sh")
+        .args(&companion.args)
+        .envs(env);
     cmd
 }
 
-fn prefix_command(game: &Game, target: &str) -> Result<Command> {
+fn prefix_command(game: &Game, companion: &Invocation) -> Result<Command> {
     let steam = with_steam_wine(game)?;
     let source = steam.as_ref().unwrap_or(game);
 
-    let exe = std::path::PathBuf::from(target);
+    let exe = PathBuf::from(&companion.target);
     let name = exe
         .file_name()
         .and_then(|n| n.to_str())
@@ -97,14 +104,23 @@ fn prefix_command(game: &Game, target: &str) -> Result<Command> {
     let mut tool = Game::new(name, exe)
         .with_prefix(super::resolve_prefix(source).to_string_lossy())
         .with_runner_version(source.wine.version.clone());
-    tool.launch.args = game.launch.companion_args.clone();
+    tool.launch.args = companion.args.clone();
     tool.source = game.source.clone();
     tool.metadata.slug = game.slug();
 
     build_launch_as(&tool, EnvPurpose::Companion)?.to_command()
 }
 
-fn companion_of(game: &Game) -> Option<String> {
-    let target = TemplateVars::for_game(game).expand(&game.launch.companion);
-    (!target.is_empty()).then_some(target)
+fn resolve(game: &Game) -> Option<Invocation> {
+    let vars = TemplateVars::for_game(game);
+    let target = vars.expand(&game.launch.companion);
+    (!target.is_empty()).then(|| Invocation {
+        args: game
+            .launch
+            .spliced_companion_args()
+            .iter()
+            .map(|a| vars.expand(a))
+            .collect(),
+        target,
+    })
 }

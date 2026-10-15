@@ -8,7 +8,7 @@ use super::env::{EnvPurpose, build_env, game_env_pairs};
 use super::prefix::resolve_prefix;
 use super::wine::{WineVariant, resolve_wine_exe};
 use crate::desktop::ensure_steam_icon;
-use crate::library::{Game, RunnerType};
+use crate::library::{Game, RunnerType, WrapCommand};
 use crate::store::epic;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::system_info::gpu_launch_env;
@@ -75,7 +75,9 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
         tracing::warn!("dock icon link failed for {}: {}", game.metadata.name, e);
     }
 
-    let mut command = if game.is_epic() {
+    let mut command = if let Some(WrapCommand::Wine(wrap)) = game.launch.wrap_command() {
+        [vec![wine_exe.to_string_lossy().to_string()], wrap].concat()
+    } else if game.is_epic() {
         let legendary = epic::require_legendary()?;
         if !epic::logged_in() {
             return Err(anyhow::Error::new(StoreSignedOut {
@@ -122,6 +124,10 @@ fn apply_wrapping(
     game: &Game,
     wrap_mangohud: bool,
 ) {
+    if let Some(WrapCommand::Host(wrap)) = game.launch.wrap_command() {
+        *command = wrap;
+    }
+
     // mangohud only without gamescope; env var crashes with gamescope
     if wrap_mangohud && game.graphics.mangohud && !game.graphics.gamescope.enabled {
         command.insert(0, "mangohud".to_string());
