@@ -234,10 +234,6 @@ impl ManifestCompanion {
     }
 
     pub async fn install(&self) -> Result<PathBuf> {
-        let exe = self.exe_path();
-        if exe.is_file() {
-            return Ok(exe);
-        }
         let link = archive_source::RepoLink::parse(&self.repo)
             .ok_or_else(|| anyhow!("unusable repo link: {}", self.repo))?;
         archive_source::install_asset(&link.releases_api_url(), &self.exe, &self.install_dir())

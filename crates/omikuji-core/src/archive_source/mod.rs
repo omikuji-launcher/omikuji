@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use crate::archive::{self, ArchiveKind};
 use crate::components_config::{ArchiveSource, SourceCategory};
 use crate::event_queue::EventQueue;
+use crate::fs_util::write_atomic;
 use crate::http::{self, ResponseExt};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -284,7 +285,7 @@ pub async fn install_asset(api_url: &str, asset_name: &str, dest_dir: &Path) -> 
 
     fs::create_dir_all(dest_dir)?;
     let dest = dest_dir.join(asset_name);
-    fs::write(&dest, &bytes)?;
+    write_atomic(&dest, &bytes)?;
     Ok(dest)
 }
 
