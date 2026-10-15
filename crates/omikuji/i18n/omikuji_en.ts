@@ -5502,229 +5502,229 @@ Search for community scripts, or use a local file.</source>
 <context>
     <name>TabSystem</name>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="22"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="24"/>
         <source>Performance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="28"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="30"/>
         <source>Feral GameMode (gamemoderun)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="37"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="39"/>
         <source>CPU Cores</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="38"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="40"/>
         <source>0 = no limit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="53"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="55"/>
         <source>Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="59"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="61"/>
         <source>FPS overlay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="68"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="70"/>
         <source>GPU</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="70"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="72"/>
         <source>Default</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="82"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="84"/>
         <source>Audio</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="87"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="89"/>
         <source>Reduce Pulse Latency</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="97"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="99"/>
         <source>Power</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="102"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="104"/>
         <source>Prevent Sleep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="103"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="105"/>
         <source>inhibit screensaver and sleep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="114"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="116"/>
         <source>Discord</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="119"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="121"/>
         <source>Discord Rich Presence</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="120"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="122"/>
         <source>show this game on your Discord profile while it runs</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="135"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="137"/>
         <source>Enable Gamescope</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="136"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="138"/>
         <source>run game inside gamescope compositor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="154"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="156"/>
         <source>Output Width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="155"/>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="164"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="157"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="166"/>
         <source>0 = native</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="163"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="165"/>
         <source>Output Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="177"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="179"/>
         <source>Game Width</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="178"/>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="187"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="180"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="189"/>
         <source>0 = output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="186"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="188"/>
         <source>Game Height</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="196"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="198"/>
         <source>FPS Limit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="210"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="212"/>
         <source>Refresh Rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="224"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="226"/>
         <source>Fullscreen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="233"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="235"/>
         <source>Borderless</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="242"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="244"/>
         <source>Integer Scaling</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="251"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="253"/>
         <source>HDR</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="260"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="262"/>
         <source>Filter</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="263"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="265"/>
         <source>None</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="264"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="266"/>
         <source>Nearest</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="265"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="267"/>
         <source>Linear</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="268"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="270"/>
         <source>Pixel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="279"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="281"/>
         <source>FSR Sharpness</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="293"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="295"/>
         <source>Environment</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="306"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="308"/>
         <source>Add variable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="313"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="315"/>
         <source>Sets · %1 synced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="313"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="315"/>
         <source>Sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="325"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="327"/>
         <source>Scripts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="330"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="332"/>
         <source>Pre-Launch Script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="331"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="333"/>
         <source>runs before game starts</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="339"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="341"/>
         <source>Post-Exit Script</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="340"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="342"/>
         <source>runs after game exits</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5735,12 +5735,27 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/settings/game/TabSystem.qml" line="353"/>
-        <source>an .exe to run in the prefix while the game runs</source>
+        <source>an .exe or a script to run with the game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="353"/>
-        <source>a command to run while the game runs</source>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="372"/>
+        <source>When</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="376"/>
+        <source>After the game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="377"/>
+        <source>Before the game</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="378"/>
+        <source>Instead of the game</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -5749,22 +5764,12 @@ Search for community scripts, or use a local file.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="371"/>
-        <source>Start It First</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="372"/>
-        <source>run it before the game instead of after</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="382"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="384"/>
         <source>Delay</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/settings/game/TabSystem.qml" line="383"/>
+        <location filename="../qml/components/settings/game/TabSystem.qml" line="385"/>
         <source>seconds to wait between the two, for whichever starts first</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5793,91 +5798,96 @@ Search for community scripts, or use a local file.</source>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="45"/>
-        <source>the game&apos;s resolved prefix</source>
+        <source>the game&apos;s launch arguments</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="46"/>
-        <source>internal game id</source>
+        <source>the game&apos;s resolved prefix</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="47"/>
-        <source>game name</source>
+        <source>internal game id</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="48"/>
-        <source>url-safe game name, as used by omikuji run</source>
+        <source>game name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="49"/>
-        <source>home folder</source>
+        <source>url-safe game name, as used by omikuji run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="50"/>
-        <source>prefixes root</source>
+        <source>home folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="51"/>
-        <source>cache root</source>
+        <source>prefixes root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="52"/>
-        <source>install scripts root</source>
+        <source>cache root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="53"/>
-        <source>omikuji data root</source>
+        <source>install scripts root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="54"/>
-        <source>gacha manifests root</source>
+        <source>omikuji data root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="55"/>
-        <source>components root</source>
+        <source>gacha manifests root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="56"/>
-        <source>runners root</source>
+        <source>components root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="57"/>
-        <source>layers root</source>
+        <source>runners root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="58"/>
-        <source>tools root</source>
+        <source>layers root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="59"/>
-        <source>logs root</source>
+        <source>tools root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="60"/>
+        <source>logs root</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="61"/>
         <source>runtime root</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="72"/>
+        <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="73"/>
         <source>Add variable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="79"/>
+        <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="80"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
