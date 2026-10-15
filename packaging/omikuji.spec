@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.5
+Version:        0.20.6
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,14 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Thu Oct 15 2026 reakjra <reakjra@proton.me> - 0.20.6-1
+- minor ui fixes
+- clamped accent colors' lightness
+- re-install companions on gachas import
+- arknigths: endfield's companion (stepministrator)
+- ${game_args} template variable
+- 'instead of the game' (wrap) companion mode
+
 * Sun Oct 04 2026 reakjra <reakjra@proton.me> - 0.20.5-1
 
 * Sat Oct 03 2026 reakjra <reakjra@proton.me> - 0.20.4-1

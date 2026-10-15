@@ -13,6 +13,19 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.6
+Added:
+- 'Instead of the game' (wrap) companion mode
+- ${game_args} template variable
+- Arknights: Endfield's companion (stepministrator)
+
+Changed:
+- Re-install companions on Gachas import
+- Clamped accent colors' lightness
+
+Fixes:
+- Minor ui fixes
+
 ## 0.20.5
 Added:
 - Custom color picker dialog (theme and log highlight colors)
