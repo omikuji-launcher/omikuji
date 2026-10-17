@@ -61,3 +61,5 @@ docs/site/book
 
 # qmllint --fix / tooling backups
 *.bak
+
+result
