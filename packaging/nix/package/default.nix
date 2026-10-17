@@ -6,7 +6,6 @@
   omikuji-unwrapped,
   extraPkgs ? pkgs: [ ],
   extraLibraries ? pkgs: [ ],
-  steamSupport ? false,
 }:
 
 let
@@ -21,10 +20,10 @@ let
   gnomeDeps =
     pkgs: with pkgs; [
       zenity
-      gtksourceview3
-      gnome-desktop
-      libgnome-keyring
-      webkitgtk_4_1
+      # gtksourceview3
+      # gnome-desktop
+      # libgnome-keyring
+      # webkitgtk_4_1
       adwaita-icon-theme
     ];
   xorgDeps =
@@ -81,9 +80,6 @@ buildFHSEnv {
       # Appimages
       fuse
 
-      # Adventure Game Studio
-      allegro
-
       # Battle.net
       jansson
 
@@ -91,55 +87,34 @@ buildFHSEnv {
       libnghttp2
 
       # Desmume
-      lua
-      agg
-      soundtouch
       openal
       desktop-file-utils
       atk
 
-      # DGen // TODO: libarchive is broken
-
       # Dolphin
       bluez
-      ffmpeg_6
       gettext
-      portaudio
-      miniupnpc
-      mbedtls
-      lzo
-      sfml
-      gsm
-      wavpack
       orc
       nettle
       gmp
-      pcre
       vulkan-loader
       zstd
 
-      # DOSBox
-      SDL_net
-      SDL_sound
+      # SDL_net
+      # SDL_sound
 
       # GOG
       glib-networking
 
-      # Higan // TODO: "higan is not available for the x86_64 architecture"
-
       # Libretro
-      fluidsynth
       hidapi
       libgbm
       libdrm
 
       # MAME
       fontconfig
-      SDL2_ttf
 
-      # Mednafen
-      libglut
-      mesa_glu
+      # mesa_glu
 
       # MESS
       expat
@@ -148,37 +123,11 @@ buildFHSEnv {
       nss
 
       # Mupen64Plus
-      boost
-      dash
+      # boost
+      # dash
 
       # Overwatch 2
       libunwind
-
-      # PPSSPP
-      glew
-      snappy
-
-      # Redream // "redream is not available for the x86_64 architecture"
-
-      # RPCS3
-      llvm
-      e2fsprogs
-      libgpg-error
-
-      # ScummVM
-      nasm
-      sndio
-
-      # ResidualVM is now merged with ScummVM and therefore does not exist anymore
-      flac
-
-      # Snes9x
-      libepoxy
-      minizip
-
-      # Vice
-      bison
-      flex
 
       # WINE
       xrandr
@@ -191,14 +140,11 @@ buildFHSEnv {
       opencl-headers
 
       # ZDOOM
-      soundfont-fluid
       bzip2
-      game-music-emu
     ]
-    ++ qt5Deps pkgs
+    # ++ qt5Deps pkgs
     ++ qt6Deps pkgs
     ++ gnomeDeps pkgs
-    ++ lib.optional steamSupport pkgs.steam
     ++ extraPkgs pkgs;
 
   multiPkgs =
@@ -270,8 +216,6 @@ buildFHSEnv {
       p11-kit
       libbsd
       harfbuzz
-
-      # PCSX2 // TODO: "libgobject-2.0.so.0: wrong ELF class: ELFCLASS64"
 
       # WINE
       cups
