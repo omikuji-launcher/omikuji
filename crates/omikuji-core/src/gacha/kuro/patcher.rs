@@ -82,9 +82,6 @@ async fn patch_into_staging(
     patch: &PatchConfig,
     pidx: &PatchIndexFile,
 ) -> Result<()> {
-    if pidx.resource.is_empty() {
-        bail!("patch indexFile returned zero resources");
-    }
     if !pidx.zip_infos.is_empty() || !pidx.patch_infos.is_empty() {
         bail!(
             "patch indexFile carries {} zipInfos and {} patchInfos payloads, which are not implemented",
@@ -92,10 +89,6 @@ async fn patch_into_staging(
             pidx.patch_infos.len()
         );
     }
-    if pidx.group_infos.is_empty() {
-        bail!("patch indexFile declares no groupInfos to apply");
-    }
-
     let install_root = entry.install_path.clone();
     let dl_root = staging.join("dl");
     let out_root = staging.join("out");

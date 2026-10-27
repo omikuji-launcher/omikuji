@@ -29,6 +29,7 @@ Item {
 
     readonly property bool isUninterruptible: status === "Extracting"
     readonly property bool isPaused: status === "Paused"
+    readonly property bool isVerifying: status === "Verifying"
 
     property var netSamples: []
     property var diskSamples: []
@@ -188,7 +189,7 @@ Item {
                                 : "—"
                         }
                         StatCell {
-                            label: qsTr("Downloaded")
+                            label: hero.isVerifying ? qsTr("Verified") : qsTr("Downloaded")
                             minWidth: 190
                             value: hero.bytesTotal > 0
                                 ? Format.formatBytes(hero.bytesDownloaded) + " / " + Format.formatBytes(hero.bytesTotal)
