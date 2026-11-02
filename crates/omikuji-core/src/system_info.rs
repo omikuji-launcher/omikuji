@@ -61,7 +61,7 @@ pub fn report(app_version: &str, qt_version: &str) -> String {
     fields.push(("Qt".into(), qt_version.to_string()));
     fields.push((
         "Flatpak".into(),
-        if flatpak() { "yes" } else { "no" }.into(),
+        if in_flatpak() { "yes" } else { "no" }.into(),
     ));
     for spec in components::specs::all() {
         fields.push((
@@ -175,7 +175,7 @@ fn ram() -> String {
     "unknown".into()
 }
 
-fn flatpak() -> bool {
+pub fn in_flatpak() -> bool {
     std::env::var("FLATPAK_ID").is_ok() || std::path::Path::new("/.flatpak-info").exists()
 }
 

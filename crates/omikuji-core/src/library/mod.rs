@@ -146,6 +146,10 @@ impl RunnerType {
     pub fn is_steam(self) -> bool {
         self == Self::Steam
     }
+
+    pub fn is_wine(self) -> bool {
+        self == Self::Wine
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]

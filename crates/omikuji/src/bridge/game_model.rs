@@ -2364,7 +2364,7 @@ impl qobject::GameModel {
     }
 
     fn is_flatpak(&self) -> bool {
-        std::env::var("FLATPAK_ID").is_ok()
+        system_info::in_flatpak()
     }
 
     // glibc malloc_trim: paired with the store-panel Loader unload after hide,

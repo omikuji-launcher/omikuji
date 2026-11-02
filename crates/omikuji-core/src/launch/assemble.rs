@@ -11,7 +11,7 @@ use crate::desktop::ensure_steam_icon;
 use crate::library::{Game, RunnerType, WrapCommand};
 use crate::store::epic;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
-use crate::system_info::gpu_launch_env;
+use crate::system_info::{gpu_launch_env, in_flatpak};
 use crate::template_vars::TemplateVars;
 
 pub struct ResolvedLaunch {
@@ -204,7 +204,7 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLau
         );
     }
 
-    let mut command = vec!["flatpak".to_string(), "run".to_string()];
+    let mut command = host_command(["flatpak", "run"]);
 
     // game env + mangohud get translated to --env= flags so they reach inside the sandbox
     for (k, v) in game_env_pairs(game) {
@@ -229,6 +229,16 @@ fn build_flatpak_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLau
     apply_wrapping(&mut command, &mut env, game, false);
 
     Ok(ResolvedLaunch::from_game(game, command, env, working_dir))
+}
+
+fn host_command<const N: usize>(args: [&str; N]) -> Vec<String> {
+    let spawn = in_flatpak().then_some(["flatpak-spawn", "--host"]);
+    spawn
+        .into_iter()
+        .flatten()
+        .chain(args)
+        .map(String::from)
+        .collect()
 }
 
 fn build_native_launch(game: &Game, working_dir: PathBuf) -> Result<ResolvedLaunch> {
@@ -314,7 +324,7 @@ fn build_gamescope_args(game: &Game) -> Vec<String> {
 }
 
 fn build_steam_command(appid: &str, args: &[String]) -> Vec<String> {
-    if std::env::var("FLATPAK_ID").is_ok() {
+    if in_flatpak() {
         let uri = if args.is_empty() {
             format!("steam://rungameid/{}", appid)
         } else {

@@ -4,6 +4,7 @@ use crate::log_files;
 use crate::media::{self, MediaType, media_path};
 use crate::settings;
 use crate::store::steam;
+use crate::system_info::in_flatpak;
 use anyhow::{Context, Result};
 use fs_err as fs;
 use nix::sys::statvfs::statvfs;
@@ -15,7 +16,7 @@ pub fn desktop_dir() -> PathBuf {
 }
 
 pub fn applications_dir() -> PathBuf {
-    if std::env::var("FLATPAK_ID").is_ok() {
+    if in_flatpak() {
         return dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join(".local/share/applications");
@@ -26,7 +27,7 @@ pub fn applications_dir() -> PathBuf {
 }
 
 pub fn icons_dir() -> PathBuf {
-    if std::env::var("FLATPAK_ID").is_ok() {
+    if in_flatpak() {
         return dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("."))
             .join(".local/share/icons/hicolor/256x256/apps");

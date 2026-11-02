@@ -34,7 +34,7 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
 }
 
-fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
+fn prepare_wine(game: &Game, env: &HashMap<String, String>) {
     if game.is_epic() {
         let wine_exe = env
             .get("WINE")
@@ -43,26 +43,29 @@ fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
         let _ = launch::prepare_epic_prefix(game, &wine_exe, env);
     }
 
-    // steam manages its own prefix, skip dll injection for it
-    if !game.runner.runner_type.is_steam()
-        && let Err(e) = dll_packs::inject_all(game, env)
-    {
+    if let Err(e) = dll_packs::inject_all(game, env) {
         tracing::warn!("dll pack injection failed: {} (launching anyway)", e);
     }
 
-    if !game.runner.runner_type.is_steam()
-        && let Some(runner_dir) = runners::runner_dir(&game.wine.version)
-        && let Err(e) = runners::bundled_layers::apply_for_launch(&runner_dir, game, env)
-    {
+    let Some(runner_dir) = runners::runner_dir(&game.wine.version) else {
+        return;
+    };
+
+    if let Err(e) = runners::bundled_layers::apply_for_launch(&runner_dir, game, env) {
         tracing::warn!("runner dll sync failed: {} (launching anyway)", e);
     }
 
     if runners::proton_monkey_patch::VARS
         .iter()
         .any(|var| env.contains_key(*var))
-        && let Some(runner_dir) = runners::runner_dir(&game.wine.version)
     {
         runners::proton_monkey_patch::ensure_installed(&runner_dir);
+    }
+}
+
+fn prepare_runtime(game: &Game, env: &HashMap<String, String>) {
+    if game.runner.runner_type.is_wine() {
+        prepare_wine(game, env);
     }
 
     // download saves before the game opens its save files
