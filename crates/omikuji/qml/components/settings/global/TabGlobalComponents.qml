@@ -275,75 +275,58 @@ Item {
                         width: parent.width
                         height: 56
 
-                        Row {
+                        Column {
                             anchors.left: parent.left
                             anchors.leftMargin: 16
                             anchors.right: actions.left
                             anchors.rightMargin: 16
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: 14
+                            spacing: 2
 
-                            Rectangle {
-                                width: 10
-                                height: 10
-                                radius: 5
-                                anchors.verticalCenter: parent.verticalCenter
-                                color: runtimeRow.status.status === "completed" || runtimeRow.isExternal ? Theme.success
-                                    : runtimeRow.status.status === "failed" ? Theme.error
-                                    : runtimeRow.busy ? Theme.accent
-                                    : Theme.textFaint
+                            Row {
+                                spacing: 10
+                                Text {
+                                    text: runtimeRow.meta.label
+                                    color: Theme.text
+                                    font.pixelSize: Theme.type.body.size
+                                    font.weight: Font.DemiBold
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    visible: text.length > 0
+                                    text: runtimeRow.isExternal
+                                        ? (runtimeRow.status.path || "")
+                                        : runtimeRow.hasUpdate
+                                            ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
+                                            : (runtimeRow.status.version || "")
+                                    color: runtimeRow.hasUpdate ? Theme.warning : Theme.textMuted
+                                    font.pixelSize: Theme.type.caption.size
+                                    font.family: Theme.mono
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    visible: runtimeRow.busy
+                                    text: runtimeRow.status.status === "downloading"
+                                        ? qsTr("downloading %1%").arg(Math.round(runtimeRow.status.percent))
+                                        : runtimeRow.status.status
+                                    color: Theme.accent
+                                    font.pixelSize: Theme.type.caption.size
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
 
-                            Column {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2
-                                width: parent.width - 10 - 14
-
-                                Row {
-                                    spacing: 10
-                                    Text {
-                                        text: runtimeRow.meta.label
-                                        color: Theme.text
-                                        font.pixelSize: Theme.type.body.size
-                                        font.weight: Font.DemiBold
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    Text {
-                                        visible: text.length > 0
-                                        text: runtimeRow.isExternal
-                                            ? (runtimeRow.status.path || "")
-                                            : runtimeRow.hasUpdate
-                                                ? runtimeRow.status.version + " -> " + runtimeRow.status.latest
-                                                : (runtimeRow.status.version || "")
-                                        color: runtimeRow.hasUpdate ? Theme.warning : Theme.textMuted
-                                        font.pixelSize: Theme.type.caption.size
-                                        font.family: Theme.mono
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    Text {
-                                        visible: runtimeRow.busy
-                                        text: runtimeRow.status.status === "downloading"
-                                            ? qsTr("downloading %1%").arg(Math.round(runtimeRow.status.percent))
-                                            : runtimeRow.status.status
-                                        color: Theme.accent
-                                        font.pixelSize: Theme.type.caption.size
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-
-                                Text {
-                                    text: runtimeRow.status.status === "failed" && runtimeRow.status.error
-                                        ? runtimeRow.status.error
-                                        : runtimeRow.isSystem
-                                            ? qsTr("Provided by your system. Install to use omikuji's own copy instead.")
-                                            : runtimeRow.isCustom
-                                                ? qsTr("Not installed by omikuji. Install to replace it with omikuji's own copy.")
-                                                : runtimeRow.meta.desc
-                                    color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
-                                    font.pixelSize: Theme.type.caption.size
-                                    elide: Text.ElideRight
-                                    width: parent.width
-                                }
+                            Text {
+                                text: runtimeRow.status.status === "failed" && runtimeRow.status.error
+                                    ? runtimeRow.status.error
+                                    : runtimeRow.isSystem
+                                        ? qsTr("Provided by your system. Install to use omikuji's own copy instead.")
+                                        : runtimeRow.isCustom
+                                            ? qsTr("Not installed by omikuji. Install to replace it with omikuji's own copy.")
+                                            : runtimeRow.meta.desc
+                                color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
+                                font.pixelSize: Theme.type.caption.size
+                                elide: Text.ElideRight
+                                width: parent.width
                             }
                         }
 
