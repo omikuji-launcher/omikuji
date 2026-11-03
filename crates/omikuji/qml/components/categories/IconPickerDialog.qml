@@ -45,7 +45,11 @@ DialogCard {
 
             Grid {
                 id: grid
-                columns: Math.max(1, Math.floor(iconFlick.width / 52))
+
+                readonly property int cell: 46
+
+                x: (iconFlick.width - width) / 2
+                columns: Math.max(1, Math.floor((iconFlick.width + spacing) / (cell + spacing)))
                 spacing: 6
 
                 Repeater {
@@ -55,8 +59,8 @@ DialogCard {
                         id: iconCell
                         required property string modelData
 
-                        width: 46
-                        height: 46
+                        width: grid.cell
+                        height: grid.cell
 
                         Rectangle {
                             anchors.fill: parent
@@ -64,7 +68,7 @@ DialogCard {
                             color: popup.selected === iconCell.modelData
                                 ? Theme.alpha(Theme.accent, 0.18)
                                 : tapArea.containsMouse
-                                    ? Theme.alpha(Theme.text, 0.08)
+                                    ? Theme.stateHover
                                     : "transparent"
                             border.width: popup.selected === iconCell.modelData ? 1 : 0
                             border.color: Theme.accent
