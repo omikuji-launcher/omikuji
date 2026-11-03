@@ -22,6 +22,19 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.7" date="2026-11-03">
+      <description>
+        <ul>
+          <li>reducded motion toggle</li>
+          <li>more icons</li>
+          <li>system info, downloads and stoe logins for session logs</li>
+          <li>fix flatpak games not launching from the flatpak build</li>
+          <li>download state verification</li>
+          <li>minor ui changes and fixes</li>
+          <li>new app icon</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.6" date="2026-10-15">
       <description>
         <ul>

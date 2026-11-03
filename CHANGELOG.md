@@ -13,6 +13,21 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.7
+Added:
+- Reducded motion toggle (Settings -> Interface)
+- More icons 
+- System info, downloads and store logins in session logs
+
+Fixes:
+- Flatpak games not launching with flatpak build
+- Download state verification
+- Minor ui fixes
+
+Changed:
+- New app icon
+- Minor UI changes
+
 ## 0.20.6
 Added:
 - 'Instead of the game' (wrap) companion mode

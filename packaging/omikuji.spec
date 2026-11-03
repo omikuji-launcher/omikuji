@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.6
+Version:        0.20.7
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,15 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Tue Nov 03 2026 reakjra <reakjra@proton.me> - 0.20.7-1
+- reducded motion toggle
+- more icons
+- system info, downloads and stoe logins for session logs
+- fix flatpak games not launching from the flatpak build
+- download state verification
+- minor ui changes and fixes
+- new app icon
+
 * Thu Oct 15 2026 reakjra <reakjra@proton.me> - 0.20.6-1
 - minor ui fixes
 - clamped accent colors' lightness
