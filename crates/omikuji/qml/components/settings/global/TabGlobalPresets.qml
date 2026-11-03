@@ -9,6 +9,29 @@ Item {
 
     implicitHeight: content.height
 
+    component ManageRow: RowLayout {
+        id: row
+
+        required property string text
+        signal manageClicked()
+
+        width: parent.width
+
+        Text {
+            Layout.fillWidth: true
+            text: row.text
+            color: Theme.text
+            font.pixelSize: Theme.type.subtitle.size
+            wrapMode: Text.WordWrap
+        }
+
+        M3Button {
+            text: qsTr("Manage")
+            variant: "tonal"
+            onClicked: row.manageClicked()
+        }
+    }
+
     Column {
         id: content
         width: parent.width
@@ -19,22 +42,9 @@ Item {
             icon: "view_list"
             width: parent.width
 
-            RowLayout {
-                width: parent.width
-
-                Text {
-                    Layout.fillWidth: true
-                    text: qsTr("Create and edit reusable env sets, applied or copied per-game.")
-                    color: Theme.textSubtle
-                    font.pixelSize: Theme.type.label.size
-                    wrapMode: Text.WordWrap
-                }
-
-                M3Button {
-                    text: qsTr("Manage")
-                    variant: "tonal"
-                    onClicked: root.manageSetsRequested("env")
-                }
+            ManageRow {
+                text: qsTr("Reusable env sets, applied or copied per game")
+                onManageClicked: root.manageSetsRequested("env")
             }
         }
 
@@ -43,22 +53,9 @@ Item {
             icon: "view_list"
             width: parent.width
 
-            RowLayout {
-                width: parent.width
-
-                Text {
-                    Layout.fillWidth: true
-                    text: qsTr("Create and edit reusable DLL override sets, applied or copied per-game.")
-                    color: Theme.textSubtle
-                    font.pixelSize: Theme.type.label.size
-                    wrapMode: Text.WordWrap
-                }
-
-                M3Button {
-                    text: qsTr("Manage")
-                    variant: "tonal"
-                    onClicked: root.manageSetsRequested("dll")
-                }
+            ManageRow {
+                text: qsTr("Reusable DLL override sets, applied or copied per game")
+                onManageClicked: root.manageSetsRequested("dll")
             }
         }
 
@@ -67,22 +64,9 @@ Item {
             icon: "code"
             width: parent.width
 
-            RowLayout {
-                width: parent.width
-
-                Text {
-                    Layout.fillWidth: true
-                    text: qsTr("Custom ${variable} tokens, usable in launch fields, prefix, install paths, scripts and image overrides.")
-                    color: Theme.textSubtle
-                    font.pixelSize: Theme.type.label.size
-                    wrapMode: Text.WordWrap
-                }
-
-                M3Button {
-                    text: qsTr("Manage")
-                    variant: "tonal"
-                    onClicked: root.manageSetsRequested("vars")
-                }
+            ManageRow {
+                text: qsTr("Custom ${variable} tokens for launch fields, prefix, install paths, scripts and image overrides")
+                onManageClicked: root.manageSetsRequested("vars")
             }
         }
     }
