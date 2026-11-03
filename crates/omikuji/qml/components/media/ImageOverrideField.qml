@@ -30,7 +30,7 @@ M3FileField {
         }
     }
 
-    placeholder: qsTr("empty = auto-fetch from SGDB")
+    placeholder: qsTr("fetched from SteamGridDB (auto)")
     filter: "*.png *.jpg *.jpeg *.webp"
     text: config[configKey] || ""
     expandWith: gameModel ? (t) => gameModel.expandGlobalVars(t) : null

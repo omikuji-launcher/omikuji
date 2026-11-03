@@ -173,7 +173,7 @@ Item {
             }
 
             Text {
-                text: qsTr("Wine prefixes omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.")
+                text: qsTr("Wine prefixes Omikuji knows about. Each game lives in one; an orphan is a prefix no game uses anymore.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.caption.size
                 width: parent.width

@@ -67,7 +67,7 @@ DialogCard {
             Text {
                 width: parent.width
                 visible: root.isSteam
-                text: qsTr("This is a Steam prefix. Steam owns its files, omikuji only runs tools inside it.")
+                text: qsTr("This is a Steam prefix. Steam owns its files, Omikuji only runs tools inside it.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.caption.size
                 wrapMode: Text.WordWrap

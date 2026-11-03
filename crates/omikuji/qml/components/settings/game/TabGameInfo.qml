@@ -32,6 +32,7 @@ Item {
             M3TextField {
                 id: nameField
                 label: qsTr("Name")
+                placeholder: qsTr("e.g. Drakengard 3")
                 text: root.config["meta.name"] || ""
                 width: parent.width
                 onTextEdited: (t) => root.updateField("meta.name", t)
@@ -82,7 +83,7 @@ Item {
                 visible: root.gameModel ? root.gameModel.is_flatpak() : false
                 icon: "warning"
                 tone: Theme.warning
-                text: qsTr("It seems you're using a flatpak build, cutie. Make sure omikuji has the proper extra permissions set to run native or flatpak applications.")
+                text: qsTr("It seems you're using a flatpak build, cutie. Make sure Omikuji has the proper extra permissions set to run native or flatpak applications.")
             }
         }
 

@@ -30,7 +30,7 @@ Window {
     height: 520
     minimumWidth: 420
     minimumHeight: 280
-    title: qsTr("omikuji · %1 logs").arg(gameName || gameId)
+    title: qsTr("Omikuji · %1 logs").arg(gameName || gameId)
     color: Theme.bg
 
     function sync() {

@@ -244,7 +244,7 @@ Item {
             }
 
             Text {
-                text: qsTr("External tools omikuji downloads on first run. Reinstall if a version is stale or corrupted.")
+                text: qsTr("External tools Omikuji downloads on first run. Reinstall if a version is stale or corrupted.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.caption.size
                 width: parent.width
@@ -319,9 +319,9 @@ Item {
                                 text: runtimeRow.status.status === "failed" && runtimeRow.status.error
                                     ? runtimeRow.status.error
                                     : runtimeRow.isSystem
-                                        ? qsTr("Provided by your system. Install to use omikuji's own copy instead.")
+                                        ? qsTr("Provided by your system. Install to use Omikuji's own copy instead.")
                                         : runtimeRow.isCustom
-                                            ? qsTr("Not installed by omikuji. Install to replace it with omikuji's own copy.")
+                                            ? qsTr("Not installed by Omikuji. Install to replace it with Omikuji's own copy.")
                                             : runtimeRow.meta.desc
                                 color: runtimeRow.status.status === "failed" ? Theme.error : Theme.textSubtle
                                 font.pixelSize: Theme.type.caption.size

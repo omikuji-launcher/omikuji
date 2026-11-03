@@ -292,7 +292,7 @@ DialogCard {
             M3FileField {
                 Layout.fillWidth: true
                 label: qsTr("Prefix path (optional)")
-                placeholder: qsTr("auto — created per game")
+                placeholder: qsTr("created per game (auto)")
                 selectFolder: true
                 gameModel: root.gameModel
                 text: root.prefixPath

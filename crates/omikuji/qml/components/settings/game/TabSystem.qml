@@ -102,7 +102,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Prevent Sleep")
-                description: qsTr("inhibit screensaver and sleep")
+                description: qsTr("Inhibit screensaver and sleep")
                 width: parent.width
                 M3Switch {
                     checked: root.config["system.prevent_sleep"] === true
@@ -119,7 +119,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Discord Rich Presence")
-                description: qsTr("show this game on your Discord profile while it runs")
+                description: qsTr("Show this game on your Discord profile while it runs")
                 width: parent.width
                 M3Switch {
                     checked: root.config["system.discord_rpc"] === true
@@ -135,7 +135,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Enable Gamescope")
-                description: qsTr("run game inside gamescope compositor")
+                description: qsTr("Run game inside gamescope compositor")
                 width: parent.width
                 M3Switch {
                     checked: root.config["graphics.gamescope.enabled"] === true
@@ -154,7 +154,7 @@ Item {
 
                     M3TextField {
                         label: qsTr("Output Width")
-                        placeholder: qsTr("0 = native")
+                        placeholder: qsTr("native")
                         text: (root.config["graphics.gamescope.width"] || 0) > 0
                             ? String(root.config["graphics.gamescope.width"]) : ""
                         width: (parent.width - 12) / 2
@@ -163,7 +163,7 @@ Item {
 
                     M3TextField {
                         label: qsTr("Output Height")
-                        placeholder: qsTr("0 = native")
+                        placeholder: qsTr("native")
                         text: (root.config["graphics.gamescope.height"] || 0) > 0
                             ? String(root.config["graphics.gamescope.height"]) : ""
                         width: (parent.width - 12) / 2
@@ -177,7 +177,7 @@ Item {
 
                     M3TextField {
                         label: qsTr("Game Width")
-                        placeholder: qsTr("0 = output")
+                        placeholder: qsTr("output")
                         text: (root.config["graphics.gamescope.game_width"] || 0) > 0
                             ? String(root.config["graphics.gamescope.game_width"]) : ""
                         width: (parent.width - 12) / 2
@@ -186,7 +186,7 @@ Item {
 
                     M3TextField {
                         label: qsTr("Game Height")
-                        placeholder: qsTr("0 = output")
+                        placeholder: qsTr("output")
                         text: (root.config["graphics.gamescope.game_height"] || 0) > 0
                             ? String(root.config["graphics.gamescope.game_height"]) : ""
                         width: (parent.width - 12) / 2
@@ -382,7 +382,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Delay")
-                description: qsTr("seconds to wait between the two, for whichever starts first")
+                description: qsTr("Seconds to wait between the two, for whichever starts first")
                 width: parent.width
                 visible: companionField.text !== "" && companionWhenField.currentValue !== "wrap"
                 contentRightMargin: 74

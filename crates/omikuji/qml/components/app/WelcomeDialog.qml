@@ -34,7 +34,7 @@ DialogCard {
 
     maxWidth: 560
     scrollable: true
-    title: qsTr("Welcome to omikuji~")
+    title: qsTr("Welcome to Omikuji~")
 
     function refresh() {
         if (archiveManager) {

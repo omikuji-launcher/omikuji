@@ -31,7 +31,7 @@ Item {
         spacing: Theme.space.xxl
 
         SettingsSection {
-            label: "omikuji"
+            label: "Omikuji"
             width: parent.width
 
             Column {
@@ -58,7 +58,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Guided tour")
-                description: qsTr("A quick walk through the library, adding a game and the stores.")
+                description: qsTr("A quick walk through the library, adding a game and the stores")
                 labelWidth: 200
                 contentRightMargin: 0
 
@@ -76,7 +76,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Session log")
-                description: qsTr("Everything omikuji logged since it started. Attach it when reporting a bug.")
+                description: qsTr("Everything Omikuji logged since it started")
                 labelWidth: 200
                 contentRightMargin: 0
 
@@ -94,7 +94,7 @@ Item {
             width: parent.width
 
             Text {
-                text: qsTr("GPL-3.0-or-later. omikuji is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.")
+                text: qsTr("GPL-3.0-or-later. Omikuji is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.")
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.caption.size
                 width: parent.width

@@ -67,7 +67,7 @@ DialogCard {
         Text {
             visible: !root.linking
             width: parent.width
-            text: qsTr("Moves %1 from omikuji's runners folder into the selected Steam installations.").arg(root.runnerName)
+            text: qsTr("Moves %1 from Omikuji's runners folder into the selected Steam installations.").arg(root.runnerName)
             color: Theme.textSubtle
             font.pixelSize: Theme.type.caption.size
             wrapMode: Text.WordWrap
@@ -77,7 +77,7 @@ DialogCard {
             visible: root.linking
             width: parent.width
             icon: "info"
-            text: qsTr("%1 stays in omikuji and keeps auto-updating; Steam follows the symlink. Unchecking one removes its link.").arg(root.runnerName)
+            text: qsTr("Steam uses %1 through a link so it updates along with Omikuji.").arg(root.runnerName)
         }
 
         Repeater {

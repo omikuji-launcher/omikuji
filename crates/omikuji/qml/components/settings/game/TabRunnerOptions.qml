@@ -98,6 +98,7 @@ Item {
                 M3FileField {
                     id: wineExeField
                     label: qsTr("Path")
+                    placeholder: "/path/to/game.exe"
                     text: root.config["meta.exe"] || ""
                     width: parent.width
                     gameModel: root.gameModel
@@ -109,7 +110,7 @@ Item {
 
                 M3FileField {
                     label: qsTr("Working Directory")
-                    placeholder: qsTr("empty = executable's parent directory")
+                    placeholder: qsTr("executable's folder (auto)")
                     text: root.config["launch.working_dir"] || ""
                     selectFolder: true
                     width: parent.width
@@ -119,7 +120,7 @@ Item {
 
                 M3TextField {
                     label: qsTr("Arguments")
-                    placeholder: '--skip-intro --windowed --name "John Doe"'
+                    placeholder: '--skip-intro --windowed --name "Jane Doe"'
                     text: root.config["launch.args"] || ""
                     width: parent.width
                     gameModel: root.gameModel
@@ -165,7 +166,7 @@ Item {
 
                 M3FileField {
                     label: qsTr("Prefix")
-                    placeholder: root.config["wine.prefix.resolved"] || qsTr("empty = auto-create per game")
+                    placeholder: root.config["wine.prefix.resolved"] || qsTr("created per game (auto)")
                     text: root.config["wine.prefix"] || ""
                     selectFolder: true
                     width: parent.width
@@ -431,6 +432,7 @@ Item {
             M3FileField {
                 id: nativeExeField
                 label: qsTr("Executable")
+                placeholder: "/path/to/game"
                 text: root.config["meta.exe"] || ""
                 width: parent.width
                 gameModel: root.gameModel
@@ -442,7 +444,7 @@ Item {
 
             M3FileField {
                 label: qsTr("Working Directory")
-                placeholder: qsTr("empty = executable's parent directory")
+                placeholder: qsTr("executable's folder (auto)")
                 text: root.config["launch.working_dir"] || ""
                 selectFolder: true
                 width: parent.width

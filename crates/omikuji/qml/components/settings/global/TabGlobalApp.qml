@@ -190,7 +190,7 @@ Item {
 
             SpinRow {
                 label: qsTr("Bandwidth limit")
-                description: qsTr("Applies to every download, whatever the source.")
+                description: qsTr("Applies to every download, whatever the source")
                 width: parent.width
                 from: 0
                 to: 1000
@@ -204,7 +204,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Notify when a download finishes")
-                description: qsTr("Sends a desktop notification.")
+                description: qsTr("Sends a desktop notification")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {
@@ -220,7 +220,7 @@ Item {
 
             SpinRow {
                 label: qsTr("Download workers")
-                description: qsTr("Auto lets legendary pick, which is min(2 x CPUs, 16).")
+                description: qsTr("Auto lets legendary pick, which is min(2 x CPUs, 16)")
                 width: parent.width
                 from: 0
                 to: 128
@@ -231,7 +231,7 @@ Item {
 
             SpinRow {
                 label: qsTr("Shared memory")
-                description: qsTr("Buffer the workers download into. Auto is 1024.")
+                description: qsTr("Buffer the workers download into, 1024 when auto")
                 width: parent.width
                 from: 0
                 to: 16384
@@ -249,7 +249,7 @@ Item {
 
             SpinRow {
                 label: qsTr("Download workers")
-                description: qsTr("Auto lets gogdl pick.")
+                description: qsTr("Auto lets gogdl pick")
                 width: parent.width
                 from: 0
                 to: 128
@@ -265,7 +265,7 @@ Item {
 
             SpinRow {
                 label: qsTr("Max connections")
-                description: qsTr("How many files download at the same time.")
+                description: qsTr("How many files download at the same time")
                 width: parent.width
                 from: 1
                 to: 128
@@ -275,7 +275,7 @@ Item {
 
             SpinRow {
                 label: qsTr("HoYo patch threads")
-                description: qsTr("Patches applied at once after an update. Raise it if patching feels slow.")
+                description: qsTr("Patches applied at once after an update")
                 width: parent.width
                 from: 1
                 to: 32
@@ -301,7 +301,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Save game logs to disk")
-                description: qsTr("Off: logs live in memory only until the game exits. On: also written to cache/logs/games/.")
+                description: qsTr("Written to cache/logs/games/")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
                 M3Switch {

@@ -41,7 +41,7 @@ DialogCard {
                 + "${prefixes_path}    " + qsTr("prefixes root") + "\n"
                 + "${cache_path}       " + qsTr("cache root") + "\n"
                 + "${scripts_path}     " + qsTr("install scripts root") + "\n"
-                + "${data_path}        " + qsTr("omikuji data root") + "\n"
+                + "${data_path}        " + qsTr("Omikuji data root") + "\n"
                 + "${gachas_path}      " + qsTr("gacha manifests root") + "\n"
                 + "${components_path}  " + qsTr("components root") + "\n"
                 + "${runners_path}     " + qsTr("runners root") + "\n"

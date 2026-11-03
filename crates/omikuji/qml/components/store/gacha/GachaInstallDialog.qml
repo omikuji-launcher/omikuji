@@ -610,7 +610,7 @@ DialogCard {
             M3FileField {
                 Layout.fillWidth: true
                 label: qsTr("Temp path (optional)")
-                placeholder: qsTr("auto — next to install path")
+                placeholder: qsTr("next to install path (auto)")
                 selectFolder: true
                 gameModel: root.gameModel
                 text: root.tempPath
@@ -652,7 +652,7 @@ DialogCard {
             M3FileField {
                 Layout.fillWidth: true
                 label: qsTr("Prefix path (optional)")
-                placeholder: qsTr("auto — created per game")
+                placeholder: qsTr("created per game (auto)")
                 selectFolder: true
                 gameModel: root.gameModel
                 text: root.prefixPath

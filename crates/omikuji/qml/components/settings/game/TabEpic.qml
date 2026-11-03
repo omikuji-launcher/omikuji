@@ -65,7 +65,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Auto-sync")
-                description: qsTr("download before launch, upload after exit")
+                description: qsTr("Download before launch, upload after exit")
                 width: parent.width
 
                 M3Switch {
@@ -93,7 +93,7 @@ Item {
 
                 M3TextField {
                     label: qsTr("Save Path Override")
-                    placeholder: qsTr("leave empty to use detected path")
+                    placeholder: qsTr("detected path (auto)")
                     text: root.config["source.save_path"] || ""
                     width: parent.width
                     onTextEdited: (t) => root.updateField("source.save_path", t)

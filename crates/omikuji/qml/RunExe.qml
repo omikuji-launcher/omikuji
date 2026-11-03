@@ -81,7 +81,7 @@ ApplicationWindow {
 
             M3FileField {
                 label: qsTr("Prefix")
-                placeholder: qsTr("empty = auto-create")
+                placeholder: qsTr("new prefix (auto)")
                 selectFolder: true
                 width: parent.width
                 gameModel: gameModel

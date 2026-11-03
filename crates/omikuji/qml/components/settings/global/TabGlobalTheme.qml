@@ -72,7 +72,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Follow system")
-                description: qsTr("Use the desktop palette. Disable to apply per-token overrides below.")
+                description: qsTr("Use the desktop palette instead of the overrides below")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
                     checked: root.appSettings ? root.appSettings.followSystemColors : true
@@ -150,7 +150,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Follow system")
-                description: qsTr("Use the desktop default font. Disable to pick a family below.")
+                description: qsTr("Use the desktop default font instead of the family below")
                 labelWidth: root.rowLabelWidth
                 M3Switch {
                     checked: root.appSettings ? root.appSettings.followSystemFont : true
@@ -160,7 +160,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Font family")
-                description: qsTr("Applied app-wide. Requires restart.")
+                description: qsTr("Applies app-wide after a restart")
                 labelWidth: root.rowLabelWidth
                 opacity: (root.appSettings && !root.appSettings.followSystemFont) ? 1.0 : 0.4
 
@@ -174,7 +174,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Mono font")
-                description: qsTr("Paths, versions and inline values.")
+                description: qsTr("Paths, versions and inline values")
                 labelWidth: root.rowLabelWidth
 
                 M3Dropdown {
@@ -187,7 +187,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Logs font")
-                description: qsTr("Log views and preformatted blocks.")
+                description: qsTr("Log views and preformatted blocks")
                 labelWidth: root.rowLabelWidth
 
                 M3Dropdown {
@@ -200,7 +200,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Font sizes")
-                description: qsTr("Per-role text sizes used across the app.")
+                description: qsTr("Per-role text sizes used across the app")
                 labelWidth: root.rowLabelWidth
 
                 M3Button {
@@ -217,7 +217,7 @@ Item {
 
             SettingsRow {
                 label: qsTr("Corner radius")
-                description: qsTr("Per-token corner rounding used across the app.")
+                description: qsTr("Per-token corner rounding used across the app")
                 labelWidth: root.rowLabelWidth
 
                 M3Button {

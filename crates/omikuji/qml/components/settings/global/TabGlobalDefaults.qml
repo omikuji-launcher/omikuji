@@ -213,7 +213,7 @@ Item {
                 M3FileField {
                     id: prefixField
                     label: SettingLabels.label("wine.prefix")
-                    placeholder: qsTr("empty = auto-create per game")
+                    placeholder: qsTr("created per game (auto)")
                     text: root.cfg["wine.prefix"] || ""
                     selectFolder: true
                     width: parent.width - root.badgeSlot
