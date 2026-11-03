@@ -387,6 +387,7 @@ impl NileStore {
 
         self.pending_login = None;
         self.display_name = name.clone();
+        tracing::info!("{STORE}: logged in");
         Ok(name)
     }
 
@@ -399,6 +400,7 @@ impl NileStore {
         let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.pending_login = None;
         self.display_name.clear();
+        tracing::info!("{STORE}: logged out");
         Ok(())
     }
 

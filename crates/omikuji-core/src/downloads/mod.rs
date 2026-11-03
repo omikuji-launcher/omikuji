@@ -654,6 +654,14 @@ impl DownloadManager {
 
             set_status(&entry.id, DownloadStatus::Starting);
             throttle::global().reload();
+            tracing::info!(
+                "{}: {} started via {} into {}",
+                entry.display_name,
+                entry.kind.label(),
+                entry.source,
+                entry.install_path.display()
+            );
+            let started = std::time::Instant::now();
 
             let result = match &entry.kind {
                 DownloadKind::Install => source.install(&entry).await,
@@ -672,14 +680,26 @@ impl DownloadManager {
                     .unwrap_or(ControlSignal::None)
             };
 
+            let elapsed = started.elapsed().as_secs();
             match (result, final_signal) {
-                (_, ControlSignal::Pause) => set_status(&entry.id, DownloadStatus::Paused),
+                (_, ControlSignal::Pause) => {
+                    tracing::info!("{}: paused after {elapsed}s", entry.display_name);
+                    set_status(&entry.id, DownloadStatus::Paused);
+                }
                 (_, ControlSignal::Cancel) => {
+                    tracing::info!("{}: cancelled after {elapsed}s", entry.display_name);
                     discard_partial(&entry);
                     finish_bar(&entry.id, &entry.display_name, "cancelled");
                     mgr.inner.lock().unwrap().remove_entry(&entry.id);
                 }
-                (Ok(()), ControlSignal::None) => complete(&entry),
+                (Ok(()), ControlSignal::None) => {
+                    tracing::info!(
+                        "{}: {} finished in {elapsed}s",
+                        entry.display_name,
+                        entry.kind.label()
+                    );
+                    complete(&entry);
+                }
                 (Err(e), ControlSignal::None) => {
                     tracing::error!("{} failed: {e:?}", entry.display_name);
                     set_failed(&entry.id, format!("{e:#}"));

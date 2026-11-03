@@ -920,6 +920,7 @@ impl Default for GameModelRust {
         let sort_mode = SortMode::parse(&AppSettings::load().display.card_sort);
         library.game.sort_by(|a, b| sort_mode.cmp(a, b));
         let count = library.game.len() as i32;
+        tracing::info!("library: {count} games");
         Self {
             library,
             count,
@@ -1300,19 +1301,6 @@ impl qobject::GameModel {
         let Some(game) = self.library.game.get(row) else {
             return QVariant::default();
         };
-
-        if role == ROLE_NAME {
-            tracing::debug!(
-                "row={} name='{}' coverart='{}'",
-                row,
-                game.metadata.name,
-                media::resolve_image(
-                    &game.metadata.id,
-                    &game.metadata.coverart,
-                    &MediaType::Coverart
-                )
-            );
-        }
 
         match role {
             ROLE_ID => QVariant::from(&QString::from(&*game.metadata.id)),
@@ -2305,8 +2293,7 @@ impl qobject::GameModel {
     }
 
     fn system_info(&self) -> QString {
-        let qt = option_env!("OMIKUJI_QT_VERSION").unwrap_or("unknown");
-        QString::from(&system_info::report(env!("CARGO_PKG_VERSION"), qt))
+        QString::from(&app_log::system_report())
     }
 
     fn app_version(&self) -> QString {

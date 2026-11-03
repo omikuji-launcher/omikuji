@@ -15,7 +15,7 @@ use tracing_subscriber::fmt::{
 };
 use tracing_subscriber::prelude::*;
 
-use omikuji_core::log_files;
+use omikuji_core::{log_files, system_info};
 
 use crate::log_fmt::ShortTarget;
 
@@ -136,6 +136,12 @@ pub fn start_session() {
         env!("CARGO_PKG_VERSION"),
         path.display()
     );
+    std::thread::spawn(|| tracing::info!("system:\n{}", system_report()));
+}
+
+pub fn system_report() -> String {
+    let qt = option_env!("OMIKUJI_QT_VERSION").unwrap_or("unknown");
+    system_info::report(env!("CARGO_PKG_VERSION"), qt)
 }
 
 fn install_panic_hook() {

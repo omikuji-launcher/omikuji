@@ -48,6 +48,7 @@ impl GogStore {
 
     pub async fn login(&mut self, code: &str) -> Result<String> {
         gogdl_output(&["auth", "--code", code.trim()]).await?;
+        tracing::info!("{STORE}: logged in");
 
         if let Err(e) = self.refresh_user_data().await {
             tracing::error!("refresh_user_data after login failed: {}", e);
@@ -209,6 +210,7 @@ impl GogStore {
         let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
         self.user_id.clear();
+        tracing::info!("{STORE}: logged out");
     }
 }
 

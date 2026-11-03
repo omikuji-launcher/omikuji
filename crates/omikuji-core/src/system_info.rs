@@ -59,10 +59,7 @@ pub fn report(app_version: &str, qt_version: &str) -> String {
     }
 
     fields.push(("Qt".into(), qt_version.to_string()));
-    fields.push((
-        "Flatpak".into(),
-        if in_flatpak() { "yes" } else { "no" }.into(),
-    ));
+    fields.push(("Package".into(), packaging().into()));
     for spec in components::specs::all() {
         fields.push((
             spec.name.into(),
@@ -177,6 +174,16 @@ fn ram() -> String {
 
 pub fn in_flatpak() -> bool {
     std::env::var("FLATPAK_ID").is_ok() || std::path::Path::new("/.flatpak-info").exists()
+}
+
+fn packaging() -> &'static str {
+    if in_flatpak() {
+        "flatpak"
+    } else if std::env::var_os("APPIMAGE").is_some() {
+        "appimage"
+    } else {
+        "native"
+    }
 }
 
 fn enumerate() -> Vec<Gpu> {

@@ -130,6 +130,7 @@ impl EpicStore {
 
     pub async fn login(&mut self, code: &str) -> Result<String> {
         legendary_output_async(legendary_async()?.args(["auth", "--code", code.trim()])).await?;
+        tracing::info!("{STORE}: logged in");
 
         self.refresh_display_name();
         if self.display_name.is_empty() {
@@ -146,6 +147,7 @@ impl EpicStore {
         // drop cache so next login starts with an empty library, not the previous user's
         let _ = fs_err::remove_file(store::cache::library_path(STORE));
         self.display_name.clear();
+        tracing::info!("{STORE}: logged out");
         Ok(())
     }
 
