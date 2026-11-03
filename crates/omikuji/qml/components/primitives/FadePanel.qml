@@ -19,7 +19,7 @@ Rectangle {
     layer.live: shown
 
     Behavior on opacity {
-        NumberAnimation { id: fade; duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { id: fade; duration: Theme.dur.lg; easing.type: Theme.ease.standard }
     }
 
     // corner mask so the rounded bottom-right doesnt let content bleed

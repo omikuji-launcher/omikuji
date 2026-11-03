@@ -87,7 +87,7 @@ Item {
     readonly property alias labelArea: nameRow
 
     property real onArtOpacity: !root.spec.hoverReveal || root.hovered || root.keyFocused ? 1 : 0
-    Behavior on onArtOpacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Easing.OutCubic } }
+    Behavior on onArtOpacity { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
     readonly property real overlayBottomInset: root.spec.nameOnArt
         ? root.height - nameRow.y
@@ -122,9 +122,9 @@ Item {
 
     opacity: !cardVisible ? 0 : dimmed ? 0.55 : 1
     visible: animateVisibility ? opacity > 0.01 : cardVisible
-    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard } }
 
-    // declared before frame so it renders under in paint order, only the halo outside the card ends up visible
+    // declared before frame so only the halo outside the card shows
     RectangularShadow {
         anchors.fill: frame
         visible: opacity > 0.01
@@ -135,7 +135,7 @@ Item {
         color: Theme.shadow
         scale: frame.scale
         transformOrigin: Item.Center
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
     }
 
     Rectangle {
@@ -150,7 +150,7 @@ Item {
             : root.keyFocused ? 1.04
             : (root.hovered ? 1.02 : 1.0)
 
-        Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard } }
 
         Item {
             id: bannerClip
@@ -317,8 +317,8 @@ Item {
             border.color: root.keyFocused || root.selected ? root.selectedBorderColor
                 : root.hovered ? Theme.cardBorderHover : Theme.cardBorder
 
-            Behavior on border.color { ColorAnimation { duration: 150 } }
-            Behavior on border.width { NumberAnimation { duration: 100 } }
+            Behavior on border.color { ColorAnimation { duration: Theme.dur.md } }
+            Behavior on border.width { NumberAnimation { duration: Theme.dur.xs } }
         }
     }
 

@@ -31,7 +31,7 @@ Item {
     implicitHeight: small ? 28 : 36
     implicitWidth: Math.max(small ? 0 : 72, content.implicitWidth + (small ? Theme.space.md : Theme.space.lg) * 2)
     opacity: enabled ? 1 : 0.45
-    Behavior on opacity { enabled: root.visible; NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+    Behavior on opacity { enabled: root.visible; NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
     readonly property bool navigable: true
     readonly property real navRingRadius: radius
@@ -46,14 +46,14 @@ Item {
         borderWidth: root._outlined ? 1 : 0
         scale: area.pressed ? 0.97 : 1.0
 
-        Behavior on scale { NumberAnimation { duration: Theme.dur.xfast; easing.type: Theme.ease.standard } }
-        Behavior on fillColor { enabled: root.visible; ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.xs; easing.type: Theme.ease.standard } }
+        Behavior on fillColor { enabled: root.visible; ColorAnimation { duration: Theme.dur.md } }
 
         Squircle {
             anchors.fill: parent
             radius: root.radius
             fillColor: Theme.alpha(root._stateOn, area.pressed ? 0.14 : (area.containsMouse ? 0.08 : 0.0))
-            Behavior on fillColor { ColorAnimation { duration: Theme.dur.fast } }
+            Behavior on fillColor { ColorAnimation { duration: Theme.dur.md } }
         }
 
         Row {

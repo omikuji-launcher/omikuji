@@ -190,9 +190,9 @@ Item {
     SequentialAnimation {
         id: snapAnim
         ParallelAnimation {
-            NumberAnimation { id: snapX; target: dragProxy; property: "x"; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { id: snapY; target: dragProxy; property: "y"; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { target: dragProxy; property: "scale"; to: 1.0; duration: 160; easing.type: Easing.OutCubic }
+            NumberAnimation { id: snapX; target: dragProxy; property: "x"; duration: Theme.dur.md; easing.type: Theme.ease.standard }
+            NumberAnimation { id: snapY; target: dragProxy; property: "y"; duration: Theme.dur.md; easing.type: Theme.ease.standard }
+            NumberAnimation { target: dragProxy; property: "scale"; to: 1.0; duration: Theme.dur.md; easing.type: Theme.ease.standard }
         }
         ScriptAction {
             script: {
@@ -219,7 +219,7 @@ Item {
             property real grabY: 0
             width: dragCard ? dragCard.width : 0
             height: dragCard ? dragCard.height : 0
-            Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard } }
             Drag.active: dragCard !== null && !snapAnim.running
             Drag.keys: root.reorderKeys
             Drag.hotSpot.x: grabX

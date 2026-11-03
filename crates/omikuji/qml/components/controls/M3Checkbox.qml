@@ -25,8 +25,8 @@ Item {
         border.width: 2
         border.color: root._on ? Theme.accent : root._outlineOff
 
-        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
-        Behavior on border.color { ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
+        Behavior on border.color { ColorAnimation { duration: Theme.dur.md } }
 
         SvgIcon {
             anchors.centerIn: parent
@@ -35,7 +35,7 @@ Item {
             color: Theme.accentOn
             opacity: root.checked && !root.indeterminate ? 1 : 0
 
-            Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
         }
 
         Rectangle {
@@ -46,7 +46,7 @@ Item {
             color: Theme.accentOn
             opacity: root.indeterminate ? 1 : 0
 
-            Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
         }
     }
 }

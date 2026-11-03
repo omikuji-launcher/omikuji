@@ -96,8 +96,8 @@ Item {
                         anchors.leftMargin: Theme.space.sm
                         anchors.rightMargin: Theme.space.sm
                         radius: Theme.radius.sm
-                        color: (rowArea.containsMouse && !itemRow.locked) ? Theme.alpha(Theme.text, 0.06) : "transparent"
-                        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                        color: (rowArea.containsMouse && !itemRow.locked) ? Theme.stateHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
                     }
 
                     IconTile {
@@ -150,7 +150,7 @@ Item {
                         anchors.rightMargin: Theme.space.md
                         anchors.verticalCenter: parent.verticalCenter
                         opacity: rowArea.containsMouse || hovered || InputMode.keyFocus(rowArea) || InputMode.keyFocus(removeBtn) ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
                         onClicked: root.removeRequested(itemRow.modelData.id)
                     }
 

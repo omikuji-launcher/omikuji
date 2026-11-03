@@ -26,8 +26,8 @@ Item {
 
     SequentialAnimation {
         id: clench
-        NumberAnimation { target: halo; property: "squeeze"; to: halo.gap; duration: Theme.dur.xfast; easing.type: Theme.ease.standard }
-        NumberAnimation { target: halo; property: "squeeze"; to: 0; duration: Theme.dur.fast; easing.type: Theme.ease.standard }
+        NumberAnimation { target: halo; property: "squeeze"; to: halo.gap; duration: Theme.dur.xs; easing.type: Theme.ease.standard }
+        NumberAnimation { target: halo; property: "squeeze"; to: 0; duration: Theme.dur.md; easing.type: Theme.ease.standard }
     }
 
     function _sync() {

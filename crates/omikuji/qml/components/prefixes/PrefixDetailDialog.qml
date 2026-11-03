@@ -57,19 +57,9 @@ DialogCard {
             width: parent.width
             spacing: Theme.space.sm
 
-            Squircle {
-                width: parent.width
-                height: pathText.implicitHeight + Theme.space.md
-                radius: Theme.radius.sm
-                fillColor: Theme.alpha(Theme.text, 0.06)
-
+            InsetBox {
                 PathText {
-                    id: pathText
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: Theme.space.md
-                    anchors.rightMargin: Theme.space.md
+                    width: parent.width
                     text: root.prefix.path || ""
                 }
             }
@@ -168,7 +158,7 @@ DialogCard {
                     id: scrollAnim
                     target: gameList
                     property: "contentX"
-                    duration: Theme.dur.med
+                    duration: Theme.dur.xl
                     easing.type: Theme.ease.standard
                 }
 

@@ -38,9 +38,9 @@ Item {
 
     SequentialAnimation {
         id: swap
-        NumberAnimation { target: layout; property: "opacity"; to: 0; duration: Theme.dur.xfast; easing.type: Easing.InCubic }
+        NumberAnimation { target: layout; property: "opacity"; to: 0; duration: Theme.dur.xs; easing.type: Easing.InCubic }
         ScriptAction { script: if (root.content) root._view = root.content }
-        NumberAnimation { target: layout; property: "opacity"; to: 1; duration: Theme.dur.fast; easing.type: Theme.ease.standard }
+        NumberAnimation { target: layout; property: "opacity"; to: 1; duration: Theme.dur.md; easing.type: Theme.ease.standard }
     }
 
     readonly property real _gap: Theme.space.lg
@@ -77,10 +77,10 @@ Item {
     scale: shown ? 1 : 0.96
     visible: opacity > 0.01
 
-    Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
-    Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
-    Behavior on x { enabled: root.visible; NumberAnimation { duration: Theme.dur.slow; easing.type: Easing.InOutCubic } }
-    Behavior on y { enabled: root.visible; NumberAnimation { duration: Theme.dur.slow; easing.type: Easing.InOutCubic } }
+    Behavior on opacity { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
+    Behavior on scale { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
+    Behavior on x { enabled: root.visible; NumberAnimation { duration: Theme.dur.xxl; easing.type: Easing.InOutCubic } }
+    Behavior on y { enabled: root.visible; NumberAnimation { duration: Theme.dur.xxl; easing.type: Easing.InOutCubic } }
 
     RectangularShadow {
         anchors.fill: surface

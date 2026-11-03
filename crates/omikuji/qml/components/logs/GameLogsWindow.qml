@@ -183,10 +183,8 @@ Window {
                     Rectangle {
                         anchors.fill: parent
                         radius: Theme.radius.xs
-                        color: followArea.containsMouse
-                            ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, 0.08)
-                            : "transparent"
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                        color: followArea.containsMouse ? Theme.stateHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
                     }
 
                     Row {
@@ -308,8 +306,8 @@ Window {
         opacity: logWindow.searchExpanded ? 0 : 1
         scale: logWindow.searchExpanded ? 0.85 : 1
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.xfast } }
-        Behavior on scale { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xs } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
         SvgIcon {
             anchors.centerIn: parent
@@ -338,8 +336,8 @@ Window {
         opacity: logWindow.searchExpanded ? 1 : 0
         scale: logWindow.searchExpanded ? 1 : 0.9
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
-        Behavior on scale { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
         property var matchPositions: []
         property int matchCount: 0

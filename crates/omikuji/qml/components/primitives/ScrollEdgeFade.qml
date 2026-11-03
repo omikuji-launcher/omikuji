@@ -49,7 +49,7 @@ Item {
                 GradientStop { position: 0.45; color: Theme.alpha(root.surfaceColor, 0.6) }
                 GradientStop { position: 1.0; color: Theme.alpha(root.surfaceColor, 0) }
             }
-            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.md } }
         }
 
         Rectangle {
@@ -64,7 +64,7 @@ Item {
                 GradientStop { position: 0.55; color: Theme.alpha(root.surfaceColor, 0.6) }
                 GradientStop { position: 1.0; color: root.surfaceColor }
             }
-            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.md } }
         }
 
         SvgIcon {
@@ -78,7 +78,7 @@ Item {
             rotation: 90
             color: Theme.textMuted
             opacity: root._ramp(root._before)
-            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.md } }
         }
 
         SvgIcon {
@@ -92,7 +92,7 @@ Item {
             rotation: -90
             color: Theme.textMuted
             opacity: root._ramp(root._after)
-            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.fast } }
+            Behavior on opacity { enabled: settled.value; NumberAnimation { duration: Theme.dur.md } }
         }
     }
 }

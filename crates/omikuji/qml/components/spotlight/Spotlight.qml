@@ -23,7 +23,7 @@ Item {
     property var targetRects: []
 
     property real _tint: highlighted ? 0.16 : 0
-    Behavior on _tint { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+    Behavior on _tint { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
     property var _slots: []
     property var _from: []
@@ -72,7 +72,7 @@ Item {
     function _step(dt) {
         const goals = keys.map(_goal)
         if (goals.every(g => g !== null)) {
-            _t = Math.min(1, _t + dt * 1000 / Theme.dur.slow)
+            _t = Math.min(1, _t + dt * 1000 / Theme.dur.xxl)
             if (goals.length !== targetRects.length || goals.some((g, i) => !_sameRect(g, targetRects[i]))) targetRects = goals
         }
         const e = _easeInOut(_t)
@@ -112,7 +112,7 @@ Item {
         preferredRendererType: Shape.CurveRenderer
         opacity: root.shown ? 1 : 0
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl } }
 
         ShapePath {
             fillColor: Theme.scrim

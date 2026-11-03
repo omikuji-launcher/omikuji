@@ -68,7 +68,7 @@ DialogCard {
                                     : "transparent"
                             border.width: popup.selected === iconCell.modelData ? 1 : 0
                             border.color: Theme.accent
-                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
                         }
 
                         SvgIcon {

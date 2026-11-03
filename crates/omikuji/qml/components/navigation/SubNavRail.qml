@@ -66,7 +66,7 @@ Item {
             anchors.margins: Theme.space.xs
             radius: Theme.radius.md
             color: hov.containsMouse && !railRow.selected ? Theme.stateHover : Theme.alpha(Theme.text, 0)
-            Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+            Behavior on color { ColorAnimation { duration: Theme.dur.md } }
         }
 
         Row {
@@ -83,7 +83,7 @@ Item {
                 size: 20
                 color: railRow.selected ? Theme.accent : Theme.icon
                 visible: railRow.icon !== ""
-                Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                Behavior on color { ColorAnimation { duration: Theme.dur.md } }
             }
 
             Text {
@@ -94,7 +94,7 @@ Item {
                 font.pixelSize: Theme.type.label.size
                 font.weight: railRow.selected ? Font.DemiBold : Font.Medium
                 elide: Text.ElideRight
-                Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                Behavior on color { ColorAnimation { duration: Theme.dur.md } }
             }
         }
 
@@ -147,7 +147,7 @@ Item {
         visible: root.currentIndex >= 0 && root.currentIndex < root.items.length
 
         Behavior on y {
-            NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot }
+            NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot }
         }
     }
 

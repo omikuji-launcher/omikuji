@@ -20,7 +20,7 @@ Item {
 
     function markUnsettled() { settleTimer.restart() }
 
-    Timer { id: settleTimer; interval: 220 }
+    Timer { id: settleTimer; interval: Theme.dur.xl }
 
     Connections {
         target: grips.frame
@@ -32,7 +32,7 @@ Item {
     property real snapOut: 0.96
     property bool hugging: false
     property real hugT: hugging ? 1 : 0
-    Behavior on hugT { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+    Behavior on hugT { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
 
     property Item frame: parent ? parent.parent : null
 

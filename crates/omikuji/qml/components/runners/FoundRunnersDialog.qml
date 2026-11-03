@@ -154,7 +154,7 @@ DialogCard {
                     color: rrMouse.containsMouse
                         ? Theme.alpha(Theme.text, 0.05)
                         : "transparent"
-                    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                    Behavior on color { ColorAnimation { duration: Theme.dur.md } }
                 }
 
                 MouseArea {

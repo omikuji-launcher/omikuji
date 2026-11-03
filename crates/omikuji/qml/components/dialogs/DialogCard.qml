@@ -72,7 +72,7 @@ Item {
         id: revealAnim
         target: bodyFlick
         property: "contentY"
-        duration: Theme.dur.med
+        duration: Theme.dur.xl
         easing.type: Theme.ease.standard
     }
 
@@ -108,7 +108,7 @@ Item {
         opacity: root.panelsShown && panelLoader.sourceComponent !== null && width > 0 ? 1 : 0
         visible: opacity > 0.01
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
 
         RectangularShadow {
             anchors.fill: panelSurf
@@ -152,7 +152,7 @@ Item {
         color: Theme.scrim
         opacity: root.shown ? 1 : 0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl } }
 
         MouseArea {
             anchors.fill: parent
@@ -173,8 +173,8 @@ Item {
         width: resizer.widthFor(root.maxWidth)
         height: resizer.heightFor(root.fillHeight ? root.preferredHeight : naturalHeight)
 
-        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
-        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
 
         opacity: root.shown ? 1 : 0
         scale: root.shown ? 1 : 0.96
@@ -189,8 +189,8 @@ Item {
         readonly property real naturalHeight: header.height + bodyLoader.implicitHeight
             + Theme.space.lg * 2 + (footerActive ? footerHeight + Theme.space.xl : 0)
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
-        Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
 
         RectangularShadow {
             anchors.fill: card

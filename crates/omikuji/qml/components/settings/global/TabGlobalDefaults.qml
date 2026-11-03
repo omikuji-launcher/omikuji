@@ -66,7 +66,7 @@ Item {
         icon: "sync"
         opacity: active ? 1 : 0
         enabled: active
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
         onClicked: root.reset(fieldKey)
     }
 

@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import omikuji 1.0
 
 Item {
     id: root
@@ -101,7 +102,7 @@ Item {
         sourceComponent: Rectangle {
             color: root.fillColor
             radius: height / 2
-            Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard } }
         }
     }
 

@@ -35,7 +35,7 @@ Item {
         visible: root.label !== ""
 
         Behavior on color {
-            ColorAnimation { duration: 100 }
+            ColorAnimation { duration: Theme.dur.xs }
         }
     }
 

@@ -1,17 +1,18 @@
 import QtQuick
+import omikuji 1.0
 import "../lib/Nav.js" as Nav
 
 QtObject {
     id: root
 
     property Flickable flick: null
-    property int duration: 160
+    property int duration: Theme.motion(160)
 
     readonly property NumberAnimation _anim: NumberAnimation {
         target: root.flick
         property: "contentY"
         duration: root.duration
-        easing.type: Easing.OutCubic
+        easing.type: Theme.ease.standard
     }
 
     function revealItem(item, margin) {

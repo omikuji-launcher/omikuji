@@ -242,12 +242,12 @@ Popup {
     PopupFocusReturn { popup: root }
 
     enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
-        NumberAnimation { property: "scale"; from: 0.95; to: 1; duration: 120; easing.type: Easing.OutCubic }
+        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur.sm; easing.type: Theme.ease.standard }
+        NumberAnimation { property: "scale"; from: 0.95; to: 1; duration: Theme.dur.sm; easing.type: Theme.ease.standard }
     }
     exit: Transition {
-        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 80 }
-        NumberAnimation { property: "scale"; from: 1; to: 0.98; duration: 80 }
+        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.dur.xs }
+        NumberAnimation { property: "scale"; from: 1; to: 0.98; duration: Theme.dur.xs }
     }
 
     contentItem: Column {
@@ -290,7 +290,6 @@ Popup {
                         width: root.itemWidth
                         height: 32
                         radius: Theme.radius.sm
-                        // danger items tint red, normal items use ~2x the old 0.08 alpha so light-mode hovers are actually visible
                         color: root._keyIndex === itemLoader.index && !itemLoader.modelData.disabled
                             ? (itemLoader.modelData.danger
                                 ? Theme.alpha(Theme.error, 0.18)
@@ -300,7 +299,7 @@ Popup {
                             : "transparent"
 
                         Behavior on color {
-                            ColorAnimation { duration: 80 }
+                            ColorAnimation { duration: Theme.dur.xs }
                         }
 
                         Text {
@@ -332,7 +331,7 @@ Popup {
                             rotation: root._submenuIndex === itemLoader.index && root._submenuSide === -1 ? 0 : 180
 
                             Behavior on rotation {
-                                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard }
                             }
                         }
 

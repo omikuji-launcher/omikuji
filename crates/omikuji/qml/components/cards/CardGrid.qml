@@ -212,7 +212,7 @@ Item {
 
             move: Transition {
                 enabled: root._laidOutVisible
-                NumberAnimation { properties: "x,y"; duration: 200; easing.type: Easing.OutCubic }
+                NumberAnimation { properties: "x,y"; duration: Theme.dur.lg; easing.type: Theme.ease.standard }
             }
 
             Repeater {

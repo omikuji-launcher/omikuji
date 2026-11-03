@@ -219,7 +219,7 @@ DialogCard {
 
                 Behavior on y {
                     NumberAnimation {
-                        duration: Theme.dur.med
+                        duration: Theme.dur.xl
                         easing.type: Theme.ease.emphasized
                         easing.overshoot: Theme.ease.overshoot
                     }
@@ -249,9 +249,7 @@ DialogCard {
                             anchors.fill: parent
                             anchors.margins: 3
                             radius: Theme.radius.md
-                            fillColor: (!sourceRow.current && sourceHover.containsMouse)
-                                ? Theme.alpha(Theme.text, 0.06)
-                                : "transparent"
+                            fillColor: (!sourceRow.current && sourceHover.containsMouse) ? Theme.stateHover : "transparent"
                         }
 
                         Text {
@@ -266,7 +264,7 @@ DialogCard {
                             font.weight: sourceRow.current ? Font.DemiBold : Font.Normal
                             elide: Text.ElideRight
 
-                            Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+                            Behavior on color { ColorAnimation { duration: Theme.dur.md } }
                         }
 
                         PressArea {

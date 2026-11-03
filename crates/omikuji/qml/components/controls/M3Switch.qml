@@ -19,10 +19,10 @@ Item {
     property real _press: mouseArea.pressed ? 1 : 0
 
     Behavior on _progress {
-        NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard }
+        NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard }
     }
     Behavior on _press {
-        NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard }
+        NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard }
     }
 
     Rectangle {

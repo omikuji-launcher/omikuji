@@ -50,34 +50,21 @@ DialogCard {
         width: parent.width
         spacing: Theme.space.lg
 
-        Squircle {
-            width: parent.width
-            height: contextColumn.implicitHeight + Theme.space.md
-            radius: Theme.radius.sm
-            fillColor: Theme.alpha(Theme.text, 0.06)
+        InsetBox {
+            spacing: 2
 
-            Column {
-                id: contextColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Theme.space.md
-                anchors.rightMargin: Theme.space.md
-                spacing: 2
-
-                Text {
-                    width: parent.width
-                    visible: root.contextTitle !== ""
-                    text: root.contextTitle
-                    color: Theme.text
-                    font.pixelSize: Theme.type.label.size
-                    font.weight: Font.Medium
-                    elide: Text.ElideRight
-                }
-                PathText {
-                    width: parent.width
-                    text: root.contextText
-                }
+            Text {
+                width: parent.width
+                visible: root.contextTitle !== ""
+                text: root.contextTitle
+                color: Theme.text
+                font.pixelSize: Theme.type.label.size
+                font.weight: Font.Medium
+                elide: Text.ElideRight
+            }
+            PathText {
+                width: parent.width
+                text: root.contextText
             }
         }
 

@@ -192,7 +192,7 @@ DialogCard {
                     anchors.verticalCenter: parent.verticalCenter
                     enabled: !scriptCard.modelData.remote
                     opacity: enabled && (scriptCard.active || hovered || InputMode.keyFocus(deleteBtn)) ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
                     onClicked: {
                         if (root.scriptsBridge.removeScript(scriptCard.modelData.dir))
                             root.entries = JSON.parse(root.scriptsBridge.listJson())

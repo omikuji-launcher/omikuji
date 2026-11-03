@@ -23,7 +23,7 @@ Item {
         radius: Theme.radius.sm
         color: press.containsMouse ? Theme.stateHover : "transparent"
 
-        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
     }
 
     PressArea {

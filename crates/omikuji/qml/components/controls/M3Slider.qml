@@ -125,7 +125,7 @@ Item {
             color: Theme.accent
 
             Behavior on width {
-                NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.dur.xs; easing.type: Theme.ease.standard }
             }
         }
 

@@ -331,6 +331,16 @@ Item {
             }
 
             SettingsRow {
+                label: qsTr("Reduced motion")
+                labelWidth: root.rowLabelWidth
+                width: parent.width
+                M3Switch {
+                    checked: appSettings ? appSettings.reducedMotion : false
+                    onToggled: (val) => appSettings.applyReducedMotion(val)
+                }
+            }
+
+            SettingsRow {
                 label: qsTr("Progress style")
                 labelWidth: root.rowLabelWidth
                 width: parent.width
@@ -404,7 +414,7 @@ Item {
                 spacing: 0
 
                 moveDisplaced: Transition {
-                    NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "y"; duration: Theme.dur.lg; easing.type: Theme.ease.standard }
                 }
 
                 delegate: Item {
@@ -420,7 +430,7 @@ Item {
                     height: 52
 
                     Behavior on y {
-                        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard }
                     }
 
                     Item {
@@ -433,8 +443,8 @@ Item {
                         scale: dragArea.raised ? 1.02 : 1.0
                         opacity: dragArea.raised ? 0.92 : 1.0
                         z: dragArea.raised ? 2 : 0
-                        Behavior on scale { NumberAnimation { duration: 120 } }
-                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                        Behavior on scale { NumberAnimation { duration: Theme.dur.sm } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.dur.sm } }
 
                         states: State {
                             when: dragArea.held

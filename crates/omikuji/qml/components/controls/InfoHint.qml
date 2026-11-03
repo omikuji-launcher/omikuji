@@ -19,7 +19,7 @@ Item {
         color: hover.hovered ? Theme.icon : Theme.textMuted
 
         Behavior on color {
-            ColorAnimation { duration: Theme.dur.fast }
+            ColorAnimation { duration: Theme.dur.md }
         }
     }
 

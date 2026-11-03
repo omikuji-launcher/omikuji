@@ -45,11 +45,11 @@ Popup {
     PopupFocusReturn { popup: root }
 
     enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 120; easing.type: Easing.OutCubic }
-        NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: 120; easing.type: Easing.OutCubic }
+        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.dur.sm; easing.type: Theme.ease.standard }
+        NumberAnimation { property: "scale"; from: 0.96; to: 1; duration: Theme.dur.sm; easing.type: Theme.ease.standard }
     }
     exit: Transition {
-        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 80 }
+        NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.dur.xs }
     }
 
     onOpened: Nav.focusFirst(contentItem)

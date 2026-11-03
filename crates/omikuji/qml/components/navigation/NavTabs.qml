@@ -192,13 +192,11 @@ Item {
             width: parent.width - 20
             height: 36
             radius: Theme.radius.pill
-            color: navItemMouse.containsMouse && !navItem.selected
-                ? Theme.alpha(Theme.text, 0.06)
-                : "transparent"
+            color: navItemMouse.containsMouse && !navItem.selected ? Theme.stateHover : "transparent"
             visible: !navItem.selected
 
             Behavior on color {
-                ColorAnimation { duration: 100 }
+                ColorAnimation { duration: Theme.dur.xs }
             }
         }
 
@@ -210,7 +208,7 @@ Item {
             z: 1
 
             Behavior on anchors.leftMargin {
-                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard }
             }
 
             Item {
@@ -225,7 +223,7 @@ Item {
                     color: navItem.selected ? Theme.accent : Theme.icon
 
                     Behavior on color {
-                        ColorAnimation { duration: 100 }
+                        ColorAnimation { duration: Theme.dur.xs }
                     }
                 }
 
@@ -241,7 +239,7 @@ Item {
                     transformOrigin: Item.Bottom
 
                     Behavior on scale {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+                        NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.emphasized; easing.overshoot: 1.6 }
                     }
 
                     SpiritFlame {
@@ -261,7 +259,7 @@ Item {
                 visible: opacity > 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 120 }
+                    NumberAnimation { duration: Theme.dur.sm }
                 }
             }
         }
@@ -313,7 +311,7 @@ Item {
         anchors.topMargin: root.iconOnly ? 0 : 20
 
         Behavior on anchors.topMargin {
-            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard }
         }
         anchors.left: parent.left
         anchors.leftMargin: 20
@@ -328,10 +326,10 @@ Item {
         height: root.iconOnly ? 0 : implicitHeight
 
         Behavior on opacity {
-            NumberAnimation { duration: 120 }
+            NumberAnimation { duration: Theme.dur.sm }
         }
         Behavior on height {
-            NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard }
         }
     }
 
@@ -353,7 +351,7 @@ Item {
         }
 
         Behavior on baseY {
-            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+            NumberAnimation { duration: Theme.motion(250); easing.type: Theme.ease.emphasized; easing.overshoot: 1.4 }
         }
 
         y: root.currentBottom !== ""
@@ -415,7 +413,7 @@ Item {
                 model: tabsModel
 
                 moveDisplaced: Transition {
-                    NumberAnimation { properties: "y"; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { properties: "y"; duration: Theme.dur.lg; easing.type: Theme.ease.standard }
                 }
 
                 delegate: NavItem {
@@ -453,8 +451,8 @@ Item {
                     Keys.onShortcutOverride: (event) => keyReorder.handleShortcutOverride(event)
                     Keys.onPressed: (event) => keyReorder.handleKey(event)
                     onActiveFocusChanged: if (!activeFocus) keyReorder.drop(false)
-                    Behavior on scale { NumberAnimation { duration: 120 } }
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: Theme.dur.sm } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.dur.sm } }
 
                     onActivated: {
                         root.currentIndex = index
@@ -578,7 +576,7 @@ Item {
             width: 2
             color: Theme.accent
             opacity: resizer.pressed ? 0.7 : (resizer.containsMouse ? 0.35 : 0)
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on opacity { NumberAnimation { duration: Theme.dur.sm } }
         }
     }
 

@@ -57,7 +57,7 @@ Item {
             color: linkMouseArea.containsMouse ? Qt.lighter(Theme.accent, 1.1) : Theme.accent
             font.pixelSize: Theme.type.body.size
             font.weight: Font.DemiBold
-            Behavior on color { ColorAnimation { duration: Theme.dur.xfast } }
+            Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
 
             PressArea {
                 id: linkMouseArea

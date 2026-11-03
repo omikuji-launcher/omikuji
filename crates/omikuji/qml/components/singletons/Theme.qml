@@ -63,6 +63,7 @@ QtObject {
 
     property bool mutedIcons: false
     property bool filledIcons: false
+    property bool reducedMotion: false
     property string progressStyle: "rope"
     property real uiScale: 1.0
     property color icon: Qt.rgba(text.r, text.g, text.b, mutedIcons ? 0.55 : 0.92)
@@ -139,11 +140,15 @@ QtObject {
     }
 
     readonly property QtObject dur: QtObject {
-        readonly property int xfast: 90
-        readonly property int fast: 140
-        readonly property int med: 220
-        readonly property int slow: 340
+        readonly property int xs: theme.motion(90)
+        readonly property int sm: theme.motion(120)
+        readonly property int md: theme.motion(140)
+        readonly property int lg: theme.motion(180)
+        readonly property int xl: theme.motion(220)
+        readonly property int xxl: theme.motion(340)
     }
+
+    function motion(ms) { return reducedMotion ? 0 : ms }
 
     readonly property QtObject ease: QtObject {
         readonly property int standard: Easing.OutCubic
@@ -160,5 +165,37 @@ QtObject {
         readonly property var label: ({ size: theme._fontPx("label"), weight: Font.Medium })
         readonly property var caption: ({ size: theme._fontPx("caption"), weight: Font.Normal })
         readonly property var micro: ({ size: theme._fontPx("micro"), weight: Font.Medium })
+    }
+
+    property QtObject _settings: null
+
+    function bindSettings(s) {
+        mutedIcons = Qt.binding(() => s.mutedIcons)
+        mutedLogs = Qt.binding(() => s.mutedLogs)
+        dimmedTextOpacity = Qt.binding(() => s.dimmedTextOpacity)
+        filledIcons = Qt.binding(() => s.filledIcons)
+        reducedMotion = Qt.binding(() => s.reducedMotion)
+        progressStyle = Qt.binding(() => s.progressStyle)
+        followSystemColors = Qt.binding(() => s.followSystemColors)
+        followSystemFont = Qt.binding(() => s.followSystemFont)
+        fontFamily = Qt.binding(() => s.fontFamily)
+        monoFamily = Qt.binding(() => s.fontFamilyMono)
+        logsFamily = Qt.binding(() => s.fontFamilyLogs)
+        fillFields = Qt.binding(() => s.fillFields)
+        _settings = s
+        _loadOverrides()
+        _loadFontSizes()
+        _loadRadiusOverrides()
+    }
+
+    function _loadOverrides() { overrides = JSON.parse(_settings.overridesJson()) }
+    function _loadFontSizes() { fontSizes = JSON.parse(_settings.fontSizesJson()) }
+    function _loadRadiusOverrides() { radiusOverrides = JSON.parse(_settings.radiusOverridesJson()) }
+
+    readonly property Connections _settingsWatch: Connections {
+        target: theme._settings
+        function onThemeChanged() { theme._loadOverrides() }
+        function onFontSizesChanged() { theme._loadFontSizes() }
+        function onRadiusOverridesChanged() { theme._loadRadiusOverrides() }
     }
 }

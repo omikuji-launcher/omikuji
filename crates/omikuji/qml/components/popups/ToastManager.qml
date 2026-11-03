@@ -76,15 +76,15 @@ Item {
                 NumberAnimation {
                     properties: "opacity"
                     from: 0; to: 1
-                    duration: 220
-                    easing.type: Easing.OutCubic
+                    duration: Theme.dur.xl
+                    easing.type: Theme.ease.standard
                 }
                 NumberAnimation {
                     properties: "x"
                     from: stack.width + 24
                     to: 0
-                    duration: 260
-                    easing.type: Easing.OutBack
+                    duration: Theme.motion(260)
+                    easing.type: Theme.ease.emphasized
                     easing.overshoot: 1.1
                 }
             }
@@ -95,13 +95,13 @@ Item {
                 NumberAnimation {
                     properties: "opacity"
                     to: 0
-                    duration: 180
+                    duration: Theme.dur.lg
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     properties: "x"
                     to: stack.width + 24
-                    duration: 200
+                    duration: Theme.dur.lg
                     easing.type: Easing.InCubic
                 }
             }
@@ -110,8 +110,8 @@ Item {
         displaced: Transition {
             NumberAnimation {
                 properties: "y"
-                duration: 280
-                easing.type: Easing.OutCubic
+                duration: Theme.motion(280)
+                easing.type: Theme.ease.standard
             }
         }
 

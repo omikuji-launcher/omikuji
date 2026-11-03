@@ -73,7 +73,7 @@ Item {
         sourceComponent: gridComponent
 
         Behavior on opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard }
         }
     }
 

@@ -27,19 +27,9 @@ DialogCard {
             wrapMode: Text.WordWrap
         }
 
-        Squircle {
-            width: parent.width
-            height: builtinsText.implicitHeight + Theme.space.md
-            radius: Theme.radius.sm
-            fillColor: Theme.alpha(Theme.text, 0.06)
-
+        InsetBox {
             Text {
-                id: builtinsText
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.leftMargin: Theme.space.md
-                anchors.rightMargin: Theme.space.md
+                width: parent.width
                 text: "${game_exe}         " + qsTr("game executable") + "\n"
                 + "${game_dir}         " + qsTr("folder containing the executable") + "\n"
                 + "${game_args}        " + qsTr("the game's launch arguments") + "\n"
@@ -58,7 +48,7 @@ DialogCard {
                 + "${layers_path}      " + qsTr("layers root") + "\n"
                 + "${tools_path}       " + qsTr("tools root") + "\n"
                 + "${logs_path}        " + qsTr("logs root") + "\n"
-                    + "${runtime_path}     " + qsTr("runtime root")
+                + "${runtime_path}     " + qsTr("runtime root")
                 color: Theme.textMuted
                 font.pixelSize: Theme.type.caption.size
                 font.family: Theme.mono

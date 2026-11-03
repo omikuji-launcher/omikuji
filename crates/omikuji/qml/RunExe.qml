@@ -31,35 +31,7 @@ ApplicationWindow {
 
     AppSettingsBridge {
         id: appSettings
-        Component.onCompleted: {
-            Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
-            Theme.mutedLogs = Qt.binding(() => appSettings.mutedLogs)
-            Theme.dimmedTextOpacity = Qt.binding(() => appSettings.dimmedTextOpacity)
-            Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
-            Theme.progressStyle = Qt.binding(() => appSettings.progressStyle)
-            Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
-            Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
-            Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
-            Theme.monoFamily = Qt.binding(() => appSettings.fontFamilyMono)
-            Theme.logsFamily = Qt.binding(() => appSettings.fontFamilyLogs)
-            Theme.fillFields = Qt.binding(() => appSettings.fillFields)
-            Theme.overrides = JSON.parse(overridesJson())
-            Theme.fontSizes = JSON.parse(fontSizesJson())
-            Theme.radiusOverrides = JSON.parse(radiusOverridesJson())
-        }
-    }
-
-    Connections {
-        target: appSettings
-        function onThemeChanged() {
-            Theme.overrides = JSON.parse(appSettings.overridesJson())
-        }
-        function onFontSizesChanged() {
-            Theme.fontSizes = JSON.parse(appSettings.fontSizesJson())
-        }
-        function onRadiusOverridesChanged() {
-            Theme.radiusOverrides = JSON.parse(appSettings.radiusOverridesJson())
-        }
+        Component.onCompleted: Theme.bindSettings(appSettings)
     }
 
     GameModel { id: gameModel }

@@ -14,7 +14,7 @@ Rectangle {
     border.width: Theme.fillFields ? 0 : 1
     border.color: Theme.outline
 
-    Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+    Behavior on color { ColorAnimation { duration: Theme.dur.md } }
 
     Rectangle {
         anchors.fill: parent
@@ -25,6 +25,6 @@ Rectangle {
         border.width: 2
         border.color: Theme.accent
         opacity: parent.focused ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
     }
 }

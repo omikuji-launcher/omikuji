@@ -49,11 +49,11 @@ Item {
             width: 20
             height: 20
             radius: Theme.radius.xs
-            color: stepArea.containsPress
-                ? Theme.alpha(Theme.text, 0.14)
-                : (stepArea.containsMouse ? Theme.alpha(Theme.text, 0.08) : "transparent")
+            color: stepArea.containsPress ? Theme.statePressed
+                : stepArea.containsMouse ? Theme.stateHover
+                : "transparent"
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
         }
 
         SvgIcon {

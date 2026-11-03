@@ -27,15 +27,6 @@ ApplicationWindow {
 
     Connections {
         target: appSettings
-        function onThemeChanged() {
-            Theme.overrides = JSON.parse(appSettings.overridesJson())
-        }
-        function onFontSizesChanged() {
-            Theme.fontSizes = JSON.parse(appSettings.fontSizesJson())
-        }
-        function onRadiusOverridesChanged() {
-            Theme.radiusOverrides = JSON.parse(appSettings.radiusOverridesJson())
-        }
         function onCardSortChanged() {
             gameModel.applySortMode(appSettings.cardSort)
         }
@@ -45,21 +36,8 @@ ApplicationWindow {
         id: appSettings
         Component.onCompleted: {
             initWatcher()
-            Theme.mutedIcons = Qt.binding(() => appSettings.mutedIcons)
-            Theme.mutedLogs = Qt.binding(() => appSettings.mutedLogs)
-            Theme.dimmedTextOpacity = Qt.binding(() => appSettings.dimmedTextOpacity)
-            Theme.filledIcons = Qt.binding(() => appSettings.filledIcons)
-            Theme.progressStyle = Qt.binding(() => appSettings.progressStyle)
-            Theme.followSystemColors = Qt.binding(() => appSettings.followSystemColors)
-            Theme.followSystemFont = Qt.binding(() => appSettings.followSystemFont)
-            Theme.fontFamily = Qt.binding(() => appSettings.fontFamily)
-            Theme.monoFamily = Qt.binding(() => appSettings.fontFamilyMono)
-            Theme.logsFamily = Qt.binding(() => appSettings.fontFamilyLogs)
-            Theme.fillFields = Qt.binding(() => appSettings.fillFields)
+            Theme.bindSettings(appSettings)
             Theme.uiScale = Qt.binding(() => root.uiScale)
-            Theme.overrides = JSON.parse(overridesJson())
-            Theme.fontSizes = JSON.parse(fontSizesJson())
-            Theme.radiusOverrides = JSON.parse(radiusOverridesJson())
         }
         onShowTrayIconChanged: {
             trayBridge.setEnabled(showTrayIcon)
@@ -705,7 +683,7 @@ property real cardZoom: appSettings.cardZoom
             width: 2
             color: Theme.accent
             opacity: navExpander.pressed ? 0.7 : (navExpander.containsMouse ? 0.35 : 0)
-            Behavior on opacity { NumberAnimation { duration: 120 } }
+            Behavior on opacity { NumberAnimation { duration: Theme.dur.sm } }
         }
     }
 

@@ -49,7 +49,7 @@ Item {
 
         Behavior on opacity {
             enabled: !root.suppressAnim
-            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard }
         }
     }
 
@@ -57,7 +57,7 @@ Item {
     height: 40
 
     Behavior on width {
-        NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard }
     }
 
     ButtonSlot {

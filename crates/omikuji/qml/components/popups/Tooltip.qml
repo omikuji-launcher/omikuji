@@ -88,14 +88,14 @@ Popup {
             NumberAnimation {
                 property: "opacity"
                 from: 0; to: 1
-                duration: 120
+                duration: Theme.dur.sm
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
             }
             NumberAnimation {
                 property: "scale"
                 from: 0.88; to: 1.0
-                duration: 120
+                duration: Theme.dur.sm
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: [0.34, 0.80, 0.34, 1.00, 1, 1]
             }
@@ -106,8 +106,8 @@ Popup {
     Transition {
         id: fadeOut
         ParallelAnimation {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 120 }
-            NumberAnimation { property: "scale"; from: 1.0; to: 0.92; duration: 120 }
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.dur.sm }
+            NumberAnimation { property: "scale"; from: 1.0; to: 0.92; duration: Theme.dur.sm }
         }
     }
 }

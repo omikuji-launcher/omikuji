@@ -8,7 +8,7 @@ Item {
 
     property real value: 0.0
     Behavior on value {
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.motion(300); easing.type: Theme.ease.standard }
     }
 
     property string style: Theme.progressStyle

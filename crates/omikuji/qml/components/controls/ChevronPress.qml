@@ -15,7 +15,7 @@ PressArea {
         radius: Theme.radius.sm
         color: root.containsMouse ? Theme.stateHover : "transparent"
 
-        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
     }
 
     IconTile {
@@ -30,6 +30,6 @@ PressArea {
         rotation: 180
         opacity: root.containsMouse ? 1 : 0.8
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.fast; easing.type: Theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard } }
     }
 }

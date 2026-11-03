@@ -230,6 +230,7 @@ fn main() {
         .prop_at("muted_icons", kushi::Kind::Bool, "display.muted_icons")
         .prop_at("dimmed_text_opacity", kushi::Kind::F64, "display.dimmed_text_opacity")
         .prop_at("filled_icons", kushi::Kind::Bool, "display.filled_icons")
+        .prop_at("reduced_motion", kushi::Kind::Bool, "display.reduced_motion")
         .prop_at("progress_style", kushi::Kind::QString, "display.progress_style")
         .prop_at("show_hidden", kushi::Kind::Bool, "display.show_hidden")
         .prop_at("dim_hidden", kushi::Kind::Bool, "display.dim_hidden")

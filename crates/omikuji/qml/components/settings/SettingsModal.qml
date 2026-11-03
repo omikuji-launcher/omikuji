@@ -54,7 +54,7 @@ Item {
         color: Theme.scrim
         opacity: root.shown ? 1 : 0
         visible: opacity > 0.01
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl } }
 
         MouseArea {
             anchors.fill: parent
@@ -90,10 +90,10 @@ Item {
             event.accepted = true
         }
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
-        Behavior on scale { NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
-        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
-        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.med; easing.type: Theme.ease.standard } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
+        Behavior on scale { NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.emphasized; easing.overshoot: Theme.ease.overshoot } }
+        Behavior on width { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
+        Behavior on height { enabled: root.shown && resizer.settled; NumberAnimation { duration: Theme.dur.xl; easing.type: Theme.ease.standard } }
 
         RectangularShadow {
             anchors.fill: card

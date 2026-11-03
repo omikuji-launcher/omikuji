@@ -25,7 +25,7 @@ Item {
             : (hoverArea.containsMouse && !root._suppressHover)
                 ? Theme.alpha(Theme.accent, 0.2)
                 : "transparent"
-        Behavior on color { ColorAnimation { duration: 100 } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
     }
 
     SvgIcon {

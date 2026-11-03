@@ -130,7 +130,7 @@ Item {
 
     Timer {
         id: crossfadeTimer
-        interval: 100
+        interval: Theme.dur.xs
         onTriggered: {
             root.displayedGame = root.selectedGame
             root.displayedIsRunning = root.isRunning
@@ -167,7 +167,7 @@ Item {
         visible: opacity > 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard }
         }
 
         Repeater {
@@ -216,7 +216,7 @@ Item {
             opacity: 1
 
             Behavior on opacity {
-                NumberAnimation { duration: 100 }
+                NumberAnimation { duration: Theme.dur.xs }
             }
 
             Item {

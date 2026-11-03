@@ -106,7 +106,7 @@ Item {
             font.pixelSize: Theme.type.label.size
             font.weight: Font.Medium
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
         }
 
         Text {
@@ -156,7 +156,7 @@ Item {
             rotation: popup.visible ? -90 : 0
 
             Behavior on rotation {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Theme.dur.md; easing.type: Theme.ease.standard }
             }
         }
 
@@ -372,7 +372,7 @@ Item {
                                     GradientStop { position: 0.0; color: labelClip.bg }
                                     GradientStop { position: 1.0; color: Theme.alpha(labelClip.bg, 0) }
                                 }
-                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: 120 } }
+                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: Theme.dur.sm } }
                             }
 
                             Rectangle {
@@ -386,7 +386,7 @@ Item {
                                     GradientStop { position: 0.0; color: Theme.alpha(labelClip.bg, 0) }
                                     GradientStop { position: 1.0; color: labelClip.bg }
                                 }
-                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: 120 } }
+                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: Theme.dur.sm } }
                             }
                         }
 

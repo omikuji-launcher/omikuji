@@ -36,7 +36,7 @@ Item {
     height: size
 
     opacity: blocked ? 0.35 : 1.0
-    Behavior on opacity { NumberAnimation { duration: 140 } }
+    Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
 
     readonly property bool navigable: !blocked
     readonly property real navRingRadius: rounded ? size / 2 : (squircle ? Theme.radius.md : 8)
@@ -47,7 +47,7 @@ Item {
         scale: hoverArea.containsPress ? 0.9 : 1.0
 
         Behavior on scale {
-            NumberAnimation { duration: 80; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Theme.dur.xs; easing.type: Theme.ease.standard }
         }
 
         Rectangle {
@@ -57,7 +57,7 @@ Item {
             color: btn.fill
 
             Behavior on color {
-                ColorAnimation { duration: 100 }
+                ColorAnimation { duration: Theme.dur.xs }
             }
         }
 
@@ -68,7 +68,7 @@ Item {
             fillColor: btn.fill
 
             Behavior on fillColor {
-                ColorAnimation { duration: 100 }
+                ColorAnimation { duration: Theme.dur.xs }
             }
         }
     }
@@ -82,7 +82,7 @@ Item {
             : Theme.icon
 
         Behavior on color {
-            ColorAnimation { duration: 100 }
+            ColorAnimation { duration: Theme.dur.xs }
         }
     }
 

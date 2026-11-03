@@ -22,7 +22,7 @@ FieldSurface {
     readonly property bool navigable: !blocked
     function navActivate() { clicked() }
 
-    Behavior on opacity { NumberAnimation { duration: Theme.dur.fast } }
+    Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
 
     Rectangle {
         anchors.fill: parent
@@ -32,7 +32,7 @@ FieldSurface {
               : mouse.containsMouse ? Theme.stateHover
               : "transparent"
 
-        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
     }
 
     SvgIcon {
@@ -41,7 +41,7 @@ FieldSurface {
         size: 20
         color: !root.blocked && mouse.containsMouse ? Theme.iconHover : Theme.icon
 
-        Behavior on color { ColorAnimation { duration: 100 } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.xs } }
     }
 
     MouseArea {

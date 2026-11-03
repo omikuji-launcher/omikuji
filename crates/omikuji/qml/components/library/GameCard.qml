@@ -53,7 +53,7 @@ BaseCard {
                 runnerUpdating: false
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.dur.sm; easing.type: Theme.ease.standard }
                 }
             }
         }

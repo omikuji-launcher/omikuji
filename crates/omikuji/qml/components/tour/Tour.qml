@@ -100,7 +100,7 @@ Item {
     NumberAnimation {
         id: scrollGlide
         property: "contentY"
-        duration: Theme.dur.slow
+        duration: Theme.dur.xxl
         easing.type: Easing.InOutCubic
     }
 

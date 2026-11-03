@@ -40,7 +40,7 @@ Squircle {
 
         Behavior on x {
             NumberAnimation {
-                duration: Theme.dur.med
+                duration: Theme.dur.xl
                 easing.type: Theme.ease.standard
             }
         }
@@ -69,7 +69,7 @@ Squircle {
                     anchors.fill: parent
                     radius: Theme.radius.sm
                     visible: !seg.current && segHover.containsMouse
-                    fillColor: Theme.alpha(Theme.text, 0.06)
+                    fillColor: Theme.stateHover
                 }
 
                 Text {
@@ -83,7 +83,7 @@ Squircle {
                     font.weight: seg.current ? Font.DemiBold : Font.Normal
 
                     Behavior on color {
-                        ColorAnimation { duration: Theme.dur.fast }
+                        ColorAnimation { duration: Theme.dur.md }
                     }
                 }
 

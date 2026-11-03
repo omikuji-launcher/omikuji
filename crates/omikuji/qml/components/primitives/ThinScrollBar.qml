@@ -22,7 +22,7 @@ ScrollBar {
         color: Theme.alpha(Theme.text, control.pressed ? 0.5 : (control.hovered ? 0.4 : 0.25))
         opacity: control.active || control.hovered || hideTimer.running ? 1 : 0
 
-        Behavior on opacity { NumberAnimation { duration: Theme.dur.med } }
-        Behavior on color { ColorAnimation { duration: Theme.dur.fast } }
+        Behavior on opacity { NumberAnimation { duration: Theme.dur.xl } }
+        Behavior on color { ColorAnimation { duration: Theme.dur.md } }
     }
 }
