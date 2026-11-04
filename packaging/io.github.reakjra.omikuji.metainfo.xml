@@ -539,7 +539,7 @@
       </description>
     </release>
   </releases>
-  <launchable type="desktop-id">io.github.reakjra.omikuji</launchable>
+  <launchable type="desktop-id">io.github.reakjra.omikuji.desktop</launchable>
   <branding>
     <color type="primary" scheme_preference="light">#e1cc4c</color>
     <color type="primary" scheme_preference="dark">#c41818</color>
