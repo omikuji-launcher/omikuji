@@ -11,19 +11,10 @@
 let
   unwrapped = omikuji-unwrapped;
 
-  qt5Deps =
-    pkgs: with pkgs.qt5; [
-      qtbase
-      qtmultimedia
-    ];
   qt6Deps = pkgs: with pkgs.qt6; [ qtbase ];
   gnomeDeps =
     pkgs: with pkgs; [
       zenity
-      # gtksourceview3
-      # gnome-desktop
-      # libgnome-keyring
-      # webkitgtk_4_1
       adwaita-icon-theme
     ];
   xorgDeps =
@@ -100,9 +91,6 @@ buildFHSEnv {
       vulkan-loader
       zstd
 
-      # SDL_net
-      # SDL_sound
-
       # GOG
       glib-networking
 
@@ -114,17 +102,11 @@ buildFHSEnv {
       # MAME
       fontconfig
 
-      # mesa_glu
-
       # MESS
       expat
 
       # Minecraft
       nss
-
-      # Mupen64Plus
-      # boost
-      # dash
 
       # Overwatch 2
       libunwind
@@ -142,7 +124,6 @@ buildFHSEnv {
       # ZDOOM
       bzip2
     ]
-    # ++ qt5Deps pkgs
     ++ qt6Deps pkgs
     ++ gnomeDeps pkgs
     ++ extraPkgs pkgs;
@@ -203,7 +184,6 @@ buildFHSEnv {
       SDL2
       curl
       graphite2
-      gtk2
       gtk3
       udev
       ncurses
