@@ -1,4 +1,5 @@
 use crate::components;
+use crate::packaging::Packaging;
 use ash::vk;
 use std::ffi::c_char;
 use std::fmt::Write as _;
@@ -59,7 +60,7 @@ pub fn report(app_version: &str, qt_version: &str) -> String {
     }
 
     fields.push(("Qt".into(), qt_version.to_string()));
-    fields.push(("Package".into(), packaging().into()));
+    fields.push(("Package".into(), Packaging::detect().label().into()));
     for spec in components::specs::all() {
         fields.push((
             spec.name.into(),
@@ -170,20 +171,6 @@ fn ram() -> String {
         }
     }
     "unknown".into()
-}
-
-pub fn in_flatpak() -> bool {
-    std::env::var("FLATPAK_ID").is_ok() || std::path::Path::new("/.flatpak-info").exists()
-}
-
-fn packaging() -> &'static str {
-    if in_flatpak() {
-        "flatpak"
-    } else if std::env::var_os("APPIMAGE").is_some() {
-        "appimage"
-    } else {
-        "native"
-    }
 }
 
 fn enumerate() -> Vec<Gpu> {

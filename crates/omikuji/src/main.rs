@@ -10,6 +10,7 @@ mod single_instance;
 
 use cxx_qt_lib::{QQmlApplicationEngine, QString, QUrl};
 use omikuji_core::app_settings::AppSettings;
+use omikuji_core::packaging::Packaging;
 use std::ffi::{CString, c_void};
 
 unsafe extern "C" {
@@ -30,7 +31,7 @@ unsafe extern "C" {
 #[tokio::main]
 async fn main() {
     unsafe { std::env::set_var("QT_QUICK_CONTROLS_STYLE", "Basic") };
-    if std::env::var_os("APPIMAGE").is_some() {
+    if matches!(Packaging::detect(), Packaging::AppImage { .. }) {
         unsafe { std::env::set_var("QT_QPA_PLATFORMTHEME", "xdgdesktopportal") };
     }
 

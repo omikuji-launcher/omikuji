@@ -821,7 +821,7 @@ use omikuji_core::launch::{
 use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction, ErrorNotification};
-use omikuji_core::{desktop, dll_packs, notifications, prefixes, runners, store, system_info};
+use omikuji_core::{desktop, dll_packs, notifications, packaging, prefixes, runners, store};
 
 use super::expand_path;
 use crate::app_log;
@@ -2351,7 +2351,7 @@ impl qobject::GameModel {
     }
 
     fn is_flatpak(&self) -> bool {
-        system_info::in_flatpak()
+        packaging::in_flatpak()
     }
 
     // glibc malloc_trim: paired with the store-panel Loader unload after hide,
