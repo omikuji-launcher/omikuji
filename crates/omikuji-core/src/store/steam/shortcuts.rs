@@ -175,6 +175,9 @@ pub fn available() -> bool {
 
 fn launch_spec(game: &Game) -> (String, String) {
     let mut argv = desktop::launch_argv(game);
+    if super::local::steam_is_flatpak() {
+        argv.splice(0..0, ["flatpak-spawn".to_string(), "--host".to_string()]);
+    }
     let exe = argv.remove(0);
     (exe, argv.join(" "))
 }

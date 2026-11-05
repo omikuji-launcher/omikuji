@@ -10,12 +10,10 @@ use std::path::{Path, PathBuf};
 const STEAM_DATA_DIRS: &[&str] = &[
     "~/.steam/debian-installation",
     "~/.steam",
-    "~/.local/share/steam",
     "~/.local/share/Steam",
     "~/snap/steam/common/.local/share/Steam", // well lutris has it... soooo
     "~/.steam/steam",
-    "~/.var/app/com.valvesoftware.Steam/data/steam",
-    "~/.var/app/com.valvesoftware.Steam/data/Steam", // flatpak (didnt test so yikes)
+    "~/.var/app/com.valvesoftware.Steam/data/Steam",
     "/usr/share/steam",
     "/usr/local/share/steam",
 ];
@@ -95,6 +93,9 @@ pub fn flatpak_steam_installed() -> bool {
     dirs::home_dir()
         .map(|h| h.join(".var/app/com.valvesoftware.Steam").exists())
         .unwrap_or(false)
+}
+pub fn steam_is_flatpak() -> bool {
+    find_steam_dir().is_some_and(|d| d.to_string_lossy().contains("com.valvesoftware.Steam"))
 }
 
 pub fn get_steamapps_dirs() -> Vec<PathBuf> {
