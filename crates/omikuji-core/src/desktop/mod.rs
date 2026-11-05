@@ -2,9 +2,9 @@ use crate::fs_util::write_executable_atomic;
 use crate::library::{Game, Library, generate_id, id_from_slug_id, rfc3339_now};
 use crate::log_files;
 use crate::media::{self, MediaType, media_path};
+use crate::packaging::{Packaging, in_flatpak};
 use crate::settings;
 use crate::store::steam;
-use crate::system_info::in_flatpak;
 use anyhow::{Context, Result};
 use fs_err as fs;
 use nix::sys::statvfs::statvfs;
@@ -95,21 +95,19 @@ fn desktop_filename(slug: &str, id: &str) -> String {
     format!("omikuji.{}-{}.desktop", slug, id)
 }
 
-fn launcher_command() -> String {
-    if let Ok(app_id) = std::env::var("FLATPAK_ID") {
-        format!("flatpak run {}", app_id)
-    } else {
-        "omikuji".to_string()
-    }
+pub fn launch_argv(game: &Game) -> Vec<String> {
+    let mut argv = Packaging::detect().host_invocation();
+    argv.extend(["run".into(), game.metadata.id.clone(), "--notify-gui".into()]);
+    argv
 }
 
 fn generate_desktop_content(game: &Game) -> String {
     let icon = resolve_desktop_icon(game);
-    let exec = format!(
-        "{} run {} --notify-gui",
-        launcher_command(),
-        launch_target(game)
-    );
+    let exec = launch_argv(game)
+        .iter()
+        .map(|arg| quote_exec_arg(arg))
+        .collect::<Vec<_>>()
+        .join(" ");
 
     format!(
         "[Desktop Entry]\n\
@@ -121,7 +119,7 @@ fn generate_desktop_content(game: &Game) -> String {
          Terminal=false\n",
         escape_desktop_value(&game.metadata.name),
         icon,
-        exec
+        escape_desktop_value(&exec)
     )
 }
 
@@ -147,12 +145,24 @@ fn escape_desktop_value(value: &str) -> String {
     value.replace("\\", "\\\\").replace("\n", "\\n")
 }
 
-pub fn game_slug(game: &Game) -> String {
-    game.slug()
+fn quote_exec_arg(arg: &str) -> String {
+    let escaped_in_quotes = |c: char| matches!(c, '"' | '`' | '$' | '\\');
+    if !arg.contains(|c: char| c.is_whitespace() || c == '\'' || escaped_in_quotes(c)) {
+        return arg.to_string();
+    }
+    let mut quoted = String::from('"');
+    for c in arg.chars() {
+        if escaped_in_quotes(c) {
+            quoted.push('\\');
+        }
+        quoted.push(c);
+    }
+    quoted.push('"');
+    quoted
 }
 
-pub fn launch_target(game: &Game) -> String {
-    game.metadata.id.clone()
+pub fn game_slug(game: &Game) -> String {
+    game.slug()
 }
 
 fn shortcut_path(game: &Game, dir: &Path) -> PathBuf {

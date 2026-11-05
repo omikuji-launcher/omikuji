@@ -11,7 +11,8 @@ use crate::desktop::ensure_steam_icon;
 use crate::library::{Game, RunnerType, WrapCommand};
 use crate::store::epic;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
-use crate::system_info::{gpu_launch_env, in_flatpak};
+use crate::packaging::in_flatpak;
+use crate::system_info::gpu_launch_env;
 use crate::template_vars::TemplateVars;
 
 pub struct ResolvedLaunch {

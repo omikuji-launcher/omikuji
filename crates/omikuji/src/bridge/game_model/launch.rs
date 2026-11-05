@@ -296,25 +296,22 @@ impl super::qobject::GameModel {
     }
 
     pub fn launch_console_mode(&self) {
-        AppSettings::set_console_mode_active(true);
-        if let Ok(exe) = std::env::current_exe() {
-            let _ = std::process::Command::new(exe)
-                .arg("console")
-                .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
-                .spawn();
-        }
-        std::process::exit(0);
+        relaunch_in_console_mode(true);
     }
 
     pub fn launch_desktop_mode(&self) {
-        AppSettings::set_console_mode_active(false);
-        if let Ok(exe) = std::env::current_exe() {
-            let _ = std::process::Command::new(exe)
-                .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
-                .spawn();
-        }
-        std::process::exit(0);
+        relaunch_in_console_mode(false);
     }
+}
+
+fn relaunch_in_console_mode(active: bool) -> ! {
+    AppSettings::set_console_mode_active(active);
+    if let Ok(exe) = std::env::current_exe() {
+        let _ = std::process::Command::new(exe)
+            .env("OMIKUJI_BYPASS_SINGLE_INSTANCE", "1")
+            .spawn();
+    }
+    std::process::exit(0);
 }
 
 fn pending_latest_runner(game: &Game) -> Option<ArchiveSource> {

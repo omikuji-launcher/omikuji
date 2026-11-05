@@ -174,18 +174,9 @@ pub fn available() -> bool {
 }
 
 fn launch_spec(game: &Game) -> (String, String) {
-    let target = desktop::launch_target(game);
-    if let Ok(app_id) = std::env::var("FLATPAK_ID") {
-        (
-            "/usr/bin/flatpak".to_string(),
-            format!("run {} run {} --notify-gui", app_id, target),
-        )
-    } else {
-        let exe = std::env::current_exe()
-            .map(|p| p.display().to_string())
-            .unwrap_or_else(|_| "omikuji".to_string());
-        (exe, format!("run {} --notify-gui", target))
-    }
+    let mut argv = desktop::launch_argv(game);
+    let exe = argv.remove(0);
+    (exe, argv.join(" "))
 }
 
 fn matches_game(entry: &Entry, game: &Game) -> bool {

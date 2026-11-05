@@ -26,6 +26,7 @@ pub mod log_files;
 pub mod media;
 pub mod migration;
 pub mod notifications;
+pub mod packaging;
 pub mod prefixes;
 pub mod process;
 pub mod runners;
