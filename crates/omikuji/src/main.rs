@@ -28,10 +28,23 @@ unsafe extern "C" {
     );
 }
 
+// env keys for QT_QPA_PLATFORMTHEME for the AppImage
+const BUNDLED_PLATFORM_THEMES: &[&str] = &["gtk3", "lxqt", "qt5ct", "qt6ct", "xdgdesktopportal"];
+
+fn bundled_platform_theme_requested() -> bool {
+    std::env::var("QT_QPA_PLATFORMTHEME").is_ok_and(|theme| {
+        BUNDLED_PLATFORM_THEMES
+            .iter()
+            .any(|bundled| bundled.eq_ignore_ascii_case(&theme))
+    })
+}
+
 #[tokio::main]
 async fn main() {
     unsafe { std::env::set_var("QT_QUICK_CONTROLS_STYLE", "Basic") };
-    if matches!(Packaging::detect(), Packaging::AppImage { .. }) {
+    if matches!(Packaging::detect(), Packaging::AppImage { .. })
+        && !bundled_platform_theme_requested()
+    {
         unsafe { std::env::set_var("QT_QPA_PLATFORMTHEME", "xdgdesktopportal") };
     }
 
