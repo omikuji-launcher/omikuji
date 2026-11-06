@@ -13,6 +13,16 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.8
+Added:
+- Warning for installation paths on tempfs
+
+Fixes:
+- Minor ui fixes
+- Fixed AppImage's .desktop shortcuts pointing at temp mounts
+- Fixed AppImage's QT_QPA_PLATFORMTHEME env handling
+- Fixed Steam shortcuts' command for Flatpak Steam and Omikuji 
+
 ## 0.20.7
 Added:
 - Reducded motion toggle (Settings -> Interface)

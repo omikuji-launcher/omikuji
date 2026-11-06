@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.7
+Version:        0.20.8
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,12 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Fri Nov 06 2026 reakjra <reakjra@proton.me> - 0.20.8-1
+- tempfs warning on installation path
+- minor ui fixes
+- fixed appimage shortcuts pointing at temp mounts
+- fixed appimage platformtheme handling
+
 * Tue Nov 03 2026 reakjra <reakjra@proton.me> - 0.20.7-1
 - reducded motion toggle
 - more icons
