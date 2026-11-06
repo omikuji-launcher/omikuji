@@ -389,6 +389,9 @@ ApplicationWindow {
 
     Connections {
         target: gameModel
+        function onGachaManifestsReady(fetched) {
+            hoyoStorePanel.manifestsLoading = false
+        }
         function onDataChanged() { root.pushTrayRecent() }
         function onRowsInserted() { root.pushTrayRecent() }
         function onRowsRemoved() { root.pushTrayRecent() }
@@ -869,14 +872,17 @@ property real cardZoom: appSettings.cardZoom
             unloadIdle: appSettings.unloadStorePages
             onIdleUnloaded: gameModel.trim_heap()
             property bool manifestsFetched: false
+            property bool manifestsLoading: false
             onActivated: {
                 if (!manifestsFetched) {
                     manifestsFetched = true
+                    manifestsLoading = true
                     gameModel.ensureGachaManifests()
                 }
             }
             sourceComponent: GachaLibrary {
                 gameModel: root.gameModelRef
+                manifestsLoading: hoyoStorePanel.manifestsLoading
                 cardZoom: root.cardZoom
                 cardStyle: root.cardStyle
                 cardSpacing: appSettings.cardSpacing

@@ -14,6 +14,7 @@ Item {
     property string searchText: ""
     property var activeDownloads: ({})
     property string cardFlow
+    property bool manifestsLoading: false
 
     signal backClicked()
     signal installRequested(string manifestId)
@@ -159,5 +160,19 @@ Item {
                 }
             }
         }
+    }
+
+    DelayedFlag {
+        id: loadingShown
+        source: root.manifestsLoading && root.manifests.length === 0
+    }
+
+    LoadingSpirit {
+        anchors.centerIn: parent
+        spiritWidth: Math.round(Math.min(root.width * 0.34, 280))
+        text: qsTr("Loading gachas")
+        visible: loadingShown.value
+        running: visible
+        z: 90
     }
 }

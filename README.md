@@ -84,9 +84,14 @@ flatpak override --user --nofilesystem=/run/media io.github.reakjra.omikuji
 flatpak override --user --nofilesystem=~/.var/app/com.valvesoftware.Steam io.github.reakjra.omikuji
 flatpak override --user --filesystem=/path/to/your/games io.github.reakjra.omikuji # change this to your games folder
 flatpak override --user --persist=.local/share/umu io.github.reakjra.omikuji # needed for umu 
-flatpak override --user --filesystem=~/.local/share/Steam/compatibilitytools.d io.github.reakjra.omikuji # for runners installed in steam
 flatpak override --user --nosocket=x11 io.github.reakjra.omikuji # remove this if you need to run games on x11
-flatpak override --user --filesystem=xdg-config/fontconfig:ro io.github.reakjra.omikuji # you can skip this i just need it for my fonts' weight because i cant manage font apparently
+
+# optionals
+flatpak override --user --filesystem=~/.local/share/Steam/compatibilitytools.d io.github.reakjra.omikuji # for runners installed in steam
+flatpak override --user --filesystem=xdg-data/applications io.github.reakjra.omikuji # for .desktop shortcuts
+flatpak override --user --filesystem=xdg-desktop io.github.reakjra.omikuji # same as above but in ~/Desktop
+flatpak override --user --filesystem=~/.local/share/icons/hicolor/256x256/apps io.github.reakjra.omikuji # for games' icon arts available for docks, etc. etc. 
+flatpak override --user --filesystem=xdg-config/fontconfig:ro io.github.reakjra.omikuji # you can skip this i just need it for my fonts' weight because i cant manage fonts apparently
 ```
 
 > [!WARNING]
@@ -281,12 +286,10 @@ GPL-3.0-or-later. See [LICENSE](LICENSE).
 
 ## Credits
 
-Heavy debt to the prior art:
-
-- [cxx-qt](https://github.com/KDAB/cxx-qt): lovely super-glue.
-- [Lutris](https://github.com/lutris/lutris): the wrapping chain, env setup, runner detection logic, and a lot of wine know-how is ported from here.
-- [Heroic Games Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher): Epic and GOG integration patterns. Also the source of the bundled `gogdl` binary.
-- [AAG](https://github.com/an-anime-team/): gacha launcher reference. HoYo Sophon, CDN methods all from them <3. 
+- [cxx-qt](https://github.com/KDAB/cxx-qt)
+- [Lutris](https://github.com/lutris/lutris)
+- [Heroic Games Launcher](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher) 
+- [AAG](https://github.com/an-anime-team/)
 
 Bundled icon set: [Material Symbols](https://github.com/google/material-design-icons) (Apache-2.0).
 
