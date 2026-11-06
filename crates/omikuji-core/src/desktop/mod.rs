@@ -7,7 +7,6 @@ use crate::settings;
 use crate::store::steam;
 use anyhow::{Context, Result};
 use fs_err as fs;
-use nix::sys::statvfs::statvfs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -270,22 +269,6 @@ pub fn delete_game(game: &Game) -> Result<()> {
         }
     }
     Ok(())
-}
-
-pub fn disk_free_space(path: &str) -> u64 {
-    let mut p = std::path::Path::new(path).to_path_buf();
-    while !p.exists() {
-        if !p.pop() {
-            return 0;
-        }
-    }
-    match statvfs(&p) {
-        Ok(stat) => stat.fragment_size() * stat.blocks_available(),
-        Err(e) => {
-            tracing::error!("statvfs failed for {}: {}", p.display(), e);
-            0
-        }
-    }
 }
 
 #[cfg(test)]

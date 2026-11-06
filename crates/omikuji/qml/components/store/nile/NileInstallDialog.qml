@@ -53,18 +53,12 @@ DialogCard {
     maxWidth: 480
 
     function hasEnoughSpace() {
-        if (freeSpaceBytes < 0) return false
-        if (installBytes < 0) return false
-        if (existingInstallBytes > 0 || hasResumeState) return true
-        if (installBytes === 0) return true
-        return freeSpaceBytes >= installBytes
+        return Paths.hasSpace(freeSpaceBytes, installBytes, existingInstallBytes > 0 || hasResumeState)
     }
 
     function refreshFreeSpace() {
-        if (!gameModel || installPath.trim() === "") { freeSpaceBytes = -1; return }
-        let raw = gameModel.disk_free_space(installPath.trim())
-        freeSpaceBytes = parseInt(raw)
-        if (isNaN(freeSpaceBytes)) freeSpaceBytes = -1
+        const path = installPath.trim()
+        freeSpaceBytes = gameModel && path !== "" ? Paths.freeBytes(gameModel, path) : -1
     }
 
     function _existing(app, path) {
@@ -224,6 +218,12 @@ DialogCard {
                     radius: Theme.radius.md
                 }
             }
+        }
+
+        TmpfsNote {
+            Layout.fillWidth: true
+            gameModel: root.gameModel
+            path: root.installPath
         }
 
         ExistingFilesNote {

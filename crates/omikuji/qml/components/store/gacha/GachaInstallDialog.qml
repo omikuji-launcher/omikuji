@@ -141,17 +141,11 @@ DialogCard {
         if (existingInstall) return true
         if (installFreeBytes < 0) return false
         if (downloadBytes < 0 || installBytes < 0) return false
-        if (!usesTempDir) {
-            let resuming = existingInstall
-            if (!resuming && installFreeBytes < installBytes) return false
-            return true
-        }
+        if (!usesTempDir) return installFreeBytes >= installBytes
         if (tempFreeBytes < 0) return false
         let tempNeeded = Math.max(0, downloadBytes - existingTempBytes)
         if (tempFreeBytes < tempNeeded) return false
-        let resuming = existingTempSegments > 0 || existingInstall
-        if (!resuming && installFreeBytes < installBytes) return false
-        return true
+        return existingTempSegments > 0 || installFreeBytes >= installBytes
     }
 
     onInstallPathChanged: { refreshFreeSpace(); refreshExisting() }
@@ -371,18 +365,10 @@ DialogCard {
         if (!gameModel || installPath.trim() === "") {
             installFreeBytes = -1; tempFreeBytes = -1; return
         }
-        let rawInstall = gameModel.disk_free_space(installPath.trim())
-        installFreeBytes = parseInt(rawInstall)
-        if (isNaN(installFreeBytes)) installFreeBytes = -1
+        installFreeBytes = Paths.freeBytes(gameModel, installPath.trim())
 
         let tp = effectiveTempPath()
-        if (tp === installPath.trim()) {
-            tempFreeBytes = installFreeBytes
-        } else {
-            let rawTemp = gameModel.disk_free_space(tp)
-            tempFreeBytes = parseInt(rawTemp)
-            if (isNaN(tempFreeBytes)) tempFreeBytes = -1
-        }
+        tempFreeBytes = tp === installPath.trim() ? installFreeBytes : Paths.freeBytes(gameModel, tp)
     }
 
     function refreshInstallSize() {
@@ -577,12 +563,19 @@ DialogCard {
                     : (root.installBytes >= 0 && root.installFreeBytes >= 0
                         && root.installFreeBytes < root.installBytes
                         && !root.existingInstall
-                        ? "#e06060" : Theme.textFaint)
+                        ? Theme.error : Theme.textFaint)
                 font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 Layout.leftMargin: 4
                 visible: text !== ""
+            }
+
+            TmpfsNote {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                gameModel: root.gameModel
+                path: root.installPath
             }
 
             NoteChip {
@@ -636,7 +629,7 @@ DialogCard {
                     ? Theme.accent
                     : (root.downloadBytes >= 0 && root.tempFreeBytes >= 0
                         && root.tempFreeBytes < root.downloadBytes
-                        ? "#e06060" : Theme.textFaint)
+                        ? Theme.error : Theme.textFaint)
                 font.pixelSize: Theme.type.micro.size
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true

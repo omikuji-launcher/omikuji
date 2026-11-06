@@ -1,4 +1,6 @@
 use fs_err::{DirEntry, ReadDir};
+use nix::sys::statfs::{TMPFS_MAGIC, statfs};
+use nix::sys::statvfs::statvfs;
 use std::iter;
 use std::path::{Path, PathBuf};
 
@@ -16,6 +18,28 @@ pub fn is_executable(path: &Path) -> bool {
 #[cfg(not(unix))]
 pub fn is_executable(_path: &Path) -> bool {
     true
+}
+
+fn nearest_existing(path: &Path) -> Option<&Path> {
+    path.ancestors().find(|p| p.exists())
+}
+
+pub fn disk_free_space(path: &Path) -> u64 {
+    let Some(existing) = nearest_existing(path) else {
+        return 0;
+    };
+    match statvfs(existing) {
+        Ok(stat) => stat.fragment_size() * stat.blocks_available(),
+        Err(e) => {
+            tracing::error!("statvfs failed for {}: {}", existing.display(), e);
+            0
+        }
+    }
+}
+
+pub fn is_tmpfs(path: &Path) -> bool {
+    nearest_existing(path)
+        .is_some_and(|p| statfs(p).is_ok_and(|fs| fs.filesystem_type() == TMPFS_MAGIC))
 }
 
 pub fn find_executable_in_paths(names: &[&str], extra_paths: &[&str]) -> Option<PathBuf> {

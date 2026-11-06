@@ -46,6 +46,7 @@ Item {
 
         function list_runners() { return root.gameModel ? root.gameModel.list_runners() : "[]" }
         function disk_free_space(path) { return root.gameModel ? root.gameModel.disk_free_space(path) : "-1" }
+        function is_tmpfs(path) { return false }
         function expandVars(text) { return root.gameModel ? root.gameModel.expandVars(text) : text }
 
         function epic_check_existing_install(app, path) {

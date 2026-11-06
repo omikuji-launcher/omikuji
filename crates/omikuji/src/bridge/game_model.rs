@@ -507,6 +507,9 @@ pub mod qobject {
         fn disk_free_space(self: &GameModel, path: &QString) -> QString;
 
         #[qinvokable]
+        fn is_tmpfs(self: &GameModel, path: &QString) -> bool;
+
+        #[qinvokable]
         fn epic_check_existing_install(
             self: &GameModel,
             app_name: &QString,
@@ -803,7 +806,7 @@ pub mod qobject {
 
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 
 use cxx_qt::{CxxQtType, Threading};
@@ -821,7 +824,9 @@ use omikuji_core::launch::{
 use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction, ErrorNotification};
-use omikuji_core::{desktop, dll_packs, notifications, packaging, prefixes, runners, store};
+use omikuji_core::{
+    desktop, dll_packs, fs_util, notifications, packaging, prefixes, runners, store,
+};
 
 use super::expand_path;
 use crate::app_log;
@@ -2364,7 +2369,11 @@ impl qobject::GameModel {
     }
 
     fn disk_free_space(&self, path: &QString) -> QString {
-        let bytes = desktop::disk_free_space(&expand_path(path));
+        let bytes = fs_util::disk_free_space(Path::new(&expand_path(path)));
         QString::from(&bytes.to_string())
+    }
+
+    fn is_tmpfs(&self, path: &QString) -> bool {
+        fs_util::is_tmpfs(Path::new(&expand_path(path)))
     }
 }
