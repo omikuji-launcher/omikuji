@@ -64,13 +64,41 @@ flatpak remote-add --if-not-exists omikuji https://omikuji-launcher.github.io/om
 flatpak install omikuji io.github.reakjra.omikuji
 ```
 
-Flathub is needed too, omikuji builds on the KDE and Wine runtimes hosted over there.
-
 Or grab the `.flatpak` file in the [releases page](https://github.com/omikuji-launcher/omikuji/releases):
 
 ```sh
 flatpak install omikuji.flatpak
 ```
+
+The default permissions are very permissive, if you want a better sandbox expand below:
+
+<details>
+<summary><b>Click here to expand twin</b></summary>
+
+```sh
+flatpak override --user --no-talk-name=org.freedesktop.Flatpak io.github.reakjra.omikuji # mind with this flatpak games wont be able to run 
+flatpak override --user --nofilesystem=home io.github.reakjra.omikuji
+flatpak override --user --nofilesystem=/media io.github.reakjra.omikuji
+flatpak override --user --nofilesystem=/mnt io.github.reakjra.omikuji
+flatpak override --user --nofilesystem=/run/media io.github.reakjra.omikuji
+flatpak override --user --nofilesystem=~/.var/app/com.valvesoftware.Steam io.github.reakjra.omikuji
+flatpak override --user --filesystem=/path/to/your/games io.github.reakjra.omikuji # change this to your games folder
+flatpak override --user --persist=.local/share/umu io.github.reakjra.omikuji # needed for umu 
+flatpak override --user --filesystem=~/.local/share/Steam/compatibilitytools.d io.github.reakjra.omikuji # for runners installed in steam
+flatpak override --user --nosocket=x11 io.github.reakjra.omikuji # remove this if you need to run games on x11
+flatpak override --user --filesystem=xdg-config/fontconfig:ro io.github.reakjra.omikuji # you can skip this i just need it for my fonts' weight because i cant manage font apparently
+```
+
+> [!WARNING]
+> Set your install path to the folder you set above. Your home is hidden from the sandbox so the default `~/Games` Omikuji sets by default is a tempfs folder so i mean, other than being a few GBs it'd just die next time
+
+To undo all of it:
+
+```sh
+flatpak override --user --reset io.github.reakjra.omikuji
+```
+
+</details>
 
 #### Manual building
 
