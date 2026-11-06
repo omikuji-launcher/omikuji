@@ -239,6 +239,7 @@ mhhhhhhhh).
 | `omikuji`         |   `path/to/.exe`     |  Opens a modal for ephemeral runs.			         	 |
 | `omikuji run`     |     `slug_or_id`     |  runs a game from the library headless. This skips updates, errors and such checks. Use it accordingly.		     | 
 | `omikuji run --notify-gui`     |     `slug_or_id`     |  runs a game from the library headless but will open the GUI if any errors, updates, etc. get in the way.		     | 
+| `omikuji list` |     `None`  	       |  lists the games in the library with their id, playtime and type.			     			 | 
 | `omikuji console` |     `None`  	       |  runs Omikuji in console mode.			     			 | 
 
 
