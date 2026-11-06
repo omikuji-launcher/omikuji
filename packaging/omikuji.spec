@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.8
+Version:        0.20.9
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,10 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Fri Nov 06 2026 reakjra <reakjra@proton.me> - 0.20.9-1
+- Actual steam flatpak and omikuji flatpak shortcuts
+- list cli command
+
 * Fri Nov 06 2026 reakjra <reakjra@proton.me> - 0.20.8-1
 - tempfs warning on installation path
 - minor ui fixes
