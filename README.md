@@ -94,8 +94,7 @@ flatpak override --user --filesystem=~/.local/share/icons/hicolor/256x256/apps i
 flatpak override --user --filesystem=xdg-config/fontconfig:ro io.github.reakjra.omikuji # you can skip this i just need it for my fonts' weight because i cant manage fonts apparently
 ```
 
-> [!WARNING]
-> Set your install path to the folder you set above. Your home is hidden from the sandbox so the default `~/Games` Omikuji sets by default is a tempfs folder so i mean, other than being a few GBs it'd just die next time
+Set your install path to the folder you set above. Your home is hidden from the sandbox so the default `~/Games` Omikuji sets by default is a tempfs folder so i mean, other than being a few GBs it'd just die next time
 
 To undo all of it:
 
