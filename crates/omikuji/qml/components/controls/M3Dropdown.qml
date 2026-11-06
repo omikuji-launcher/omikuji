@@ -304,7 +304,7 @@ Item {
                             font.weight: Font.Medium
                         }
 
-                        Item {
+                        PanningText {
                             id: labelClip
                             visible: !optionRow.isHeader
                             anchors.left: parent.left
@@ -312,82 +312,16 @@ Item {
                             anchors.right: parent.right
                             anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            height: optionText.implicitHeight
-                            clip: true
-
-                            readonly property real overflow: width > 0 ? Math.max(0, optionText.implicitWidth - width) : 0
-                            property real pan: 0
-                            property bool manualPan: false
-                            readonly property color bg: optionRow.lit
+                            text: optionRow.modelData.label
+                            color: optionRow.tint
+                            font.pixelSize: Theme.type.body.size
+                            font.weight: optionRow.index === root.currentIndex ? Font.Medium : Font.Normal
+                            active: optionRow.lit
+                            animateFades: popupSettled.value
+                            bg: optionRow.lit
                                 ? Theme.mix(popup.color, optionRow.tint,
                                             optionRow.index === root.currentIndex ? 0.18 : 0.14)
                                 : popup.color
-
-                            function panBy(delta) {
-                                manualPan = true
-                                pan = Math.max(0, Math.min(overflow, pan + delta))
-                            }
-                            function reset() {
-                                manualPan = false
-                                pan = 0
-                            }
-
-                            Text {
-                                id: optionText
-                                x: -Math.round(labelClip.pan)
-                                text: optionRow.modelData.label
-                                color: optionRow.tint
-                                font.pixelSize: Theme.type.body.size
-                                font.weight: optionRow.index === root.currentIndex ? Font.Medium : Font.Normal
-                            }
-
-                            SequentialAnimation {
-                                running: optionRow.lit && labelClip.overflow > 0 && !labelClip.manualPan
-                                loops: Animation.Infinite
-                                PauseAnimation { duration: 350 }
-                                NumberAnimation {
-                                    target: labelClip
-                                    property: "pan"
-                                    to: labelClip.overflow
-                                    duration: Math.max(300, labelClip.overflow * 16)
-                                }
-                                PauseAnimation { duration: 650 }
-                                NumberAnimation {
-                                    target: labelClip
-                                    property: "pan"
-                                    to: 0
-                                    duration: Math.max(300, labelClip.overflow * 16)
-                                }
-                                PauseAnimation { duration: 450 }
-                            }
-
-                            Rectangle {
-                                anchors.left: parent.left
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: 16
-                                opacity: labelClip.pan > 1 ? 1 : 0
-                                gradient: Gradient {
-                                    orientation: Gradient.Horizontal
-                                    GradientStop { position: 0.0; color: labelClip.bg }
-                                    GradientStop { position: 1.0; color: Theme.alpha(labelClip.bg, 0) }
-                                }
-                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: Theme.dur.sm } }
-                            }
-
-                            Rectangle {
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                anchors.bottom: parent.bottom
-                                width: 16
-                                opacity: labelClip.overflow > 0 && labelClip.pan < labelClip.overflow - 1 ? 1 : 0
-                                gradient: Gradient {
-                                    orientation: Gradient.Horizontal
-                                    GradientStop { position: 0.0; color: Theme.alpha(labelClip.bg, 0) }
-                                    GradientStop { position: 1.0; color: labelClip.bg }
-                                }
-                                Behavior on opacity { enabled: popupSettled.value; NumberAnimation { duration: Theme.dur.sm } }
-                            }
                         }
 
                         MouseArea {

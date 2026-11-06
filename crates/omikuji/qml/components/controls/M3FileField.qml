@@ -98,14 +98,29 @@ Item {
                 visible: root.trailingHint !== "" && inputArea.text !== ""
             }
 
-            Text {
-                anchors.fill: parent
+            PanningText {
+                id: placeholderText
+                anchors.left: parent.left
                 anchors.leftMargin: 12
-                verticalAlignment: Text.AlignVCenter
+                anchors.right: parent.right
+                anchors.rightMargin: 12
+                anchors.verticalCenter: parent.verticalCenter
                 text: root.placeholder
                 color: Theme.textSubtle
                 font.pixelSize: Theme.type.body.size
+                fades: false
+                active: placeholderHover.hovered
                 visible: inputArea.text === "" && !inputArea.activeFocus
+
+                HoverHandler {
+                    id: placeholderHover
+                    onHoveredChanged: if (!hovered) placeholderText.reset()
+                }
+
+                WheelHandler {
+                    orientation: Qt.Horizontal
+                    onWheel: (event) => placeholderText.panBy(-event.angleDelta.x * 0.5)
+                }
             }
         }
 
