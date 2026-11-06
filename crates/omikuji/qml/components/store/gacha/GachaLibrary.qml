@@ -175,4 +175,13 @@ Item {
         running: visible
         z: 90
     }
+
+    EmptyState {
+        anchors.fill: parent
+        visible: !root.manifestsLoading && root.manifests.length === 0
+        z: 90
+        icon: "local_activity"
+        text: qsTr("Couldn't load gachas")
+        hint: qsTr("Check your connection and reopen this page")
+    }
 }

@@ -317,7 +317,7 @@ ApplicationWindow {
     Connections {
         target: componentsBridge
         function onComponentFailed(name, error) {
-            toastManager.show("error", qsTr("%1 failed").arg(name), qsTr("Retry it from the Downloads tab."))
+            toastManager.show("error", qsTr("%1 failed").arg(name), qsTr("Retry it from Settings > Components."))
         }
     }
 
@@ -391,6 +391,7 @@ ApplicationWindow {
         target: gameModel
         function onGachaManifestsReady(fetched) {
             hoyoStorePanel.manifestsLoading = false
+            hoyoStorePanel.manifestsFetched = fetched > 0
         }
         function onDataChanged() { root.pushTrayRecent() }
         function onRowsInserted() { root.pushTrayRecent() }
