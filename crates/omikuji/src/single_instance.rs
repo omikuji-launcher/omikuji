@@ -1,3 +1,4 @@
+use std::os::unix::net::UnixStream as BlockingUnixStream;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -10,22 +11,31 @@ use crate::bridge::tray;
 const MSG_FOCUS: &[u8] = b"focus";
 const MSG_ERRORS: &[u8] = b"errors ";
 const MSG_LAUNCH: &[u8] = b"launch ";
+const MSG_STOP: &[u8] = b"stop ";
 const HANDOFF_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+
+fn send_game_message(prefix: &[u8], game_id: &str) -> Option<BlockingUnixStream> {
+    use std::io::Write;
+
+    let mut stream = BlockingUnixStream::connect(socket_path()).ok()?;
+    stream
+        .write_all(&[prefix, game_id.as_bytes()].concat())
+        .ok()?;
+    stream.shutdown(std::net::Shutdown::Write).ok()?;
+    Some(stream)
+}
 
 pub fn hand_off_launch(game_id: &str) -> bool {
     use std::io::Read;
-    use std::io::Write;
 
-    let Ok(mut stream) = std::os::unix::net::UnixStream::connect(socket_path()) else {
+    let Some(mut stream) = send_game_message(MSG_LAUNCH, game_id) else {
         return false;
     };
-    if stream
-        .write_all(&[MSG_LAUNCH, game_id.as_bytes()].concat())
-        .is_err()
-        || stream.shutdown(std::net::Shutdown::Write).is_err()
-    {
-        return false;
-    }
+
+    let stop_id = game_id.to_owned();
+    process::on_stop_signal(move || {
+        send_game_message(MSG_STOP, &stop_id);
+    });
 
     let _ = stream.read(&mut [0u8; 1]);
     true
@@ -57,6 +67,18 @@ fn accept_handoff(buf: &[u8]) {
     }
 
     tray::omikuji_tray_event_show();
+}
+
+async fn dispatch_message(buf: &[u8]) {
+    let game_id = |id| String::from_utf8_lossy(id).into_owned();
+
+    if let Some(id) = buf.strip_prefix(MSG_LAUNCH) {
+        let _ = process::request_launch(&game_id(id)).await;
+    } else if let Some(id) = buf.strip_prefix(MSG_STOP) {
+        process::stop_game(&game_id(id));
+    } else {
+        accept_handoff(buf);
+    }
 }
 
 fn socket_path() -> PathBuf {
@@ -123,13 +145,7 @@ pub async fn check() -> bool {
                                 .await;
 
                         match read {
-                            Ok(Ok(n)) if n > 0 => match buf.strip_prefix(MSG_LAUNCH) {
-                                Some(id) => {
-                                    let game_id = String::from_utf8_lossy(id).into_owned();
-                                    let _ = process::request_launch(&game_id).await;
-                                }
-                                None => accept_handoff(&buf),
-                            },
+                            Ok(Ok(n)) if n > 0 => dispatch_message(&buf).await,
                             Ok(Ok(_)) => {}
                             Ok(Err(e)) => tracing::error!("read error: {e}"),
                             Err(_) => tracing::error!("timed out reading from socket"),

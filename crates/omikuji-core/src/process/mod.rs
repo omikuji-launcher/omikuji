@@ -17,6 +17,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
+use tokio::signal::unix::{SignalKind, signal};
 
 mod log;
 mod procfs;
@@ -538,6 +539,34 @@ pub async fn launch_game(config: &ResolvedLaunch) -> Result<ProcessId> {
 
 pub fn is_game_running(game_id: &str) -> bool {
     manager().find_by_game_id(game_id).is_some() || running_marked_ids().contains(game_id)
+}
+
+pub fn on_stop_signal(action: impl FnOnce() + Send + 'static) {
+    let Ok(rt) = tokio::runtime::Builder::new_current_thread()
+        .enable_io()
+        .build()
+    else {
+        return;
+    };
+    let signals = rt.block_on(async {
+        Some((
+            signal(SignalKind::terminate()).ok()?,
+            signal(SignalKind::interrupt()).ok()?,
+        ))
+    });
+    let Some((mut sigterm, mut sigint)) = signals else {
+        return;
+    };
+
+    thread::spawn(move || {
+        rt.block_on(async {
+            tokio::select! {
+                _ = sigterm.recv() => {}
+                _ = sigint.recv() => {}
+            }
+        });
+        action();
+    });
 }
 
 // non-blocking. SIGTERM the whole session, SIGKILL 3s later if anything survives.

@@ -266,6 +266,11 @@ fn launch_and_wait(game: &Game, report: &Report) -> i32 {
         return 1;
     }
 
+    let stop_id = game_id.clone();
+    process::on_stop_signal(move || {
+        process::stop_game(&stop_id);
+    });
+
     while process::is_game_running(&game_id) {
         std::thread::sleep(std::time::Duration::from_millis(500));
     }
