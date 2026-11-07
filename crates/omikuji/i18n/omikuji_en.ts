@@ -863,104 +863,104 @@
 <context>
     <name>EpicInstallDialog</name>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="243"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="238"/>
         <source>Install %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="243"/>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="427"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="238"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="428"/>
         <source>Install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="286"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="287"/>
         <source>Legendary allows only one install. To reinstall elsewhere, delete the game files first.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="296"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="297"/>
         <source>Installation path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="316"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="317"/>
         <source>Calculating size…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="318"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="319"/>
         <source>Size unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="320"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="321"/>
         <source>%1 install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="322"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="323"/>
         <source>%1 download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="327"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="328"/>
         <source>%1 free</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="349"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="350"/>
         <source>Prefix path (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="350"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="351"/>
         <source>created per game (auto)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="360"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="361"/>
         <source>Runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="375"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="376"/>
         <source>DLC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="403"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="404"/>
         <source>Hide details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="403"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="404"/>
         <source>Show details</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="412"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="413"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="422"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="423"/>
         <source>Install DLC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="423"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="424"/>
         <source>Repair</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="423"/>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="426"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="424"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="427"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="425"/>
+        <location filename="../qml/components/store/epic/EpicInstallDialog.qml" line="426"/>
         <source>Resume</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1472,140 +1472,158 @@
 <context>
     <name>GachaInstallDialog</name>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="467"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="453"/>
         <source>Install %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="467"/>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="755"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="453"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="748"/>
         <source>Install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="477"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="463"/>
         <source>Edition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="541"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="527"/>
         <source>Installation path</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="556"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="542"/>
         <source>Calculating size…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="558"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="544"/>
         <source>Size unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="560"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="546"/>
         <source>%1 install</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="564"/>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="631"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="550"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="624"/>
         <source>%1 free</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="568"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="554"/>
         <source>existing install detected · v%1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="570"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="556"/>
         <source>Unknown version</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="596"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="589"/>
         <source>Select the region this folder holds. Importing the wrong one will not match these files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="599"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="592"/>
         <source>This folder holds the %1 version, and it has been selected for you, baby.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="612"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="605"/>
         <source>Temp path (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="613"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="606"/>
         <source>next to install path (auto)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="655"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="648"/>
         <source>created per game (auto)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="625"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="618"/>
         <source>Found existing files · %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="628"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="621"/>
         <source>%1 download</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="654"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="647"/>
         <source>Prefix path (optional)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="665"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="658"/>
         <source>Runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="668"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="661"/>
         <source>This runner is advised to play this game, and is installed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="669"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="662"/>
         <source>This runner is advised to play this game.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="685"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="678"/>
         <source>Release file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="701"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="694"/>
         <source>Installing the runner... %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="718"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="711"/>
         <source>Misc</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="748"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="741"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="754"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="747"/>
         <source>Import</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="755"/>
+        <location filename="../qml/components/store/gacha/GachaInstallDialog.qml" line="748"/>
         <source>Resume</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>GachaLibrary</name>
+    <message>
+        <location filename="../qml/components/store/gacha/GachaLibrary.qml" line="173"/>
+        <source>Loading gachas</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/store/gacha/GachaLibrary.qml" line="184"/>
+        <source>Couldn&apos;t load gachas</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/components/store/gacha/GachaLibrary.qml" line="185"/>
+        <source>Check your connection and reopen this page</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2057,12 +2075,12 @@
 <context>
     <name>GogInstallDialog</name>
     <message>
-        <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="241"/>
+        <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="235"/>
         <source>Install %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="241"/>
+        <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="235"/>
         <location filename="../qml/components/store/gog/GogInstallDialog.qml" line="411"/>
         <source>Install</source>
         <translation type="unfinished"></translation>
@@ -2351,12 +2369,12 @@
 <context>
     <name>M3FileField</name>
     <message>
-        <location filename="../qml/components/controls/M3FileField.qml" line="141"/>
+        <location filename="../qml/components/controls/M3FileField.qml" line="156"/>
         <source>Select Folder</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/controls/M3FileField.qml" line="141"/>
+        <location filename="../qml/components/controls/M3FileField.qml" line="156"/>
         <source>Select File</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2399,11 +2417,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="320"/>
-        <source>Retry it from the Downloads tab.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../qml/Main.qml" line="365"/>
         <source> gacha</source>
         <translation type="unfinished"></translation>
@@ -2424,179 +2437,184 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="901"/>
+        <location filename="../qml/Main.qml" line="908"/>
         <source>This will stop &quot;%1&quot; and delete the partially downloaded files.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="906"/>
+        <location filename="../qml/Main.qml" line="913"/>
         <source>Nile cannot resume a partial file. Pausing &quot;%1&quot; throws away the %2 it is currently writing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="992"/>
+        <location filename="../qml/Main.qml" line="999"/>
         <source>Cancel download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="993"/>
+        <location filename="../qml/Main.qml" line="1000"/>
         <source>Cancel &amp; delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="994"/>
+        <location filename="../qml/Main.qml" line="1001"/>
         <source>Keep</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1002"/>
+        <location filename="../qml/Main.qml" line="1009"/>
         <source>Pause download?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1003"/>
+        <location filename="../qml/Main.qml" line="1010"/>
         <source>Pause anyway</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1004"/>
+        <location filename="../qml/Main.qml" line="1011"/>
         <source>Keep downloading</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1012"/>
+        <location filename="../qml/Main.qml" line="1019"/>
         <source>Refetch art from SGDB</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1013"/>
+        <location filename="../qml/Main.qml" line="1020"/>
         <source>Replaces the cached banner, cover art, and icon with a fresh pull from SteamGridDB. Manual overrides you&apos;ve set won&apos;t be touched.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1014"/>
+        <location filename="../qml/Main.qml" line="1021"/>
         <source>Refetch</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1015"/>
-        <location filename="../qml/Main.qml" line="1388"/>
+        <location filename="../qml/Main.qml" line="1022"/>
+        <location filename="../qml/Main.qml" line="1395"/>
         <source>Cancel</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1029"/>
+        <location filename="../qml/Main.qml" line="1036"/>
         <source>Art preview</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1053"/>
+        <location filename="../qml/Main.qml" line="1060"/>
         <source>Environment sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1054"/>
+        <location filename="../qml/Main.qml" line="1061"/>
         <source>Manage env sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1065"/>
+        <location filename="../qml/Main.qml" line="1072"/>
         <source>DLL override sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1066"/>
+        <location filename="../qml/Main.qml" line="1073"/>
         <source>Manage DLL sets</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1132"/>
+        <location filename="../qml/Main.qml" line="1139"/>
         <source>Removes &quot;%1&quot; from your sources. Installed versions stay on disk and keep working; adding a source with the same name picks them up again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1160"/>
+        <location filename="../qml/Main.qml" line="1167"/>
         <source>Couldn&apos;t delete runner</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1161"/>
+        <location filename="../qml/Main.qml" line="1168"/>
         <source>%1 deleted</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1174"/>
+        <location filename="../qml/Main.qml" line="1181"/>
         <source>Couldn&apos;t update Steam links</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1179"/>
+        <location filename="../qml/Main.qml" line="1186"/>
         <source>Steam links updated for %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1179"/>
-        <location filename="../qml/Main.qml" line="1190"/>
+        <location filename="../qml/Main.qml" line="1186"/>
+        <location filename="../qml/Main.qml" line="1197"/>
         <source>Restart Steam to see it.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1190"/>
+        <location filename="../qml/Main.qml" line="1197"/>
         <source>%1 moved to Steam</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1198"/>
+        <location filename="../qml/Main.qml" line="1205"/>
         <source>Remove</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1203"/>
+        <location filename="../qml/Main.qml" line="1210"/>
         <source>Couldn&apos;t remove source</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1232"/>
+        <location filename="../qml/Main.qml" line="1239"/>
         <source>Update queued</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1229"/>
+        <location filename="../qml/Main.qml" line="1236"/>
         <source>Update failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1229"/>
+        <location filename="../qml/Main.qml" line="320"/>
+        <source>Retry it from Settings &gt; Components.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/Main.qml" line="1236"/>
         <source>Could not enqueue update</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1233"/>
+        <location filename="../qml/Main.qml" line="1240"/>
         <source>Pre-download queued</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1271"/>
+        <location filename="../qml/Main.qml" line="1278"/>
         <source>Installing umu-run</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1272"/>
+        <location filename="../qml/Main.qml" line="1279"/>
         <source>See Downloads for progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1329"/>
+        <location filename="../qml/Main.qml" line="1336"/>
         <source>Game added</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1355"/>
+        <location filename="../qml/Main.qml" line="1362"/>
         <source>Translation layers changed</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1357"/>
+        <location filename="../qml/Main.qml" line="1364"/>
         <source>Until now, Proton switched DXVK, VKD3D and NVAPI on by itself, even when these toggles were off. That has changed. Off now really means off.
 
 So %n Proton game(s) would start running on Wine&apos;s own Direct3D instead of what they use today. Turning those toggles back on keeps them exactly as they are.
@@ -2622,17 +2640,17 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1358"/>
+        <location filename="../qml/Main.qml" line="1365"/>
         <source>Update games</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1359"/>
+        <location filename="../qml/Main.qml" line="1366"/>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
     <message numerus="yes">
-        <location filename="../qml/Main.qml" line="1371"/>
+        <location filename="../qml/Main.qml" line="1378"/>
         <source>This deletes the prefix and everything in it. %n game(s) use it, and it won&apos;t be recoverable.</source>
         <translation>
             <numerusform>This deletes the prefix and everything in it. %n game uses it, and it won&apos;t be recoverable.</numerusform>
@@ -2640,57 +2658,57 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
         </translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1372"/>
+        <location filename="../qml/Main.qml" line="1379"/>
         <source>This deletes the prefix and everything in it. It won&apos;t be recoverable.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1386"/>
+        <location filename="../qml/Main.qml" line="1393"/>
         <source>Delete prefix?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1387"/>
+        <location filename="../qml/Main.qml" line="1394"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1432"/>
+        <location filename="../qml/Main.qml" line="1439"/>
         <source>Configure (winecfg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1434"/>
+        <location filename="../qml/Main.qml" line="1441"/>
         <source>Registry (regedit)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1435"/>
+        <location filename="../qml/Main.qml" line="1442"/>
         <source>Command Prompt (cmd)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1436"/>
+        <location filename="../qml/Main.qml" line="1443"/>
         <source>File Explorer (explorer)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1437"/>
+        <location filename="../qml/Main.qml" line="1444"/>
         <source>Run EXE in prefix…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1438"/>
+        <location filename="../qml/Main.qml" line="1445"/>
         <source>Run wine command…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1439"/>
+        <location filename="../qml/Main.qml" line="1446"/>
         <source>Kill wineserver</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/Main.qml" line="1464"/>
+        <location filename="../qml/Main.qml" line="1471"/>
         <source>Select EXE to run in prefix</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2861,12 +2879,12 @@ Would you like Omikuji to migrate these games for you? They&apos;ll behave like 
 <context>
     <name>NileInstallDialog</name>
     <message>
-        <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="198"/>
+        <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="192"/>
         <source>Install %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="198"/>
+        <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="192"/>
         <location filename="../qml/components/store/nile/NileInstallDialog.qml" line="332"/>
         <source>Install</source>
         <translation type="unfinished"></translation>
@@ -5902,6 +5920,14 @@ Search for community scripts, or use a local file.</source>
     <message>
         <location filename="../qml/components/presets/TemplateVarsDialog.qml" line="70"/>
         <source>Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>TmpfsNote</name>
+    <message>
+        <location filename="../qml/components/store/TmpfsNote.qml" line="17"/>
+        <source>This folder lives in RAM. Anything installed here can disappear when Omikuji closes or on reboot.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
