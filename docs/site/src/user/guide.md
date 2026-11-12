@@ -478,6 +478,23 @@ To install one, click the `+` button and select `Install Script` in the tiny pop
 
 Clicking a script pulls it locally and opens a new dialog. The fields in it are all declared in the script's `.toml` file. The only thing that is always present is the `show source` button that expands a code block with the script's source code. For more information, see the [scripts documentation](https://github.com/omikuji-launcher/omikuji-scripts/blob/master/README.md).
 
+## Run with Omikuji
+
+Omikuji can run any Windows `.exe` or open a link like `magnet:` or `novetus://` inside a prefix without adding it to the library. Right click a `.exe` in your file manager and pick `Open With` > `Omikuji` or run it from a terminal:
+
+```sh
+omikuji /path/to/setup.exe
+omikuji 'magnet:?xt=urn:btih:...'
+```
+
+Pick a runner and a prefix or select a game to use its settings.
+
+If you want browsers to forward specific links directly to Omikuji:
+
+```sh
+xdg-mime default io.github.reakjra.omikuji.desktop x-scheme-handler/<scheme>
+```
+
 ## Keyboard and Controller
 
 The whole app can be used without a mouse (hi steam deck user). Pressing an arrow key, `Tab` or any controller button switches to keyboard mode: the mouse cursor hides and the focused element gets an outline. Moving or clicking the mouse switches back. `Enter` and `Space` alone don't switch modes (that'd be dumb wouldn't it.).
@@ -625,7 +642,7 @@ See [Installing DLC (Epic Games / GOG)](#epic-games--gog--amazon-games).
 
 ### How do I run a random `.exe` inside a game's prefix?
 
-See [Library Overview](#library-overview).
+See [Run with Omikuji](#run-with-omikuji) or the Wine button in [Library Overview](#library-overview).
 
 ### What's the difference between copying and syncing an env set?
 
