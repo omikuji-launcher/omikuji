@@ -9,10 +9,10 @@ use super::source::sync_file;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
 use crate::fs_util;
-use crate::http;
 use crate::gacha::file_sync::{
     Skip, SyncProgress, download_one, expected_md5, file_md5, is_stale, sanitize_rel,
 };
+use crate::http;
 
 // interrupt keeps staging so a resume reuses the pulled diffs
 pub(super) async fn run_patch_update(

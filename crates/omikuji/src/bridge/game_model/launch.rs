@@ -1,11 +1,17 @@
+use std::io;
+use std::os::unix::process::CommandExt;
+use std::path::PathBuf;
 use std::pin::Pin;
+use std::process::{Command, Stdio};
 
 use cxx_qt_lib::QString;
 
 use omikuji_core::app_settings::AppSettings;
 use omikuji_core::components_config::ArchiveSource;
 use omikuji_core::library::Game;
+use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction};
+use omikuji_core::store::steam::local::with_steam_wine;
 use omikuji_core::template_vars::TemplateVars;
 use omikuji_core::wine_tools::{self, WineTool};
 use omikuji_core::{anyhow, game_logs, launch, log_files, notifications, runners, updates};
@@ -55,7 +61,7 @@ impl super::qobject::GameModel {
     }
 
     pub fn launch_exe(&self, exe: &QString, runner: &QString, prefix: &QString) -> bool {
-        let exe_path = std::path::PathBuf::from(exe.to_string());
+        let exe_path = PathBuf::from(exe.to_string());
         let name = exe_path
             .file_name()
             .and_then(|n| n.to_str())
@@ -64,38 +70,40 @@ impl super::qobject::GameModel {
         let game = Game::new(name, exe_path)
             .with_prefix(prefix.to_string())
             .with_runner_version(runner.to_string());
-        let config = match launch::build_launch(&game) {
-            Ok(c) => c,
-            Err(e) => {
-                tracing::error!("run-exe build_launch failed: {}", e);
-                return false;
-            }
-        };
-        if config.command.is_empty() {
+        spawn_detached(launch::build_launch(&game).and_then(|c| c.to_command()))
+    }
+
+    pub fn launch_exe_in_game(&self, exe: &QString, game_id: &QString) -> bool {
+        let id = game_id.to_string();
+        let Some(game) = self.library.game(&id) else {
+            tracing::warn!("game '{}' not found", id);
             return false;
-        }
-        let mut cmd = std::process::Command::new(&config.command[0]);
-        cmd.args(&config.command[1..]);
-        cmd.current_dir(&config.working_dir);
-        cmd.env_clear();
-        cmd.envs(&config.env);
-        cmd.stdin(std::process::Stdio::null());
-        use std::os::unix::process::CommandExt;
-        unsafe {
-            cmd.pre_exec(|| {
-                if libc::setsid() == -1 {
-                    return Err(std::io::Error::last_os_error());
-                }
-                Ok(())
-            });
-        }
-        match cmd.spawn() {
-            Ok(_) => true,
-            Err(e) => {
-                tracing::error!("run-exe spawn failed: {}", e);
-                false
-            }
-        }
+        };
+        let tool = WineTool::RunExe(PathBuf::from(exe.to_string()));
+        spawn_detached(wine_tools::build_wine_command(game, &tool))
+    }
+
+    pub fn prefix_games_json(&self) -> QString {
+        let games: Vec<_> = self
+            .library
+            .game
+            .iter()
+            .filter_map(|g| {
+                let host = match with_steam_wine(g) {
+                    Ok(Some(steam)) => steam,
+                    Ok(None) if g.uses_wine_prefix() => g.clone(),
+                    _ => return None,
+                };
+                Some(serde_json::json!({
+                    "id": g.metadata.id,
+                    "title": g.metadata.name,
+                    "image": media::resolve_image(&g.metadata.id, &g.metadata.coverart, &MediaType::Coverart),
+                    "runner": host.wine.version,
+                    "prefix": launch::prefix_path_for(&host),
+                }))
+            })
+            .collect();
+        QString::from(&serde_json::Value::from(games).to_string())
     }
 
     pub fn run_exe_path(&self) -> QString {
@@ -226,7 +234,7 @@ impl super::qobject::GameModel {
         };
         let display_name = game.metadata.name.clone();
         let game_id_owned = game.metadata.id.clone();
-        let path = std::path::PathBuf::from(&exe);
+        let path = PathBuf::from(&exe);
         let file_label = path
             .file_name()
             .map(|s| s.to_string_lossy().into_owned())
@@ -429,6 +437,25 @@ fn spawn_launch_thread(config: launch::ResolvedLaunch) {
             }
         });
     });
+}
+
+fn spawn_detached(cmd: anyhow::Result<Command>) -> bool {
+    let spawned = cmd.and_then(|mut cmd| {
+        cmd.stdin(Stdio::null());
+        unsafe {
+            cmd.pre_exec(|| {
+                if libc::setsid() == -1 {
+                    return Err(io::Error::last_os_error());
+                }
+                Ok(())
+            });
+        }
+        Ok(cmd.spawn()?)
+    });
+    if let Err(e) = &spawned {
+        tracing::error!("run-exe failed: {e:#}");
+    }
+    spawned.is_ok()
 }
 
 fn refuse_if_busy(game: &Game) -> bool {

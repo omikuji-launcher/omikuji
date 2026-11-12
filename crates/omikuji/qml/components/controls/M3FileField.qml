@@ -23,6 +23,7 @@ Item {
 
     onTextChanged: if (inputArea.text !== text) inputArea.text = text
 
+    opacity: enabled ? 1 : 0.45
     implicitWidth: 200
     implicitHeight: (label ? labelText.height + 4 : 0) + fieldRow.height
                     + (expansion.visible ? expansion.implicitHeight + 3 : 0)

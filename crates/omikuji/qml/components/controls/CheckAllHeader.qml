@@ -8,10 +8,11 @@ Item {
     property bool checkAllVisible: true
     property bool checked: false
     property bool indeterminate: false
+    property alias trailing: trailingSlot.data
 
     signal checkAllClicked()
 
-    implicitHeight: 24
+    implicitHeight: Math.max(24, trailingSlot.childrenRect.height)
 
     Text {
         anchors.left: parent.left
@@ -42,6 +43,15 @@ Item {
             checked: root.checked
             indeterminate: !root.checked && root.indeterminate
         }
+    }
+
+    Item {
+        id: trailingSlot
+        anchors.right: root.checkAllVisible ? checkAll.left : parent.right
+        anchors.rightMargin: root.checkAllVisible ? Theme.space.lg : 0
+        anchors.verticalCenter: parent.verticalCenter
+        width: childrenRect.width
+        height: childrenRect.height
     }
 
     PressArea {

@@ -15,6 +15,8 @@ Item {
     property bool removable: false
     property string title: ""
     property bool checkAllVisible: false
+    property bool single: false
+    property alias headerTrailing: header.trailing
     property int visibleRows: 3
     property bool fillHeight: false
     readonly property int rowHeight: 52
@@ -34,9 +36,11 @@ Item {
     implicitHeight: content.height
 
     function toggle(id) {
-        root.selectionRequested(checkedIds.indexOf(id) !== -1
-            ? checkedIds.filter(v => v !== id)
-            : checkedIds.concat([id]))
+        const on = checkedIds.indexOf(id) !== -1
+        if (single)
+            root.selectionRequested(on ? [] : [id])
+        else
+            root.selectionRequested(on ? checkedIds.filter(v => v !== id) : checkedIds.concat([id]))
     }
 
     Column {
@@ -157,6 +161,7 @@ Item {
                     M3Checkbox {
                         id: check
                         visible: !root.readOnly
+                        round: root.single
                         anchors.right: parent.right
                         anchors.rightMargin: Theme.space.lg
                         anchors.verticalCenter: parent.verticalCenter

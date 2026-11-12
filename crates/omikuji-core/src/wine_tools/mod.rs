@@ -134,7 +134,7 @@ fn pipe_lines<R: std::io::Read + Send + 'static>(reader: R, tx: std::sync::mpsc:
     });
 }
 
-fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
+pub fn build_wine_command(game: &Game, tool: &WineTool) -> Result<Command> {
     let effective = with_steam_wine(game)?;
     let g: &Game = effective.as_ref().unwrap_or(game);
 

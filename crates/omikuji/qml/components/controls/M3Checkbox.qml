@@ -6,6 +6,7 @@ Item {
 
     property bool checked: false
     property bool indeterminate: false
+    property bool round: false
     property int boxSize: 20
 
     readonly property bool _on: checked || indeterminate
@@ -20,7 +21,7 @@ Item {
         anchors.centerIn: parent
         width: root.boxSize
         height: root.boxSize
-        radius: Math.max(2, Math.round(root.boxSize * 0.14))
+        radius: root.round ? root.boxSize / 2 : Math.max(2, Math.round(root.boxSize * 0.14))
         color: root._on ? Theme.accent : "transparent"
         border.width: 2
         border.color: root._on ? Theme.accent : root._outlineOff
@@ -33,7 +34,18 @@ Item {
             name: "check"
             size: root.boxSize
             color: Theme.accentOn
-            opacity: root.checked && !root.indeterminate ? 1 : 0
+            opacity: root.checked && !root.indeterminate && !root.round ? 1 : 0
+
+            Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
+        }
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.round(root.boxSize * 0.4)
+            height: width
+            radius: width / 2
+            color: Theme.accentOn
+            opacity: root.round && root.checked ? 1 : 0
 
             Behavior on opacity { NumberAnimation { duration: Theme.dur.md } }
         }

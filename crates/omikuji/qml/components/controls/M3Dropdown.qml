@@ -26,6 +26,8 @@ Item {
 
     signal selected(var value)
 
+    opacity: enabled ? 1 : 0.45
+
     readonly property bool popupOpen: popup.visible
 
     property int _highlightIndex: -1

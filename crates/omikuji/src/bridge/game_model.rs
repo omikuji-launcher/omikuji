@@ -242,6 +242,12 @@ pub mod qobject {
         fn launch_exe(self: &GameModel, exe: &QString, runner: &QString, prefix: &QString) -> bool;
 
         #[qinvokable]
+        fn launch_exe_in_game(self: &GameModel, exe: &QString, game_id: &QString) -> bool;
+
+        #[qinvokable]
+        fn prefix_games_json(self: &GameModel) -> QString;
+
+        #[qinvokable]
         fn run_exe_path(self: &GameModel) -> QString;
 
         #[qinvokable]

@@ -8,6 +8,7 @@ Item {
     property string placeholder: ""
     property string label: ""
     property bool readOnly: false
+    property real fieldHeight: 44
     property var gameModel: null
     property bool expandHint: true
     property var expandWith: expandHint && gameModel ? (t) => gameModel.expandVars(t) : null
@@ -45,7 +46,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.topMargin: root.label ? labelText.height + 4 : 0
-        height: 44
+        height: root.fieldHeight
         focused: input.activeFocus
 
         TextInput {
