@@ -21,7 +21,7 @@ pub struct Cli {
     pub command: Option<Cmd>,
     #[arg(
         value_name = "FILE",
-        help = "Windows executable to run via a wine runner + prefix picker"
+        help = "Windows executable or URI to open via a wine runner + prefix picker"
     )]
     pub file: Option<String>,
 }

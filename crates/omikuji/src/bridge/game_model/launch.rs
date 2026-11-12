@@ -13,7 +13,7 @@ use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction};
 use omikuji_core::store::steam::local::with_steam_wine;
 use omikuji_core::template_vars::TemplateVars;
-use omikuji_core::wine_tools::{self, WineTool};
+use omikuji_core::wine_tools::{self, RunTarget, WineTool};
 use omikuji_core::{anyhow, game_logs, launch, log_files, notifications, runners, updates};
 
 use crate::inhibit;
@@ -60,27 +60,33 @@ impl super::qobject::GameModel {
         self.try_spawn_launch(game)
     }
 
-    pub fn launch_exe(&self, exe: &QString, runner: &QString, prefix: &QString) -> bool {
-        let exe_path = PathBuf::from(exe.to_string());
-        let name = exe_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("Program")
-            .to_string();
-        let game = Game::new(name, exe_path)
+    pub fn launch_exe(&self, target: &QString, runner: &QString, prefix: &QString) -> bool {
+        let target = RunTarget::parse(&target.to_string());
+        let exe = match &target {
+            RunTarget::Exe(path) => path.clone(),
+            RunTarget::Uri(_) => PathBuf::new(),
+        };
+        let game = Game::new(target.label(), exe)
             .with_prefix(prefix.to_string())
             .with_runner_version(runner.to_string());
-        spawn_detached(launch::build_launch(&game).and_then(|c| c.to_command()))
+        spawn_detached(match target {
+            RunTarget::Exe(_) => launch::build_launch(&game).and_then(|c| c.to_command()),
+            RunTarget::Uri(_) => wine_tools::build_wine_command(&game, &target.tool()),
+        })
     }
 
-    pub fn launch_exe_in_game(&self, exe: &QString, game_id: &QString) -> bool {
+    pub fn launch_exe_in_game(&self, target: &QString, game_id: &QString) -> bool {
         let id = game_id.to_string();
         let Some(game) = self.library.game(&id) else {
             tracing::warn!("game '{}' not found", id);
             return false;
         };
-        let tool = WineTool::RunExe(PathBuf::from(exe.to_string()));
+        let tool = RunTarget::parse(&target.to_string()).tool();
         spawn_detached(wine_tools::build_wine_command(game, &tool))
+    }
+
+    pub fn run_target_label(&self) -> QString {
+        QString::from(&RunTarget::parse(&self.run_exe_path().to_string()).label())
     }
 
     pub fn prefix_games_json(&self) -> QString {

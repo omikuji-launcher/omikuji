@@ -239,10 +239,18 @@ pub mod qobject {
         fn prepare_prefix(self: Pin<&mut GameModel>, index: i32);
 
         #[qinvokable]
-        fn launch_exe(self: &GameModel, exe: &QString, runner: &QString, prefix: &QString) -> bool;
+        fn launch_exe(
+            self: &GameModel,
+            target: &QString,
+            runner: &QString,
+            prefix: &QString,
+        ) -> bool;
 
         #[qinvokable]
-        fn launch_exe_in_game(self: &GameModel, exe: &QString, game_id: &QString) -> bool;
+        fn launch_exe_in_game(self: &GameModel, target: &QString, game_id: &QString) -> bool;
+
+        #[qinvokable]
+        fn run_target_label(self: &GameModel) -> QString;
 
         #[qinvokable]
         fn prefix_games_json(self: &GameModel) -> QString;

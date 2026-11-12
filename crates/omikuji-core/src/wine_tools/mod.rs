@@ -76,6 +76,49 @@ impl WineTool {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum RunTarget {
+    Exe(PathBuf),
+    Uri(String),
+}
+
+impl RunTarget {
+    pub fn parse(arg: &str) -> Self {
+        match reqwest::Url::parse(arg) {
+            Ok(url) if url.scheme() == "file" => {
+                Self::Exe(url.to_file_path().unwrap_or_else(|_| PathBuf::from(arg)))
+            }
+            Ok(url) if url.scheme().len() > 1 => Self::Uri(arg.to_string()),
+            _ => Self::Exe(PathBuf::from(arg)),
+        }
+    }
+
+    pub fn label(&self) -> String {
+        match self {
+            Self::Exe(path) => path
+                .file_name()
+                .map_or_else(|| path.to_string_lossy(), |n| n.to_string_lossy())
+                .into_owned(),
+            Self::Uri(uri) => {
+                let scheme = uri.split_once(':').map_or(uri.as_str(), |(s, _)| s);
+                format!("{scheme} link")
+            }
+        }
+    }
+
+    pub fn tool(&self) -> WineTool {
+        match self {
+            Self::Exe(path) => WineTool::RunExe(path.clone()),
+            // wine /start apparntly cant handle long arguments lol
+            Self::Uri(uri) => WineTool::Custom(vec![
+                "rundll32".into(),
+                "url.dll,FileProtocolHandler".into(),
+                uri.clone(),
+            ]),
+        }
+    }
+}
+
 pub fn run(game: &Game, tool: WineTool) -> Result<Child> {
     let mut cmd = build_wine_command(game, &tool)?;
     cmd.spawn()

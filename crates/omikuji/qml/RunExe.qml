@@ -26,7 +26,7 @@ ApplicationWindow {
     property string selectedId: ""
     property string searchText: ""
 
-    readonly property string exeName: exePath ? exePath.substring(exePath.lastIndexOf('/') + 1) : ""
+    property string targetLabel: ""
     readonly property var selectedGame: games.find(g => g.id === selectedId) || null
     readonly property var shownGames: {
         const q = searchText.trim().toLowerCase()
@@ -35,6 +35,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         exePath = gameModel.run_exe_path()
+        targetLabel = gameModel.run_target_label()
         prefixValue = defaults.getConfig()["wine.prefix"] || ""
         try { games = JSON.parse(gameModel.prefix_games_json()) }
         catch (e) { games = [] }
@@ -57,94 +58,120 @@ ApplicationWindow {
 
     DefaultsBridge { id: defaults }
 
+    GamepadBridge {
+        synthesizeKeys: true
+        Component.onCompleted: start()
+    }
+
+    FocusHalo {}
+
     Shortcut {
         sequence: "Escape"
         onActivated: gameModel.quit_now()
     }
 
-    MouseArea {
+    Item {
+        id: content
         anchors.fill: parent
-        onClicked: forceActiveFocus()
-    }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: Theme.space.xl
-        spacing: Theme.space.lg
+        Keys.onPressed: (event) => windowTrap.handleKey(event)
 
-        Text {
-            Layout.fillWidth: true
-            text: root.exeName || qsTr("Run with Omikuji")
-            color: Theme.text
-            font.pixelSize: Theme.type.title.size
-            font.weight: Theme.type.title.weight
-            elide: Text.ElideRight
+        FocusTrap {
+            id: windowTrap
+            host: null
+            scope: content
+            active: true
+            sections: [gameList, runnerDropdown, prefixField, actions]
         }
 
-        ArtCheckList {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            visible: root.games.length > 0
-            title: qsTr("Use a game's settings")
-            single: true
-            fillHeight: true
-            items: root.shownGames
-            headerTrailing: M3TextField {
-                width: 200
-                fieldHeight: 32
-                placeholder: qsTr("Search games")
-                text: root.searchText
-                onTextEdited: (t) => root.searchText = t
-            }
-            checkedIds: root.selectedId ? [root.selectedId] : []
-            onSelectionRequested: (ids) => root.selectedId = ids.length > 0 ? ids[0] : ""
+        MouseArea {
+            anchors.fill: parent
+            onClicked: forceActiveFocus()
         }
 
-        M3Dropdown {
-            Layout.fillWidth: true
-            label: qsTr("Runner")
-            enabled: !root.selectedGame
-            options: RG.groupRunners(JSON.parse(gameModel.list_runners()))
-            currentIndex: {
-                const chosen = RG.indexOfValue(options, root.selectedGame ? root.selectedGame.runner : root.runnerValue)
-                if (chosen >= 0) return chosen
-                return RG.selectedIndex(options, defaults.getConfig()["wine.version"])
-            }
-            onSelected: (val) => root.runnerValue = val
-            Component.onCompleted: root.runnerValue = currentValue
-        }
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: Theme.space.xl
+            spacing: Theme.space.lg
 
-        M3FileField {
-            Layout.fillWidth: true
-            label: qsTr("Prefix")
-            placeholder: qsTr("new prefix (auto)")
-            selectFolder: true
-            enabled: !root.selectedGame
-            gameModel: gameModel
-            text: root.selectedGame ? root.selectedGame.prefix : root.prefixValue
-            onTextEdited: (t) => root.prefixValue = t
-            onAccepted: (p) => root.prefixValue = p
-        }
-
-        Item {
-            Layout.fillHeight: root.games.length === 0
-        }
-
-        Row {
-            Layout.alignment: Qt.AlignRight
-            spacing: Theme.space.md
-
-            M3Button {
-                text: qsTr("Close")
-                variant: "text"
-                onClicked: gameModel.quit_now()
+            Text {
+                Layout.fillWidth: true
+                text: root.targetLabel || qsTr("Run with Omikuji")
+                color: Theme.text
+                font.pixelSize: Theme.type.title.size
+                font.weight: Theme.type.title.weight
+                elide: Text.ElideRight
             }
 
-            M3Button {
-                text: qsTr("Run")
-                variant: "filled"
-                enabled: root.exePath !== "" && (root.selectedGame !== null || root.runnerValue !== "")
-                onClicked: root.run()
+            ArtCheckList {
+                id: gameList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.games.length > 0
+                title: qsTr("Use a game's settings")
+                single: true
+                fillHeight: true
+                items: root.shownGames
+                headerTrailing: M3TextField {
+                    width: 200
+                    fieldHeight: 32
+                    placeholder: qsTr("Search games")
+                    text: root.searchText
+                    onTextEdited: (t) => root.searchText = t
+                }
+                checkedIds: root.selectedId ? [root.selectedId] : []
+                onSelectionRequested: (ids) => root.selectedId = ids.length > 0 ? ids[0] : ""
+            }
+
+            M3Dropdown {
+                id: runnerDropdown
+                Layout.fillWidth: true
+                label: qsTr("Runner")
+                enabled: !root.selectedGame
+                options: RG.groupRunners(JSON.parse(gameModel.list_runners()))
+                currentIndex: {
+                    const chosen = RG.indexOfValue(options, root.selectedGame ? root.selectedGame.runner : root.runnerValue)
+                    if (chosen >= 0) return chosen
+                    return RG.selectedIndex(options, defaults.getConfig()["wine.version"])
+                }
+                onSelected: (val) => root.runnerValue = val
+                Component.onCompleted: root.runnerValue = currentValue
+            }
+
+            M3FileField {
+                id: prefixField
+                Layout.fillWidth: true
+                label: qsTr("Prefix")
+                placeholder: qsTr("new prefix (auto)")
+                selectFolder: true
+                enabled: !root.selectedGame
+                gameModel: gameModel
+                text: root.selectedGame ? root.selectedGame.prefix : root.prefixValue
+                onTextEdited: (t) => root.prefixValue = t
+                onAccepted: (p) => root.prefixValue = p
+            }
+
+            Item {
+                Layout.fillHeight: root.games.length === 0
+            }
+
+            Row {
+                id: actions
+                Layout.alignment: Qt.AlignRight
+                spacing: Theme.space.md
+
+                M3Button {
+                    text: qsTr("Close")
+                    variant: "text"
+                    onClicked: gameModel.quit_now()
+                }
+
+                M3Button {
+                    text: qsTr("Run")
+                    variant: "filled"
+                    enabled: root.exePath !== "" && (root.selectedGame !== null || root.runnerValue !== "")
+                    onClicked: root.run()
+                }
             }
         }
     }
