@@ -13,6 +13,14 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.20.10
+Added:
+- Selectable games list in Run with Exe dialog
+- URI forwarding to Prefixes 
+
+Fixed:
+- Wuthering Waves updates 
+
 ## 0.20.8
 Added:
 - Warning for installation paths on tempfs

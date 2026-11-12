@@ -22,6 +22,15 @@
     </p>
   </description>
   <releases>
+    <release version="0.20.10" date="2026-11-12">
+      <description>
+        <ul>
+          <li>Fix Wuthering Waves updates</li>
+          <li>Added URI forwarding to Prefixes</li>
+          <li>Added selectable games list in Run with Omikuji dialog</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.9" date="2026-11-06">
       <description>
         <ul>

@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.9
+Version:        0.20.10
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,11 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Thu Nov 12 2026 reakjra <reakjra@proton.me> - 0.20.10-1
+- Fix Wuthering Waves updates
+- Added URI forwarding to Prefixes
+- Added selectable games list in Run with Omikuji dialog
+
 * Fri Nov 06 2026 reakjra <reakjra@proton.me> - 0.20.9-1
 - Actual steam flatpak and omikuji flatpak shortcuts
 - list cli command
