@@ -127,6 +127,10 @@ pub fn url_file_name(url: &str) -> Option<String> {
         .map(str::to_string)
 }
 
+pub fn join_url(base: &str, rel: &str) -> String {
+    format!("{}/{}", base.trim_end_matches('/'), rel.trim_start_matches('/'))
+}
+
 // on_percent fires at most once per whole percent, size_hint covers servers that send no content-length
 pub async fn download_with_progress(
     url: &str,

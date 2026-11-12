@@ -14,6 +14,7 @@ use crate::gacha::file_sync::{self, Skip, SyncFile, SyncProgress};
 use crate::gacha::manifest::GachaManifest;
 use crate::gacha::strategies::normalize_version;
 use crate::gacha::{state, strategies};
+use crate::http;
 
 pub struct KuroSource;
 
@@ -99,7 +100,7 @@ pub(super) fn sync_file(file: &api::ResourceFile, base_url: &str) -> SyncFile {
     SyncFile {
         rel_path: file.dest.clone(),
         size: file.size,
-        url: format!("{}{}", base_url, clean.replace(' ', "%20")),
+        url: http::join_url(base_url, &clean.replace(' ', "%20")),
         md5: file_sync::expected_md5(&file.md5),
     }
 }
@@ -165,7 +166,7 @@ async fn sync_pack(
     if let DownloadKind::Update { from_version } = &entry.kind
         && let Some(pc) = pack.matching_patch(from_version)
     {
-        let index_url = format!("{}{}", pack.cdn_url, pc.index_file_rel);
+        let index_url = http::join_url(&pack.cdn_url, &pc.index_file_rel);
         match api::fetch_patch_index(&index_url).await {
             Ok(pidx) => match patcher::run_patch_update(entry, pack_id, pack, pc, &pidx).await {
                 Ok(()) => return Ok(()),

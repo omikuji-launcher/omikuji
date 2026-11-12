@@ -170,8 +170,8 @@ impl RawPack {
         Pack {
             version: self.version,
             cdn_url: cdn_url.to_string(),
-            index_file_url: format!("{cdn_url}{}", self.index_file),
-            base_url: format!("{cdn_url}{}", self.base_url),
+            index_file_url: http::join_url(cdn_url, &self.index_file),
+            base_url: http::join_url(cdn_url, &self.base_url),
             download_bytes: self.size,
             install_bytes: self.un_compress_size,
             patch_configs: self.patch_config,

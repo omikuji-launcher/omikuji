@@ -1,6 +1,7 @@
 use anyhow::{Context, Result, anyhow};
 use futures_util::{StreamExt, stream};
 use serde::de::Error as _;
+use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -170,9 +171,16 @@ pub async fn download_one(
         fs_err::create_dir_all(parent)?;
     }
 
-    if skip == Skip::SameSize && size_matches(&dest_path, file.size) {
-        progress.advance(id, file.size);
-        return Ok(());
+    match skip {
+        Skip::SameSize if size_matches(&dest_path, file.size) => {
+            progress.advance(id, file.size);
+            return Ok(());
+        }
+        Skip::Never => match fs_err::remove_file(&dest_path) {
+            Err(e) if e.kind() != ErrorKind::NotFound => return Err(e.into()),
+            _ => {}
+        },
+        Skip::SameSize => {}
     }
 
     http::with_retries(DOWNLOAD_ATTEMPTS, |attempt| {

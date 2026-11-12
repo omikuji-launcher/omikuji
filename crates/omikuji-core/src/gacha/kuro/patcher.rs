@@ -9,6 +9,7 @@ use super::source::sync_file;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::{ControlSignal, DownloadEntry, DownloadStatus, check_control, set_status};
 use crate::fs_util;
+use crate::http;
 use crate::gacha::file_sync::{
     Skip, SyncProgress, download_one, expected_md5, file_md5, is_stale, sanitize_rel,
 };
@@ -100,7 +101,7 @@ async fn patch_into_staging(
 
     let id = entry.id.clone();
     let cdn = pack.cdn_url.clone();
-    let patch_base = format!("{}{}", pack.cdn_url, patch.base_url_rel);
+    let patch_base = http::join_url(&pack.cdn_url, &patch.base_url_rel);
     let resources = pidx.resource.clone();
     let dl_for_workers = dl_root.clone();
     let progress_for_workers = progress.clone();
@@ -112,7 +113,7 @@ async fn patch_into_staging(
         let base = if file.from_folder.is_empty() {
             patch_base.clone()
         } else {
-            format!("{}{}", cdn, file.from_folder)
+            http::join_url(&cdn, &file.from_folder)
         };
         async move {
             if check_control(&id) != ControlSignal::None {
