@@ -90,50 +90,14 @@ Item {
             spacing: 20
             visible: root.isWine
 
-            SettingsSection {
+            LaunchSection {
                 label: qsTr("Executable")
-                icon: "terminal"
+                exeLabel: qsTr("Path")
+                exePlaceholder: "/path/to/game.exe"
                 width: parent.width
-
-                M3FileField {
-                    id: wineExeField
-                    label: qsTr("Path")
-                    placeholder: "/path/to/game.exe"
-                    text: root.config["meta.exe"] || ""
-                    width: parent.width
-                    gameModel: root.gameModel
-                    expandHint: false
-                    onTextEdited: (t) => root.updateField("meta.exe", t)
-
-                    SpotlightTarget { key: "game.exe"; target: wineExeField }
-                }
-
-                M3FileField {
-                    label: qsTr("Working Directory")
-                    placeholder: qsTr("executable's folder (auto)")
-                    text: root.config["launch.working_dir"] || ""
-                    selectFolder: true
-                    width: parent.width
-                    gameModel: root.gameModel
-                    onTextEdited: (t) => root.updateField("launch.working_dir", t)
-                }
-
-                M3TextField {
-                    label: qsTr("Arguments")
-                    placeholder: '--skip-intro --windowed --name "Jane Doe"'
-                    text: root.config["launch.args"] || ""
-                    width: parent.width
-                    gameModel: root.gameModel
-                    onTextEdited: (t) => root.updateField("launch.args", t)
-                }
-
-                M3TextField {
-                    label: qsTr("Command Prefix")
-                    placeholder: qsTr("prepended to command (e.g. custom wrapper)")
-                    text: root.config["launch.command_prefix"] || ""
-                    width: parent.width
-                    onTextEdited: (t) => root.updateField("launch.command_prefix", t)
-                }
+                config: root.config
+                updateField: root.updateField
+                gameModel: root.gameModel
             }
 
             SettingsSection {
@@ -423,51 +387,14 @@ Item {
         }
 
         // the more i add the more i aks myself why im doing this. Electron was the real answer all along...
-        SettingsSection {
+        LaunchSection {
             label: qsTr("Native")
-            icon: "terminal"
+            exePlaceholder: "/path/to/game"
             width: parent.width
             visible: root.runnerType === "native"
-
-            M3FileField {
-                id: nativeExeField
-                label: qsTr("Executable")
-                placeholder: "/path/to/game"
-                text: root.config["meta.exe"] || ""
-                width: parent.width
-                gameModel: root.gameModel
-                expandHint: false
-                onTextEdited: (t) => root.updateField("meta.exe", t)
-
-                SpotlightTarget { key: "game.exe"; target: nativeExeField }
-            }
-
-            M3FileField {
-                label: qsTr("Working Directory")
-                placeholder: qsTr("executable's folder (auto)")
-                text: root.config["launch.working_dir"] || ""
-                selectFolder: true
-                width: parent.width
-                gameModel: root.gameModel
-                onTextEdited: (t) => root.updateField("launch.working_dir", t)
-            }
-
-            M3TextField {
-                label: qsTr("Arguments")
-                placeholder: '--skip-intro --windowed'
-                text: root.config["launch.args"] || ""
-                width: parent.width
-                gameModel: root.gameModel
-                onTextEdited: (t) => root.updateField("launch.args", t)
-            }
-
-            M3TextField {
-                label: qsTr("Command Prefix")
-                placeholder: qsTr("prepended to command (e.g. custom wrapper)")
-                text: root.config["launch.command_prefix"] || ""
-                width: parent.width
-                onTextEdited: (t) => root.updateField("launch.command_prefix", t)
-            }
+            config: root.config
+            updateField: root.updateField
+            gameModel: root.gameModel
         }
 
         SettingsSection {
