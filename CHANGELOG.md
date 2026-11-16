@@ -13,6 +13,24 @@ Changed:
 Removed:
 - removed 45% of the working code.
 
+## 0.21.0
+
+Added:
+- Launch options dialog for Epic and GOG games
+- GOG install scripts (ISI) at game launch
+- Comet for GOG games (game settings -> GOG)
+- Install/Repair files (in-game deleted content) blacklist for Honkai: Star Rail
+- Per-game window class for umu games
+- Template variables for command prefix field
+- Stores' games art updating on url changes
+
+Changed:
+- New app icon (again lmao)
+
+Fixes:
+- GOG download speed and ETA
+- Minor ui fixes
+
 ## 0.20.10
 Added:
 - Selectable games list in Run with Exe dialog

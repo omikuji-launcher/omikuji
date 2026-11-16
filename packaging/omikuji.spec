@@ -1,7 +1,7 @@
 %global debug_package %{nil}
 
 Name:           omikuji
-Version:        0.20.10
+Version:        0.21.0
 Release:        1%{?dist}
 Summary:        Qt/QML based wine apps launcher for Linux
 
@@ -54,6 +54,14 @@ install -Dm0644 packaging/io.github.reakjra.omikuji.metainfo.xml %{buildroot}%{_
 %{_datadir}/metainfo/io.github.reakjra.omikuji.metainfo.xml
 
 %changelog
+* Mon Nov 16 2026 reakjra <reakjra@proton.me> - 0.21.0-1
+- added launch options dialog for epic and gog
+- added gog install scripts (ISI) support 
+- added Comet for GOG games
+- install/repair blacklist for HSR
+- per-game window class for umu games
+- new app icon (again)
+
 * Thu Nov 12 2026 reakjra <reakjra@proton.me> - 0.20.10-1
 - Fix Wuthering Waves updates
 - Added URI forwarding to Prefixes

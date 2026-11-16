@@ -22,6 +22,22 @@
     </p>
   </description>
   <releases>
+    <release version="0.21.0" date="2026-11-16">
+      <description>
+        <ul>
+          <li>added launch options dialog for epic and gog</li>
+          <li>added gog install scripts (ISI) support </li>
+          <li>added Comet for GOG games</li>
+          <li>install/repair blacklist for HSR</li>
+          <li>per-game window class for umu games</li>
+          <li>new app icon (again)</li>
+          <li>refresh stores arts on url change</li>
+          <li>expand template variables in wrapper field</li>
+          <li>fixed GOG download speed and ETA</li>
+          <li>minor ui fixes</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.20.10" date="2026-11-12">
       <description>
         <ul>
