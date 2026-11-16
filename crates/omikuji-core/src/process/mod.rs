@@ -2,7 +2,7 @@ use crate::app_settings::AppSettings;
 use crate::event_queue::EventQueue;
 use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, companion};
 use crate::library::{Game, Library};
-use crate::store::epic;
+use crate::store::{epic, gog};
 use crate::{discord, dll_packs, game_logs, log_files, runners};
 use anyhow::Result;
 use fs_err::OpenOptions;
@@ -36,12 +36,17 @@ fn next_id() -> ProcessId {
 }
 
 fn prepare_wine(game: &Game, env: &HashMap<String, String>) {
+    let wine_exe = env
+        .get("WINE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("wine"));
     if game.is_epic() {
-        let wine_exe = env
-            .get("WINE")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| PathBuf::from("wine"));
         let _ = launch::prepare_epic_prefix(game, &wine_exe, env);
+    }
+    if game.is_gog()
+        && let Err(e) = gog::script::run_install_scripts(game, &wine_exe, env)
+    {
+        tracing::warn!("gog install script failed: {e:#} (launching anyway)");
     }
 
     if let Err(e) = dll_packs::inject_all(game, env) {

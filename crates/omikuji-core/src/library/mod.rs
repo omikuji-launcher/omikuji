@@ -1,6 +1,6 @@
 use crate::defaults::{CopyMode, Defaults, FIELDS};
 use crate::dll_packs;
-use crate::fs_util::write_atomic;
+use crate::fs_util::{is_windows_executable, write_atomic};
 use crate::media::slugify;
 use crate::migration;
 use crate::string_enum::string_enum;
@@ -287,7 +287,6 @@ pub struct LaunchConfig {
     pub store_option: String,
 }
 
-const WINDOWS_EXTENSIONS: [&str; 5] = ["exe", "bat", "cmd", "msi", "com"];
 const GAME_ARGS_ARG: &str = "${game_args}";
 
 impl LaunchConfig {
@@ -301,10 +300,7 @@ impl LaunchConfig {
     }
 
     pub fn companion_needs_wine(&self) -> bool {
-        Path::new(&self.companion)
-            .extension()
-            .and_then(|e| e.to_str())
-            .is_some_and(|e| WINDOWS_EXTENSIONS.iter().any(|w| e.eq_ignore_ascii_case(w)))
+        is_windows_executable(Path::new(&self.companion))
     }
 
     pub fn spliced_companion_args(&self) -> Vec<String> {
@@ -703,6 +699,10 @@ impl Game {
     // epic games are launched via legendary, not wine directly, i mean still wine but through legendary
     pub fn is_epic(&self) -> bool {
         self.source.kind == SourceKind::Epic
+    }
+
+    pub fn is_gog(&self) -> bool {
+        self.source.kind == SourceKind::Gog
     }
 
     // steam/flatpak/native launch outside wine, so they don't use an omikuji-managed prefix, damn gaijin...

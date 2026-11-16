@@ -20,13 +20,15 @@ use crate::fs_util::{self, dir_size};
 use crate::launch::options::LaunchOption;
 use crate::shell_args;
 
+use super::script;
+
 pub struct GogdlSource;
 
 #[async_trait]
 impl DownloadSource for GogdlSource {
     // destructive_cleanup on Install already rm -rf's install_path, so this is a no-op there
     fn cleanup_state(&self, entry: &DownloadEntry) {
-        let support = super::gog_dir().join("support").join(&entry.app_id);
+        let support = super::support_dir(&entry.app_id);
         if support.exists() {
             let _ = fs_err::remove_dir_all(&support);
         }
@@ -95,6 +97,12 @@ impl DownloadSource for GogdlSource {
             tracing::error!("failed to record install: {}", e);
         }
 
+        if script::needs_interpreter(&entry.app_id)
+            && let Ok(Err(e)) = tokio::task::spawn_blocking(script::fetch_interpreter).await
+        {
+            tracing::warn!("scriptinterpreter fetch failed: {e:#} - retrying at launch");
+        }
+
         Ok(())
     }
 
@@ -140,7 +148,7 @@ fn dlc_args(dlcs: &[String]) -> Vec<String> {
 }
 
 async fn spawn_download(gogdl: process::Command, entry: &DownloadEntry) -> Result<Child> {
-    let support_dir = super::gog_dir().join("support").join(&entry.app_id);
+    let support_dir = super::support_dir(&entry.app_id);
     let _ = fs_err::create_dir_all(&support_dir);
 
     let mut cmd = Command::from(gogdl);
@@ -153,7 +161,7 @@ async fn spawn_download(gogdl: process::Command, entry: &DownloadEntry) -> Resul
         .arg("--support")
         .arg(&support_dir)
         .arg("--lang")
-        .arg("en-US")
+        .arg(super::LANG_CODE)
         .args(dlc_args(&entry.dlcs))
         .args(StoreLimits::gog().args())
         .envs(proxy::env_vars().await)
@@ -365,9 +373,9 @@ pub fn launch_options(install_path: &Path, app_id: &str) -> Vec<LaunchOption> {
         .enumerate()
         .filter(|&(i, task)| {
             Some(i) != primary
-                && task_str(task, "type") == "FileTask"
+                && is_launchable_task(task)
                 && task_str(task, "category") != "document"
-                && task.get("isHidden").and_then(|h| h.as_bool()) != Some(true)
+                && !task_flag(task, "isHidden")
         })
         .filter_map(|(_, task)| {
             let name = task_str(task, "name");
@@ -397,11 +405,27 @@ fn task_str<'a>(task: &'a serde_json::Value, key: &str) -> &'a str {
     task.get(key).and_then(|v| v.as_str()).unwrap_or("")
 }
 
+fn task_flag(task: &serde_json::Value, key: &str) -> bool {
+    task.get(key).and_then(|v| v.as_bool()) == Some(true)
+}
+
+fn is_file_task(task: &serde_json::Value) -> bool {
+    task_str(task, "type") == "FileTask"
+}
+
+fn is_launchable_task(task: &serde_json::Value) -> bool {
+    is_file_task(task) && fs_util::is_windows_executable(Path::new(task_str(task, "path")))
+}
+
 fn primary_task(tasks: &[serde_json::Value]) -> Option<usize> {
-    tasks
-        .iter()
-        .position(|t| t.get("isPrimary").and_then(|b| b.as_bool()) == Some(true))
-        .or_else(|| tasks.iter().position(|t| task_str(t, "type") == "FileTask"))
+    let is_primary = |t: &serde_json::Value| task_flag(t, "isPrimary");
+    let find = |pred: &dyn Fn(&serde_json::Value) -> bool| tasks.iter().position(pred);
+
+    find(&|t| is_primary(t) && is_launchable_task(t))
+        .or_else(|| find(&|t| is_launchable_task(t) && task_str(t, "category") == "game"))
+        .or_else(|| find(&is_launchable_task))
+        .or_else(|| find(&is_primary))
+        .or_else(|| find(&is_file_task))
         .or((!tasks.is_empty()).then_some(0))
 }
 

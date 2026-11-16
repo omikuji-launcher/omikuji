@@ -20,6 +20,14 @@ pub fn is_executable(_path: &Path) -> bool {
     true
 }
 
+const WINDOWS_EXTENSIONS: [&str; 5] = ["exe", "bat", "cmd", "msi", "com"];
+
+pub fn is_windows_executable(path: &Path) -> bool {
+    path.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| WINDOWS_EXTENSIONS.iter().any(|w| e.eq_ignore_ascii_case(w)))
+}
+
 fn nearest_existing(path: &Path) -> Option<&Path> {
     path.ancestors().find(|p| p.exists())
 }

@@ -276,6 +276,10 @@ pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {
     Some(fs_util::resolve_windows_path(&root, &win_path[2..]))
 }
 
+pub fn host_path_to_wine(path: &Path) -> String {
+    format!("Z:{}", path.to_string_lossy().replace('/', "\\"))
+}
+
 pub fn delete_prefix(target: &Path) -> bool {
     if !target.is_dir() {
         tracing::warn!("delete_prefix: not a directory: {}", target.display());

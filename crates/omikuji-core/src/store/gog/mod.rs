@@ -1,4 +1,5 @@
 // little note: FUCK YOU GOG. we love you really but what the fuck
+pub mod script;
 pub mod source;
 pub mod updates;
 
@@ -17,6 +18,8 @@ use tokio::process::Command as AsyncCommand;
 
 const STORE: &str = "gog";
 const METADATA_FETCHES: usize = 8;
+const LANG_CODE: &str = "en-US";
+const LANG_NAME: &str = "English";
 
 pub struct GogStore {
     pub display_name: String,
@@ -217,6 +220,10 @@ impl GogStore {
 
 pub fn gog_dir() -> PathBuf {
     crate::runtime_dir().join("gog")
+}
+
+fn support_dir(app_id: &str) -> PathBuf {
+    gog_dir().join("support").join(app_id)
 }
 
 fn registry_path() -> PathBuf {
@@ -674,14 +681,13 @@ pub fn gogdl_config_dir() -> PathBuf {
     gog_dir().join("gogdl_state")
 }
 
+fn gogdl_manifest(app_id: &str) -> Option<serde_json::Value> {
+    let path = fs_util::find_file_named(&gogdl_config_dir(), app_id)?;
+    serde_json::from_str(&fs_err::read_to_string(&path).ok()?).ok()
+}
+
 pub fn installed_dlcs(app_name: &str) -> Vec<GogDlc> {
-    let Some(path) = fs_util::find_file_named(&gogdl_config_dir(), app_name) else {
-        return Vec::new();
-    };
-    let Ok(text) = fs_err::read_to_string(&path) else {
-        return Vec::new();
-    };
-    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+    let Some(v) = gogdl_manifest(app_name) else {
         return Vec::new();
     };
     let Some(installed) = v.get("HGLdlcs").and_then(|p| p.as_array()) else {
