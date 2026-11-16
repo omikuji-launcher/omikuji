@@ -727,9 +727,16 @@ fn sampler_loop() {
                 .entries
                 .iter()
                 .find(|e| e.status.is_running())
-                .map(|e| (e.id.clone(), e.status.clone(), e.speed_bps))
+                .map(|e| {
+                    (
+                        e.id.clone(),
+                        e.status.clone(),
+                        e.speed_bps,
+                        e.bytes_downloaded,
+                    )
+                })
         };
-        let Some((id, status, speed)) = running else {
+        let Some((id, status, speed, done)) = running else {
             last_id = None;
             continue;
         };
@@ -741,7 +748,7 @@ fn sampler_loop() {
             DownloadStatus::Verifying | DownloadStatus::Extracting | DownloadStatus::Patching => 0,
             _ => speed,
         };
-        io_stats::tick(net);
+        io_stats::tick(net, done);
     }
 }
 

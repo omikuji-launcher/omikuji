@@ -3,13 +3,32 @@ use std::sync::{LazyLock, Mutex};
 
 const HISTORY_LEN: usize = 60;
 
+struct Sample {
+    net_bps: u64,
+    disk_bps: u64,
+    progress_bytes: u64,
+}
+
 #[derive(Default)]
 struct Inner {
     roots: HashMap<u32, u64>,
     seen: HashMap<u32, u64>,
     retired: u64,
     last_total: Option<u64>,
-    history: VecDeque<(u64, u64)>,
+    history: VecDeque<Sample>,
+}
+
+impl Inner {
+    fn progress_bps(&self) -> u64 {
+        let (Some(first), Some(last)) = (self.history.front(), self.history.back()) else {
+            return 0;
+        };
+        let secs = self.history.len() as u64 - 1;
+        last.progress_bytes
+            .saturating_sub(first.progress_bytes)
+            .checked_div(secs)
+            .unwrap_or(0)
+    }
 }
 
 static STATE: LazyLock<Mutex<Inner>> = LazyLock::new(|| Mutex::new(Inner::default()));
@@ -63,7 +82,7 @@ fn disk_total(inner: &mut Inner) -> u64 {
     *retired + read_write_bytes("/proc/self/io").unwrap_or(0) + seen.values().sum::<u64>()
 }
 
-pub fn tick(net_bps: u64) {
+pub fn tick(net_bps: u64, progress_bytes: u64) {
     let mut inner = STATE.lock().unwrap();
     let total = disk_total(&mut inner);
     let disk_bps = inner
@@ -74,7 +93,11 @@ pub fn tick(net_bps: u64) {
     if inner.history.len() == HISTORY_LEN {
         inner.history.pop_front();
     }
-    inner.history.push_back((net_bps, disk_bps));
+    inner.history.push_back(Sample {
+        net_bps,
+        disk_bps,
+        progress_bytes,
+    });
 }
 
 pub fn reset_history() {
@@ -85,7 +108,8 @@ pub fn reset_history() {
 
 pub fn history_json() -> String {
     let inner = STATE.lock().unwrap();
-    let net: Vec<u64> = inner.history.iter().map(|(n, _)| *n).collect();
-    let disk: Vec<u64> = inner.history.iter().map(|(_, d)| *d).collect();
-    serde_json::json!({ "net": net, "disk": disk }).to_string()
+    let net: Vec<u64> = inner.history.iter().map(|s| s.net_bps).collect();
+    let disk: Vec<u64> = inner.history.iter().map(|s| s.disk_bps).collect();
+    serde_json::json!({ "net": net, "disk": disk, "progress_bps": inner.progress_bps() })
+        .to_string()
 }

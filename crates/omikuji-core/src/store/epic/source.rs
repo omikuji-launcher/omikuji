@@ -16,6 +16,7 @@ use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress, set_display_name,
 };
+use crate::store::size_text;
 
 pub struct LegendarySource;
 
@@ -267,52 +268,15 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
 }
 
 fn feed_line(tally: &mut SessionTally, line: &str) -> bool {
-    if let Some(bytes) = parse_labeled_size(line, "Download size:") {
+    if let Some(bytes) = size_text::parse_labeled(line, "Download size:") {
         tally.set_session_total(bytes);
         return true;
     }
-    if let Some(bytes) = parse_labeled_size(line, "Downloaded:") {
+    if let Some(bytes) = size_text::parse_labeled(line, "Downloaded:") {
         tally.set_session_done(bytes);
         return true;
     }
     false
-}
-
-fn parse_labeled_size(line: &str, label: &str) -> Option<u64> {
-    let idx = line.find(label)?;
-    parse_size(&line[idx + label.len()..])
-}
-
-fn unit_multiplier(s: &str) -> Option<f64> {
-    // longest prefix first so "GiB" beats "B"
-    if s.starts_with("GiB") {
-        Some(1024.0 * 1024.0 * 1024.0)
-    } else if s.starts_with("MiB") {
-        Some(1024.0 * 1024.0)
-    } else if s.starts_with("KiB") {
-        Some(1024.0)
-    } else if s.starts_with("GB") {
-        Some(1_000_000_000.0)
-    } else if s.starts_with("MB") {
-        Some(1_000_000.0)
-    } else if s.starts_with("KB") {
-        Some(1000.0)
-    } else if s.starts_with('B') {
-        Some(1.0)
-    } else {
-        None
-    }
-}
-
-fn parse_size(s: &str) -> Option<u64> {
-    let trimmed = s.trim_start();
-    let num_end = trimmed
-        .find(|c: char| !c.is_ascii_digit() && c != '.')
-        .unwrap_or(trimmed.len());
-    let num: f64 = trimmed[..num_end].parse().ok()?;
-    let rest = trimmed[num_end..].trim_start();
-    let mult = unit_multiplier(rest)?;
-    Some((num * mult) as u64)
 }
 
 #[cfg(test)]

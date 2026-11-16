@@ -37,17 +37,8 @@ Item {
     readonly property real netBps: netSamples.length > 0 ? netSamples[netSamples.length - 1] : speed
     readonly property real diskBps: diskSamples.length > 0 ? diskSamples[diskSamples.length - 1] : 0
 
-    readonly property real etaBps: {
-        let sum = 0
-        let n = 0
-        for (let i = 0; i < netSamples.length; i++) {
-            if (netSamples[i] > 0) {
-                sum += netSamples[i]
-                n++
-            }
-        }
-        return n > 0 ? sum / n : speed
-    }
+    property real progressBps: 0
+    readonly property real etaBps: progressBps > 0 ? progressBps : speed
 
     Timer {
         interval: 1000
@@ -58,6 +49,7 @@ Item {
             let h = JSON.parse(hero.downloadModel.speedHistoryJson())
             hero.netSamples = h.net
             hero.diskSamples = h.disk
+            hero.progressBps = h.progress_bps
         }
     }
 

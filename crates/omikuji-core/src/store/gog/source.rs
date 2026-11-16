@@ -19,6 +19,7 @@ use crate::downloads::{
 use crate::fs_util::{self, dir_size};
 use crate::launch::options::LaunchOption;
 use crate::shell_args;
+use crate::store::size_text;
 
 use super::script;
 
@@ -185,19 +186,23 @@ async fn run_with_progress(mut child: Child, entry: &DownloadEntry) -> Result<()
 
     let mut tally = SessionTally::new(entry.bytes_total);
     let mut meter: Option<RateMeter> = None;
+    let mut net_speed = 0;
 
     let mut control_tick = tokio::time::interval(std::time::Duration::from_millis(250));
     control_tick.tick().await;
 
     let mut handle = |line: &str| -> bool {
+        if let Some(downloaded) = size_text::parse_labeled(line, "Downloaded:") {
+            net_speed = seeded_update(&mut meter, downloaded);
+            return true;
+        }
         let Some((written, total)) = parse_progress_bytes(line) else {
             return false;
         };
         tally.set_session_total(total);
         tally.set_session_done(written);
         if let Some((pct, done, total)) = tally.snapshot() {
-            let speed = seeded_update(&mut meter, tally.session_done());
-            report_progress(&entry.id, pct, done, total, speed);
+            report_progress(&entry.id, pct, done, total, net_speed);
         }
         true
     };
@@ -472,7 +477,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn progress_line_gives_written_and_total() {
+    fn progress_and_downloaded_lines_parse_apart() {
         let progress = "[gogdl] [PROGRESS] INFO: = Progress: 68.61 15271662900/22258050474, Running for: 00:01:57, ETA: 00:00:53";
         let downloaded = "[gogdl] [PROGRESS] INFO: = Downloaded: 512.50 MiB, Written: 480.00 MiB";
         assert_eq!(
@@ -480,5 +485,10 @@ mod tests {
             Some((15271662900, 22258050474))
         );
         assert_eq!(parse_progress_bytes(downloaded), None);
+        assert_eq!(
+            size_text::parse_labeled(downloaded, "Downloaded:"),
+            Some(537_395_200)
+        );
+        assert_eq!(size_text::parse_labeled(progress, "Downloaded:"), None);
     }
 }

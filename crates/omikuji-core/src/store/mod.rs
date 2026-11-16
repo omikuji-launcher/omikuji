@@ -4,6 +4,7 @@ pub mod game;
 pub mod gog;
 pub mod nile;
 pub mod registry;
+pub mod size_text;
 pub mod steam;
 
 use crate::desktop;
