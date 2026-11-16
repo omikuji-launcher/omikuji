@@ -2,14 +2,37 @@ use crate::fs_util::write_atomic;
 use crate::media;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub fn cache_dir(store: &str) -> PathBuf {
     crate::cache_dir().join(store)
 }
 
-pub fn image_path(store: &str, app_name: &str, kind: &str) -> PathBuf {
-    cache_dir(store).join(format!("{}_{}.img", app_name, kind))
+fn image_stem(app_name: &str, kind: &str) -> String {
+    format!("{app_name}_{kind}")
+}
+
+fn image_path(store: &str, app_name: &str, kind: &str, url: &str) -> PathBuf {
+    let hash = crc32fast::hash(url.as_bytes());
+    cache_dir(store).join(format!("{}_{hash:08x}.img", image_stem(app_name, kind)))
+}
+
+fn remove_stale_images(store: &str, app_name: &str, kind: &str, keep: &Path) {
+    let stem = image_stem(app_name, kind);
+    let Ok(entries) = fs_err::read_dir(cache_dir(store)) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        let Some(rest) = name.strip_prefix(&stem) else {
+            continue;
+        };
+        let ours = rest == ".img" || (rest.starts_with('_') && rest.ends_with(".img"));
+        if ours && entry.path() != keep {
+            let _ = fs_err::remove_file(entry.path());
+        }
+    }
 }
 
 pub fn library_path(store: &str) -> PathBuf {
@@ -54,9 +77,14 @@ pub fn resolve_image(
     if url.is_empty() {
         return None;
     }
+    let url = transform(url);
+    let path = image_path(store, app_name, kind, &url);
+    if !path.exists() {
+        remove_stale_images(store, app_name, kind, &path);
+    }
     media::fetch_cached_image(
-        &image_path(store, app_name, kind),
-        &transform(url),
-        format!("{}_{}_{}", store, app_name, kind),
+        &path,
+        &url,
+        format!("{store}_{}", image_stem(app_name, kind)),
     )
 }
