@@ -214,13 +214,18 @@ pub fn latest_installed_tag(source: &ArchiveSource) -> Option<String> {
     archive_source::installed_source_tag(&latest_dir(source)).map(|(_, tag)| tag)
 }
 
-pub struct AdvisedRunner {
+pub enum AdvisedRunner {
+    Pinned(PinnedRunner),
+    Latest(ArchiveSource),
+}
+
+pub struct PinnedRunner {
     pub source: ArchiveSource,
-    pub tag: String,
+    pub tag: Option<String>,
     pub registered: bool,
 }
 
-impl AdvisedRunner {
+impl PinnedRunner {
     pub fn dest_root(&self) -> PathBuf {
         if self.registered {
             source_root(&self.source)
@@ -232,32 +237,31 @@ impl AdvisedRunner {
 
 pub fn resolve_advised(link: &str) -> Option<AdvisedRunner> {
     let repo = RepoLink::parse(link)?;
-    let tag = repo.tag.clone()?;
-
-    if let Some(source) = list_sources()
+    let known = list_sources()
         .into_iter()
-        .find(|s| RepoLink::parse(&s.api_url).is_some_and(|known| known.slug() == repo.slug()))
-    {
-        return Some(AdvisedRunner {
-            source,
-            tag,
-            registered: true,
-        });
-    }
+        .find(|s| RepoLink::parse(&s.api_url).is_some_and(|known| known.slug() == repo.slug()));
 
-    Some(AdvisedRunner {
-        source: ArchiveSource {
-            name: repo.repo.clone(),
-            kind: "proton".to_string(),
-            api_url: repo.releases_api_url(),
-            desc: String::new(),
-            asset_priority: Vec::new(),
-            require_asset_match: false,
-            prefix_install_version: String::new(),
-        },
+    let tag = repo.tag.clone();
+    if tag.is_none()
+        && let Some(source) = known
+    {
+        return Some(AdvisedRunner::Latest(source));
+    }
+    let registered = known.is_some();
+    let source = known.unwrap_or_else(|| ArchiveSource {
+        name: repo.repo.clone(),
+        kind: "proton".to_string(),
+        api_url: repo.releases_api_url(),
+        desc: String::new(),
+        asset_priority: Vec::new(),
+        require_asset_match: false,
+        prefix_install_version: String::new(),
+    });
+    Some(AdvisedRunner::Pinned(PinnedRunner {
+        source,
         tag,
-        registered: false,
-    })
+        registered,
+    }))
 }
 
 pub fn delete_version(source: &ArchiveSource, tag: &str) -> Result<()> {

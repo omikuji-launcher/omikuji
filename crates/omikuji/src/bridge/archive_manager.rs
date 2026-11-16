@@ -5,7 +5,7 @@ use cxx_qt::Threading;
 use cxx_qt_lib::QString;
 use omikuji_core::archive_source::{self, InstallChannel, ReleaseInfo};
 use omikuji_core::components_config::{self, ArchiveSource, SourceCategory};
-use omikuji_core::runners;
+use omikuji_core::runners::{self, AdvisedRunner, PinnedRunner};
 use omikuji_core::store::steam::local as steam_local;
 use omikuji_core::{anyhow, archive};
 use std::pin::Pin;
@@ -249,21 +249,63 @@ fn lookup(category: &str, name: &str) -> Option<(SourceCategory, ArchiveSource)>
     Some((category, category.find(name)?))
 }
 
-fn resolve_release(link: &str) -> Result<(runners::AdvisedRunner, ReleaseInfo), String> {
-    let advised =
-        runners::resolve_advised(link).ok_or_else(|| format!("unusable runner link: {}", link))?;
+fn resolve_advised(link: &str) -> Result<AdvisedRunner, String> {
+    runners::resolve_advised(link).ok_or_else(|| format!("unusable runner link: {link}"))
+}
+
+fn resolve_release(link: &str) -> Result<(PinnedRunner, ReleaseInfo), String> {
+    match resolve_advised(link)? {
+        AdvisedRunner::Pinned(pinned) => pinned_release(pinned),
+        AdvisedRunner::Latest(source) => Err(format!(
+            "{} follows the latest release and installs at launch",
+            source.name
+        )),
+    }
+}
+
+fn pinned_release(pinned: PinnedRunner) -> Result<(PinnedRunner, ReleaseInfo), String> {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .map_err(|e| e.to_string())?;
     let releases = rt
-        .block_on(archive_source::fetch_versions(&advised.source))
+        .block_on(archive_source::fetch_versions(&pinned.source))
         .map_err(|e| format!("{:#}", e))?;
-    let release = releases
-        .into_iter()
-        .find(|r| r.tag == advised.tag)
-        .ok_or_else(|| format!("no release tagged {}", advised.tag))?;
-    Ok((advised, release))
+    let release = match &pinned.tag {
+        Some(tag) => releases
+            .into_iter()
+            .find(|r| r.tag == *tag)
+            .ok_or_else(|| format!("no release tagged {tag}"))?,
+        None => releases
+            .into_iter()
+            .next()
+            .ok_or_else(|| format!("{} has no releases", pinned.source.name))?,
+    };
+    Ok((pinned, release))
+}
+
+fn advised_json(advised: AdvisedRunner) -> Result<serde_json::Value, String> {
+    let (pinned, release) = match advised {
+        AdvisedRunner::Latest(source) => {
+            return Ok(serde_json::json!({
+                "tag": runners::latest_dir_name(&source),
+                "latest": true,
+                "installed": runners::latest_dir(&source).exists(),
+            }));
+        }
+        AdvisedRunner::Pinned(pinned) => pinned_release(pinned)?,
+    };
+    let stems: Vec<String> = release
+        .assets
+        .iter()
+        .map(|a| archive::stem(&a.name).to_string())
+        .collect();
+    Ok(serde_json::json!({
+        "tag": release.tag,
+        "assets": release.assets,
+        "installedDirs": archive_source::list_installed(&pinned.source, &pinned.dest_root()),
+        "steamProtonDirs": runners::steam_proton_dirs_by_name(&stems),
+    }))
 }
 
 fn sources_to_json(sources: &[ArchiveSource]) -> String {
@@ -352,26 +394,10 @@ impl qobject::ArchiveManagerBridge {
                     bridge.advised_runner_ready(QString::from(&json), QString::from(&error));
                 });
             };
-            let (advised, release) = match resolve_release(&link_s) {
-                Ok(v) => v,
-                Err(e) => return emit(String::new(), e),
-            };
-            let installed = archive_source::list_installed(&advised.source, &advised.dest_root());
-            let stems: Vec<String> = release
-                .assets
-                .iter()
-                .map(|a| archive::stem(&a.name).to_string())
-                .collect();
-            emit(
-                serde_json::json!({
-                    "tag": advised.tag,
-                    "assets": release.assets,
-                    "installedDirs": installed,
-                    "steamProtonDirs": runners::steam_proton_dirs_by_name(&stems),
-                })
-                .to_string(),
-                String::new(),
-            );
+            match resolve_advised(&link_s).and_then(advised_json) {
+                Ok(json) => emit(json.to_string(), String::new()),
+                Err(e) => emit(String::new(), e),
+            }
         });
     }
 

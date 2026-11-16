@@ -24,16 +24,18 @@ DialogCard {
     property string runnerError: ""
 
     readonly property bool hasAdvised: advised !== null && advised !== undefined
-    readonly property var advisedAssets: hasAdvised ? advised.assets : []
+    readonly property bool advisedLatest: hasAdvised && advised.latest === true
+    readonly property var advisedAssets: hasAdvised && !advisedLatest ? advised.assets : []
     readonly property var advisedStems: AA.stems(advisedAssets)
     readonly property var advisedLabels: AA.labels(advisedAssets)
     readonly property string chosenStem: advisedStems[assetIndex] || ""
     readonly property string advisedSteamDir:
         hasAdvised && chosenStem !== "" && advised.steamProtonDirs
             ? (advised.steamProtonDirs[chosenStem] || "") : ""
-    readonly property bool advisedInstalled:
-        hasAdvised && chosenStem !== ""
-        && (advised.installedDirs.indexOf(chosenStem) >= 0 || advisedSteamDir !== "")
+    readonly property bool advisedInstalled: advisedLatest
+        ? advised.installed === true
+        : hasAdvised && chosenStem !== ""
+            && (advised.installedDirs.indexOf(chosenStem) >= 0 || advisedSteamDir !== "")
     readonly property bool advisedSelected:
         hasAdvised && runnerOptions.length > 0
         && runnerOptions[runnerIndex] && runnerOptions[runnerIndex].isAdvisedEntry === true
@@ -282,6 +284,7 @@ DialogCard {
     }
 
     function selectedRunner() {
+        if (advisedSelected && advisedLatest) return advised.tag
         if (advisedSelected && chosenStem !== "") {
             if (advised.installedDirs.indexOf(chosenStem) >= 0) return chosenStem
             return advisedSteamDir !== "" ? "steam:" + advisedSteamDir : chosenStem
@@ -290,7 +293,7 @@ DialogCard {
     }
 
     function startInstall() {
-        if (advisedSelected && !advisedInstalled) {
+        if (advisedSelected && !advisedInstalled && !advisedLatest) {
             runnerError = ""
             runnerPhase = ""
             runnerPercent = 0
@@ -659,7 +662,9 @@ DialogCard {
                 labelSuffix: root.advisedSelected
                     ? (root.advisedInstalled
                         ? qsTr("This runner is advised to play this game, and is installed.")
-                        : qsTr("This runner is advised to play this game."))
+                        : root.advisedLatest
+                            ? qsTr("This runner is advised to play this game. It downloads on first launch.")
+                            : qsTr("This runner is advised to play this game."))
                     : ""
                 labelSuffixColor: root.advisedTint
                 enabled: !root.runnerInstalling
