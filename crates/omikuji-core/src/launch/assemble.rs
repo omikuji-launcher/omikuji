@@ -10,6 +10,7 @@ use super::wine::{WineVariant, resolve_wine_exe};
 use crate::desktop::ensure_steam_icon;
 use crate::library::{Game, RunnerType, WrapCommand};
 use crate::packaging::in_flatpak;
+use crate::shell_args;
 use crate::store::epic;
 use crate::store::steam::local::{find_native_steam, flatpak_steam_installed};
 use crate::system_info::gpu_launch_env;
@@ -21,6 +22,8 @@ pub struct ResolvedLaunch {
     pub working_dir: PathBuf,
     pub game_id: String,
     pub game_name: String,
+    pub exe: PathBuf,
+    pub args: Vec<String>,
     pub post_exit_script: String,
 }
 
@@ -38,6 +41,8 @@ impl ResolvedLaunch {
             working_dir: PathBuf::from(vars.expand(&working_dir.to_string_lossy())),
             game_id: game.metadata.id.clone(),
             game_name: game.metadata.name.clone(),
+            exe: game.metadata.exe.clone(),
+            args: game.launch.args.clone(),
             post_exit_script: vars.expand(&game.launch.post_exit_script),
         }
     }
@@ -100,7 +105,7 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
 
         if !game.launch.args.is_empty() {
             cmd.push("--extra-args".to_string());
-            cmd.push(game.launch.args.join(" "));
+            cmd.push(shell_args::join(&game.launch.args));
         }
         cmd
     } else {

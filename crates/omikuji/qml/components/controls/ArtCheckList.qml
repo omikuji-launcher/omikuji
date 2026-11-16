@@ -15,6 +15,7 @@ Item {
     property bool removable: false
     property string title: ""
     property bool checkAllVisible: false
+    property bool artVisible: true
     property bool single: false
     property alias headerTrailing: header.trailing
     property int visibleRows: 3
@@ -106,6 +107,7 @@ Item {
 
                     IconTile {
                         id: artBox
+                        visible: root.artVisible
                         anchors.left: parent.left
                         anchors.leftMargin: Theme.space.md
                         anchors.verticalCenter: parent.verticalCenter
@@ -117,7 +119,7 @@ Item {
                     }
 
                     Column {
-                        anchors.left: artBox.right
+                        anchors.left: root.artVisible ? artBox.right : parent.left
                         anchors.leftMargin: Theme.space.md
                         anchors.right: root.removable ? removeBtn.left : check.left
                         anchors.rightMargin: Theme.space.md

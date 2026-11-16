@@ -319,7 +319,7 @@ ApplicationWindow {
         if (!gameId || gameId.length === 0) return false
         let idx = gameModel.index_of_id(gameId)
         if (idx < 0) return false
-        if (gameModel.launch_game(idx)) {
+        if (gameModel.launch_game(idx, "")) {
             cardRow.markFocusedRunning()
             if (appSettings.minimizeOnLaunch) {
                 root.visible = false

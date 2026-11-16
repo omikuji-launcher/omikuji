@@ -119,7 +119,10 @@ impl super::qobject::GameModel {
                 prefix: prefix_str,
                 ..WineConfig::default()
             },
-            launch: LaunchConfig::default(),
+            launch: LaunchConfig {
+                args: gog::source::primary_args(&info.install_path, &app_name_s),
+                ..LaunchConfig::default()
+            },
             graphics: GraphicsConfig::default(),
             system: SystemConfig::default(),
         };

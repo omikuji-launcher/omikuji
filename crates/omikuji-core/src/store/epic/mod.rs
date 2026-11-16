@@ -4,10 +4,11 @@ pub mod updates;
 
 use crate::components::{self, SettingsKey};
 use crate::fs_util::find_executable_in_paths;
+use crate::launch::options::LaunchOption;
 use crate::launch::{ComponentMissing, build_launch};
 use crate::library::Game;
 use crate::store::{self, StoreGame};
-use crate::{downloads, fs_util, http};
+use crate::{downloads, fs_util, http, shell_args};
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 use serde::de::IgnoredAny;
@@ -286,6 +287,26 @@ fn read_metadata(app_name: &str) -> Result<serde_json::Value> {
     Ok(serde_json::from_str(&fs_err::read_to_string(
         metadata_json(app_name),
     )?)?)
+}
+
+pub fn launch_options(app_name: &str) -> Vec<LaunchOption> {
+    let Ok(meta) = read_metadata(app_name) else {
+        return Vec::new();
+    };
+    let attr = |key: String| {
+        meta.pointer(&format!("/metadata/customAttributes/{key}/value"))
+            .and_then(|v| v.as_str())
+    };
+    (1..)
+        .map_while(|i| {
+            let name = attr(format!("extraLaunchOption_{i:03}_Name"))?;
+            let args = attr(format!("extraLaunchOption_{i:03}_Args")).unwrap_or_default();
+            Some(LaunchOption::with_args(
+                name.to_string(),
+                shell_args::split_windows(args),
+            ))
+        })
+        .collect()
 }
 
 fn dlc_items(meta: &serde_json::Value) -> &[serde_json::Value] {

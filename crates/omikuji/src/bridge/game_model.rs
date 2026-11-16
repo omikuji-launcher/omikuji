@@ -224,10 +224,16 @@ pub mod qobject {
         fn library_dir(self: &GameModel) -> QString;
 
         #[qinvokable]
-        fn launch_game(self: Pin<&mut GameModel>, index: i32) -> bool;
+        fn launch_game(self: Pin<&mut GameModel>, index: i32, option: &QString) -> bool;
 
         #[qinvokable]
-        fn launch_game_force(self: &GameModel, index: i32) -> bool;
+        fn launch_game_force(self: &GameModel, index: i32, option: &QString) -> bool;
+
+        #[qinvokable]
+        fn launch_options(self: &GameModel, index: i32) -> QString;
+
+        #[qinvokable]
+        fn launch_choice_missing(self: &GameModel, index: i32) -> bool;
 
         #[qinvokable]
         fn missing_component(self: &GameModel, index: i32) -> QString;
@@ -839,7 +845,7 @@ use omikuji_core::library::{Game, Library, SourceKind, rfc3339_now};
 use omikuji_core::media::{self, MediaType};
 use omikuji_core::process::{self, ErrorAction, ErrorNotification};
 use omikuji_core::{
-    desktop, dll_packs, fs_util, notifications, packaging, prefixes, runners, store,
+    desktop, dll_packs, fs_util, notifications, packaging, prefixes, runners, shell_args, store,
 };
 
 use super::expand_path;
@@ -973,69 +979,6 @@ fn runner_display(game: &Game) -> String {
     }
 }
 
-fn args_to_text(args: &[String]) -> String {
-    args.iter()
-        .map(|a| {
-            if a.is_empty() {
-                "\"\"".to_string()
-            } else if a
-                .chars()
-                .any(|c| c.is_whitespace() || matches!(c, '"' | '\'' | '\\'))
-            {
-                let escaped = a.replace('\\', "\\\\").replace('"', "\\\"");
-                format!("\"{}\"", escaped)
-            } else {
-                a.clone()
-            }
-        })
-        .collect::<Vec<_>>()
-        .join(" ")
-}
-
-fn args_from_text(s: &str) -> Vec<String> {
-    let mut out = Vec::new();
-    let mut cur = String::new();
-    let mut in_single = false;
-    let mut in_double = false;
-    let mut escape = false;
-    let mut started = false;
-    for c in s.chars() {
-        if escape {
-            cur.push(c);
-            escape = false;
-            started = true;
-            continue;
-        }
-        if c == '\\' && !in_single {
-            escape = true;
-            continue;
-        }
-        if c == '\'' && !in_double {
-            in_single = !in_single;
-            started = true;
-            continue;
-        }
-        if c == '"' && !in_single {
-            in_double = !in_double;
-            started = true;
-            continue;
-        }
-        if c.is_whitespace() && !in_single && !in_double {
-            if started {
-                out.push(std::mem::take(&mut cur));
-                started = false;
-            }
-            continue;
-        }
-        cur.push(c);
-        started = true;
-    }
-    if started {
-        out.push(cur);
-    }
-    out
-}
-
 macro_rules! field_get {
     (str, $m:ident, $key:literal, $v:expr) => {
         $m.insert(QString::from($key), QVariant::from(&QString::from(&*$v)));
@@ -1060,7 +1003,7 @@ macro_rules! field_get {
     (args, $m:ident, $key:literal, $v:expr) => {
         $m.insert(
             QString::from($key),
-            QVariant::from(&QString::from(&*args_to_text(&$v))),
+            QVariant::from(&QString::from(&*shell_args::join(&$v))),
         );
     };
     (choice, $m:ident, $key:literal, $v:expr) => {
@@ -1107,7 +1050,7 @@ macro_rules! field_set {
     };
     (args, $game:ident, $key:ident, $value:ident, $lit:literal, $($path:ident).+) => {
         if $key == $lit {
-            $game.$($path).+ = args_from_text($value);
+            $game.$($path).+ = shell_args::split($value);
             return true;
         }
     };
@@ -1189,6 +1132,7 @@ game_fields! {
     "launch.companion_delay" => int, launch.companion_delay,
     "launch.env" => json, launch.env,
     "launch.env_sets" => json, launch.env_sets,
+    "launch.store_option" => str, launch.store_option,
 
     "graphics.mangohud" => bool, graphics.mangohud,
     "graphics.gpu" => str, graphics.gpu,

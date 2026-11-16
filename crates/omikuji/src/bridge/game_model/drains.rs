@@ -20,7 +20,7 @@ impl super::qobject::GameModel {
             let index = self.library.index_of(&request.game_id).map(|i| i as i32);
 
             match index {
-                Some(i) if self.as_mut().launch_game(i) => continue,
+                Some(i) if self.as_mut().launch_game(i, &QString::default()) => continue,
                 Some(_) => {}
                 None => process::notify_error(ErrorNotification {
                     game_id: request.game_id.clone(),

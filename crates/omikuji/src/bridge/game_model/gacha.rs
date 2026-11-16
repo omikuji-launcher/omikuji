@@ -7,9 +7,11 @@ use omikuji_core::defaults::Defaults;
 use omikuji_core::gacha::controls;
 use omikuji_core::library::{Game, Library, SourceKind, generate_id};
 use omikuji_core::media::MediaSlot;
-use omikuji_core::{anyhow, background, components, gacha, install_sizes, notifications};
+use omikuji_core::{
+    anyhow, background, components, gacha, install_sizes, notifications, shell_args,
+};
 
-use super::{Draft, args_to_text};
+use super::Draft;
 use crate::bridge::{csv_ids, expand_path};
 
 impl super::qobject::GameModel {
@@ -461,7 +463,7 @@ fn select_on_draft(
         .ok_or_else(|| anyhow::anyhow!("unknown launch control {control_id}"))?;
     let mut launch = draft.game.launch.clone();
     control.select(&mut launch, choice)?;
-    draft.edit("launch.args".into(), args_to_text(&launch.args));
+    draft.edit("launch.args".into(), shell_args::join(&launch.args));
     draft.edit(
         "launch.env".into(),
         serde_json::to_string(&launch.env).unwrap_or_default(),

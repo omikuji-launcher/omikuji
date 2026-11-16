@@ -32,6 +32,7 @@ pub mod process;
 pub mod runners;
 pub mod scripts;
 pub mod settings;
+pub mod shell_args;
 pub mod store;
 mod string_enum;
 pub mod system_info;

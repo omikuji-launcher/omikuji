@@ -19,10 +19,9 @@ use omikuji_core::{anyhow, game_logs, launch, log_files, notifications, runners,
 use crate::inhibit;
 
 impl super::qobject::GameModel {
-    pub fn launch_game(mut self: Pin<&mut Self>, index: i32) -> bool {
+    pub fn launch_game(mut self: Pin<&mut Self>, index: i32, option: &QString) -> bool {
         use cxx_qt::Threading;
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx).cloned() else {
+        let Some(game) = self.game_with_store_option(index, option) else {
             tracing::warn!("launch_game: invalid index {}", index);
             return false;
         };
@@ -51,13 +50,40 @@ impl super::qobject::GameModel {
         true
     }
 
-    pub fn launch_game_force(&self, index: i32) -> bool {
-        let idx = index as usize;
-        let Some(game) = self.library.game.get(idx) else {
+    pub fn launch_game_force(&self, index: i32, option: &QString) -> bool {
+        let Some(game) = self.game_with_store_option(index, option) else {
             tracing::warn!("launch_game_force: invalid index {}", index);
             return false;
         };
-        self.try_spawn_launch(game)
+        self.try_spawn_launch(&game)
+    }
+
+    pub fn launch_options(&self, index: i32) -> QString {
+        let options: Vec<_> = self
+            .library
+            .game
+            .get(index as usize)
+            .map(launch::options::list)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|o| serde_json::json!({ "id": o.id, "title": o.name }))
+            .collect();
+        QString::from(&serde_json::Value::from(options).to_string())
+    }
+
+    pub fn launch_choice_missing(&self, index: i32) -> bool {
+        self.library
+            .game
+            .get(index as usize)
+            .is_some_and(launch::options::choice_missing)
+    }
+
+    fn game_with_store_option(&self, index: i32, option: &QString) -> Option<Game> {
+        let mut game = self.library.game.get(index as usize).cloned()?;
+        if !option.is_empty() {
+            game.launch.store_option = option.to_string();
+        }
+        Some(game)
     }
 
     pub fn launch_exe(&self, target: &QString, runner: &QString, prefix: &QString) -> bool {

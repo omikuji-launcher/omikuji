@@ -113,6 +113,26 @@ pub fn walk(root: &Path) -> impl Iterator<Item = DirEntry> {
     })
 }
 
+pub fn resolve_windows_path(root: &Path, rel: &str) -> PathBuf {
+    rel.split(['/', '\\'])
+        .filter(|part| !part.is_empty() && *part != ".")
+        .fold(root.to_path_buf(), |dir, part| {
+            find_entry_ignoring_case(&dir, part).unwrap_or_else(|| dir.join(part))
+        })
+}
+
+fn find_entry_ignoring_case(dir: &Path, name: &str) -> Option<PathBuf> {
+    let exact = dir.join(name);
+    if exact.exists() {
+        return Some(exact);
+    }
+    fs_err::read_dir(dir)
+        .ok()?
+        .flatten()
+        .find(|e| e.file_name().to_string_lossy().eq_ignore_ascii_case(name))
+        .map(|e| e.path())
+}
+
 pub fn find_file_named(root: &Path, name: &str) -> Option<PathBuf> {
     walk(root)
         .find(|e| e.file_name() == name && e.file_type().is_ok_and(|t| t.is_file()))

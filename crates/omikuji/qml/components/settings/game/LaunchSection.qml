@@ -1,5 +1,6 @@
 import QtQuick
 import omikuji 1.0
+import "../../lib/RunnerGrouping.js" as RG
 
 SettingsSection {
     id: root
@@ -51,5 +52,19 @@ SettingsSection {
         width: parent.width
         gameModel: root.gameModel
         onTextEdited: (t) => root.updateField("launch.command_prefix", t)
+    }
+
+    M3Dropdown {
+        readonly property var storeOptions: root.gameModel
+            ? JSON.parse(root.gameModel.launch_options(root.gameModel.index_of_id(root.config["meta.id"] || "")))
+            : []
+
+        visible: storeOptions.length > 0
+        label: qsTr("Launch Option")
+        width: parent.width
+        options: [{ label: qsTr("Ask every time"), value: "" }]
+            .concat(storeOptions.map(o => ({ label: o.title, value: o.id })))
+        currentIndex: Math.max(0, RG.indexOfValue(options, root.config["launch.store_option"] || ""))
+        onSelected: (v) => root.updateField("launch.store_option", v)
     }
 }

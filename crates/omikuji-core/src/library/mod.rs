@@ -283,6 +283,8 @@ pub struct LaunchConfig {
     pub env: IndexMap<String, String>,
     #[serde(default)]
     pub env_sets: Vec<String>,
+    #[serde(default)]
+    pub store_option: String,
 }
 
 const WINDOWS_EXTENSIONS: [&str; 5] = ["exe", "bat", "cmd", "msi", "com"];

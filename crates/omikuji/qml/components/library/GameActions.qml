@@ -30,6 +30,7 @@ QtObject {
     signal downloadInFlight()
     signal componentRequired(int index, bool skipUpdateCheck, string missing)
     signal prefixPrepRequired(int index, bool skipUpdateCheck)
+    signal launchOptionRequired(int index, bool skipUpdateCheck)
     signal forceLaunched(int index)
 
     function selectionValid() {
@@ -122,14 +123,18 @@ QtObject {
         return root.launch(index, forceSkipUpdateCheck)
     }
 
-    function launch(index, forceSkipUpdateCheck) {
+    function launch(index, forceSkipUpdateCheck, option = "") {
+        if (option === "" && root.gameModel.launch_choice_missing(index)) {
+            root.launchOptionRequired(index, forceSkipUpdateCheck)
+            return true
+        }
         if (forceSkipUpdateCheck) {
-            if (!root.gameModel.launch_game_force(index)) return false
+            if (!root.gameModel.launch_game_force(index, option)) return false
             root.isLaunching = true
             root.forceLaunched(index)
             return true
         }
-        if (!root.gameModel.launch_game(index)) return false
+        if (!root.gameModel.launch_game(index, option)) return false
         root.isLaunching = true
         return true
     }

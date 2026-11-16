@@ -9,6 +9,7 @@ mod assemble;
 mod command;
 pub mod companion;
 mod env;
+pub mod options;
 mod prefix;
 mod wine;
 
@@ -55,6 +56,7 @@ impl std::fmt::Display for StoreSignedOut {
 impl std::error::Error for StoreSignedOut {}
 
 pub fn prepare_launch(game: &Game) -> Result<ResolvedLaunch> {
+    let game = &options::applied(game);
     let config = assemble_launch(game, EnvPurpose::Session)?;
     reject_slop_env(&config)?;
     run_pre_launch_script(game, &config);
@@ -67,6 +69,7 @@ pub fn build_launch(game: &Game) -> Result<ResolvedLaunch> {
 }
 
 pub fn build_launch_as(game: &Game, purpose: EnvPurpose) -> Result<ResolvedLaunch> {
+    let game = &options::applied(game);
     validate_exe(game)?;
     let config = assemble_launch(game, purpose)?;
     reject_slop_env(&config)?;

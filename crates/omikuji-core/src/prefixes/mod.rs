@@ -5,7 +5,7 @@ use crate::launch::{prefix_path_for, resolve_prefix};
 use crate::library::{Game, Library, SourceKind};
 use crate::store::steam::local as steam_local;
 use crate::wine_tools::{self, WineTool};
-use crate::{dll_packs, media};
+use crate::{dll_packs, fs_util, media};
 use fs_err::File;
 use std::collections::BTreeMap;
 use std::io::Read;
@@ -273,27 +273,7 @@ pub fn wine_path_to_host(prefix: &Path, win_path: &str) -> Option<PathBuf> {
     let root = fs_err::canonicalize(&link)
         .ok()
         .or_else(|| fs_err::read_link(&link).ok())?;
-    let rest = win_path[2..].replace('\\', "/");
-    let mut out = root;
-    for part in rest.split('/').filter(|p| !p.is_empty() && *p != ".") {
-        out = match resolve_component(&out, part) {
-            Some(found) => found,
-            None => out.join(part),
-        };
-    }
-    Some(out)
-}
-
-fn resolve_component(dir: &Path, name: &str) -> Option<PathBuf> {
-    let exact = dir.join(name);
-    if exact.exists() {
-        return Some(exact);
-    }
-    fs_err::read_dir(dir)
-        .ok()?
-        .flatten()
-        .find(|e| e.file_name().to_string_lossy().eq_ignore_ascii_case(name))
-        .map(|e| e.path())
+    Some(fs_util::resolve_windows_path(&root, &win_path[2..]))
 }
 
 pub fn delete_prefix(target: &Path) -> bool {

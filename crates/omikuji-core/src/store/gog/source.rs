@@ -16,7 +16,9 @@ use crate::downloads::session::SessionTally;
 use crate::downloads::{
     ControlSignal, DownloadEntry, DownloadSource, check_control, report_progress,
 };
-use crate::fs_util::dir_size;
+use crate::fs_util::{self, dir_size};
+use crate::launch::options::LaunchOption;
+use crate::shell_args;
 
 pub struct GogdlSource;
 
@@ -321,38 +323,94 @@ fn scan_dir_for_info(dir: &Path) -> Option<String> {
 }
 
 fn parse_info_for_exe(info_path: &Path) -> Option<String> {
-    let content = fs_err::read_to_string(info_path).ok()?;
-    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
-    let tasks = v.get("playTasks").and_then(|t| t.as_array())?;
+    let root = info_path.parent()?;
+    let tasks = read_play_tasks(info_path)?;
+    let primary = &tasks[primary_task(&tasks)?];
+    if task_str(primary, "type") == "URLTask" {
+        return None;
+    }
+    let exe = task_exe(root, primary)?;
+    Some(exe.strip_prefix(root).ok()?.to_string_lossy().into_owned())
+}
 
-    // prefer isPrimary: true, fall back to first FileTask
-    let primary = tasks
-        .iter()
-        .find(|t| t.get("isPrimary").and_then(|b| b.as_bool()) == Some(true))
-        .or_else(|| {
-            tasks
-                .iter()
-                .find(|t| t.get("type").and_then(|x| x.as_str()) == Some("FileTask"))
+fn find_info_file(install_path: &Path, app_id: &str) -> Option<PathBuf> {
+    let info_name = format!("goggame-{}.info", app_id);
+    std::iter::once(install_path.to_path_buf())
+        .chain(subdirs(install_path).map(|e| e.path()))
+        .map(|dir| dir.join(&info_name))
+        .find(|p| p.exists())
+}
+
+pub fn primary_args(install_path: &Path, app_id: &str) -> Vec<String> {
+    find_info_file(install_path, app_id)
+        .and_then(|info| read_play_tasks(&info))
+        .and_then(|tasks| {
+            let primary = &tasks[primary_task(&tasks)?];
+            Some(shell_args::split_windows(task_str(primary, "arguments")))
         })
-        .or_else(|| tasks.first())?;
+        .unwrap_or_default()
+}
 
-    if primary.get("type").and_then(|t| t.as_str()) == Some("URLTask") {
-        return None;
-    }
+pub fn launch_options(install_path: &Path, app_id: &str) -> Vec<LaunchOption> {
+    let Some(info) = find_info_file(install_path, app_id) else {
+        return Vec::new();
+    };
+    let root = info.parent().unwrap_or(install_path);
+    let Some(tasks) = read_play_tasks(&info) else {
+        return Vec::new();
+    };
+    let primary = primary_task(&tasks);
+    tasks
+        .iter()
+        .enumerate()
+        .filter(|&(i, task)| {
+            Some(i) != primary
+                && task_str(task, "type") == "FileTask"
+                && task_str(task, "category") != "document"
+                && task.get("isHidden").and_then(|h| h.as_bool()) != Some(true)
+        })
+        .filter_map(|(_, task)| {
+            let name = task_str(task, "name");
+            let exe = task_exe(root, task)?;
+            (!name.is_empty()).then(|| LaunchOption {
+                exe: Some(exe),
+                working_dir: Some(task_path(root, task, "workingDir")),
+                ..LaunchOption::with_args(
+                    name.to_string(),
+                    shell_args::split_windows(task_str(task, "arguments")),
+                )
+            })
+        })
+        .collect()
+}
 
-    let path = primary.get("path").and_then(|p| p.as_str()).unwrap_or("");
-    if path.is_empty() {
-        return None;
+fn read_play_tasks(info_path: &Path) -> Option<Vec<serde_json::Value>> {
+    let content = fs_err::read_to_string(info_path).ok()?;
+    let mut v: serde_json::Value = serde_json::from_str(&content).ok()?;
+    match v.get_mut("playTasks")?.take() {
+        serde_json::Value::Array(tasks) => Some(tasks),
+        _ => None,
     }
-    let working_dir = primary
-        .get("workingDir")
-        .and_then(|w| w.as_str())
-        .unwrap_or("");
-    if working_dir.is_empty() {
-        Some(path.to_string())
-    } else {
-        Some(format!("{}/{}", working_dir.trim_end_matches('/'), path))
-    }
+}
+
+fn task_str<'a>(task: &'a serde_json::Value, key: &str) -> &'a str {
+    task.get(key).and_then(|v| v.as_str()).unwrap_or("")
+}
+
+fn primary_task(tasks: &[serde_json::Value]) -> Option<usize> {
+    tasks
+        .iter()
+        .position(|t| t.get("isPrimary").and_then(|b| b.as_bool()) == Some(true))
+        .or_else(|| tasks.iter().position(|t| task_str(t, "type") == "FileTask"))
+        .or((!tasks.is_empty()).then_some(0))
+}
+
+fn task_path(root: &Path, task: &serde_json::Value, key: &str) -> PathBuf {
+    fs_util::resolve_windows_path(root, task_str(task, key))
+}
+
+fn task_exe(root: &Path, task: &serde_json::Value) -> Option<PathBuf> {
+    (!task_str(task, "path").is_empty()).then(|| task_path(root, task, "path"))
 }
 
 fn scan_dir_for_exe(dir: &Path) -> Option<String> {

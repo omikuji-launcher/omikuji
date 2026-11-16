@@ -9,7 +9,7 @@ use fs_err::OpenOptions;
 use crate::game_logs;
 use crate::launch::{self, ResolvedLaunch};
 use crate::library::Game;
-use crate::runners;
+use crate::{runners, shell_args};
 
 const BACKLOG_LINES: usize = 4096;
 
@@ -70,13 +70,10 @@ pub(super) fn header(game: &Game, config: &ResolvedLaunch) -> Vec<String> {
         lines.push(format!("runner: {runner}"));
     }
     if game.launches_exe() {
-        lines.push(format!(
-            "exe: {}",
-            or_none(&game.metadata.exe.to_string_lossy())
-        ));
+        lines.push(format!("exe: {}", or_none(&config.exe.to_string_lossy())));
     }
     lines.extend([
-        format!("args: {}", or_none(&game.launch.args.join(" "))),
+        format!("args: {}", or_none(&shell_args::join(&config.args))),
         format!("working_dir: {}", config.working_dir.display()),
         format!("command: {}", config.command.join(" ")),
         String::new(),

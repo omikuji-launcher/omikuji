@@ -5,6 +5,7 @@ pub mod updates;
 use crate::components::{self, SettingsKey};
 use crate::fs_util;
 use crate::http::{self, ResponseExt};
+use crate::launch::options::LaunchOption;
 use crate::store::{self, StoreGame};
 use anyhow::{Result, anyhow};
 use futures_util::{StreamExt, future, stream};
@@ -240,6 +241,12 @@ pub fn find_installed_info(app_name: &str) -> Option<InstalledInfo> {
         source::find_game_exe(&entry.install_path, app_name)
     };
     Some(entry.resolved(exe_rel))
+}
+
+pub fn launch_options(app_name: &str) -> Vec<LaunchOption> {
+    store::registry::entry(&registry_path(), app_name)
+        .map(|entry| source::launch_options(&entry.install_path, app_name))
+        .unwrap_or_default()
 }
 
 pub fn record_install(

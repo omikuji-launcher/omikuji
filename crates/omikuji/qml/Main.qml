@@ -448,6 +448,8 @@ ApplicationWindow {
             componentRequiredDialog.start(index, skipUpdateCheck, missing)
         onPrefixPrepRequired: (index, skipUpdateCheck) =>
             prefixPrepDialog.start(index, () => gameActions.launch(index, skipUpdateCheck))
+        onLaunchOptionRequired: (index, skipUpdateCheck) =>
+            launchOptionDialog.start(index, (option) => gameActions.launch(index, skipUpdateCheck, option))
         onForceLaunched: {
             if (appSettings.minimizeOnLaunch) root.minimizeForLaunch()
         }
@@ -1345,6 +1347,12 @@ property real cardZoom: appSettings.cardZoom
 
     PrefixPrepDialog {
         id: prefixPrepDialog
+        anchors.fill: parent
+        gameModel: root.gameModelRef
+    }
+
+    LaunchOptionDialog {
+        id: launchOptionDialog
         anchors.fill: parent
         gameModel: root.gameModelRef
     }
