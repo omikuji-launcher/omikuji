@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use super::HoyoEdition;
+use super::blacklist::DownloadBlacklist;
 use super::sophon;
+use super::{HoyoConfig, HoyoEdition};
 use crate::downloads::io_stats::track_child;
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::rate::RateMeter;
@@ -21,7 +22,7 @@ use crate::gacha::manifest::{GachaManifest, ManifestEdition};
 use crate::gacha::{state, strategies};
 
 struct ParsedHoyoApp {
-    biz_id: String,
+    config: HoyoConfig,
     edition: HoyoEdition,
     manifest: GachaManifest,
     manifest_edition: ManifestEdition,
@@ -36,6 +37,14 @@ impl ParsedHoyoApp {
         packs.sort_unstable();
         packs.dedup();
         packs
+    }
+
+    fn download_blacklist(&self, root: &Path) -> DownloadBlacklist {
+        self.config
+            .download_blacklist
+            .as_deref()
+            .map(|rel| DownloadBlacklist::load(root, rel))
+            .unwrap_or_default()
     }
 }
 
@@ -132,7 +141,7 @@ impl DownloadSource for HoyoSource {
         }
 
         fs_err::create_dir_all(&entry.install_path)?;
-        install_entries(entry, &entries).await?;
+        install_entries(entry, &parsed, &entries).await?;
         if check_control(&entry.id) != ControlSignal::None {
             return Ok(());
         }
@@ -173,7 +182,7 @@ impl DownloadSource for HoyoSource {
             .get_for(pack)
             .ok_or_else(|| anyhow!("no {pack} voice pack in the {} build", main.tag))?
             .clone();
-        install_entries(entry, &[voice]).await
+        install_entries(entry, &parsed, &[voice]).await
     }
 
     fn supports_repair(&self) -> bool {
@@ -673,7 +682,7 @@ fn parse_app_id(app_id: &str) -> Result<ParsedHoyoApp> {
     let manifest_edition = manifest.require_edition(&edition_id)?.clone();
 
     Ok(ParsedHoyoApp {
-        biz_id: super::biz_id(&manifest, &edition_id)?,
+        config: HoyoConfig::load(&manifest, &edition_id)?,
         edition: HoyoEdition::from_id(&edition_id)?,
         manifest_edition,
         manifest,
@@ -708,8 +717,8 @@ async fn fetch_package(
 ) -> Result<sophon::api::PackageInfo> {
     let branches = sophon::api::fetch_game_branches(parsed.edition).await?;
     let branch = branches
-        .find_for(&parsed.biz_id)
-        .ok_or_else(|| anyhow!("game branch not found for biz_id {}", parsed.biz_id))?;
+        .find_for(&parsed.config.biz_id)
+        .ok_or_else(|| anyhow!("game branch not found for biz_id {}", parsed.config.biz_id))?;
     channel.pick(branch).cloned().ok_or_else(|| {
         anyhow!(
             "no {} package info for {}",
@@ -721,6 +730,7 @@ async fn fetch_package(
 
 async fn install_entries(
     entry: &DownloadEntry,
+    parsed: &ParsedHoyoApp,
     entries: &[sophon::api::SophonManifestEntry],
 ) -> Result<()> {
     set_status(&entry.id, DownloadStatus::Downloading);
@@ -728,6 +738,7 @@ async fn install_entries(
     sophon::installer::apply_install(
         entries,
         entry.install_path.clone(),
+        &parsed.download_blacklist(&entry.install_path),
         callbacks.on_progress,
         callbacks.is_cancelled,
     )

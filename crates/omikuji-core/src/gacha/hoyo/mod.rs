@@ -1,9 +1,11 @@
 pub mod api;
+pub mod blacklist;
 pub mod sophon;
 pub mod source;
 pub mod update;
 
 use anyhow::{Result, anyhow, bail};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
@@ -120,10 +122,9 @@ fn pack_marker(root: &Path, folder: &Path) -> Option<(PathBuf, Vec<String>)> {
                 .is_some_and(|name| name.starts_with("Audio_") && name.ends_with("_pkg_version"))
         })
         .find_map(|path| {
-            let files: Vec<String> = fs_err::read_to_string(&path)
+            let files: Vec<String> = read_json_lines::<PkgVersionLine>(&path)
                 .ok()?
-                .lines()
-                .filter_map(|line| serde_json::from_str::<PkgVersionLine>(line).ok())
+                .into_iter()
                 .map(|line| line.remote_name)
                 .collect();
             files
@@ -133,14 +134,27 @@ fn pack_marker(root: &Path, folder: &Path) -> Option<(PathBuf, Vec<String>)> {
         })
 }
 
+fn read_json_lines<T: DeserializeOwned>(path: &Path) -> std::io::Result<Vec<T>> {
+    Ok(fs_err::read_to_string(path)?
+        .lines()
+        .filter_map(|line| serde_json::from_str(line).ok())
+        .collect())
+}
+
 #[derive(Deserialize)]
-struct HoyoConfig {
-    biz_id: String,
+pub struct HoyoConfig {
+    pub biz_id: String,
+    pub download_blacklist: Option<String>,
+}
+
+impl HoyoConfig {
+    pub fn load(manifest: &GachaManifest, edition_id: &str) -> Result<Self> {
+        manifest.strategy_config(manifest.require_edition(edition_id)?)
+    }
 }
 
 pub fn biz_id(manifest: &GachaManifest, edition_id: &str) -> Result<String> {
-    let config: HoyoConfig = manifest.strategy_config(manifest.require_edition(edition_id)?)?;
-    Ok(config.biz_id)
+    HoyoConfig::load(manifest, edition_id).map(|config| config.biz_id)
 }
 
 pub fn read_install_version(install_path: &std::path::Path, data_folder: &str) -> Option<String> {

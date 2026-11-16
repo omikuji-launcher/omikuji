@@ -15,6 +15,7 @@ use super::patcher::{CancelFn, ProgressFn, ProgressReport, Stage};
 use super::protos::{FileChunk, ManifestFile};
 use crate::downloads::limits::GachaLimits;
 use crate::downloads::throttle;
+use crate::gacha::hoyo::blacklist::DownloadBlacklist;
 use crate::http::ResponseExt;
 
 const CHUNKS_PER_FILE: usize = 4;
@@ -22,6 +23,7 @@ const CHUNKS_PER_FILE: usize = 4;
 pub async fn apply_install(
     entries: &[SophonManifestEntry],
     target_dir: PathBuf,
+    blacklist: &DownloadBlacklist,
     on_progress: ProgressFn,
     is_cancelled: CancelFn,
 ) -> Result<()> {
@@ -31,6 +33,7 @@ pub async fn apply_install(
 
     let mut all_files: Vec<(ManifestFile, Arc<DownloadInfo>)> = Vec::new();
     let mut total_bytes: u64 = 0;
+    let mut blacklisted = 0;
 
     for entry in entries {
         let manifest = fetch_build_manifest(entry).await?;
@@ -39,9 +42,17 @@ pub async fn apply_install(
             if f.r#type == 64 {
                 continue;
             }
+            if blacklist.contains(&f.name) {
+                blacklisted += 1;
+                continue;
+            }
             total_bytes = total_bytes.saturating_add(f.size);
             all_files.push((f, download.clone()));
         }
+    }
+
+    if blacklisted > 0 {
+        tracing::info!("skipping {blacklisted} blacklisted files");
     }
 
     if all_files.is_empty() {
