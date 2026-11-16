@@ -1093,6 +1093,7 @@ game_fields! {
     "source.kind" => choice readonly, source.kind,
     "source.app_id" => str, source.app_id,
     "source.eos_overlay" => bool readonly, source.eos_overlay,
+    "source.comet" => bool, source.comet,
     "source.cloud_saves" => bool readonly, source.cloud_saves,
     "source.save_path" => str, source.save_path,
     "source.patch" => str readonly, source.patch,

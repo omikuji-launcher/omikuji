@@ -2,6 +2,7 @@ use crate::app_settings::AppSettings;
 use crate::event_queue::EventQueue;
 use crate::launch::{self, ComponentMissing, ResolvedLaunch, StoreSignedOut, companion};
 use crate::library::{Game, Library};
+use crate::store::gog::comet::Comet;
 use crate::store::{epic, gog};
 use crate::{discord, dll_packs, game_logs, log_files, runners};
 use anyhow::Result;
@@ -14,6 +15,7 @@ use std::os::fd::OwnedFd;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::SyncSender;
 use std::sync::{Arc, LazyLock, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -35,11 +37,23 @@ fn next_id() -> ProcessId {
     ProcessId(ID_COUNTER.fetch_add(1, Ordering::SeqCst))
 }
 
-fn prepare_wine(game: &Game, env: &HashMap<String, String>) {
-    let wine_exe = env
-        .get("WINE")
+fn wine_exe(env: &HashMap<String, String>) -> PathBuf {
+    env.get("WINE")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("wine"));
+        .unwrap_or_else(|| PathBuf::from("wine"))
+}
+
+fn pump_output(child: &mut Child, log_tx: &SyncSender<String>) {
+    if let Some(stdout) = child.stdout.take() {
+        log::pump_lines(stdout, log_tx.clone());
+    }
+    if let Some(stderr) = child.stderr.take() {
+        log::pump_lines(stderr, log_tx.clone());
+    }
+}
+
+fn prepare_wine(game: &Game, env: &HashMap<String, String>) {
+    let wine_exe = wine_exe(env);
     if game.is_epic() {
         let _ = launch::prepare_epic_prefix(game, &wine_exe, env);
     }
@@ -160,6 +174,11 @@ impl ProcessManager {
 
         companion::start(&game, &config.env).await;
 
+        let mut comet = gog::comet::start(&game, &wine_exe(&config.env), &config.env).await;
+        if let Some(comet) = &mut comet {
+            pump_output(comet.child(), &log_tx);
+        }
+
         let mut child = cmd.spawn()?;
         let pid = child.id();
 
@@ -167,14 +186,7 @@ impl ProcessManager {
 
         discord::set_playing(&game);
 
-        let stdout_pipe = child.stdout.take();
-        let stderr_pipe = child.stderr.take();
-        if let Some(stdout) = stdout_pipe {
-            log::pump_lines(stdout, log_tx.clone());
-        }
-        if let Some(stderr) = stderr_pipe {
-            log::pump_lines(stderr, log_tx);
-        }
+        pump_output(&mut child, &log_tx);
 
         let proc_id = next_id();
         let started_at = Instant::now();
@@ -191,7 +203,7 @@ impl ProcessManager {
             sessions.insert(proc_id, session);
         }
 
-        self.spawn_exit_watcher(child, pid, proc_id, started_at, config);
+        self.spawn_exit_watcher(child, comet, pid, proc_id, started_at, config);
 
         Ok(proc_id)
     }
@@ -199,6 +211,7 @@ impl ProcessManager {
     fn spawn_exit_watcher(
         &self,
         mut child: Child,
+        comet: Option<Comet>,
         pid: u32,
         proc_id: ProcessId,
         started_at: Instant,
@@ -234,6 +247,7 @@ impl ProcessManager {
                     tracing::warn!(pid, "cloud save upload failed: {}", e);
                 }
             }
+            drop(comet);
 
             let playtime_secs = started_at.elapsed().as_secs();
 

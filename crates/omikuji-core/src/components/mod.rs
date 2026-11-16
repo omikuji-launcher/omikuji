@@ -72,6 +72,18 @@ pub fn gog_tools() -> Vec<&'static ComponentSpec> {
         .collect()
 }
 
+pub fn comet_tools() -> Vec<&'static ComponentSpec> {
+    specs::all()
+        .iter()
+        .filter(|s| {
+            matches!(
+                s.settings_key,
+                SettingsKey::Comet | SettingsKey::GalaxyDummy
+            )
+        })
+        .collect()
+}
+
 pub fn nile_tools() -> Vec<&'static ComponentSpec> {
     specs::all()
         .iter()
@@ -240,6 +252,7 @@ fn url_for(key: SettingsKey) -> Result<String> {
         SettingsKey::Gogdl => &s.gogdl,
         SettingsKey::Nile => &s.nile,
         SettingsKey::EglDummy => &s.egl_dummy,
+        SettingsKey::Comet | SettingsKey::GalaxyDummy => &s.comet,
     };
     if value.trim().is_empty() {
         return Err(anyhow!(

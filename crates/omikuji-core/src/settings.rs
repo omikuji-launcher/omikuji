@@ -125,6 +125,7 @@ pub struct ComponentsSettings {
     pub gogdl: String,
     pub nile: String,
     pub egl_dummy: String,
+    pub comet: String,
 }
 
 impl Default for ComponentsSettings {
@@ -136,6 +137,7 @@ impl Default for ComponentsSettings {
             gogdl: "https://api.github.com/repos/Heroic-Games-Launcher/heroic-gogdl/releases/latest".into(), // why does gogdl feels like a gurgle. goGLdl
             nile: "https://api.github.com/repos/imLinguin/nile/releases/latest".into(),
             egl_dummy: "https://raw.githubusercontent.com/omikuji-launcher/omikuji-assets/main/runtime/epic/EpicGamesLauncher.exe".into(),
+            comet: "https://api.github.com/repos/imLinguin/comet/releases/latest".into(),
         }
     }
 }

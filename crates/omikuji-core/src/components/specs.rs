@@ -65,6 +65,29 @@ static COMPONENTS: &[ComponentSpec] = &[
         system_probe: Some(|| which::which("nile").ok()),
     },
     ComponentSpec {
+        name: "comet",
+        source: Source::GithubRelease {
+            asset_matcher: |n| n == "comet-x86_64-unknown-linux-gnu",
+        },
+        extract: ExtractStrategy::Raw,
+        dest: "comet",
+        settings_key: SettingsKey::Comet,
+        system_probe: Some(|| which::which("comet").ok()),
+    },
+    ComponentSpec {
+        name: "galaxy-dummy",
+        source: Source::GithubRelease {
+            asset_matcher: |n| n == "dummy-service.zip",
+        },
+        extract: ExtractStrategy::Archive {
+            kind: ArchiveKind::Zip,
+            inner_path: "GalaxyCommunication.exe",
+        },
+        dest: "GalaxyCommunication.exe",
+        settings_key: SettingsKey::GalaxyDummy,
+        system_probe: None,
+    },
+    ComponentSpec {
         name: "egl-dummy",
         source: Source::DirectUrl { marker: "bundled" },
         extract: ExtractStrategy::Raw,

@@ -209,9 +209,9 @@ Item {
             visible: active
             sourceComponent: TabGog {
                 config: root.config
+                updateField: root.updateField
                 gameModel: root.gameModel
                 gameId: root.gameId
-                viewportHeight: root.viewportHeight
             }
         }
 

@@ -19,6 +19,8 @@ pub enum SettingsKey {
     Gogdl,
     Nile,
     EglDummy,
+    Comet,
+    GalaxyDummy,
 }
 
 #[derive(Debug, Clone, Copy)]

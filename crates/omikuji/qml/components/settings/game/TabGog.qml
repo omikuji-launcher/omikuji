@@ -7,15 +7,13 @@ Item {
     id: root
 
     property var config: ({})
+    property var updateField: function(key, value) {}
     property var gameModel: null
     property string gameId: ""
 
     property var installedDlcs: []
-    property real viewportHeight: 0
 
-    readonly property bool isEmpty: installedDlcs.length === 0
-
-    implicitHeight: root.isEmpty ? Math.max(root.viewportHeight, 240) : content.height
+    implicitHeight: content.height
 
     function refreshDlcs() {
         if (!gameModel || gameId === "") { installedDlcs = []; return }
@@ -26,24 +24,30 @@ Item {
     onGameIdChanged: refreshDlcs()
     Component.onCompleted: refreshDlcs()
 
-    EmptyState {
-        anchors.fill: parent
-        visible: root.isEmpty
-        art: "qrc:/qt/qml/omikuji/qml/icons/dino.png"
-        artSize: Math.round(Math.min(root.width * 0.75, 520))
-        text: qsTr("well... seems there's nobody in here")
-    }
-
     Column {
         id: content
         width: parent.width
         spacing: 20
-        visible: !root.isEmpty
+
+        SettingsSection {
+            label: "GOG Galaxy"
+            icon: "verified"
+            width: parent.width
+
+            SwitchField {
+                width: parent.width
+                label: "Comet"
+                description: qsTr("Syncs achievements and stats to your GOG profile")
+                checked: root.config["source.comet"] === true
+                onToggled: (val) => root.updateField("source.comet", val)
+            }
+        }
 
         SettingsSection {
             label: qsTr("DLC")
             icon: "layers"
             width: parent.width
+            visible: root.installedDlcs.length > 0
 
             Column {
                 width: parent.width

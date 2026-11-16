@@ -1,4 +1,5 @@
 // little note: FUCK YOU GOG. we love you really but what the fuck
+pub mod comet;
 pub mod script;
 pub mod source;
 pub mod updates;

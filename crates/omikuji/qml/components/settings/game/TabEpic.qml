@@ -42,18 +42,15 @@ Item {
             icon: "verified"
             width: parent.width
 
-            SettingsRow {
+            SwitchField {
+                width: parent.width
                 label: "EOS Overlay"
                 description: root.gameModel && root.gameModel.epic_overlay_is_installed()
                     ? qsTr("in-game overlay for friends, invites and achievements")
                     : qsTr("installs on first enable - one-time download")
-                width: parent.width
-
-                M3Switch {
-                    checked: root.config["source.eos_overlay"] === true
-                    onToggled: (val) => {
-                        if (root.gameModel && root.gameId !== "") root.gameModel.epic_toggle_overlay(root.gameId, val)
-                    }
+                checked: root.config["source.eos_overlay"] === true
+                onToggled: (val) => {
+                    if (root.gameModel && root.gameId !== "") root.gameModel.epic_toggle_overlay(root.gameId, val)
                 }
             }
         }
@@ -63,16 +60,13 @@ Item {
             icon: "sync"
             width: parent.width
 
-            SettingsRow {
+            SwitchField {
+                width: parent.width
                 label: qsTr("Auto-sync")
                 description: qsTr("Download before launch, upload after exit")
-                width: parent.width
-
-                M3Switch {
-                    checked: root.config["source.cloud_saves"] === true
-                    onToggled: (val) => {
-                        if (root.gameModel && root.gameId !== "") root.gameModel.epic_set_cloud_saves(root.gameId, val)
-                    }
+                checked: root.config["source.cloud_saves"] === true
+                onToggled: (val) => {
+                    if (root.gameModel && root.gameId !== "") root.gameModel.epic_set_cloud_saves(root.gameId, val)
                 }
             }
 

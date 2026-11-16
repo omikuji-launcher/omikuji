@@ -21,6 +21,8 @@ Item {
         "legendary": { label: "Legendary",  desc: qsTr("Epic Games CLI binary.") },
         "gogdl":     { label: "gogdl",      desc: qsTr("GOG CLI binary.") },
         "nile":      { label: "nile",       desc: qsTr("Amazon Games CLI binary.") },
+        "comet":     { label: "Comet",      desc: qsTr("GOG Galaxy service for achievements and stats.") },
+        "galaxy-dummy": { label: "Galaxy dummy", desc: qsTr("Dummy GalaxyCommunication.exe service that Comet needs.") },
         "egl-dummy": { label: "EGL dummy",  desc: qsTr("Dummy EpicGamesLauncher.exe needed for Epic Games imports.") }
     })
 
@@ -254,7 +256,7 @@ Item {
 
             CardGroup {
                 Repeater {
-                    model: ["umu-run", "hpatchz", "legendary", "gogdl", "nile", "egl-dummy"]
+                    model: ["umu-run", "hpatchz", "legendary", "gogdl", "comet", "galaxy-dummy", "nile", "egl-dummy"]
 
                     delegate: Item {
                         id: runtimeRow

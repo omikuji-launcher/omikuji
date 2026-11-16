@@ -101,7 +101,7 @@ impl SourceKind {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SourceConfig {
     #[serde(default)]
     pub kind: SourceKind,
@@ -124,6 +124,24 @@ pub struct SourceConfig {
     pub dlcs: Vec<String>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub predownload_dismissed: String,
+    #[serde(default = "default_true")]
+    pub comet: bool,
+}
+
+impl Default for SourceConfig {
+    fn default() -> Self {
+        Self {
+            kind: SourceKind::default(),
+            app_id: String::new(),
+            eos_overlay: false,
+            cloud_saves: false,
+            save_path: String::new(),
+            patch: String::new(),
+            dlcs: Vec::new(),
+            predownload_dismissed: String::new(),
+            comet: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
