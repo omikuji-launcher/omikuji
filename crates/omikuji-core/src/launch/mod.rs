@@ -15,7 +15,7 @@ mod wine;
 
 pub use assemble::ResolvedLaunch;
 pub use command::wine_command;
-pub use env::{EnvPurpose, build_env, env_overrides, format_env_as_shell};
+pub use env::{EnvPurpose, build_env, env_overrides, format_env_as_shell, proton_app_id};
 pub use prefix::{
     effective_prefix, prefix_path_for, prepare_epic_prefix, resolve_prefix, wineserver_alive,
 };

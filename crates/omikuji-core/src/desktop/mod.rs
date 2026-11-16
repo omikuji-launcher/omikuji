@@ -1,4 +1,5 @@
 use crate::fs_util::write_executable_atomic;
+use crate::launch::proton_app_id;
 use crate::library::{Game, Library, generate_id, id_from_slug_id, rfc3339_now};
 use crate::log_files;
 use crate::media::{self, MediaType, media_path};
@@ -43,20 +44,24 @@ pub fn ensure_steam_icon(game: &Game) -> Result<()> {
         return Ok(());
     }
 
-    let dir = icons_dir();
-    fs::create_dir_all(&dir)?;
-
-    let appid = steam::synthetic_appid(&game.metadata.id);
-    let link = dir.join(format!("steam_icon_{}.png", appid));
+    let Some(link) = steam_icon_path(game) else {
+        return Ok(());
+    };
+    fs::create_dir_all(icons_dir())?;
     let _ = fs::remove_file(&link);
     fs_err::os::unix::fs::symlink(&src, &link)?;
 
     Ok(())
 }
 
-pub fn remove_steam_icon(game_id: &str) {
-    let appid = steam::synthetic_appid(game_id);
-    let _ = fs::remove_file(icons_dir().join(format!("steam_icon_{}.png", appid)));
+pub fn remove_steam_icon(game: &Game) {
+    if let Some(link) = steam_icon_path(game) {
+        let _ = fs::remove_file(link);
+    }
+}
+
+fn steam_icon_path(game: &Game) -> Option<PathBuf> {
+    proton_app_id(game).map(|id| icons_dir().join(format!("steam_icon_{id}.png")))
 }
 
 pub fn browse_files(path: &Path) -> Result<()> {
@@ -111,6 +116,9 @@ fn generate_desktop_content(game: &Game) -> String {
         .map(|arg| quote_exec_arg(arg))
         .collect::<Vec<_>>()
         .join(" ");
+    let wm_class = proton_app_id(game)
+        .map(|id| format!("StartupWMClass=steam_app_{id}\n"))
+        .unwrap_or_default();
 
     format!(
         "[Desktop Entry]\n\
@@ -119,10 +127,12 @@ fn generate_desktop_content(game: &Game) -> String {
          Icon={}\n\
          Exec={}\n\
          Categories=Game\n\
-         Terminal=false\n",
+         Terminal=false\n\
+         {}",
         escape_desktop_value(&game.metadata.name),
         icon,
-        escape_desktop_value(&exec)
+        escape_desktop_value(&exec),
+        wm_class
     )
 }
 

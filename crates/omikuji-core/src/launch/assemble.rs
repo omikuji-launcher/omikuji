@@ -75,9 +75,7 @@ pub(super) fn assemble_launch(game: &Game, purpose: EnvPurpose) -> Result<Resolv
     let wine_exe = resolve_wine_exe(variant, &game.wine.version)?;
     let mut env = build_env(game, variant, &wine_exe, purpose);
 
-    if variant == WineVariant::Proton
-        && let Err(e) = ensure_steam_icon(game)
-    {
+    if let Err(e) = ensure_steam_icon(game) {
         tracing::warn!("dock icon link failed for {}: {}", game.metadata.name, e);
     }
 

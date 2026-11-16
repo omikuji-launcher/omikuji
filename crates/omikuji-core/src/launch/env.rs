@@ -73,15 +73,10 @@ pub fn build_env(
                 .as_str()
                 .to_string(),
         );
-        match game.source.kind.umu_store() {
-            Some(store) => {
-                env.insert("STORE".to_string(), store.to_string());
-                env.insert("GAMEID".to_string(), game.source.app_id.clone());
-            }
-            None => {
-                env.insert("GAMEID".to_string(), format!("umu-{}", game.slug()));
-            }
+        if let Some(store) = game.source.kind.umu_store() {
+            env.insert("STORE".to_string(), store.to_string());
         }
+        env.insert("GAMEID".to_string(), default_game_id(game));
     }
 
     env.insert(
@@ -231,6 +226,34 @@ fn apply_kv_sets(sets: &[KvSet], ids: &[String], mut apply: impl FnMut(&str, &st
             }
         }
     }
+}
+
+fn default_game_id(game: &Game) -> String {
+    match game.source.kind.umu_store() {
+        Some(_) => game.source.app_id.clone(),
+        None => format!(
+            "umu-{}",
+            game.slug()
+                .replace(|c: char| !c.is_ascii_alphanumeric(), "")
+        ),
+    }
+}
+
+pub fn proton_app_id(game: &Game) -> Option<String> {
+    if !game.uses_wine_prefix()
+        || WineVariant::from_version(&game.wine.version) != WineVariant::Proton
+    {
+        return None;
+    }
+    let game_id = game_env_pairs(game)
+        .into_iter()
+        .rev()
+        .find_map(|(key, value)| (key == "GAMEID").then_some(value))
+        .unwrap_or_else(|| default_game_id(game));
+    game_id
+        .strip_prefix("umu-")
+        .filter(|id| !id.is_empty() && id.chars().all(|c| c.is_alphanumeric() || c == '_'))
+        .map(str::to_owned)
 }
 
 pub(super) fn game_env_pairs(game: &Game) -> Vec<(String, String)> {

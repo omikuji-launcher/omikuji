@@ -251,7 +251,7 @@ pub fn create_shortcut(game: &Game) -> Result<PathBuf> {
 }
 
 pub fn remove_shortcut(game: &Game) -> Result<()> {
-    desktop::remove_steam_icon(&game.metadata.id);
+    desktop::remove_steam_icon(game);
 
     let Some(config) = user_config_dir() else {
         return Ok(());
