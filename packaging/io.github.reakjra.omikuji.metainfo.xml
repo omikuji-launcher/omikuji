@@ -4,9 +4,11 @@
   <url type="homepage">https://github.com/omikuji-launcher/omikuji</url>
   <url type="bugtracker">https://github.com/omikuji-launcher/omikuji/issues</url>
   <url type="vcs-browser">https://github.com/omikuji-launcher/omikuji</url>
-  <developer_name>reakjra</developer_name>
+  <developer id="io.github.reakjra">
+    <name>reakjra</name>
+  </developer>
   <name>Omikuji</name>
-  <summary>Qt/QML based game launcher for Linux</summary>
+  <summary>QtQuick games/apps launcher for Linux</summary>
   <icon type="stock">io.github.reakjra.omikuji</icon>
 
   <metadata_license>CC0-1.0</metadata_license>
@@ -18,7 +20,7 @@
   </categories>
   <description>
     <p>
-      A Qt/QML based games/apps launcher for Linux. Built 'cause I couldn't bear having 3 different launchers for just games.
+     Wine/Proton, native, Flatpak and Steam games. Epic Games, GOG and Amazon stores, plus Gacha games. Prefix, runner and layer management. Community scripts and other functions. (˶&gt;⩊&lt;˶)
     </p>
   </description>
   <releases>
