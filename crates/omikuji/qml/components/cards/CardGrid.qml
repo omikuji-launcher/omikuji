@@ -199,13 +199,18 @@ Item {
             readonly property int sidePad: 12
             property int avail: Math.max(0, parent.width - sidePad * 2)
             property int maxCols: Math.max(1, Math.floor((avail + root.cardSpacing) / (cardW + root.cardSpacing)))
-            property int colsToUse: Math.max(1, Math.min(maxCols, repeater.count))
+            property int colsToUse: Math.max(1, Math.min(maxCols, visibleChildren.filter(c => c !== repeater).length))
             // a Flow never reflows children hidden while it was, the spare pixel forces it on show
             width: colsToUse * cardW + (colsToUse - 1) * root.cardSpacing + (root.visible ? 0 : 1)
             x: {
                 if (root.cardFlow === "center") return Math.max(sidePad, (parent.width - width) / 2)
                 if (root.cardFlow === "right") return Math.max(sidePad, parent.width - width - sidePad)
                 return sidePad
+            }
+
+            Behavior on x {
+                enabled: root._laidOutVisible
+                NumberAnimation { duration: Theme.dur.lg; easing.type: Theme.ease.standard }
             }
 
             onPositioningComplete: root._laidOutVisible = root.visible
